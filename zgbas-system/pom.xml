@@ -31,6 +31,13 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- UserAgentUtils: ShiroDbRealm (com.spt.bas.web.shiro, ported Plan 03-01) parses
+             User-Agent header for login audit logging. Version managed by root dependencyManagement. -->
+        <dependency>
+            <groupId>eu.bitwalker</groupId>
+            <artifactId>UserAgentUtils</artifactId>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>

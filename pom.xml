@@ -200,6 +200,13 @@
                 <artifactId>jjwt</artifactId>
                 <version>${jjwt.version}</version>
             </dependency>
+            <!-- UserAgentUtils: ShiroDbRealm parses User-Agent header (browser/OS for login log).
+                 Same version as source web module. -->
+            <dependency>
+                <groupId>eu.bitwalker</groupId>
+                <artifactId>UserAgentUtils</artifactId>
+                <version>1.21</version>
+            </dependency>
             <!-- ruoyi-common (4.7.2): referenced by ShiroDbRealm (UserStatus, IpUtils) + later
                  IndexController (AjaxResult, ShiroConstants, Convert). Surface grew large enough
                  to justify a jar dep over inlining individual classes. Same version the source

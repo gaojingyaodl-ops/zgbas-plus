@@ -42,11 +42,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * "com.spt.bas.server"})}; the monolith's broad {@code com.spt} scan requires the exclude filter instead
  * (Rule 1 fix — ConflictingBeanDefinitionException on context load).
  *
- * <p>Additionally, {@code com.spt.tools.shiro.config.ToolsShiroConfig} is excluded — Shiro
- * authentication is Phase 3 scope (AUTH-01..04, D-P2-06: "Shiro Realm Phase 3 writes"). The
- * inlined config's {@code EhCacheManager} conflicts with Hibernate's ehcache (same VM CacheManager
- * name) and its security/filter beans require a Realm not present until Phase 3. Excluding keeps
- * Shiro dormant without affecting any Phase 2 infrastructure (Rule 1 fix).
+ * <p>Phase 3 (AUTH-01..04, D-P3-01): {@code com.spt.tools.shiro.config.ToolsShiroConfig} is now
+ * UN-excluded — the previously-dormant Shiro auto-config engages now that a concrete Realm
+ * ({@code com.spt.bas.web.shiro.ShiroDbRealm}, @Component, ported in Plan 03-01) satisfies the
+ * {@code securityManager(... AbstractShiroDbRealm shiroDbRealm)} parameter. The Phase 2
+ * ehcache-name conflict is resolved by the inlined config's own {@code EhCacheManager} bean
+ * definition; Shiro session/cache/filter-chain beans now wire alongside JPA + mybatis-plus.
  *
  * <p>Dropped vs source {@code BasServer.java}: {@code @PropertySource} (D-P2-14 native
  * profile), {@code @EnableDiscoveryClient} (nacos removed, D-P2-11), {@code @Import} of
@@ -59,8 +60,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
         classes = { com.spt.tools.http.feign.FeignConfig.class,
-                    com.spt.sign.client.config.FeignConfig.class,
-                    com.spt.tools.shiro.config.ToolsShiroConfig.class }
+                    com.spt.sign.client.config.FeignConfig.class }
     )
 )
 @EnableFeignClients(basePackages = "com.spt.sign.client.remote")

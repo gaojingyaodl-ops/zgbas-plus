@@ -1,6 +1,5 @@
 package com.spt.bas.web.util;
 
-import com.spt.bas.client.constant.BasConstants;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.*;

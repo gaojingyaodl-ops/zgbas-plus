@@ -4,8 +4,15 @@ server:
   port: 8080                                          # D-P2-16
   servlet:
     context-path: /
+    session:
+      tracking-modes: cookie                          # WARNING 1: disable URL jsessionid (avoid redirect 400). Source application.properties L9.
+      cookie:
+        http-only: true                               # WARNING 1: source application.properties L10.
+      timeout: 21600s                                 # WARNING 1: 6h session. Source L12 (old key server.session.timeout=21600), SB 2.5 maps to server.servlet.session.timeout; Duration suffix s = seconds.
 
 spring:
+  mvc:
+    static-path-pattern: /static/**                   # BLOCKER 1: templates @{/static/css/...} resolve correctly. Spring Boot default /** would make /static/css/foo.css -> classpath:/static/static/css/foo.css (double static/) -> 404. Source application.properties L21.
   main:
     allow-bean-definition-overriding: true              # Rule 1 fix: 11 sign-client @FeignClient share name="sign" -> FeignClientSpecification override (Spring Cloud OpenFeign standard)
   application:

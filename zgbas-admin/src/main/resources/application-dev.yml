@@ -40,3 +40,17 @@ file:
 sign:
   server:
     url: http://47.104.15.98:9002                       # Pitfall 9: required for cfca Feign SpEL #{signServerConfig.url}
+
+# Shiro + thymeleaf dev config keys (Phase 3 AUTH-01..04).
+# D-P3-06/07: mock-password dev plaintext backdoor (照搬旧项目明文). prod profile uses ${ZGBAS_MOCK_PASSWORD:} (empty = backdoor off).
+# D-P3-02: app-cd 照搬源 appCode. D-P3-12: zgBas.secret SSO secret dev value.
+# WARNING 1: thymeleaf dev hot reload (source application.properties L18); prod overrides to true (Plan 04).
+shiro:
+  prop:
+    mock-password: 123456
+    app-cd: zgbas
+zgBas:
+  secret: DUHZOTTIUTWNDJFRGLUKSHBGVBKWJRUY
+spring:
+  thymeleaf:
+    cache: false
