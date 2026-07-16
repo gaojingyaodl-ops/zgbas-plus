@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.spt</groupId>
+        <artifactId>zgbas-plus</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>zgbas-admin</artifactId>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <!-- Internal modules (aggregate all, single-process loads every module) -->
+        <dependency>
+            <groupId>com.spt</groupId>
+            <artifactId>zgbas-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.spt</groupId>
+            <artifactId>zgbas-framework</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.spt</groupId>
+            <artifactId>zgbas-system</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.spt</groupId>
+            <artifactId>zgbas-quartz</artifactId>
+        </dependency>
+        <!-- Only explicit external dep: web (embedded Tomcat + Spring MVC, makes port config meaningful) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <!-- Context-load smoke test (BUILD-04) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- D-11: ONLY admin declares the boot repackage plugin (fat jar).
+                 starter-parent pluginManagement already binds repackage to the package phase,
+                 so no <executions> block is needed. No custom layout and no dependency-copy
+                 step (D-11 drops the old thin-jar strategy). -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>com.spt.ZgbasApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.spt</groupId>
+        <artifactId>zgbas-plus</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>zgbas-system</artifactId>
+    <packaging>jar</packaging>
+
+    <!-- D-08/D-09: system <- common, framework. NO dependency on quartz (anti-cycle constraint). -->
+    <dependencies>
+        <dependency>
+            <groupId>com.spt</groupId>
+            <artifactId>zgbas-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.spt</groupId>
+            <artifactId>zgbas-framework</artifactId>
+        </dependency>
+    </dependencies>
+    <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
+</project>

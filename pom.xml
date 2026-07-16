@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <!-- D-02: grandparent = spring-boot-starter-parent:2.5.9 (breaks old private parent chain, D-01/D-03) -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.5.9</version>
+        <relativePath/>
+    </parent>
+    <groupId>com.spt</groupId>
+    <artifactId>zgbas-plus</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <!-- D-08 build order: common -> framework -> system -> quartz -> admin -->
+        <module>zgbas-common</module>
+        <module>zgbas-framework</module>
+        <module>zgbas-system</module>
+        <module>zgbas-quartz</module>
+        <module>zgbas-admin</module>
+    </modules>
+
+    <properties>
+        <!-- BUILD-03: JDK 1.8 lock (starter-parent default, explicit for safety) -->
+        <java.version>1.8</java.version>
+    </properties>
+
+    <!-- D-08 topology: internal module versions unified via ${project.version}.
+         admin is NOT here (it is never depended upon by other modules). -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.spt</groupId>
+                <artifactId>zgbas-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.spt</groupId>
+                <artifactId>zgbas-framework</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.spt</groupId>
+                <artifactId>zgbas-system</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.spt</groupId>
+                <artifactId>zgbas-quartz</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
