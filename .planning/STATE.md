@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-07-16T14:53:13.037Z"
+last_updated: "2026-07-16T14:58:12.995Z"
 last_activity: 2026-07-16
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 11
-  completed_plans: 9
-  percent: 82
+  completed_plans: 10
+  percent: 29
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 03 (auth-homepage) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-07-16
 
-Progress: [████████░░] 82%
+Progress: [█████████░] 91%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [████████░░] 82%
 | Phase 1 P01 | 7 | 2 tasks | 14 files |
 | Phase 03 P01 | 5 | 2 tasks | 16 files |
 | Phase 03 P02 | 4 | 2 tasks | 10 files |
+| Phase 03 P03 | 2 | 2 tasks | 2709 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,7 @@ Recent decisions affecting current work:
 - [Phase ?]: ruoyi-common 4.7.2 + UserAgentUtils 1.21 jar deps added for ShiroDbRealm compile
 - [Phase 03-02]: IndexController stub-port (required=false x3 + null-guards) so /index renders menu via authOpenFacade while Phase-4 business data degrades (D-P3-10)
 - [Phase 03-02]: MyIndexController deferred to Phase 5 (report-contract cascade); stub contracts IPmProcessClient/IApproveWaitDealClient in system for Phase 4 replacement
+- [Phase ?]: WebSocketServer @OnOpen stub via comment-out (Phase 4 IApproveWaitDealClient) + full frontend 608 templates/742 JS-CSS copied
 
 ### Pending Todos
 
@@ -94,6 +96,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-16T14:53:13.031Z
+Last session: 2026-07-16T14:58:05.851Z
 Stopped at: Completed 03-02-PLAN.md
 Resume file: None
