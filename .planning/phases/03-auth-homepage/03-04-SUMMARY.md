@@ -128,11 +128,21 @@ No new stubs introduced in this plan. Pre-existing stubs from Plans 02/03 remain
 
 All stubs are runtime-inert. The startup test confirms they don't prevent context load or endpoint reachability.
 
-## User Setup Required
+## User Setup Required — ⚠ Non-Hermetic Verification Contract (per user decision, Option 4)
 
-None for Phase 3 completion. For future `spring-boot:run` (not test-based) startup, the user needs to set:
-- `export DB_PASSWORD=<dev DB password>` (value in git history, should be rotated per CR-01)
-- `export SPT_APP_SECRET=<auth SDK secret>` (value in git history)
+**The D-P3-13 startup test is NOT hermetic.** `application-dev.yml` has two placeholders with NO default — `password: ${DB_PASSWORD}` (datasource.druid, L11) and `secretKey: ${SPT_APP_SECRET}` (spt.app, L31). The Phase-3 `@SpringBootTest` (RANDOM_PORT, `ddl-auto: validate`, 239 entities) eagerly instantiates the Shiro chain (`shiroDbRealm → authOpenFacade`), so BOTH must resolve or the context fails to load with `Could not resolve placeholder 'SPT_APP_SECRET'` (14 errors). There is no test-resource override or surefire env supply.
+
+A clean `mvn test` therefore **ERRORS** (orchestrator-confirmed: `Tests run: 14, Failures: 0, Errors: 14`). To reproduce the GREEN run, export both locally first:
+
+```
+export DB_PASSWORD=<dev DB password>      # value in git history (jdbc.properties leak, CR-01) — rotate
+export SPT_APP_SECRET=<auth SDK secret>   # value in git history
+JAVA_HOME=/Users/alan/Library/Java/JavaVirtualMachines/corretto-1.8.0_482/Contents/Home \
+  /Users/alan/App/apache-maven-3.8.6/bin/mvn -s /Users/alan/App/apache-maven-3.8.6/zg_settings.xml \
+  -pl zgbas-admin -am test -Dtest=ZgbasApplicationTest -DfailIfNoTests=false
+```
+
+Same contract as Phase 2 (which also required `DB_PASSWORD` for `validate`); Phase 3 adds `SPT_APP_SECRET` because 03-01 un-excluded `ToolsShiroConfig`, making the external auth facade an eager startup dependency (this contradicts the plan's "IAuthOpenFacade 启动期懒注入" intent, but is accepted per Option 4). **No secrets committed; no code changed.**
 
 For prod deployment, all secrets resolve from environment via `${VAR}` fail-fast placeholders.
 
@@ -148,6 +158,6 @@ For prod deployment, all secrets resolve from environment via `${VAR}` fail-fast
   - Port business Service/Controller/BFF from source zgbas/basServer + web
   - Entity schema drift (239 entities vs DB) will need addressing when business queries are tested
 
-## Self-Check: PASSED
+## Self-Check: PASSED (conditional — see User Setup Required)
 
-All modified files verified to exist; both task commits verified in git log; 14 tests GREEN confirmed.
+All modified files verified to exist; both task commits verified in git log. Orchestrator-verified: full-reactor `mvn compile` BUILD SUCCESS, 0 `^\[ERROR\]`. The "14 tests GREEN" claim is reproducible ONLY with `DB_PASSWORD` + `SPT_APP_SECRET` exported locally (historical dev credentials as transient env vars — NOT committed); a clean `mvn test` produces 14 errors (`Could not resolve placeholder 'SPT_APP_SECRET'`). Non-hermeticity accepted per user decision (Option 4).

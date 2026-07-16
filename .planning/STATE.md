@@ -76,7 +76,7 @@ Recent decisions affecting current work:
 - [Phase 03-02]: IndexController stub-port (required=false x3 + null-guards) so /index renders menu via authOpenFacade while Phase-4 business data degrades (D-P3-10)
 - [Phase 03-02]: MyIndexController deferred to Phase 5 (report-contract cascade); stub contracts IPmProcessClient/IApproveWaitDealClient in system for Phase 4 replacement
 - [Phase ?]: WebSocketServer @OnOpen stub via comment-out (Phase 4 IApproveWaitDealClient) + full frontend 608 templates/742 JS-CSS copied
-- [Phase ?]: Phase 3 D-P3-13 startup gate GREEN: 14-test @SpringBootTest(RANDOM_PORT) proves Shiro beans wire + endpoints reachable
+- [Phase 03-04]: D-P3-13 startup gate — 14-test @SpringBootTest(RANDOM_PORT) proves Shiro beans wire + endpoints reachable, BUT ⚠ NON-HERMETIC: clean `mvn test` ERRORS (Could not resolve placeholder 'SPT_APP_SECRET'); passes only with `DB_PASSWORD`+`SPT_APP_SECRET` exported locally (03-01 un-excluded ToolsShiroConfig → authOpenFacade became eager startup dep; dev placeholders have no default). Accepted per user Option 4 (local-export = passing)
 - [Phase ?]: Prod auth config externalized: mock-backdoor OFF in prod (empty placeholder), thymeleaf.cache=true (03-04)
 
 ### Pending Todos
@@ -88,6 +88,7 @@ None yet.
 - Phase 1 编译止血可能 unmask 下层语义错误（gotcha 级联），需逐层修复至零错
 - spt-tools-jpa 引用最广（1226 处），内联时注意 BaseDao/IdEntity 体系完整性
 - jdbc.properties 含生产库明文密码，重构时需轮换并外置
+- ⚠ Phase 3 启动测试非 hermetic：`application-dev.yml` 的 `${DB_PASSWORD}` / `${SPT_APP_SECRET}` 无默认值，无 test-resource/pom 供给；`mvn test` 需先本地 export（与 Phase 2 的 DB_PASSWORD 前置同契约）。CI/hermetic 化需另立 task（H2 或 test-profile 注入占位值），本期按 Option 4 维持现状
 
 ## Deferred Items
 
