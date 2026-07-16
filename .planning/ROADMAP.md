@@ -54,7 +54,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — POM foundation: version pins (D-P2-08) + module dependency declarations
+- [x] 02-01-PLAN.md — POM foundation: version pins (D-P2-08) + module dependency declarations
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -147,7 +147,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
-| 2. 基础设施 | 0/6 | Not started | - |
+| 2. 基础设施 | 1/6 | In Progress|  |
 | 3. 认证首页 | 0/TBD | Not started | - |
 | 4. 核心业务迁移 | 0/TBD | Not started | - |
 | 5. 报表迁移 | 0/TBD | Not started | - |
