@@ -51,6 +51,13 @@
             <groupId>com.ruoyi</groupId>
             <artifactId>ruoyi-common</artifactId>
         </dependency>
+
+        <!-- D-P3-11: WebSocket endpoints (WebSocketConfig/IndexWebSocketServer/WebSocketServer)
+             compile in framework. Starter version managed by spring-boot-starter-parent. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>
