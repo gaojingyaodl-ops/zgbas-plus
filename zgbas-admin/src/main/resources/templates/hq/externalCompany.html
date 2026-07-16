@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>花旗外部企业表</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>企业名称</label>
+                <input  class="control"  type="text" name="search_LIKES_companyName"/>
+            </p>
+            <span class="btn-group">
+				<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+
+<script type="text/javascript">
+
+    $(function(){
+        $('#tt').datagrid({
+            pagination:true,
+            pageSize:30,
+            rownumbers:true,
+            showFooter:true,
+            queryParams:Convert.getJson4Form('searchForm'),
+            pageList:[500,200,100,50,30,20],
+            url:_ctx+"/hq/externalCompany/findAllExternalCompanyLoading",
+            columns:[ [
+                {field:'id', title:'企业id',align:'center',width:200},
+                {field:'companyName', title:'企业名称',align:'center',width:200},
+                {field:'companyCreditNo',title:'营业执照号',align:'center',width:200},
+                {field:'companyCreditFileId', title:'营业执照附件ID',align:'center',width:200},
+                {field:'legalRepresent', title:'法人姓名',align:'center',width:200},
+                {field:'legalRepresentPhone', title:'法人联系电话',align:'center',width:200},
+                {field:'legalCardType', title:'法人认证证件类型',align:'center',width:200},
+                {field:'legalRepresentCardNo', title:'法人认证证件号码',align:'center',width:200},
+                {field:'legalCardCrontFileId', title:'法人认证证件正面附件ID',align:'center',width:200},
+                {field:'legalCardReverseFileId', title:'法人认证证件反面附件ID',align:'center',width:200},
+                {field:'registerDate', title:'企业注册时间',align:'center',width:200},
+                {field:'registerCapital', title:'注册资金',align:'center',width:200},
+                {field:'companyFax', title:'企业传真',align:'center',width:200},
+                {field:'companyEmail', title:'企业邮箱',align:'center',width:200},
+                {field:'companyAddress', title:'企业地址',align:'center',width:200},
+                {field:'companyPhone', title:'企业联系电话',align:'center',width:200},
+                {field:'source', title:'企业来源',align:'center',width:200},
+                {field:'legalCardReverseFileUrl', title:'法人认证证件反面附件URL',align:'center',width:250},
+                {field:'legalCardFrontFileUr', title:'法人认证证件正面附件URL',align:'center',width:250},
+                {field:'companyCreditFileUrl', title:'营业执照附件URL',align:'center',width:250},
+                {
+                    field: 'option', title: '操作', align: 'left', width: 100, formatter: function (value, row, index) {
+                        var str = "";
+                        if (row.fileId != "" && row.fileId != null) {
+                            str += '<span onclick="showFile(' + row.fileId + ')" class="contract-btn contract-btn-5">查看附件</span>';
+                        }
+                        return  str;
+                    }
+                },
+
+            ]],
+            onClickRow:function(index,row){
+                lastIndex = index;
+            },
+            onLoadSuccess:function(data){
+
+            }
+        });
+    });
+    //查看附件
+    function showFile(contractId) {
+        $.post(_ctx + "/ctr/loading/getByFileId?fileId=" + contractId, function (result) {
+            window.open(result, "_blank")
+        });
+    }
+</script>
+</body>
+</html>

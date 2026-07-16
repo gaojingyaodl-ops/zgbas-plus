@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-bottom:20px">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>企业名:</label>
+				<input readonly name="companyName" id="companyName" type="text" th:value="${entity.companyName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>企业法人:</label>
+				<input readonly name="" id="" type="text"   th:value="${entity.legalRepresent}" ></input>
+			</p>
+
+			<p class="yw-table-filter w2">
+				<label>注册资本:</label>
+				<input readonly name="registerCapital" id="registerCapital" type="text" th:value="${entity.registerCapital}"></input>
+			</p>
+
+
+			<p class="yw-table-filter w2">
+				<label>准入审批:</label>
+				<input readonly name="supplierRating4" id="supplierRating4" type="text" th:if="${entity.supplierRating} eq null" value=""></input>
+				<input readonly name="supplierRating" id="supplierRating" type="text" th:if="${entity.supplierRating} eq W" value="白名单"></input>
+				<input readonly name="supplierRating2" id="supplierRating2" type="text" th:if="${entity.supplierRating} eq B" value="黑名单"></input>
+				<input readonly name="supplierRating3" id="supplierRating3" type="text" th:if="${entity.supplierRating} eq G" value="灰名单"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>赊销额度:</label>
+				<input readonly name="baseQuota" id="baseQuota" type="text" th:value="${entity.baseQuota}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>企业地址:</label>
+				<input readonly name="address" id="address" type="text" th:value="${entity.address}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>企业类型:</label>
+				<input readonly name="econKind" id="econKind" type="text" th:value="${entity.econKind}"></input>
+			</p>
+
+			<p class="yw-table-filter w2">
+				<label>所属行业:</label>
+				<input readonly name="industryName" id="industryName" type="text" th:value="${entity.industryName}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>企业性质:</label>
+				<input readonly name="companyCategory" id="companyCategory" type="text" th:value="${entity.companyCategory}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>企业电话:</label>
+				<input readonly name="companyPhone" id="companyPhone" type="text" th:value="${entity.companyPhone}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>委托人:</label>
+				<input readonly name="client" id="client" type="text" th:value="${entity.client}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>委托人联系方式:</label>
+				<input readonly name="clientPhone" id="clientPhone" type="text" th:value="${entity.clientPhone}"></input>
+			</p>
+
+			<p class="yw-table-filter w2">
+				<label>是否开通线上化:</label>
+				<input readonly name="online" id="online" type="text" th:if="${entity.online} eq F" value="否"></input>
+				<input readonly name="online1" id="online1" type="text" th:if="${entity.online} eq T" value="是"></input>
+			</p>
+
+		</div>
+
+
+		</div>
+	</div>
+</div>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+
+</script>

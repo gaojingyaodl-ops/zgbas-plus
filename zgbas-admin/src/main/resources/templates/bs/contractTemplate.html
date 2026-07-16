@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>合同模板配置</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<form id="searchForm" class="form-search from-input-layout" method="post">
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label>合同类型:</label> 
+					<input class="control" name="search_EQS_contractType" id="_contractType" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>是否有效:</label>
+					<input class="control" id="_enableFlg" name="search_EQB_enableFlg" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>模板名称:</label> 
+					<input class="control" name="search_LIKES_templateName" type="text"/>
+				</p>
+				<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			</div>
+		</form>
+		<div id="btn" class="add-btn" style="margin-top: 10px">
+			<a href="#" class="easyui-linkbutton btn64 addBtn" onclick="editrow(0)">新增</a>
+		</div>
+	</div>
+	<div region="center" border="false" class="panel_padding" style="padding-right: 20px;padding-left:20px;">
+		<table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id">
+		</table>
+	</div>
+	<div id="w" title="模板详情" data-options="width:800,height:580"></div>
+	<div id="w_show" title="查看模板" data-options="width:900,height:680"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+var _contractType = eval('[(${contractType})]');
+var lastIndex;
+$(function(){
+	$("#_contractType").combobox({
+		data : _contractType,
+		textField : 'dictName',
+		valueField : 'dictCd',
+		panelHeight : "auto"
+	});
+	$("#_enableFlg").combobox({
+		data:[{id:'',text:'--全部--'},{id:'true',text:'有效'},{id:'false',text:'无效'}],
+		textField:'text',
+		valueField:'id',
+		panelHeight:"auto",
+		onLoadSuccess:function(){
+			$("#_enableFlg").combobox('setValue','true');
+		}
+	});
+	$('#tt').datagrid({
+		pagination:true,
+		rownumbers:true,
+		pageSize:30,
+		pageList:[50,40,30,20,10],
+		queryParams:Convert.getJson4Form('searchForm'),
+		url:_ctx+"/bs/contractTemplate/findTemplateList",
+		columns: [ [
+			{field:'contractType',title:'合同类型', align:'center', width:200, formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_contractType,"dictCd",value,"dictName");
+			}},
+			{field:'templateName',title:'模板名称',align:'left', width:200},
+			{field:'templateTag',title:'模板标识', width:200, align:'left'},
+			{field:'enableFlg',title:'是否有效', width:80,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+					debugger;
+				if(value=="true"){
+						return'是';
+					}else{
+						return'<span style="color:red">否</span>';
+					}
+				}},
+			/* {field:'fileId', title:'附件ID', width:200, align:'center'}, */
+			{field:'opt',title:'操作',width:60,align:'center',
+				formatter:function(value,row,index){
+					var id =row.id;
+					var d = '<img href="#" style="cursor:pointer;width:16px;hight:18px" onclick=deleterow("'+id+'") src="../static/new-version/images/icon_delete.png"></img>';
+					return d;
+				}
+			},
+			{field:'ht',title:'合同预览',width:60,align:'center',
+				formatter:function(value,row,index){
+					var id =row.id;
+					var d = '<a  href="#"  onclick=viewContract("'+id+'")>查看</a  href="">';
+					return d;
+				}
+			}
+			/* {field:'content',title:'模板内容', width:1000} */
+		] ],
+		onDblClickCell:function(index,field){
+			lastIndex = index;
+			var row = $('#tt').datagrid('getSelected');
+			editrow(row.id);
+		}
+	});
+	$('#w').window({
+		modal : true,
+		closed : true,
+		collapsible : false,
+		minimizable : false,
+		maximizable : false,
+		cache : false,
+		onClose : function() {
+			$('#tt').datagrid('reload');
+		}
+	});
+	$('#w_show').window({
+		title: '电子合同',
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		maximizable : false,
+		cache:false
+	});
+});
+
+function editrow(id) {
+	var url = _ctx + "/bs/contractTemplate/detail/" + id;
+	$('#w').window({href : url});
+	$('#w').window("open");
+}
+function viewContract(id) {
+	var url = _ctx + "/bs/contractTemplate/viewContractTemplate/"+id;
+	$('#w_show').window({href : url});
+	$('#w_show').window("open");
+}
+
+function deleterow(id){
+	$('#tt').datagrid('selectRecord',id);
+	var row = $('#tt').datagrid('getSelected');
+	var index = $('#tt').datagrid('getRowIndex',row);
+	if (id=='0'){
+		$('#tt').datagrid('deleteRow', index);
+		var nextSelect=index>0?index-1:0;
+		$('#tt').datagrid('selectRow', nextSelect);
+	}else{
+		$.messager.confirm({
+			width:388,
+			height:170,
+			title: '删除提示',
+			msg: '确认删除该数据?',
+			ok: "确定",
+			cancel: "取消",
+			cls:'c9',
+			border:'thin',
+			fn: function(r){
+                if (r){
+                	if(id){
+						$.post(_ctx+"/bs/contractTemplate/delete/"+id, function(result) {
+							$('#tt').datagrid('reload');
+						});
+					}
+                }
+            }
+        });
+	}
+}
+</script>
+</body>
+</html>

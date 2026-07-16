@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>出库表单</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+	<div class="mb6">
+		<p class="yw-table-filter">
+			<label>品名:</label>
+			<input name="productCd" id="productCd" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>状态:</label>
+			<input type="text" id="deliveryOutStatus" name="deliveryOutStatus"/>
+		</p>
+		<p class="yw-table-filter">
+			<label style="width:120px;">销售合同编号:</label>
+			<input name="contractNo" id="contractNo" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label style="width:120px;">销售采购合同编号:</label>
+			<input name="buyContractNo" id="buyContractNo" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label style="width:120px;">出库采购合同编号:</label>
+			<input name="realBuyContractNo" id="realBuyContractNo" type="text"/>
+		</p>
+	</div>
+	<div class="mb6">
+		<p class="yw-table-filter">
+			<label>业务类型:</label>
+			<input name="businessType" id="businessType" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>牌号:</label>
+			<input name="brandNumber" id="brandNumber" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>出库方式:</label>
+			<input name="warehouseOutType" id="warehouseOutType" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>提货单号:</label>
+			<input name="applyNo" id="applyNo" type="text"/>
+		</p>
+		<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+		<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+	</div>
+	</form>
+	<!-- <div id="btn" class="add-btn" style="margin-top: 10px">
+		<a  href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="save()">保存</a>
+    </div> -->
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<!-- <div id="w" title="提货单详情" data-options="width:970,height:650"> -->
+<div id="detail" title="出库表单详情" data-options="width:1055,height:705"></div>		
+</div>
+<script type="text/javascript">
+	var lastIndex;
+	var canUpdate = '[(${canUpdate})]'
+	var _deliveryTypeJson= eval('[(${deliveryTypeJson})]');
+	var _deliveryModeJson= eval('[(${deliveryModeJson})]');
+	var _printStatusJson = eval('[(${printStatusJson})]');
+	var productTypeJson = eval('[(${productTypeJson})]');
+	var businessTypeJson = eval('[(${businessTypeJson})]');
+	var _deliveryOutTypeJson=eval('[(${deliveryOutTypeJson})]');
+	var _hasInvalid = '[[${hasInvalid}]]';
+	var _flg = true;
+	var sourceModeJson = [{id:'ZY-XS',text:'自营销售'},{id:'ZY-BB',text:'背靠背'},{id:'SY-XS',text:'质押销售'},{id:'SX-SX',text:'赊销'},
+		 {id:'SX-HK',text:'货到付款'},{id:'DL-KZ',text:'代理开证'},{id:'DL-DC',text:'国企代采'}];
+	$(function(){
+		//品名下拉
+		$('#productCd').combotree({
+			data : productTypeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(data) {
+				$(this).val(data.typeName);
+			}
+		});
+		$("#deliveryOutStatus").combobox({
+			data : [ {
+				id : 'C',
+				text : '已作废'
+			}, {
+				id : 'N',
+				text : '当前'
+			}, {
+				id : '',
+				text : '全部'
+			}],
+			textField : 'text',
+			valueField : 'id',
+			panelHeight : "auto",
+			onLoadSuccess : function() {
+				var value = $(this).val();
+				if (_flg && (value==null||value==""||value==undefined)){
+					$("#deliveryOutStatus").combobox('setValue', 'N');
+					_flg = false;
+				}
+			}
+		});
+		$('#businessType').combobox({
+			data : sourceModeJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		//出库方式
+		$('#warehouseOutType').combobox({
+			data:_deliveryOutTypeJson, 
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			width:400,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[50,40,30,20,10],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/apply/deliveryPrint/findDeliveryPage",
+			columns:[ [				
+				{field:'applyNo',title:'出库单号', width:150},
+				{field:'businessType',title:'业务类型', width:90,align:'left',formatter:function(value){
+					return Convert.findValueByKey(businessTypeJson,"dictCd",value,"dictName")
+				}},
+				{field:'productName',title:'品名', width:100},
+				{field:'brandNumber',title:'牌号', width:130},
+				{field:'factoryName',title:'厂商', width:130},
+				{field:'contractNo',title:'销售合同编号', width:130},
+				{field:'buyContractNo',title:'销售采购合同编号', width:130},
+				{field:'realBuyContractNo',title:'出库采购合同编号', width:130},
+				/* {field:'ourCompanyName',title:'我方抬头', width:220}, */
+				{field:'companyName',title:'供应商', width:220},
+				{field:'companyPhone',title:'公司电话', width:100},
+				{field:'dealNumber',title:'数量(吨)', width:70},
+				{field:'bizUserName',title:'业务员', width:80},
+				{field:'warehouseInNo',title:'入库单号', width:110},
+				{field:'driverName',title:'提货人', width:80},
+				{field:'driverPhone',title:'提货人电话', width:100},
+				{field:'driverCardNo',title:'身份证号', width:150},
+				{field:'plateNumber',title:'车牌号', width:90},
+				{field:'warehousePosition',title:'仓位/货位', width:90},
+				{field:'warehouseBatchNo',title:'批号', width:90},
+				{field:'countersNumber',title:'柜数', width:90},
+				{field:'warehouseOutType',title:'出库方式', width:90,formatter:function(value){
+					return Convert.findValueByKey(_deliveryOutTypeJson,"dictCd",value,"dictName")
+				}},
+				{field:'deliveryAddr',title:'收货地址', width:90},
+				{field:'remark',title:'备注'},
+				{field:'operate',title:'操作', width:70,align:'center',formatter:function(value, row, index){  
+			        var str = '';  
+			        /*str +='<img onclick="printThd(\''+row.applyDeliveryId+'\')" style="cursor:pointer;padding-left:20px;" src="../static/images/icon_xiangqing.png" title="提货单" class="tip"/>';
+			       	str +='&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+			       	str +='<img onclick="printHzd(\''+row.applyDeliveryId+'\')" style="cursor:pointer;" src="../static/images/icon_xiangqing1.png" title="货权转移单" class="tip"/>';
+			       	str +='&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'; */
+			       	if(row.operation == "0" && _hasInvalid == "true"){
+			       		str +='<img id="Cancel" onclick="printCancel(\''+row.applyDeliveryId+'\')" style="cursor:pointer;text-align:center" title="作废"  src="../static/images/icon_cancel.png" class="tip"/>';
+			       	}
+			        return str;
+			    }}
+			]],
+			toolbar:'#toolbar',
+			onDblClickCell:function(index,field){
+				var row = $('#tt').datagrid('getSelected');
+				var id = row.applyDeliveryId;
+				if (id){
+					editrow(id);
+				}
+			},
+			onLoadSuccess:function(data){
+				 $(".tip").tooltip(
+		            {
+		                onShow: function(){
+		                    $(this).tooltip('tip').css({
+		                        width:'100',
+		                        height:'20',
+		                        boxShadow: '1px 1px 3px #292929'
+		                 });
+		             }
+		         }
+				);
+			}
+		});
+		$('#detail').window({
+			title:"出库表单详情",
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+	});	
+	function editrow(id) {
+		var url = _ctx + "/apply/deliveryPrint/detail/" + id;
+		$('#detail').window({href : url});
+		$('#detail').window("open");
+	}
+	//提货单打印
+	function printThd(id){
+		if(id){
+			window.parent.addTab("提货单预览",_ctx+"/apply/deliveryPrint/printThd?id="+id);
+		}
+	}
+	//转货单打印
+	function printHzd(id){
+		if(id){
+			window.parent.addTab("转货单预览",_ctx+"/apply/deliveryPrint/printHzd?id="+id);
+		}
+	}
+	//提货单作废
+	function printCancel(id){
+		$.messager.confirm({
+			width:388,
+			height:170,
+			title: '默认选择提示',
+			msg: '是否确认作废？',
+			ok: "确定",
+			cancel: "取消",
+			cls:'c9',
+			border:'thin',
+			fn: function(r){
+	            if (r){
+					$.post(_ctx+"/apply/deliveryPrint/printCancel?id="+id,function(data) {
+						var rObj = eval(data);
+						if(rObj.success){
+							$('#tt').datagrid('reload');
+						}else{
+							 $.messager.alert('error',rObj.failure,'warning');
+						}
+					});
+	            }
+	        }
+	    });
+	}
+	function saveEdit(){
+		var flag=true;
+		var row = $('#tt').datagrid('getSelected');
+		if (row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			$('#tt').datagrid('endEdit', index);
+		}
+		var changeRows=[];
+		var inserted = $('#tt').datagrid('getChanges','inserted');
+		var updated = $('#tt').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#tt').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#tt').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#tt').datagrid('selectRow',index);
+    			$('#tt').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#tt').datagrid('endEdit', index);
+    		}
+		}
+		if (flag){
+			
+		$.post(_ctx+"/apply/deliveryPrint/saveBatch",Convert.ToSaveParam("tt") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+	function endEdit(){
+		var rows=$("#tt").datagrid('getRows');
+		for(var i=0;i<rows.length;i++){
+			//验证没通过 不关闭编辑器
+			if($("#tt").datagrid("validateRow",i)){	
+				$("#tt").datagrid("endEdit",i);	
+			}
+		}
+	}
+	function save(){
+		endEdit();
+		var val=$("#tt").datagrid("getChanges");
+		for(i=0;i<val.length;i++){
+			var index=$('#tt').datagrid("getRowIndex",val[i]);
+			if(!$("#tt").datagrid("validateRow",index)){
+				$.messager.alert("提示","请填写完整!","error");
+				return ;
+			}
+		}
+		if($.isEmptyObject(val)){return false}
+		var param=JSON.stringify(val);
+		ajaxPost(param);
+	}
+	function ajaxPost(param){
+		$.post(_ctx+"/apply/deliveryPrint/saveBatch",Convert.ToSaveParam("tt"),function(data){
+			var rObj = eval(data);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				 $.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+</script>
+</body>
+</html>

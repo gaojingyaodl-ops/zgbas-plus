@@ -1,0 +1,105 @@
+<div class="easyui-layout" fit="true" style="width:100%;height:500px;">
+<div region="north" class="search_div pl20 pt10 pr20" border="false" style="overflow: hidden;">
+</div>
+<div region="center" border="false" class="pl20 pr20">
+	<table id="tt_deliveryOut_choose" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div region="south" border="false" style="overflow: hidden;height: 40px;">
+	<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn-info btn64 ml6" onclick="DeliveryOutChoose.confirmChoose();">确&nbsp;认</a>
+		<a href="#" class="easyui-linkbutton btn-danger btn64 ml6" onclick="DeliveryOutChoose.closeCurrentWin();">关&nbsp;闭</a>
+	</div>
+</div>
+</div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var _url = "";
+	$(function(){
+		var fileview = $.extend({}, $.fn.datagrid.defaults.view, { onAfterRender: function (target) { DeliveryOutChoose.ischeckItem(); } });
+
+		var columns =[ [
+			{field:'productName',title:'品名', width:120},
+			{field:'productAttr',title:'在途/现货', width: 80,formatter:function (value,row) {
+					switch (value) {
+						case 'N':
+							return '在途';
+						case 'P':
+							return '现货';
+						default:
+							return '';
+					}
+				}},
+			{field:'curNumber',title:'数量(吨)', width:80},
+			{field:'dealPrice',title:'单价(元)', width:80},
+			{field:'applyMatcher',title:'申请人', width:80},
+			{field:'createdDate',title:'时间', width:160}
+		]];
+
+		debugger;
+		$('#tt_deliveryOut_choose').datagrid({
+			pagination:false,
+			pageSize:30,
+			rownumbers:true,
+			view: fileview,
+			singleSelect:true,
+			url:_ctx+"/apply/deliveryOut/getUnConfirmDeliveryOut?ctrContractId="+contractId+"&waybillCode="+waybillCode,
+			columns:columns,
+			onSelect:function(index,row){
+				DeliveryOutChoose.selected = [];
+				DeliveryOutChoose.selected.push(row);
+			},
+			onUnselect:function(index,row){
+				DeliveryOutChoose.removeSelected(row);
+			}
+		});
+	});
+
+	var DeliveryOutChoose={
+			selected:[],
+			ischeckItem:function () {
+		        for (var i = 0; i < DeliveryOutChoose.selected.length; i++) {
+		            $('#tt_deliveryOut_choose').datagrid('selectRecord', DeliveryOutChoose.selected[i]); //根据id选中行
+		        }
+			},
+			removeSelected:function(row){
+				console.log('onUnselect',DeliveryOutChoose.selected);
+				for(var i=0; i<DeliveryOutChoose.selected.length; i++) {
+				    if(DeliveryOutChoose.selected[i].id == row.id) {
+				    	DeliveryOutChoose.selected.splice(i, 1);
+				      	break;
+				    }
+				  }
+			},
+			confirmChoose:function(){
+				var selectedRows=DeliveryOutChoose.selected;//$('#ttsimpleproduct').datagrid('getSelections');
+				var transportAmount = Number(0);
+				var logisticsCostsReal = Number(0);
+				var warehouseAmount = Number(0);
+				var deliveryFee = Number(0);
+				selectedRows.forEach(function(item){
+					transportAmount += Number(item.transportAmount);
+					warehouseAmount += Number(item.warehouseAmount);
+					deliveryFee += Number(item.deliveryOutFee);
+					logisticsCostsReal +=Number(item.logisticsCosts);
+				});
+				var logisticsCosts =  Number(transportAmount) + Number(warehouseAmount) + Number(deliveryFee);
+				$("#logisticsCosts").val(logisticsCosts.toFixed(2));
+				$("#deliveryOutTransformAmount").val(logisticsCostsReal.toFixed(2));
+
+
+				$("#lossAmountByActual").numberbox("setValue", logisticsCostsReal.toFixed(2));
+				var callbackExec = $('#w_deliveryOut_choose').attr('callbackExec');
+		    	var myfunc = eval(callbackExec);
+		    	if(typeof(myfunc) == "function"){
+		    		myfunc(selectedRows);
+		    	}
+		    	DeliveryOutChoose.closeCurrentWin();
+			},
+			closeCurrentWin:function(){
+				$('#w_deliveryOut_choose').window('close');
+			}
+		}
+</script>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <div region="north" border="false">
+        <form id="inputForm" method="post" class="from-input-layout">
+            <input type="hidden" name="id" id="productId" th:value="${product.id}"/>
+            <input type="hidden" name="waybillCode" id="waybillCode" th:value="${product.waybillCode}"/>
+            <input type="hidden" name="customerOrderCode" id="waybillCode" th:value="${product.customerOrderCode}"/>
+            <input type="hidden" name="contractId" id="contractId" th:value="${product.contractId}"/>
+            <input name="receiveCompanyId" id="receiveCompanyId" type="hidden" required="required"
+                   th:value="${product.receiveCompanyId}"></input>
+            <div class="mb6">
+                <h3 style="color: #00b7ee">基本信息</h3>
+            </div>
+            <div class="mb6" style="border: #DDDDDD 1px solid;padding: 15px">
+                <p class="yw-table-filter">
+                    <label for="productName">品名:</label>
+                    <input readonly name="productName" id="productName" required="required" type="text"
+                           th:value="${product.productName}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label  for="brandNumber">牌号:</label>
+                    <input  readonly name="brandNumber" id="brandNumber" type="text" required="required"
+                           th:value="${product.brandNumber}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="dealNumber">数量:</label>
+                    <input readonly name="dealNumber" id="dealNumber" type="text" required="required"
+                           th:value="${product.dealNumber}"></input>
+                </p>
+                <br>
+                <p class="yw-table-filter">
+                    <label for="dealPrice">单价:</label>
+                    <input readonly name="dealPrice" id="dealPrice" type="text" required="required"
+                           th:value="${product.dealPrice}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="dealPriceAmount">总价:</label>
+                    <input readonly name="dealPriceAmount" id="dealPriceAmount" type="text" required="required"
+                           th:value="${product.dealPriceAmount}"></input>
+                </p>
+                <br>
+                <p class="yw-table-filter">
+                    <label>出库日期:</label>
+                    <input name="deliveryDate" id="deliveryDate" class="easyui-datebox" required="required"
+                           th:value="${#dates.format(product.deliveryDate,'yyyy-MM-dd')}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>要求到货日期:</label>
+                    <input name="deliveryDateMust" id="deliveryDateMust" class="easyui-datebox" required="required"
+                           th:value="${#dates.format(product.deliveryDateMust,'yyyy-MM-dd')}"/>
+                </p>
+                <br>
+                <p class="yw-table-filter">
+                    <label for="deliveryContactor">发货联系人:</label>
+                    <input name="deliveryContactor" id="deliveryContactor" type="text"
+                           th:value="${product.deliveryContactor}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="deliveryContactPhone">发货联系电话:</label>
+                    <input name="deliveryContactPhone" id="deliveryContactPhone" type="text"
+                           th:value="${product.deliveryContactPhone}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="deliveryAddress">提货地址:</label>
+                    <input name="deliveryAddress" id="deliveryAddress" type="text"
+                           th:value="${product.deliveryAddress}"></input>
+                </p>
+            </div>
+                <div class="mb6">
+                    <h3 style="color: #00b7ee">单位联系信息</h3>
+                </div>
+            <div class="mb6" style="border: #DDDDDD 1px solid;padding: 15px">
+                <p class="yw-table-filter">
+                    <label for="transportCompany">送货单位:</label>
+                    <input name="transportCompany" id="transportCompany" type="text"
+                           th:value="${product.transportCompany}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="transportContactor">送货联系人:</label>
+                    <input name="transportContactor" id="transportContactor" type="text"
+                           th:value="${product.transportContactor}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="transportContactPhone">送货联系电话:</label>
+                    <input name="transportContactPhone" id="transportContactPhone" type="text"
+                           th:value="${product.transportContactPhone}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="transportAddress">送货单位地址:</label>
+                    <input name="transportAddress" id="transportAddress" type="text"
+                           th:value="${product.transportAddress}"></input>
+                </p>
+
+                <p class="yw-table-filter">
+                    <label for="receiveCompany">收货单位:</label>
+                    <input name="receiveCompany" id="receiveCompany" type="text"
+                           th:value="${product.receiveCompany}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="receiveContactor">收货联系人:</label>
+                    <input name="receiveContactor" id="receiveContactor" type="text"
+                           th:value="${product.receiveContactor}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="receiveContactPhone">收货联系电话:</label>
+                    <input name="receiveContactPhone" id="receiveContactPhone" type="text"
+                           th:value="${product.receiveContactPhone}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="receiveAddress">收货单位地址:</label>
+                    <input name="receiveAddress" id="receiveAddress" type="text"
+                           th:value="${product.receiveAddress}"></input>
+                </p>
+            </div>
+                <div class="mb6">
+                    <h3 style="color: #00b7ee">运输公司信息</h3>
+                </div>
+            <div class="mb6" style="border: #DDDDDD 1px solid;padding: 15px">
+                <p class="yw-table-filter">
+                    <label for="plateNumber">车牌号:</label>
+                    <input  name="plateNumber" id="plateNumber" type="text"
+                            th:value="${product.plateNumber}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="driverName">司机姓名:</label>
+                    <input   name="driverName" id="driverName" type="text"
+                             th:value="${product.driverName}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="driverPhone">司机电话:</label>
+                    <input  name="driverPhone" id="driverPhone" type="text"
+                            th:value="${product.driverPhone}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="driverCardNo">司机身份证:</label>
+                    <input name="driverCardNo" id="driverCardNo" type="text"
+                           th:value="${product.driverCardNo}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="carryNumber">运输数量:</label>
+                    <input name="carryNumber" id="carryNumber" type="text"
+                           th:value="${product.carryNumber}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="carryAmount">运输总金额:</label>
+                    <input name="carryAmount" id="carryAmount" type="text"
+                           th:value="${product.carryAmount}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="loadNumber">装车数量:</label>
+                    <input name="loadNumber" id="loadNumber" type="text"
+                           th:value="${product.loadNumber}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="loadAmount">装车总金额:</label>
+                    <input name="loadAmount" id="loadAmount" type="text"
+                           th:value="${product.loadAmount}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="totalAmount">合计金额:</label>
+                    <input name="totalAmount" id="totalAmount" type="text"
+                           th:value="${product.totalAmount}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="remark">备注:</label>
+                    <input name="remark" id="remark" type="text" th:value="${product.remark}"></input>
+                </p>
+                </div>
+        </form>
+    </div>
+
+    <div region="south" style="margin-left: 310px;margin-top: 20px">
+        <a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'"
+           onclick="$('#inputForm').submit();">保存</a>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+
+
+
+    var lastIndex2 = -1;
+    var isExists = false;
+    $(function () {
+        $("#inputForm").validate({
+            submitHandler: function (form) {
+                saveDict();
+            }
+        });
+
+     var  waybillCodes= $("#waybillCode").val();
+     if(waybillCodes==""||waybillCodes==null||waybillCodes==undefined){
+         $('#plateNumber,#driverName,#driverPhone').textbox({
+             readonly: false
+         });
+     }else{
+         $('#plateNumber,#driverName,#driverPhone').textbox({
+             readonly: true
+         });
+     }
+
+
+    });
+
+   $("#loadAmount").change(function(){
+       debugger;
+      var la= $("#loadAmount").val();
+      var ta= $("#carryAmount").val();
+       $("#totalAmount").val(parseFloat(la)+ parseFloat(ta));
+   });
+
+    var la= $("#loadAmount").val();
+    var ta= $("#carryAmount").val();
+    $("#totalAmount").val(parseFloat(la)+ parseFloat(ta));
+    function saveDict() {
+        debugger;
+        var options = {
+            url: _ctx + '/ctr/delivery/save',
+            success: function (data) {
+                if (data.indexOf('success') != -1) {
+                    $.messager.show({
+                        height: 150,
+                        title: '提示',
+                        msg: '保存成功',
+                        timeout: 2000,
+                        border: 'thin',
+                        cls: 'c9',
+                        showType: 'show'
+                    });
+                    window.opener = null;
+                    window.open(' ', '_self')
+                    window.close();
+                } else {
+                    $.messager.alert('', '保存失败');
+                }
+            }
+        };
+        $('#inputForm').form('submit', options);
+    }
+
+    function focusEditor(field, editIndex) {
+        var editor = $('#tt2').datagrid('getEditor', {index: editIndex, field: field});
+        if (editor) {
+            editor.target.focus();
+        } else {
+            var editors = $('#tt2').datagrid('getEditors', editIndex);
+            if (editors.length) {
+                editors[0].target.focus();
+            }
+        }
+    }
+
+    function insert() {
+        var rowSel = $('#tt2').datagrid('getSelected', lastIndex2);
+        $('#tt2').datagrid('endEdit', lastIndex2);
+        var index = $('#tt2').datagrid('getData').total;
+        if (!index) index = $('#tt2').datagrid('getRows').length;
+        var field = {
+            id: '0',
+            dictCd: '',
+            dictName: '',
+            i18n: '',
+            enableFlg: 'true',
+            remark: '',
+            dispOrderNo: index + 1
+        }
+        $('#tt2').datagrid('appendRow', field);
+        lastIndex2 = $('#tt2').datagrid('getRows').length - 1;
+        $('#tt2').datagrid('selectRow', lastIndex2);
+        $('#tt2').datagrid('beginEdit', lastIndex2);
+        Convert.focusEditor("tt2", field, lastIndex2);
+    }
+
+
+</script>

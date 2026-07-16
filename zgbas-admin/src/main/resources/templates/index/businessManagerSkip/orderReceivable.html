@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>库存查询</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/css/businessManageIndex.css}" rel="stylesheet"/>
+</head>
+<body class="easyui-layout">
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <input type="hidden" name="labelCode" id="labelCode" th:value="${labelCode}" />
+    <div style="display: flex;justify-content: flex-end;height: 40px;align-items: center">
+        <div>
+            <span class="bm-div-toggle-show" id="orderReceivableN" onclick="changeSpan('N')">即将到期</span>
+            <span class="bm-div-toggle-show" id="orderReceivableB" onclick="changeSpan('B')">宽限期</span>
+            <span class="bm-div-toggle-show" id="orderReceivableD" onclick="changeSpan('D')">催告期</span>
+            <span class="bm-div-toggle-show" id="orderReceivableS" onclick="changeSpan('S')">逾期</span>
+            <span class="bm-div-toggle-show" id="orderReceivableP" onclick="changeSpan('P')">诉讼</span>
+        </div>
+    </div>
+    <div style="height: 480px">
+        <table id="list" fit="true"
+               title="" iconCls="icon-edit" singleSelect="true"
+               idField="id">
+        </table>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var processListJson = eval('[(${processListJson})]');
+    var businessKindJson=eval('[(${businessKindJson})]');
+    var columns =[
+        {field:'contractNo',title:'合同编号',align:'center', width:120},
+        {field:'companyName',title:'客户名称',align:'left', width:150,formatter:function(value,row){
+                if (value){
+                    var s_str = value.split("有限公司");
+                    if (s_str) {
+                        value = s_str[0];
+                    }
+                    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                    return content;
+                }
+            }},
+        {field:'businessKind',title:'业务类型', width:80,align:'center',formatter:function(value,row,index){
+                return Convert.findValueByKey(businessKindJson,"dictCd",value,"dictName");
+            }},
+        {field:'totalAmount',title:'合同金额(元)',align:'right', width:100,formatter:formateNum},
+        {field:'noReceiveTotalAmount',title:'待收金额(元)',align:'right', width:100,formatter:formateNum},
+        {field:'appointPayFullTime',title:'约定回款日期',align:'center',width: 100},
+        {field:'creditCycle',title:'账期',align:'center',width: 80},
+        {field:'breachDays',title:'逾期天数',align:'center',width: 80},
+        {field:'breachAmount',title:'逾期金额（元）',align:'right',width: 100,formatter:formateNum},
+        {field:'noReceiveBreachAmount',title:'未收罚息（元）',align:'right',width: 100,formatter:formateNum},
+        // {field:'noReceiveTotalAmount',title:'待收金额合计（元）',align:'right',width: 130,formatter:formateNum},
+    ]
+    $(function(){
+        let labelCode =$("#labelCode").val()
+        $('#orderReceivable'+labelCode).addClass('active')
+        changeSpan(labelCode)
+    });
+    function changeSpan(labelCode){
+        // 给所有的 <span> 元素添加点击事件
+        $(".bm-div-toggle-show").click(function() {
+            // 移除所有的 active 类
+            $(".bm-div-toggle-show").removeClass("active");
+            // 为当前点击的 <span> 元素添加 active 类
+            $(this).addClass("active");
+        });
+        getDataShow(labelCode,columns)
+    }
+    function getDataShow(labelCode,columns){
+        $('#list').datagrid({
+            pagination:true,
+            pageSize:10,
+            height: 550,
+            rownumbers:true,
+            showFooter:true,
+            pageList:[10,20,30,40,50],
+            queryParams: {
+                // (数量-释放数量)库存数量大于0，且销售指导价不为空,且状态不失效R
+                labelCode:labelCode
+            },
+            method: 'post',
+            url:_ctx+"/business/manager/workbench/findSellContractReceivablePage",
+            columns:[columns],
+        });
+    }
+    /**
+     * 合同状态图标展示逻辑
+     */
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+</script>
+</body>
+<style>
+    .active {
+        background-color: #FFFFFF; /* 点击时的背景颜色 */
+    }
+</style>
+</html>

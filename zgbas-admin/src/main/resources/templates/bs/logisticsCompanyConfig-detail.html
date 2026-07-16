@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl80 pr20 pb15 ofh" border="false">
+        <form id="inputForms" method="post"  class="from-input-layout" >
+            <input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="carrier"  class="control-label">企业名称:</label>
+                    <input name="carrier" id="carrier"   type="text" th:value="${entity.carrier}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label for="licenseNumber"  class="control-label">营业执照号:</label>
+                    <input type="text" name="licenseNumber"  id="licenseNumber" th:value="${entity.licenseNumber}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="ourCompanyNames"  class="control-label">我方:</label>
+                    <input name="ourCompanyNames" id="ourCompanyNames" type="text" th:value="${entity.ourCompanyNames}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="contactName"  class="control-label">联系人:</label>
+                    <input name="contactName" id="contactName"   type="text" th:value="${entity.contactName}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="contactPhone"  class="control-label">联系电话:</label>
+                    <input name="contactPhone" id="contactPhone"   type="text" th:value="${entity.contactPhone}"/>
+                </p>
+            </div>
+
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="startDate"  class="control-label">合同签订日期:</label>
+                    <input name="startDate" id="startDate"  class="easyui-datebox" th:value="${#dates.format(entity.startDate,'yyyy-MM-dd')}" />
+                </p>
+                <p class="yw-table-filter">
+                    <label for="endDate"  class="control-label">合同到期日:</label>
+                    <input name="endDate" id="endDate"  class="easyui-datebox"   th:value="${#dates.format(entity.endDate,'yyyy-MM-dd')}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="enableFlg"  class="control-label">是否有效:</label>
+                    <input name="enableFlg" id="enableFlg"   type="text" th:value="${entity.enableFlg}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="averageScore"  class="control-label">评分:</label>
+                    <input name="averageScore" id="averageScore" readonly  type="text" th:value="${entity.averageScore}"/>
+                </p>
+            </div>
+
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="bankAccount"  class="control-label">银行账号:</label>
+                    <input name="bankAccount"  id="bankAccount" type="text" th:value="${entity.bankAccount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="bankName"  class="control-label">开户行:</label>
+                    <input name="bankName" id="bankName"   type="text" th:value="${entity.bankName}"/>
+                </p>
+            </div>
+
+            <div class="mb6">
+                <p class="yw-table-filter w4">
+                    <label for="address"  class="control-label">地址:</label>
+                    <input name="address"  id="address" type="text" th:value="${entity.address}"/>
+                </p>
+                <p class="yw-table-filter w4">
+                    <label for="remark"  class="control-label">备注:</label>
+                    <input name="remark"  id="remark" type="text" th:value="${entity.remark}"/>
+                </p>
+            </div>
+        </form>
+        <div  class="yw-table-tables" style="width:660px;height: 140px;margin-top: 20px;margin-left: -10px">
+            <div>
+                <div class="yw-table-tables">
+                    <table  id="allphisTable"
+                           title="" iconCls="icon-edit" singleSelect="true"
+                           idField="id" style="width:660px;max-height: 140px;margin-left: 20px" data-options="inline:true" class="yw-table-tables">
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div region="south" border="false" style="overflow: hidden;height: 60px;margin-left:  370px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="submit();">保存</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //var entityId=$("#id").val();
+    var enableFlgJson = eval('[(${enableFlgJson})]');
+    var ourCompanyJson = eval('[(${ourCompanyJson})]');
+
+    $(function(){
+        $('#enableFlg').combobox({
+            data:enableFlgJson,
+            valueField:'dictCd',
+            textField:'dictName',
+            panelHeight:"auto"
+        })
+        console.log(ourCompanyJson);
+        // $('#ourCompanyNames').combotree({
+        //     data:ourCompanyJson,
+        //     valueField:'dictCd',
+        //     textField:'dictName',
+        //     multiple:true,
+        //     editable:false,
+        //     required:true,
+        //     //cascadeCheck:false,
+        //     panelHeight:150,
+        //     onlyLeafCheck:true
+        // })
+        $('#ourCompanyNames').combobox({
+            data:ourCompanyJson,
+            valueField:'dictCd',
+            textField:'dictName',
+            editable:false,
+            required:true,
+            multiple:true,
+            panelHeight:275,
+            formatter: function (row) {
+                var opts = $(this).combobox('options');
+                return '<input style="margin-right:10px;" type="checkbox" class="combobox-checkbox ckbox">' + row[opts.textField]
+            },
+            onShowPanel: function () {
+                var opts = $(this).combobox('options');
+                var target = this;
+                var values = $(target).combobox('getValues');
+                $.map(values, function (value) {
+                    var el = opts.finder.getEl(target, value);
+                    el.find('input.combobox-checkbox')._propAttr('checked', true);
+                })
+            },
+            onLoadSuccess: function () {
+                var opts = $(this).combobox('options');
+                var target = this;
+                var values = $(target).combobox('getValues');
+                $.map(values, function (value) {
+                    var el = opts.finder.getEl(target, value);
+                    el.find('input.combobox-checkbox')._propAttr('checked', true);
+                })
+            },
+            onSelect: function (row) {
+                var opts = $(this).combobox('options');
+                var el = opts.finder.getEl(this, row[opts.valueField]);
+                el.find('input.combobox-checkbox')._propAttr('checked', true);
+            },
+            onUnselect: function (row) {
+                var opts = $(this).combobox('options');
+                var el = opts.finder.getEl(this, row[opts.valueField]);
+                el.find('input.combobox-checkbox')._propAttr('checked', false);
+            }
+        });
+
+        var carrier=$("#carrier").val();
+        debugger;
+        var _url = _ctx + "/bs/logisticsCompanyConfig/carrierDetail?carrier="+carrier;
+        $('#allphisTable').datagrid({
+            pagination: false,
+            pageSize: 10,
+            rownumbers: true,
+            pageList: [50, 40, 30, 20],
+            showFooter:false,
+            url: _url,
+            columns: [ [
+                {field: 'deliveryOutNo', title: '出库单号', align: 'left', width: 170},
+                {field: 'deliveryOutDate', title: '出库日期', align: 'left', width: 80},
+                {field: 'score', title: '综合评分', align: 'center', width: 90},
+                {field: 'evaluate', title: '评价描述', align: 'center', width: 290}
+            ]],
+        });
+
+    });
+    //保存
+    function submit(){
+       var ourCompanyName =  $("#ourCompanyNames").val();
+       debugger;
+            var entityId = $("#id").val();
+            if (entityId != null  && entityId !=0 && entityId != ""){//判断是否有id值，有则修改，无则添加
+                Edit();//修改方法
+            }else{
+                save();//添加方法
+            }
+
+
+
+
+
+    }
+    /* 修改方法 */
+    function Edit(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: _ctx+'/bs/logisticsCompanyConfig/updateConfig',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '修改成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#matchProfitsConfig_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+    /* 添加方法 */
+    function save(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: _ctx+'/bs/logisticsCompanyConfig/saveConfig',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '添加成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#matchProfitsConfig_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+
+</script>

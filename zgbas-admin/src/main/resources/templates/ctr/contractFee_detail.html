@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+<div class="easyui-layout" fit="true">	
+	<div region="center" border="false">
+		<form id="inputForm" method="post"  enctype="multipart/form-data" class="editForm from-input-layout">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="feeType"  class="control-label">费用类型:</label>
+					<input name="feeType" id="feeType" type="text" th:value="${entity.feeType}"></input>
+				</span>
+				
+				<span class="input-colspan">
+					<label for="contractNo"  class="control-label">合同编号:</label>
+					<input name="contractNo" id="contractNo" type="text" th:value="${entity.contractNo}" ></input>
+				</span>
+				</p>
+				<p class="p_text">
+				<!-- <span class="input-colspan">
+					<label for="bizUserName"  class="control-label">业务员:</label>
+					<input name="bizUserName" id="bizUserName" type="text" th:value="${entity.bizUserName}"></input>
+				</span> -->
+				<span class="input-colspan">
+					<label for="feeAmount"  class="control-label">金额（元）:</label>
+					<input name="feeAmount" id="feeAmount" type="number" th:value="${entity.feeAmount}"></input>
+				</span>
+				
+				<span class="input-colspan">
+					<label>费用日期:</label>
+					<input name="feeDate" id="feeDate" class="easyui-datebox"   th:value="${#dates.format(entity.feeDate,'yyyy-MM-dd')}"></input>
+				</span>
+			</p>
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="assumePerson"  class="control-label">承担人:</label>
+					<input name="assumePerson" id="assumePerson" type="text" th:value="${entity.assumePerson}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="feeRate"  class="control-label">费率:</label>
+					<input name="feeRate" id="feeRate" type="text" th:value="${entity.feeRate}"></input>
+				</span>
+			</p>
+			<p class="p_text">
+				<span class="input-colspan2">
+					<label for="remark">备注:</label>
+					<input name="remark" id="remark" type="text"  th:value="${entity.remark}"></input>
+				</span>
+			</p>
+			<div class="editForm pl16"> 
+				<p>
+					<span class="upload-btn" id="btn_fileId">
+						<i></i>
+		               	<span>附件上传</span>
+		           	</span>
+					<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+				</p>
+				<p class="controls showImg fileId" id="span_fileId"></p>
+			</div>
+		</form>
+	</div>
+	<div region="south" border="false" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+			<span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" id="save" onclick="save()">保存</span>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/ctr/contractFee/updateFileId',true);
+$(function(){
+	//费用类型
+	$("#feeType").combobox({
+		data : _contractFeeType,
+		textField : 'dictName',
+		valueField : 'dictCd',
+		panelHeight : "auto",
+		required: true ,
+		onSelect:function(data){
+			if(data.dictCd=='DFWF' || data.dictCd=='TF' ||data.dictCd=='LF' ||data.dictCd=='TMF'){
+				$("#feeRate").combobox('setValue',_contractFeeRate[2].dictCd)
+			}else if(data.dictCd=='WF' || data.dictCd=='RKF' ||data.dictCd=='HZF' ||data.dictCd=='WMF'){
+				$("#feeRate").combobox('setValue',_contractFeeRate[1].dictCd)
+			}
+		}
+	});
+	//费用日期
+	$('#feeDate').datebox({
+		required: true
+	}); 
+	//合同编号
+	$("#contractNo").textbox({
+		required: true
+	});
+	//业务员
+	$("#bizUserName").textbox({
+		required: true
+	});
+	//金额
+	$("#feeAmount").textbox({
+		required: true
+	});
+	
+	//承担人
+	$("#assumePerson").textbox({
+		required: true
+	});
+	//费率
+	 $("#feeRate").combobox({
+		data : _contractFeeRate,
+		textField : 'dictName',
+		valueField : 'dictCd',
+		panelHeight : "auto",
+		required: true,
+		editable:false
+	});
+	
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($("#btn_fileId").length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+});
+
+function save() {
+	var options = {
+		url : _ctx + '/ctr/contractFee/saveContractFee',
+		onSubmit : function() {
+			var flag = $("#inputForm").form('validate');
+			if (!flag) {
+				$.messager.alert('提示','请填写完整','info');
+			}
+			return flag;
+		},
+		success : function(data) {
+			/* var result = eval('(' + data + ')');
+			 if (data.success) {
+				$.messager.show({
+					title : 'Tip',
+					msg : '保存成功',
+					timeout : 2000,
+					showType : 'show'
+				});
+				$('#w').window("close");
+				$('#tt').datagrid('reload');
+			} else {
+				$.messager.alert('error', data.failure, 'warning');
+			}  */
+			$.messager.show({
+				title : 'Tip',
+				msg : data,
+				timeout : 2000,
+				showType : 'show'
+			});
+			$('#w').window("close");
+			$('#tt').datagrid('reload');
+		}
+	}
+	$('#inputForm').form('submit', options);
+}
+</script>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+ <div>
+   <input type="hidden" id="contractId" th:value="${contractId}" />
+   <table id="lossTable" 
+		title="" iconCls="icon-edit" singleSelect="true"
+		idField="id">
+	</table>
+</div>
+<script type="text/javascript">
+$(function(){
+	var _contractId = $("#contractId").val();
+	var _url = _ctx+"/ctr/contract/detailLossLog/"+_contractId;
+	$('#lossTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:[ [
+			{field:'contractId',title:'合同ID',align:'center',width:100},
+			{field:'lossNum',title:'损耗数量',align:'center',width:100},
+			{field:'lossAmount',title:'损耗金额(元)',align:'center',width:100},
+			/* {field:'fileId',title:'附件Id',align:'center',width:80}, */
+			{field:'remark',title:'备注',align:'center',width:210},
+			{field:'createdDate',title:'创建时间',align:'center',width:130},
+			{field:'updatedDate',title:'修改时间',align:'center',width:130},
+		]]
+	});
+	
+})
+</script>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+        <form id="inputForms" method="post"  class="from-input-layout" >
+            <input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="configName"  class="control-label">配置名称:</label>
+                    <input type="text" name="configName" class="easyui-validatebox" required="true" id="configName" th:value="${entity.configName}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label for="configKey"  class="control-label">配置项:</label>
+                    <input name="configKey" class="easyui-validatebox" id="configKey" required="true"  type="text" th:value="${entity.configKey}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w4">
+                    <label for="configValue"  class="control-label">配置内容:</label>
+                    <textarea name="configValue" style="width:640px;height: 360px;font-size: 14px;line-height: 1.7em;padding: 10px;" id="configValue" required="true" class="easyui-validatebox control textarea-middle" th:text="${entity.configValue}"></textarea>
+                </p>
+            </div>
+        </form>
+    </div>
+
+
+    <div region="south" border="false" style="overflow: hidden;height: 30px;margin-left:  320px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" id="submitBtn" onclick="submit();">保存</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+    });
+    //保存
+    function submit(){
+        let configName = $("#configName").val();
+        let configKey = $("#configKey").val();
+        let configValue = $("#configValue").val();
+        let id = $("#id").val();
+        if(configName === '' || configName === undefined || configName === null){
+            $.messager.alert({
+                    title:'提示',
+                    msg:'配置名称不能为空'
+            });
+            return;
+        }
+        if(configKey === '' || configKey === undefined || configKey === null){
+            $.messager.alert({
+                title:'提示',
+                msg:'配置项不能为空'
+            });
+            return;
+        }
+        if(configValue === '' || configValue === undefined || configValue === null){
+            $.messager.alert({
+                title:'提示',
+                msg:'配置内容不能为空'
+            });
+            return;
+        }
+        if (id !== null && id !== undefined && id !== '' && id !== '0') {
+            Edit();//修改方法
+        } else {
+            save();//添加方法
+        }
+    }
+    /* 修改方法 */
+    function Edit(){
+        let configName = $("#configName").val();
+        let configKey = $("#configKey").val();
+        let configValue = $("#configValue").val();
+        let id = $("#id").val();
+        let data = {
+            configName:configName,
+            configKey:configKey,
+            configValue:configValue,
+            id:id
+        };
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: _ctx + '/bs/productConfig/updateConfig',
+            data: data,
+            success: function (data){
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '修改成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#projectConfig_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+        })
+    }
+    /* 添加方法 */
+    function save(){
+        let configName = $("#configName").val();
+        let configKey = $("#configKey").val();
+        let configValue = $("#configValue").val();
+        let data = {
+            configName:configName,
+            configKey:configKey,
+            configValue:configValue
+        };
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: _ctx + '/bs/productConfig/updateConfig',
+            data: data,
+            success: function (data){
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '添加成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#projectConfig_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+        })
+    }
+
+</script>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>人员成本堆叠图</title>
+	<th:block th:include="include :: header('人员成本图表')" />
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+	<th:block th:include="include :: echarts-js" />
+	<script th:src="@{/static/ruoyi/js/common.js?v=4.7.3}"></script>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 80px;">年月:</label>
+				<input name="searchMonth" class="easyui-validatebox" id="searchMonth" type="text" th:value="${nowTargetMonth}"/>
+			</p>
+<!--			<p class="yw-table-filter mobile-display-none">-->
+<!--				<label>业务类型</label>-->
+<!--				<input  type="text" id="businessType" class="control text_padding" name="businessType"/>-->
+<!--			</p>-->
+			<a class="easyui-linkbutton addBtn btn110" id="businessLicenseC" onclick="initGrossProfitMarginEcharts()" style="margin-left: 60px;">查询</a>
+		</div>
+	</form>
+</div>
+
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+
+	<div class="col-xs-12" id="grossProfitMarginDiv" style="height: 100%;">
+		<div class="ibox" style="margin-left: -5px;height: 100%;">
+			<div class="ibox-title">
+				<h5>人员成本堆叠图表（月）</h5>
+			</div>
+			<div class="imbox-content hgt90-bfb echarts" id="personCostChart" style="padding-right:30px;" >
+			</div>
+		</div>
+	</div>
+
+</div>
+</div>
+
+<script type="text/javascript">
+	var lastIndex=0;
+
+	$(function(){
+		$('#searchMonth').datebox({
+			editable: false,
+			onChange: function(newValue, oldValue) {
+				initGrossProfitMarginEcharts();
+			}
+		});
+		intiMonthBox('searchMonth');
+		initGrossProfitMarginEcharts();
+	});
+	function initGrossProfitMarginEcharts() {
+		const formatNumber = (value) => {
+			return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+		};
+
+		var $personCostChart = document.getElementById('personCostChart');
+		var myChart = echarts.init($personCostChart);
+		var option;
+
+
+		// const rawData = [
+		// 	[100, 302, 301, 334],
+		// 	[320, 132, 101, 134],
+		// 	[220, 182, 191, 234],
+		// 	[150, 212, 201, 154],
+		// 	[820, 832, 901, 934],
+		// 	[250, 200, 150, 180]
+		// ];
+		let rawData = [];
+		// 工资
+		let wagesData = [];
+		// 提成绩效
+		let commissionData = [];
+		// 五险一金 （社保 + 公积金）
+		let socialSecurityData = [];
+		// 出差报销费用
+		let evectionCostData = [];
+		// 其它费用
+		let otherCostData = [];
+		let personCountData = [];
+
+		let topTitleDate = '2024年9月';
+		let rawDataTitle = ['工资', '提成绩效', '五险一金', '其他(出差报销+其他)'];
+		rawDataTitle.push('');
+		const lastIndex = rawDataTitle.length - 1;
+		// const xData = ['华北', '华东', '华南', '华中'];
+		const xData = [];
+
+		// 查询数据填充
+		$.ajax({
+			type: 'post',
+			async: false,
+			url: _ctx+'/person/cost/chart/getPersonCostChartData',
+			data: Convert.getJson4Form('searchForm'),
+			success: function (response) {
+				let length = response.length;
+				const dataMap = {};
+				for (let i = 0; i < length; i++) {
+					wagesData.push(response[i].wages);
+					commissionData.push(response[i].commission);
+					socialSecurityData.push(response[i].socialSecurity);
+					evectionCostData.push(response[i].evectionCost);
+					otherCostData.push(response[i].otherCost);
+					personCountData.push(response[i].personCount);
+					xData.push(response[i].branchName);
+					topTitleDate = response[i].topTitleDate;
+				}
+				rawData.push(wagesData);
+				rawData.push(commissionData);
+				rawData.push(socialSecurityData);
+				// rawData.push(evectionCostData);
+				rawData.push(otherCostData);
+				rawData.push(personCountData);
+			},
+			error: function () {
+				console.log("出错了！")
+			}
+		});
+
+		const colors = [
+			'#6386F8',
+			// '#FFB92F',
+			'#00C6A8',
+			'#FB954E',
+			'#BC77F5',
+			'#FFFFFF'
+		]; // 颜色数组
+
+		const totalData = [];
+		for (let i = 0; i < rawData[0].length; ++i) {
+			let sum = 0;
+			for (let j = 0; j < rawData.length; ++j) {
+				sum += rawData[j][i];
+			}
+			totalData.push(sum);
+		}
+		const grid = {
+			left: 100,
+			right: 100,
+			top: 50,
+			bottom: 50
+		};
+		const series = rawDataTitle.map(
+				(name, sid) => {
+					return {
+						name,
+						type: 'bar',
+						stack: 'total',
+						barWidth: '60%',
+						label: {
+							show: true,
+							position: sid === lastIndex ? 'insideBottom' : 'inside',
+							offset: sid === lastIndex ? [0, -10] : [0, 0],
+							formatter: (params) => {
+								if (params.value === 0) return '';
+								if (sid === lastIndex) {
+									return `${
+											xData[params.dataIndex]
+									}：${params.value} 人`; // 最后一个柱子显示类别名称
+								}
+								return `¥ ${formatNumber(params.value)}`;
+							},
+							color: '#000000'
+						},
+						data: rawData[sid], // 直接使用原始数据
+						itemStyle: {
+							color: sid === lastIndex ? 'rgba(255, 255, 255, 0)' : colors[sid]
+						}
+					};
+				}
+		);
+		option = {
+			title: {
+				text: topTitleDate + '用人成本占比：单元（元）', // 设置标题内容
+				left: 'center', // 设置标题在左侧
+				top: 'top', // 设置标题在顶部
+				textStyle: {
+					fontSize: 16,
+					color: '#333' // 设置字体颜色
+				}
+			},
+			legend: {
+				selectedMode: true,
+				bottom: 0, // 设置图例在底部
+				orient: 'horizontal' // 设置图例为水平排列
+			},
+			grid,
+			yAxis: {
+				type: 'value',
+				name: '单位（元）',
+				axisLabel: {
+					formatter: (value) => `¥ ${formatNumber(value)}` // 在每个纵坐标值前添加 ¥
+				}
+			},
+			xAxis: {
+				type: 'category',
+				data: xData
+			},
+			series
+		};
+
+		option && myChart.setOption(option);
+		window.addEventListener("resize",function(){
+			myChart.resize();
+		});
+	}
+
+	function intiMonthBox(id){
+		var db = $('#'+id);
+		db.datebox({
+			onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+				span.trigger('click'); //触发click事件弹出月份层
+				if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+					tds = p.find('div.calendar-menu-month-inner td');
+					tds.click(function (e) {
+						e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+						var year = /\d{4}/.exec(span.html())[0]//得到年份
+								, month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+						db.datebox('hidePanel')//隐藏日期对象
+								.datebox('setValue', year + '-' + month); //设置日期的值
+					});
+				}, 0);
+				yearIpt.unbind();//解绑年份输入框中任何事件
+			},
+			parser: function (s) {
+				if (!s) return new Date();
+				var arr = s.split('-');
+				return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+			},
+			formatter: function (d) {
+				let year = d.getFullYear();
+				let month = d.getMonth() + 1;
+				if (month < 10) {
+					month = '0' + month;
+				}
+				return year + '-' + month;
+			}
+		});
+		var p = db.datebox('panel'), //日期选择对象
+				tds = false, //日期选择对象中月份
+				yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+				span = p.find('span.calendar-text'); //显示月份层的触发控件
+	}
+
+</script>
+<style scoped>
+
+</style>
+</body>
+</html>

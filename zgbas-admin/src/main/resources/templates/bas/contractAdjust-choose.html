@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true" style="width:100%;height:500px;">
+<div region="north" class="search_div" border="false" style="overflow: hidden;">
+	<form id="frm_stockDetail_choose" class="form-search from-input-layout" method="post">
+
+		<!-- 合同调整业务选择库存明细条件 -->
+		<input type="hidden" name="search_EQS_productCd" th:value="${param.productCd}"/>
+		<input type="hidden" name="search_GTM_availableNumber" th:value="${param.availableNumber}"/>
+		<input type="hidden" name="search_EQM_deliveryOutNumber" th:value="0"/>
+		<input type="hidden" name="search_EQS_brandNumber" th:value="${param.brandNumber}"/>
+		<input type="hidden" name="search_EQL_factoryId" th:value="${param.factoryId}"/>
+
+		<!-- 出库业务选择库存明细条件 -->
+		<input type="hidden" name="productCd" th:value="${param.productCd}"/>
+		<input type="hidden" name="warehouseName" th:value="${param.warehouseName}"/>
+		<input type="hidden" name="totalNumber" th:value="${param.totalNumber}" id = "totalNumber"/>
+		<input type="hidden" name="productAttr" th:value="${param.productAttr}"/>
+	</form>
+</div>
+
+<div region="center" border="false">
+	<table id="tt_choose" style="height:340px;"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id" fit="true">
+	</table>
+</div>
+
+<div region="south" border="false" style="overflow: hidden;height: 40px;">
+	<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn-info" onclick="ContractChoose.confirmChoose();">确&nbsp;认</a>
+		<a href="#" class="easyui-linkbutton btn-danger" onclick="ContractChoose.closeCurrentWin();">关&nbsp;闭</a>
+	</div>
+</div>
+</div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var productAttrJson=eval('[(${productType})]');
+	var _url = _ctx+"/bas/stockDetail/list";
+	if($("#totalNumber").val()){
+		_url = _ctx+"/bas/stockDetail/findByCondition";
+	}
+	$(function(){
+		var columns =[ [
+			{field:'productName',title:'品名', width:100},
+			{field:'brandNumber',title:'牌号', width:100},
+			{field:'factoryName',title:'厂商名称', width:150},
+			{field:'warehouseName',title:'仓库名称', width:150},
+			{field:'deliveryInNumber',title:'入库数量(吨)', width:90,align:'right'},
+			{field:'availableNumber',title:'可用数量(吨)', width:90,align:'right'},
+			{field:'frozenNumber',title:'冻结数量(吨)', width:90,align:'right'},
+			{field:'dealPrice',title:'单价(元)', width:90,align:'right'},
+			{field:'productAttr',title:'产品类型', width:90,align:'center',
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(productAttrJson,"dictCd",value,"dictName")
+			}},
+			{field:'bizUserName',title:'业务员',width:80},
+			{field:'createdDate',title:'创建时间',width:140}
+		]];
+		if (_industry.indexOf('SL')==-1){
+			for(var i in columns[0]){
+				var col =columns[0][i];
+				if (col.field=='brandNumber' || col.field=='factoryName'){
+					col.hidden = true;
+				}
+			}
+		}
+		$('#tt_choose').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[500,200,100,50,30,20],
+			singleSelect:true,
+			queryParams:Convert.getJson4Form('frm_stockDetail_choose'),
+			url:_url,
+			columns:columns,
+			onSelect:function(index,row){
+				var selectedRows = $('#tt_choose').datagrid('getSelections');
+				if(selectedRows.length>10){
+					$.messager.alert('提示','最多只能选择10条商品记录！','info');
+					return;
+				}
+				ContractChoose.selected.push(row);
+			},
+			onUnselect:function(index,row){
+				ContractChoose.removeSelected(row);
+			}/* ,
+			onLoadSuccess:function(data){
+			} */
+		});
+
+	});
+
+	var ContractChoose={
+			selected:[],
+			ischeckItem:function () {
+		        for (var i = 0; i < ContractChoose.selected.length; i++) {
+		            $('#tt_choose').datagrid('selectRecord', ContractChoose.selected[i]); //根据id选中行
+		        }
+			},
+			removeSelected:function(row){
+				for(var i=0; i<ContractChoose.selected.length; i++) {
+				    if(ContractChoose.selected[i].id == row.id) {
+				    	ContractChoose.selected.splice(i, 1);
+				      	break;
+				    }
+				  }
+			},
+			confirmChoose:function(){
+				var selectedRows=ContractChoose.selected;
+		    	var callbackExec = $('#w_stockDetail_choose').attr('callbackExec');
+		    	var myfunc = eval(callbackExec);
+		    	if(typeof(myfunc) == "function"){
+		    		myfunc(selectedRows);
+		    	}
+		    	ContractChoose.closeCurrentWin();
+			},
+
+			closeCurrentWin:function(){
+				$('#w_stockDetail_choose').window('close');
+			}
+
+
+		}
+</script>
+</html>

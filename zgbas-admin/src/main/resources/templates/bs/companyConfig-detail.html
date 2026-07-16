@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+        <form id="inputForm" method="post"  class="from-input-layout">
+            <input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+            <div class="mb6">
+                <p class="yw-table-filter w3">
+                    <label for="bsCompanyName"  class="control-label">企业名称:</label>
+                    <input name="bsCompanyName" id="bsCompanyName" required="required" type="text" th:value="${entity.bsCompanyName}"/>
+                    <input name="bsCompanyId" id="bsCompanyId" required="required" type="hidden" th:value="${entity.bsCompanyId}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="matchUserName"  class="control-label">业务员:</label>
+                    <input name="matchUserName" id="matchUserName" required="required" type="text" th:value="${entity.matchUserName}"/>
+                    <input name="matchUserId" id="matchUserId" required="required" type="hidden" th:value="${entity.matchUserId}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="serviceRate"  class="control-label">资金服务费率:</label>
+                    <input type="number" name="serviceRate" id="serviceRate" th:value="${entity.serviceRate}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="overdueRate"  class="control-label">逾期罚息费率:</label>
+                    <input name="overdueRate" id="overdueRate" type="number" th:value="${entity.overdueRate}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="profitRate"  class="control-label">盈利限制费率:</label>
+                    <input name="profitRate" id="profitRate" type="number" th:value="${entity.profitRate}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="insuranceRate"  class="control-label">保险费率:</label>
+                    <input name="insuranceRate" id="insuranceRate" type="number" th:value="${entity.insuranceRate}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="sellCommissionRate"  class="control-label">销售提成比例:</label>
+                    <input type="number" name="sellCommissionRate" id="sellCommissionRate" th:value="${entity.sellCommissionRate}"/>
+                </p>
+            </div>
+        </form>
+    </div>
+    <div region="south" border="false" style="overflow: hidden;height: 40px;padding-left:200px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveCompanyConfig();">保存配置</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var _companyId = $("#bsCompanyId").val();
+    var _matchUserNameTree = eval('[(${matchUserNameTree})]');
+    $(function(){
+        $("#serviceRate,#insuranceRate,#overdueRate,#sellCommissionRate,#profitRate").numberbox({
+            precision:8,
+            required: false
+        });
+
+        $('#matchUserName').combotree({
+            data: _matchUserNameTree,
+            multiple : false,
+            editable : true,
+            required:true,
+            formatter:function(node){
+                var enableFlg = node.attributes.enableFlg;
+                if (enableFlg==false){
+                    return '<span style="color:red;">'+node.text+'(无效)</span>';
+                }
+                return node.text;
+            },
+            onSelect : function(node){
+                if(node.children.length!=0){
+                    $('#matchUserName').combotree('clear');
+                }else{
+                    var value = node.id;
+                    var value1 = value.replace('user','');
+                    $("#matchUserId").val(value1);
+                    $('#matchUserName').combotree('setValue',node.text);
+                }
+            }
+        });
+
+        if (!_companyId){
+            _companyId = 0;
+        }
+        $('#bsCompanyName').combobox({
+            url:_ctx+"/bs/company/listCompany/"+ _companyId,
+            mode:'remote',
+            limitToList:true,
+            valueField:'companyName',
+            textField:'text',
+            panelHeight:300,
+            required:true,
+            onSelect : function(node){
+                var _id = node.id;
+                $("#bsCompanyId").val(_id);
+            }
+        });
+    });
+    //保存
+    function saveCompanyConfig(){
+        var _url = _ctx + "/bs/companyConfig/saveCompanyConfig";
+        var options = {
+            url: _url,
+            success: function (data) {
+                var rObj = eval('(' + data + ')');
+                if (rObj.success) {
+                    $.messager.show({
+                        title : '提示',
+                        msg : '配置保存成功!',
+                        timeout : 2000,
+                        height:120,
+                        showType : 'show'
+                    });
+                    $('#w').window("close");
+                    $('#tt').datagrid('reload');
+                } else {
+                    var failure = rObj.failure;
+                    $.messager.alert('提示', failure, 'warning');
+                    onClickFlg = true;
+                    $('#tt').datagrid('reload');
+                }
+            }
+        };
+        $('#inputForm').form('submit', options);
+    }
+</script>

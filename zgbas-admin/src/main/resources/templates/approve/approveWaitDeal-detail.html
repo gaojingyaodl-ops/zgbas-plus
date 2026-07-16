@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css?v=5565}" type="text/css" rel="stylesheet" />
+<style>
+    .btn_disable{background-color: #C0C0C0;}
+</style>
+<div region="north" class="search_div pt20	pl20 pr20 ofh" border="false">
+    <div region="center" border="false">
+        <form id="inputForms" method="post"  enctype="multipart/form-data" class="editForm from-input-layout">
+            <input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="dealTypex"  class="control-label">事项类型:</label>
+                    <input name="dealType" id="dealTypex" type="text" th:value="${entity.dealType}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="relaDeptId"  class="control-label">接收部门:</label>
+                    <input name="relaDeptId" id="relaDeptId" type="text"  th:value="${entity.relaDeptId}" ></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="relaUserId"  class="control-label">接收人:</label>
+                    <input name="relaUserId" id="relaUserId" type="text" th:value="${entity.relaUserId}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="completeFlg"  class="control-label">需处理:</label>
+                    <input name="completeFlg" id="completeFlg" type="text" th:value="${entity.completeFlg}"></input>
+                </p>
+
+            </div>
+            <div>
+
+                <label for="subject"  class="control-label"></label>
+
+<!--                <input name="subject" style="width:700px;height:385px;;" id="subject" class="easyui-validatebox control textarea-middle" th:text="${entity.subject}"></input>-->
+                <textarea name="subject" style="width:700px;height:385px;;" id="subject" class="easyui-validatebox control textarea-middle" th:text="${entity.subject}"></textarea>
+            </div>
+        </form>
+    </div>
+    <div region="south" border="false" style="overflow: hidden;height: 40px;padding-top:10px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" id="save" onclick="save()">保存</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var completeFlg = eval('[(${completeFlg})]');//完成状态
+    var dealType = eval('[(${dealType})]');//通知类型
+    var deptJson=eval('[(${matchDeptNameTree})]');
+    var matchUserJson = eval('[(${matchUserNameTree})]');
+    console.log("部门ID")
+    console.log(deptJson)
+    console.log("人员ID")
+    console.log(matchUserJson)
+    $(function(){
+        //通知类型
+        $("#dealTypex").combobox({
+            data : dealType,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            panelHeight:"auto",
+            required: true,
+            editable : false,
+            value:"通知"
+        });
+        $('#relaDeptId').combotree({
+            data : deptJson,
+            multiple : true,
+            editable : true,
+            required: true,
+            onLoadSuccess:function (node,data){
+                var t = $(this);
+                t.tree('expandAll');
+
+            },
+            onClick : function(node) {
+                console.log(node.children.length)
+                if (node.children.length != 0) {
+                    $('#matchDeptNameTree').combotree('clear');
+
+                }
+                if ($('#relaDeptId').val() != ''){
+                    $("#relaUserId").combotree({ disabled: true })
+                }else {
+                    $("#relaUserId").combotree({ disabled: false })
+                }
+
+            },
+
+        });
+        $("#completeFlg").combobox({
+            data : completeFlg,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            panelHeight:"auto",
+            required: true,
+            editable : false,
+            value:"2"
+        });
+        $('#relaUserId').combotree({
+            data : matchUserJson,
+            multiple : true,
+            editable : true,
+            required: true,
+            onClick : function(node) {
+                console.log(node)
+                if (node.children.length != 0) {
+                    $('#matchUserNameTree').combotree('clear');
+                }
+                if ($('#relaUserId').val() != ''){
+                    $("#relaDeptId").combotree({ disabled: true })
+                }else {
+                    $("#relaDeptId").combotree({ disabled: false })
+                }
+
+
+            }
+        });
+    });
+
+    function save() {
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: 'waitDeal/saveWaitDeal',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '添加成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                }
+                $("#matchProfitsConfig_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+</script>

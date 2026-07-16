@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>合同管理</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>花旗订单编号</label>
+				<input  class="control"  type="text" name="search_LIKES_outOrderNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同编号</label>
+				<input  class="control"  type="text" name="search_LIKES_contractNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>业务员</label>
+				<input type="text" id="matchUserName" class="control text_padding" name="search_LIKES_matchUserName"></input>
+			</p>
+			<span class="btn-group">
+				<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</div>
+		<div class="mb6 mt20">
+
+		</div>
+
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+		   title="" iconCls="icon-edit" singleSelect="true"
+		   idField="id">
+	</table>
+</div>
+
+<script type="text/javascript">
+	var lastIndex=0;
+	var deliveryModeJson =eval('[(${deliveryModeJson})]');
+	var payTypeJson =eval('[(${payTypeJson})]');
+
+
+
+	$(function(){
+
+
+
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:false,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/hq/externalOrder/findExternalOrderDetailLoading",
+			columns:[ [
+				 {field:'eid', title:'',align:'center',hidden:false,width: 30},
+				{field:'outOrderNo',title:'花旗商品订单编号',align:'left',width:150},
+				{field:'contractNo', title:'中光合同编号',align:'center',width:120},
+				{field:'contractType', title:'合同类型',align:'center',width:100,formatter:function(value,row,index){
+						var str = ""
+						if (value == "S"){
+							str = "销售合同";
+						}else{
+							str = "采购合同";
+						}
+						return str;
+					} },
+				{field:'companyName', title:'企业客户名称',align:'center',width:120},
+				{field:'deliveryType', title:'交货方式',align:'center',width:100,formatter:function(value,row,index){
+						return Convert.findValueByKey(deliveryModeJson,"dictCd",value,"dictName");
+					}   },
+				{field:'bondRate', title:'定金比例',align:'center',width:100,formatter:function(value,row,index){
+						return value;
+					}  },
+				{field:'bondAmount', title:'定金金额',align:'center',width:100},
+				{field:'totalAmount', title:'合同总金额',align:'center',width:100},
+				{field:'payFullDate', title:'付全款日期',align:'center',width:100},
+				{field:'payBondDate', title:'付定金日期',align:'center',width:100},
+				{field:'deliveryDate', title:'交货日期',align:'center',width:100},
+				// {field:'deliveryPhone', title:'交货电话',align:'center',width:100},
+				// {field:'deliveryAddr', title:'交货地址',align:'center',width:100},
+				{field:'transportAmount', title:'运输费',align:'center',width:100},
+				{field:'warehouseAmount', title:'仓储费',align:'center',width:100},
+				{field:'payType', title:'支付方式',align:'center',width:100,formatter:function(value,row,index){
+						return Convert.findValueByKey(payTypeJson,"dictCd",value,"dictName");;
+					}   },
+				{field:'sellPrice', title:'销售价',align:'center',width:100},
+				{field:'matchUserName', title:'业务员',align:'center',width:100},
+				{
+					field: 'option', title: '操作', align: 'left', width: 100, formatter: function (value, row, index) {
+						var str = "";
+						if (row.fileId != "" && row.fileId != null) {
+							str += '<span onclick="showFile(' + row.fileId + ')" class="contract-btn contract-btn-5">查看附件</span>';
+						}
+						return  str;
+					}
+				},
+			]],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				$(".tip").tooltip(
+						{
+							onShow: function(){
+								$(this).tooltip('tip').css({
+									width:'400',
+									boxShadow: '1px 1px 3px #292929'
+								});
+							}
+						}
+				);
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+
+				//合并datagrid行
+				var mark = 1;
+				for (var i = 1; i < data.rows.length; i++) {
+					if (data.rows[i]['eid'] == data.rows[i - 1]['eid'] && data.rows[i]['eid'] != null
+							&& data.rows[i]['eid'] != "") {
+						mark += 1;
+						$("#tt").datagrid('mergeCells', {
+							index: i + 1 - mark,
+							field: 'eid',
+							rowspan: mark
+						});
+
+					} else {
+						mark = 1;
+					}
+				}
+			}
+		});
+
+	});
+
+
+
+
+
+
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+
+	function formateNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+
+
+</script>
+
+</body>
+</html>

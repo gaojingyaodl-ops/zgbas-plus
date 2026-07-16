@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+<div region="north"  border="false">
+	<form id="proForm" class="from-input-layout" method="post" action="/pm/process/save">
+	 <input type="hidden" id="processId" name="id" th:value="${entity.id == null ? 0 : entity.id}"/>
+	 	<div class="mb6">
+	 		<p class="yw-table-filter">
+	 			<label>流程代码:</label>
+				<input data-options="required:true" name="processCode" type="text" th:value="${entity.processCode}"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>流程名称:</label>
+				<input data-options="required:true" type="text" name="processName" th:value="${entity.processName}"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>内容地址:</label>
+				<input type="text" name="contentUrl" th:value="${entity.contentUrl}"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>实体名称:</label>
+				<input name="entityName" type="text" th:value="${entity.entityName}"/>
+	 		</p>
+			<p class="yw-table-filter">
+				<label>审批服务名称:</label>
+				<input type="text" name="entityService" th:value="${entity.entityService}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label></label>
+				<span onchange="$(this).toggleClass('on')" th:class="${entity.viewFlg} ? 'ckbox on' : 'ckbox'">
+					<input type="checkbox" th:checked="${entity.viewFlg}" onchange="$('#viewFlg').val($(this).attr('checked')=='checked');"/>
+           			<span>控制权限</span>
+           			<input type="hidden" name="viewFlg" th:value="${entity.viewFlg}" id="viewFlg" />
+				</span>
+			</p>
+	 	</div>
+	 	<div class="mb6">
+	 		<p class="yw-table-filter">
+	 			<label>保存服务名称:</label>
+				<input type="text" name="listenerService" th:value="${entity.listenerService}"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>序号:</label>
+				<input type="text" id="dispOrderNo" name="dispOrderNo" th:value="${entity.dispOrderNo}"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>备注:</label>
+				<input type="text" name="remark" th:value="${entity.remark}"/>
+	 		</p>
+			<p class="yw-table-filter">
+				<label>发起人提示:</label>
+				<input type="text" name="sponsorTips" th:value="${entity.sponsorTips}"/>
+			</p>
+			<p class="yw-table-filter">
+				<lable>流程分组:</lable>
+				<input name="processGroup" id="processGroupa" type="text" th:value="${entity.processGroup}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label></label>
+				<span onchange="$(this).toggleClass('on')" th:class="${entity.enableFlg} ? 'ckbox on' : 'ckbox'">
+					<input type="checkbox" th:checked="${entity.enableFlg}" onchange="$('#enableFlg').val($(this).attr('checked')=='checked');"/>
+           			<span>是否有效</span>
+           			<input type="hidden" name="enableFlg" th:value="${entity.enableFlg}" id="enableFlg" />
+				</span>
+			</p>
+	 	</div>
+	</form>
+</div>
+<div id="boxDiv" class="easyui-tabs btds mt15 pt15 pb40 popup-tab">
+	<div class="mt10 yw-menu-section" title="流程条件配置">
+		<div style="height:250px;">
+			<a href="#" class="easyui-linkbutton mb6" data-options="iconCls:'icon-add'," onclick="insert()">新增条件</a>
+			<table id="ta" fit="true" title="" singleSelect="true" idField="id" class="mt20 yw-menu-section"></table>
+		</div>
+		<div style="height: 220px;">
+			<a href="#" class="easyui-linkbutton mb6" data-options="iconCls:'icon-add'," onclick="insert1()">新增节点</a>
+			<table id="tb" fit="true" title="" singleSelect="true" idField="id" class="mt20 yw-menu-section"></table>
+		</div>
+		<div class="mt15">
+			<a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveProcess();">保存</a>
+		</div>
+	</div>
+	<div class="mt10 yw-menu-section" title="额外条件配置" th:href="@{/pm/processAutoStep/findAutoStep/}+${entity.id == null ? 0 : entity.id}"></div>
+</div>
+</div>
+<script type="text/javascript">
+	var lastIndex;
+	var tbLastIndex;
+	var _taIndexId="";
+	var enableFlgs =eval('[(${enableFlgs})]');
+	var processGroupJson =eval('[(${processGroup})]');
+	var stepGroupTypeJson =eval('[(${stepGroupType})]');
+	var _curStepUrl="";
+	$(function(){
+		var _taUrl = "";
+		var _processId = $("#processId").val();
+		if(_processId!=""&&_processId!="0"){
+			_taUrl = _ctx+"/pm/processCondition/list?search_EQL_processId="+_processId;
+		}
+		var nodeTypeJson ;
+		//获取流程节点list
+		$.ajax({url:_ctx+"/pm/processNode/nodeList",
+			async : false,
+			success :function(result){
+				nodeTypeJson = eval(result);
+			}
+		});
+		//获取流程分组
+		$('#processGroupa').combobox({
+			data:processGroupJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false,
+			onLoadSuccess:function(data){
+				var value = $(this).val();
+				if (!value){
+					$(this).combobox('setValue',data[0].dictCd);
+				}
+			}
+		});
+
+
+		$('#dispOrderNo').numberbox({
+ 		    min:0,
+ 		    precision:0,
+ 		   required: true
+ 		});
+
+		$("#pro_en_flg").combobox({
+			data:enableFlgs,
+			textField:'dictName',
+			valueField:'dictCd',
+			width:152,
+			height:27,
+			editable:true,
+			onLoadSuccess:function(){
+			 var _val = $(this).val();
+			 if(_val==""){
+				 $(this).combobox('setValue', 'true');
+			 }
+			}
+		});
+		$('#ta').datagrid({
+			pageSize:60,
+			pageList:[500,200,100,60],
+			rownumbers:true,
+			pagination:true,
+			url:_taUrl,
+			columns:[ [
+				{field:'conditionName',title:'条件名称',align:'left',editor:{type:'validatebox',options:{required:'true',validType:'length[1,100]'}}, width:200},
+				{field:'conditionValue',title:'条件内容',align:'left',editor:{type:'validatebox',options:{validType:'length[1,200]'}}, width:467},
+				{field:'enableFlg',title:'有效',editor:{type:'checkbox',options:{on:'true',off:'false'}}, width:60, align:'center',
+					formatter:function(value,row,index){
+						if(value=='true')
+							return '是';
+						else
+							return '<span style="color: red;">否</span>';
+					},
+				width:60},
+				{field:'dispOrderNo',title:'序号',editor:{type:'validatebox',options:{required:'true',validType:'length[1,20]'}},  width:70},
+				{field:'remark',title:'备注',align:'left',editor:{type:'validatebox',options:{validType:'length[1,200]'}}, width:120},
+				{field:'operate',title:'操作', width:70,align:'center',formatter:function(value, row, index){
+			        var str = '<img onclick="delete1()" style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>';
+			        return str;
+				}}
+			]],
+			onDblClickCell:function(index,field){
+				$('#ta').datagrid('endEdit', lastIndex);
+				$('#ta').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("ta",field,lastIndex);
+			},
+			onClickCell:function(index,field){
+				/*if (lastIndex != index){
+					$('#ta').datagrid('endEdit', lastIndex);
+					$('#ta').datagrid('beginEdit', index);
+				}*/
+				lastIndex = index;
+				//Convert.focusEditor("ta",field,lastIndex);
+			},
+			onSelect:function(rowIndex,rowData){
+				_taIndexId = rowData.id;
+				_curStepUrl=_ctx+"/pm/processStep/list?search_EQL_conditionId="+_taIndexId+"&search_EQL_processId="+_processId;
+				 showTb(_curStepUrl,nodeTypeJson);
+			},
+			onLoadSuccess:function(data){
+				$('#ta').datagrid("selectRow", 0);
+			}
+		});
+		 if(_taIndexId==""){
+			 showTb("",nodeTypeJson);
+		}
+
+	});
+	function showTb(url,nodeTypeJson){
+		$('#tb').datagrid({
+			pageSize:100,
+			pageList:[500,400,300,200,100],
+			rownumbers:true,
+			pagination:true,
+			url:url,
+			columns:[ [
+				{field:'nodeId',title:'流程节点',align:'left',width:160,editor:{type:'combobox',
+					options:{required:'true',data:nodeTypeJson,textField:'nodeName',panelWidth:160,valueField:'id'}
+				}, formatter:function(value,row,index){
+					return Convert.findValueByKey(nodeTypeJson,"id",value,"nodeName");
+				}},
+				{field:'stepName',title:'步骤名称',align:'left',width:160,editor:{type:'validatebox',options:{required:'true',validType:'length[1,20]'}}, width:160},
+				{field:'stepGroup',title:'所属分组',align:'left',width:80,editor:{type:'combobox',
+						options:{data:stepGroupTypeJson,textField:'dictName',panelWidth:80,valueField:'dictCd'}
+					}, formatter:function(value,row,index){
+						return Convert.findValueByKey(stepGroupTypeJson,"dictCd",value,"dictName");
+					}},
+				{field:'autoSignLimit',title:'自动签时限(分钟)',editor:{type:'validatebox',options:{validType:'length[0,20]'}},  width:110},
+				{field:'dispOrderNo',title:'序号',editor:{type:'validatebox',options:{required:'true',validType:'length[1,20]'}},  width:70},
+				{field:'backFlg',title:'驳回权限',width:90,editor:{type:'checkbox',options:{on:'true',off:'false'}},
+					formatter:function(value,row,index){
+						if(value=='true')
+							return '是';
+						else
+							return '否';
+					}, align:'center'
+				},
+				{field:'enableFlg',title:'有效',editor:{type:'checkbox',options:{on:'true',off:'false'}}, width:90, align:'center',
+					formatter:function(value,row,index){
+						if(value=='true')
+							return '是';
+						else
+							return '<span style="color: red;">否</span>';
+				}},
+				{field:'repeatSkipFlg',title:'重复节点跳过',editor:{type:'checkbox',options:{on:'true',off:'false'}}, width:90, align:'center',
+					formatter:function(value,row,index){
+						if(value=='true')
+							return '是';
+						else
+							return '否';
+				}},
+				{field:'processId',title:'进程ID',align:'center',hidden:true,width:150,editor:{type:'textbox',options:{required:'true'}}},
+				{field:'conditionId',title:'条件ID',align:'center',hidden:true,width:150,editor:{type:'textbox',options:{required:'true'}}},
+				{field:'remark',title:'备注',editor:{type:'validatebox',options:{validType:'length[1,200]'}}, width:80},
+				// {field:'tips',title:'提示信息',editor:{type:'validatebox',options:{validType:'length[1,200]'}}, width:120},
+				{field:'operate',title:'操作', width:60,align:'center',formatter:function(value, row, index){
+			        var str = '<img onclick="delete2()" style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>';
+			        return str;
+				}}
+			]],
+			toolbar:'#tb_tb',
+			onDblClickCell:function(index,field){
+				$('#tb').datagrid('endEdit', lastIndex);
+				$('#tb').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("ta",field,lastIndex);
+			},
+			onClickCell:function(index,field){
+				lastIndex = index;
+			}
+		});
+	}
+	function saveStep(stepUrl){
+		var flag=true;
+		var rows = $('#tb').datagrid('getRows');
+		for(var i in rows){
+			var row =rows[i];
+			if (row){
+				var index = $('#tb').datagrid('getRowIndex', row);
+				$('#tb').datagrid('endEdit', index);
+			}
+
+		}
+		var changeRows=[];
+		var inserted = $('#tb').datagrid('getChanges','inserted');
+		var updated = $('#tb').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#tb').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#tb').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#tb').datagrid('selectRow',index);
+    			$('#tb').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#tb').datagrid('endEdit', index);
+    		}
+		}
+    	if(_taIndexId==""||_taIndexId=="0"){
+    		flag=false;
+    		$.messager.alert('error',"请添加条件流程",'warning');
+    	}
+		if (flag){
+		$.post(_ctx+"/pm/processStep/saveBatch",Convert.ToSaveParam("tb") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				//若datagrid的url为空，则需添加
+				$('#tb').datagrid({url:stepUrl});
+				$('#tb').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+	function saveCondition(){
+		var flag=true;
+		var _processId = $("#processId").val();
+    	if(_processId==""||_processId=="0"){
+    		flag=false;
+    		alert("请添加流程代码、流程名称并保存");
+    	}
+		var rows = $('#ta').datagrid('getRows');
+		for(var i in rows){
+			var row =rows[i];
+			if (row){
+				var index = $('#ta').datagrid('getRowIndex', row);
+				$('#ta').datagrid('endEdit', index);
+				row.processId = Number(_processId);
+			}
+		}
+		var changeRows=[];
+		var inserted = $('#ta').datagrid('getChanges','inserted');
+		var updated = $('#ta').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#ta').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#ta').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#ta').datagrid('selectRow',index);
+    			$('#ta').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#ta').datagrid('endEdit', index);
+    		}
+		}
+
+		if (flag){
+		$.post(_ctx+"/pm/processCondition/saveBatch",Convert.ToSaveParam("ta") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				//若datagrid的url为空，则需添加
+				$('#ta').datagrid({url:_ctx+"/pm/processCondition/list?search_EQL_processId="+_processId});
+				$('#ta').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+
+	}
+	function saveProcess(){
+		var GroupJson = $('#processGroupa').val();
+		var processGroup = Convert.findValueByKey(processGroupJson,"dictCd",GroupJson,"dictName");
+		$("#processGroupa").val(processGroup);
+		$("#proForm").form('submit',{
+			onSubmit:function(){
+				var flag =  $(this).form('enableValidation').form('validate');
+				return flag;
+			},
+			success:function(data){
+				//保存主表数据
+				var _processId = $("#processId").val();
+				if(_processId==""){
+					$("#processId").val(eval('('+ data +')').success);
+				}
+				//保存条件
+				saveCondition();
+				//保存流程节点
+				if(_curStepUrl!=""){
+					saveStep(_curStepUrl);
+				}
+				$.messager.show({
+                    title:'Tip',
+                    msg:'保存成功',
+                    timeout:2000,
+                    showType:'show'
+                });
+			}
+		});
+	}
+
+	function insert(){
+		var _$ta = $('#ta');
+		_$ta.datagrid('endEdit', lastIndex);
+		var field={conditionName:'DEFAULT', enableFlg:'true'};
+		_$ta.datagrid('appendRow',field);
+		lastIndex = _$ta.datagrid('getRows').length-1;
+		_$ta.datagrid('selectRow', lastIndex);
+		var row = _$ta.datagrid('getSelected')
+		row.dispOrderNo = lastIndex*10 + 10;
+		_$ta.datagrid('beginEdit', lastIndex);
+		Convert.focusEditor("ta",field,lastIndex);
+	}
+	function insert1(){
+		var _$tb = $('#tb');
+		_$tb.datagrid('endEdit', lastIndex);
+		var field={backFlg:'true',enableFlg:'true',repeatSkipFlg:'true'};
+		_$tb.datagrid('appendRow',field);
+		lastIndex = _$tb.datagrid('getRows').length-1;
+		_$tb.datagrid('selectRow', lastIndex);
+		var row = _$tb.datagrid('getSelected')
+		row.dispOrderNo = lastIndex*10 + 10;
+		row.processId = $("#processId").val();
+		row.conditionId = Number(_taIndexId);
+		_$tb.datagrid('beginEdit', lastIndex);
+		Convert.focusEditor("tb",field,lastIndex);
+	}
+
+	function delete1(){
+		var row = $('#ta').datagrid('getSelected');
+		if(row){
+			var index = $('#ta').datagrid('getRowIndex', row);
+			if (row.id==undefined){
+				$('#ta').datagrid('deleteRow',index);
+			}else{
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+		                if (r){
+							$.post(_ctx+"/pm/processCondition/delete/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									$('#ta').datagrid('reload');
+								}else{
+									 $.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+		                }
+		            }
+		        });
+			}
+		}
+	}
+
+	function delete2(){
+		var row = $('#tb').datagrid('getSelected');
+		if(row){
+			var index = $('#tb').datagrid('getRowIndex', row);
+			if (row.id==undefined){
+				$('#tb').datagrid('deleteRow',index);
+			}else{
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+		                if (r){
+							$.post(_ctx+"/pm/processStep/delete/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									$('#tb').datagrid('reload');
+								}else{
+									 $.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+		                }
+		            }
+		        });
+			}
+		}
+	}
+</script>
+</html>

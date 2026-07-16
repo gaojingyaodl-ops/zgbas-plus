@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--<html lang="zh-CN">-->
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="utf-8">
+    <title>轨迹</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <style>
+        body,
+        html,   
+        #container {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            font-family: "微软雅黑";
+            color: #942a25;
+        }
+    </style>
+    <script src="//mapopen.bj.bcebos.com/github/BMapGLLib/TrackAnimation/src/TrackAnimation.min.js"></script>
+    <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=zFP4hlOd5QY8YY45HM6wrnRuj1tbmO9q"></script>
+</head>
+<body>
+<div id="container"></div>
+<input type="hidden" id="startLng" th:value="${startLng}">
+<input type="hidden" id="startLat" th:value="${startLat}">
+<input type="hidden" id="endLng" th:value="${endLng}">
+<input type="hidden" id="endLat" th:value="${endLat}">
+<input type="hidden" id="message" th:value="${message}">
+</body>
+</html>
+
+<script>
+    var locusJson =eval('[(${locusJson})]');
+    var startLng = $("#startLng").val();// 经度
+    var startLat = $("#startLat").val();// 纬度
+    var endLng = $("#endLng").val();// 经度
+    var endLat = $("#endLat").val();// 纬度
+    var message = $("#message").val();// 纬度
+    // debugger;
+    var bmap = new BMapGL.Map("container");
+    // bmap.centerAndZoom(new BMapGL.Point(110.17259, 25.258741), 15);
+    bmap.centerAndZoom(new BMapGL.Point(endLng, endLat), 13);// 中心点
+    bmap.enableScrollWheelZoom(true);
+    var path = locusJson;
+    // var path = [{
+    //     'lng': '110.17259',
+    //     'lat': '25.258741'
+    // }, {
+    //     'lng': 118.396182,
+    //     'lat': 29.55916
+    // }, {
+    //     'lng': 111.166044,
+    //     'lat': 31.832511
+    // }, {
+    //     'lng': 117.365933,
+    //     'lat': 35.251764
+    // }];
+    var point = [];
+    for (var i = 0; i < path.length; i++) {
+        point.push(new BMapGL.Point(path[i].lng, path[i].lat));
+    }
+    if(path.length > 0) {
+        // lab1 = new BMapGL.Label("起点", { position: new BMapGL.Point(startLng, startLat) });
+        // bmap.addOverlay(lab1);
+
+        lab2 = new BMapGL.Label("车辆抵达位置", { position: new BMapGL.Point(endLng, endLat) });
+        lab2.setStyle({
+            color:"red",
+            borderCloor:"black"
+        })
+        bmap.addOverlay(lab2);
+        // var marker = new BMapGL.Marker(new BMapGL.Point(110.17259, 25.258741));
+        var marker = new BMapGL.Marker(new BMapGL.Point(startLng, startLat));
+        bmap.addOverlay(marker);
+        var endMarker = new BMapGL.Marker(new BMapGL.Point(endLng, endLat));
+        bmap.addOverlay(endMarker);
+    } else {
+        point.push(new BMapGL.Point(startLng, startLat));
+    }
+    // var polyline = new BMapGL.Polyline(point, {
+    //     overallView: true,
+    //     strokeColor: 'blue',
+    //     strokeWeight: 2,
+    //     strokeOpacity: 0.5
+    // });
+    var pl = new BMapGL.Polyline(point,{
+        overallView: true,
+        strokeColor: 'red',
+        strokeWeight: 3,
+        strokeOpacity: 1
+    });
+    bmap.addOverlay(pl); // 增加折线
+    if(message != '' && message != null && message != undefined){
+
+        $.messager.alert('提示',message);
+    }
+    // setTimeout('start()', 1000);
+    // function start () {
+    //     trackAni = new BMapGLLib.TrackAnimation(bmap, pl, {
+    //         overallView: true,
+    //         tilt: 30,
+    //         duration: 10000,
+    //         delay: 300
+    //     });
+    //     if(point.length > 0){
+    //         trackAni.start();
+    //     }
+    // }
+    $(function(){
+        
+    });
+    
+</script>

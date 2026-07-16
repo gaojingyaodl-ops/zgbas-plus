@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="center" border="false">
+        <div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden" name="companyId" id="companyId" th:value="${company.id}" />
+            <input type="hidden" name="companyName" id="companyName" th:value="${company.companyName}" />
+            <input type="hidden" name="canApproveEdit" id="canApproveEdit" th:value="${psv.canApproveEdit}" />
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <lable>公司：</lable>
+                    <input type="text" readonly  th:value="${company.companyName}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>回款周期</lable>
+                    <input name="creditDays" type="text" id="creditDays"  th:value="${entity.creditDays}"/>
+                </p>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    var entity = [[${entity}]];
+    var psv = [[${psv}]];
+    if (entity.id != 0){
+        console.log("applyCreditCycle : ", entity);
+        // console.table("psv : ", psv);
+
+        $("#creditDays").val(entity.creditDays);
+        if (psv.hasEdit) {
+            $("#creditDays").attr("readonly",false);
+        }else {
+            if (psv.canApproveEdit && psv.mapEdit && psv.mapEdit.creditDays && psv.mapEdit.creditDays.edit) {
+                $("#creditDays").attr("readonly",false);
+            }else {
+                $("#creditDays").attr("readonly","readonly");
+            }
+
+        }
+    }
+</script>

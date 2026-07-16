@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<style>
+.editForm_approve .large{width:354px}
+.editForm_approverela label{
+    width: 70px;
+}
+</style>
+<script th:src="@{/static/js/admin/apply_import.js}" type="text/javascript"></script>
+<div class="easyui-layout" fit="true" id="parenDiv">
+	<div region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+		<!-- <input type="hidden" id="canApproveEdit" th:value="${psv.canApproveEdit}"/>  -->
+		<input type="hidden" name="id" id="entityId" th:value="${import.id}" />
+		<input type="hidden" name="status" id="entityStatus" th:value="${import.status}" />
+		<input type="hidden" id="matchUserId" name="matchUserId"/>
+		<input type="hidden" id="matchUserNameRela" name="matchUserName"/>
+		<input type="hidden" id="businessType" name="businessType" th:value="${import.businessType}">
+		<!-- <input type="hidden" name="productName" id="productName" th:value="${entity.productName}" /> -->
+	<p class="p_text">
+
+		<span class="input-colspan2">
+		<label>我方抬头:</label>
+		<input id="ourCompanyName"  name="ourCompanyName" class="control  text_padding" th:value="${import.ourCompanyName}"  data-options="required:true"  type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>业务类型:</label>
+		<input type="text" th:value="${business}" readonly="readonly"></input>
+		</span>
+	</p>
+	<p class="p_text">
+		<span class="input-colspan">
+		<label>合同毛利:</label>
+		<input name="grossProfit" id="grossProfit" type="text" readonly="readonly" th:value="${import.grossProfit}" class="control readonly text_padding"></input>
+		</span>
+		<span class="input-colspan">
+		<label>差价:</label>
+		<input id="differPrice"  name="differPrice" class="control readonly text_padding" th:value="${import.differPrice}" readonly="readonly" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>成本毛利:</label>
+		<input name="costProfit" id="costProfit"  type="text" readonly="readonly"></input>
+		</span>
+		<span class="input-colspan">
+		<label>合同属性:</label>
+		<input name="contractAttr" id="contractAttr" type="text" th:value="${import.contractAttr}" class="control text_padding" required="required"></input>
+		</span>
+	</p>
+		  <p class="p_text">
+	  	<span class="input-colspan">
+		<label>到货时间:</label>
+		<input id="arrivalTime" name="arrivalTime" th:value="${#dates.format(import.arrivalTime, 'yyyy-MM-dd')}"  class="control text_padding" type="text" ></input>
+		</span>
+		<span class="input-colspan">
+		<label>保证金时间:</label>
+		<input id="bondTime" name="bondTime" th:value="${#dates.format(import.bondTime, 'yyyy-MM-dd')}"  class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>付全款时间:</label>
+		<input id="fullTime" name="fullTime"  th:value="${#dates.format(import.fullTime, 'yyyy-MM-dd')}" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>船期:</label>
+		<input id="shippingDate" name="shippingDate"  th:value="${#dates.format(import.shippingDate, 'yyyy-MM-dd')}" class="control text_padding" type="text"></input>
+		</span>
+	  </p>
+	  <p class="p_text">
+	  	<span class="input-colspan">
+		<label>装运港:</label>
+		<input id="port" name="port" th:value="${import.port}" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>外商合同号:</label>
+		<input id="foreignContractNo" data-options="required:true" th:value="${import.foreignContractNo}" name="foreignContractNo" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan2">
+		<label>付款条款:</label>
+		<input id="payCondition" name="payCondition" th:value="${import.payCondition}" class="control text_padding" type="text"></input>
+		</span>
+	  </p>
+	 </div>
+	 <fieldset class="form-section" style="padding: 35px 30px 10px 20px;" th:each="entity:${productDetailList}">
+	 <legend class="form-section-title" style="margin-bottom:25px;"><span class="approve_text" th:text="${entity.contractType eq 'S'}?'销售':'采购'">采购</span><i></i></legend>
+	 <div th:if="${entity.contractType eq 'B'}" region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+		<form th:id="form+${entity.id}">
+		 <input  type="hidden" th:value="${entity.id}" th:id="detailId+${entity.id}" name="id"/>
+		 <input type="hidden" th:value="${entity.id}" name="randomNumber" id="randomNumber" />
+		<p class="p_text">
+
+			<th:block th:replace="~{tags/apply :: contractNo (${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+
+			<span class="input-colspan">
+			<label>合同类型:</label>
+			<input th:id="contractType+${entity.id}" th:attr="val=${entity.contractType}"  th:name="${psv.hasApprove} eq false?contractType" th:value="${entity.contractType}" readonly="readonly"  class="control contractType text_padding" type="text"></input>
+			<input type="hidden" th:if="${psv.hasApprove}" name="contractType"  th:value="${entity.contractType}" />
+			</span>
+
+			<span class="input-colspan">
+			<label>结算方式:</label>
+			<input th:id="deliveryMode+${entity.id}" th:value="${entity.deliveryMode}" data-options="required:true"  name="deliveryMode" class="control text_padding"  type="text"></input>
+			</span>
+
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+			<label>银行保证金:</label>
+			<input th:id="payBondAmount+${entity.id}" th:value="${entity.payBondAmount}" data-options="required:true"  name="payBondAmount" class="control text_padding"  type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>仓储费(元):</label>
+			<input th:id="warehouseCost+${entity.id}" th:value="${entity.warehouseCost}"  name="warehouseCost" class="control text_padding buy_warehouse_cost" type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>运输费(元):</label>
+			<input th:id="transportCost+${entity.id}" th:value="${entity.transportCost}" data-options="required:true"  name="transportCost" class="control text_padding buy_transport_cost"  type="text"></input>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+			<label>清关费(元):</label>
+			<input th:id="qingguanFee+${entity.id}" th:value="${entity.qingguanFee}" data-options="required:true"  name="qingguanFee" class="control text_padding buy_qingguan_fee"  type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>开证手续费(元):</label>
+			<input th:id="kaizhengFee+${entity.id}" th:value="${entity.kaizhengFee}" data-options="required:true"  name="kaizhengFee" class="control text_padding buy_kaizheng_fee"  type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>承兑费(元):</label>
+			<input th:id="chengduiFee+${entity.id}" th:value="${entity.chengduiFee}" data-options="required:true"  name="chengduiFee" class="control text_padding buy_chengdui_fee"  type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>支付方式:</label>
+			<input th:id="payType+${entity.id}" th:value="${entity.payType}" data-options="required:true"  name="payType" class="control text_padding" type="text"></input>
+			</span>
+		</p>
+		<p class="p_text">
+		<th:block th:replace="~{tags/apply :: companyId (${#maps.containsKey(psv.mapEdit, 'companyId')}?${psv.mapEdit['companyId'].require}:true,${#maps.containsKey(psv.mapEdit, 'companyId')}?${psv.mapEdit['companyId'].edit && psv.hasApprove}:${ psv.hasEdit},${companyJson},${entity.id},'供应商')}"/>
+			<span class="input-colspan">
+			<label>联系电话:</label>
+			<input th:id="contactPhone+${entity.id}" th:value="${entity.contactPhone}"  name="contactPhone" class="control text_padding" type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>目的港:</label>
+			<input th:id="objectivePort+${entity.id}" th:value="${entity.objectivePort}" class="control text_padding" name="objectivePort" type="text"></input>
+			</span>
+		</p>
+		<p class="p_text">
+		<span class="input-colspan2">
+			<label>联系地址:</label>
+			<input th:id="contactAddr+${entity.id}" th:value="${entity.contactAddr}" name="contactAddr" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan2">
+			<label>备注:</label>
+			<input th:id="payRemark+${entity.id}" th:value="${entity.payRemark}" data-options="required:true"  name="payRemark" class="control text_padding large" type="text"></input>
+		</span>
+		</p>
+	  </form>
+	   </div>
+
+	  <div th:if="${entity.contractType eq 'S'}" region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+		<form th:id="form+${entity.id}">
+		<input  type="hidden" th:value="${entity.id}" th:id="detailId+${entity.id}" name="id"/>
+		<input type="hidden" th:value="${entity.id}" name="randomNumber" id="randomNumber" />
+		<p class="p_text">
+			<th:block th:replace="~{tags/apply :: contractNo (${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<span class="input-colspan">
+			<label>合同类型:</label>
+			<input th:id="contractType+${entity.id}" th:attr="val=${entity.contractType}"  th:name="${psv.hasApprove} eq false?contractType" th:value="${entity.contractType}" readonly="readonly"  class="control contractType text_padding" type="text"></input>
+			<input type="hidden" th:if="${psv.hasApprove}" name="contractType"  th:value="${entity.contractType}" />
+			</span>
+			<span class="input-colspan">
+			<label>结算方式:</label>
+			<input th:id="deliveryMode+${entity.id}" th:value="${entity.deliveryMode}" data-options="required:true"  name="deliveryMode" class="control text_padding"  type="text"></input>
+			</span>
+			</p>
+		<p class="p_text">
+			<span class="input-colspan">
+			<label>保证金(元):</label>
+			<input th:id="receiveBondAmount+${entity.id}" th:value="${entity.receiveBondAmount}" data-options="required:true"  name="receiveBondAmount" class="control text_padding"  type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>仓储费(元):</label>
+			<input th:id="warehouseCost+${entity.id}" th:value="${entity.warehouseCost}"  name="warehouseCost" class="control text_padding sell_warehouse" type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>运输费(元):</label>
+			<input th:id="transportCost+${entity.id}" th:value="${entity.transportCost}"  name="transportCost" class="control text_padding sell_transport"  type="text"></input>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+			<label>清关费(元):</label>
+			<input th:id="qingguanFee+${entity.id}" th:value="${entity.qingguanFee}" data-options="required:true"  name="qingguanFee" class="control text_padding"  type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>代理费(元):</label>
+			<input th:id="dailiFee+${entity.id}" th:value="${entity.dailiFee}" data-options="required:true"  name="dailiFee" class="control text_padding"  type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>支付方式:</label>
+			<input th:id="receiveType+${entity.id}" th:value="${entity.receiveType}" data-options="required:true"  name="receiveType" class="control text_padding" type="text"></input>
+			</span>
+		</p>
+		<p class="p_text">
+		<th:block th:replace="~{tags/apply :: companyId (${#maps.containsKey(psv.mapEdit, 'companyId')}?${psv.mapEdit['companyId'].require}:true,${#maps.containsKey(psv.mapEdit, 'companyId')}?${psv.mapEdit['companyId'].edit && psv.hasApprove}:${ psv.hasEdit},${companyJson},${entity.id},'需货方')}"/>
+			<span class="input-colspan">
+			<label>联系电话:</label>
+			<input th:id="contactPhone+${entity.id}" th:value="${entity.contactPhone}" name="contactPhone" class="control text_padding" type="text"></input>
+			</span>
+			<span class="input-colspan">
+			<label>目的港:</label>
+			<input th:id="objectivePort+${entity.id}" th:value="${entity.objectivePort}" class="control text_padding" name="objectivePort" type="text"></input>
+			</span>
+		</p>
+		<p class="p_text">
+		<span class="input-colspan2">
+			<label >联系地址:</label>
+			<input  th:id="contactAddr+${entity.id}" th:value="${entity.contactAddr}" data-options="required:true"  name="contactAddr" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan2">
+			<label>备注:</label>
+			<input th:id="payRemark+${entity.id}" th:value="${entity.payRemark}" data-options="required:true"  name="payRemark" class="control text_padding large" type="text"></input>
+		</span>
+		</p>
+	  	</form>
+	  	</div>
+	<div style="margin-bottom:20px;">
+		<div id="btn" class="add-btn" th:if="${import.status eq 'B' or import.status eq 'N' or import.status eq 'C'}">
+			<a  th:if="${entity.contractType eq 'B'}" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'"   th:attr="table=relaTable+${entity.id}" onclick="applyMatch.insert(this)">新增</a>
+			<a  th:if="${entity.contractType eq 'B'}"  href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="applyMatch.batchInsertSell(this)" th:attr="table=relaTable+${entity.id}">同步销售</a>
+		</div>
+		<table th:id="relaTable+${entity.id}"  th:attr="pointer=${entity.id},atr=${entity.contractType}" class="relaTable"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+		</table>
+	</div>
+
+
+	<div region="south" th:if="${import.status eq 'B' or import.status eq 'N' or import.status eq 'C'}"  border="true" style="float: right;" >
+			<!-- <span class="btn_com float_left bglan relaInsertSpan" th:attr="detailId=${detail.id}" onclick="applyMatch.removeNode(this)">
+                <i class="float_left icon_delete"></i>
+                <span class="float_left">删除</span>
+            </span> -->
+            <a href="#" th:if="${entity.contractType eq 'B'}" class="easyui-linkbutton btn-danger detail" data-options="iconCls:'icon-clear'" th:attr="detailId=${entity.id}" onclick="applyMatch.removeNode(this)">删除</a>
+		</div>
+	</fieldset>
+   </div>
+	<div class="editForm">
+			<p>
+				<span class="upload-btn" id="btn_fileId">
+				 	<i></i>
+                	<span>附件上传</span>
+            	</span>
+            	<!-- <a id="btn_fileId" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-upload'" style="width:106px;margin-top:10px;background:transparent;color: #2d2d2d;">上传附件 </a> -->
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${import.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+
+<input type="hidden" id="sellTotalNumber" />
+<input type="hidden" id="buyTotalNumber" />
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/import/updateFileId',[[${param.hasEditFile}]]);
+var lastIndex;
+_beforSaveOper=true;
+var indexlist=new Array();
+var removelist=new Array();
+var buyPricelist=new Array();
+//品名列表
+var _productAllJson = eval('[(${productAllJson})]');
+var _productChildrenJson = eval('[(${productChildrenJson})]');
+
+//牌号名称
+var _brandJson = eval('[(${brandJson})]');
+//厂商列表
+var _factoryJson = eval('[(${factoryJson})]');
+//合同类型
+var _contractTypeJson = eval('[(${contractTypeJson})]');
+
+//付款方式
+var _payTypeJson= eval('[(${payTypeJson})]');
+//交货方式
+var _deliveryModeJson =eval('[(${deliveryModeJson})]');
+//提货方式
+var _deliveryTypeJson =eval('[(${deliveryTypeJson})]');
+//我方企业抬头
+var _ourCompanyNameJson =eval('[(${ourCompanyNameJson})]');
+//合同属性
+var _contractAttrJson= eval('[(${contractAttr})]');
+//包装规格
+var packingSpecificaJson= eval('[(${packingSpecificaJson})]');
+
+var buyProductCdlist=new Array();
+
+var sellProductCdlist=new Array();
+
+applyMatch.init();
+
+//企业列表
+var _companyJson= eval('[(${companyJson})]');
+var number1= 0;
+var number2 =1;
+	$(function(){
+		getCostProfit();
+		$(".relaTable").each(function(){
+			var _this = $(this);
+			var _atr = _this.attr("atr");
+			if(_atr=="S"){
+				number2 = _this.attr("pointer");
+				return false;
+			}
+		});
+
+		$('.easyui-linkbutton').linkbutton();
+		//加载现有的table
+		var _tab=$(".relaTable");
+		var _len=_tab.length;
+		for(var i=0;i<_len;i++){
+			var _num=$(_tab[i]).attr("pointer");
+			var _atr = $(_tab[i]).attr("atr");
+			applyMatch.initLoadEasyui(_num,_atr,"S","R");
+		}
+		var entityStatus=$("#entityStatus").val();
+		if(entityStatus=="N"|| entityStatus=="B"|| entityStatus=="C"){
+			//交货方式
+			$("#deliveryMode").combobox({
+				data:_deliveryModeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				panelHeight:"auto",
+				height:30
+			});
+			$("#deliveryTypeShow").addClass("hide");
+			$("#deliveryType").removeClass("hide");
+			//配送方式
+			$("#deliveryType").combobox({
+				data:_deliveryTypeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				panelHeight:"auto",
+				height:30
+			});
+
+			$('#bondTime,#fullTime,#arrivalTime,#shippingDate').datebox({
+				editable:false,
+				required:true
+			});
+
+			$("#ourCompanyName").combobox({
+				data:_ourCompanyNameJson,
+				textField:'dictName',
+				valueField:'dictName',
+				panelHeight:"auto",
+				height:30
+			});
+
+			$('#contractAttr').combobox({
+				data:_contractAttrJson,
+				valueField:'dictCd',
+				textField:'dictName',
+				panelHeight:"auto",
+				editable:false,
+				required: true,
+				hasDownArrow:false,
+				readonly:true,
+				onLoadSuccess:function(){
+					$(this).combobox("setValue","F");
+				}
+			});
+
+			//保证金 代理费
+			$("#bondAmount").numberbox({
+				 min:0,
+				 precision:3,
+				 height:30
+			});
+			$("#agentAmount").numberbox({
+				 min:0,
+				 precision:3,
+				 height:30
+			});
+
+			//加载附件列表
+			filePlugin.load($('#fileId').val(),'#span_fileId');
+			if ($("#btn_fileId").length>0){
+				fileUpload("btn_fileId", "fileId");
+			}
+
+		}else{
+			//只加载附件名
+			filePlugin.load($('#fileId').val(),'#span_fileId');
+			if ($("#btn_fileId").length>0){
+				fileUpload("btn_fileId", "fileId");
+			}
+			//付款方式
+			var deliveryModeDom=$("#deliveryMode");
+			var deliveryMode=Convert.findValueByKey(_deliveryModeJson,"dictCd",deliveryModeDom.val(),"dictName");
+			deliveryModeDom.val(deliveryMode);
+
+			var deliveryTypeDom=$("#deliveryType");
+			var deliveryType=Convert.findValueByKey(_deliveryTypeJson,"dictCd",deliveryTypeDom.val(),"dictName");
+			deliveryTypeDom.val(deliveryType);
+
+			var deliveryType=Convert.findValueByKey(_deliveryTypeJson,"dictCd",$("#deliveryType").val(),"dictName");
+			$("#deliveryTypeShow").val(deliveryType);
+
+			var contractAttrDom =$('#contractAttr');
+			var contractAttr=Convert.findValueByKey(_contractAttrJson,"dictCd",contractAttrDom.val(),"dictName");
+			contractAttrDom.val(contractAttr);
+		}
+
+	});
+
+//发起申请前操作
+function beforSaveOper(){
+	applyMatch.curGrossProfitAndDiffPrice();
+	var buyTotalNumber=$("#buyTotalNumber").val();
+	var sellTotalNumber=$("#sellTotalNumber").val();
+	if(buyTotalNumber!=sellTotalNumber){
+		$.messager.alert('提示','保存失败，数量必须一致!','warning');
+		return false;
+	}
+
+	/* var rtn=applyMatch.eqSet(buyProductCdlist,sellProductCdlist);
+	if(!rtn){
+		$.messager.alert('提示','进口代理业务  货品必须一致!','warning');
+		return false;
+	} */
+
+	//参数array
+	var arr=new Array();
+	var result={};
+	//获得所有的datagrid
+	var _tab=$(".relaTable");
+	var _len=_tab.length;
+	for(var i=0;i<_len;i++){
+		//获得table id
+		var _datagridId=$(_tab[i]).attr("id");
+		//获得 pointer
+		var _pointer=$(_tab[i]).attr("pointer");
+		//将form 解析成对象
+		var str= Convert.getJson4Form("form"+_pointer);
+		arr.push(str);
+
+		//校验所有该table的所有行
+		valideAllRow(_datagridId);
+
+		var inserted=$("#"+_datagridId).datagrid('getChanges','inserted');
+		result['_inserted'+_pointer]=inserted;
+
+		var updated=$("#"+_datagridId).datagrid('getChanges','updated');
+		result['_updated'+_pointer]=updated;
+
+		var deleted = $('#'+_datagridId).datagrid('getChanges','deleted');
+		result['_deleted'+_pointer]=deleted;
+	}
+
+	//商品信息
+	var resultData= Convert.ToJSONString(result);
+	if($('#_easy_grid').length==0){
+		$('#inputFormApprove').append('<input type="hidden" id="_easy_grid" name="_easy_grid">');
+	}
+	$('#_easy_grid').val(resultData);
+	console.log("resultData:"+resultData);
+	//基本数据
+
+	if($("#contentStr").length==0){
+		$('#inputFormApprove').append('<input type="hidden" id="contentStr" name="contentStr">');
+	}
+	var resultArr=Convert.ToJSONString(arr);
+	$("#contentStr").val(resultArr);
+	console.log("formData:"+resultArr);
+	//删除信息
+	if(removelist.length>0){
+		if($("#removeArrStr").length==0){
+			$('#inputFormApprove').append('<input type="hidden" id="removeArrStr" name="removeArrStr">');
+		}
+		var removeArr=Convert.ToJSONString(removelist);
+		$("#removeArrStr").val(removeArr);
+		console.log("formData:"+removeArr);
+	}
+	return true;
+}
+
+function valideAllRow(datagridId){
+	//获得该table的所有行 校验
+	var _tab=$("#"+datagridId).datagrid("getRows");
+	var _len=_tab.length;
+	for(var i=0;i<_len;i++){
+		var rowIndex=$('#'+datagridId).datagrid('getRowIndex',_tab[i]);
+		flag=$('#'+datagridId).datagrid('validateRow',rowIndex);
+		if (!flag){
+			$('#'+datagridId).datagrid('selectRow',rowIndex);
+			$('#'+datagridId).datagrid('beginEdit', rowIndex);
+			break;
+		}else{
+			$('#'+datagridId).datagrid('endEdit', rowIndex);
+		}
+	}
+}
+
+
+</script>

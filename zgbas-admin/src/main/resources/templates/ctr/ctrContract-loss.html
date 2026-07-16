@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>货损管理</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+    <script th:src="@{/static/js/file.js}" type="text/javascript"></script>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <input type="hidden" name="search_EQB_enableFlg" value="true">
+        <div class="mb6">
+			<span class="yw-table-filter">
+				<label style="width: 60px;">合同编号:</label>
+				<input  class="control" type="text" name="search_LIKES_contractNo"/>
+			</span>
+            <span class="yw-table-filter">
+                <label>责任方:</label>
+                <input name="search_EQS_lossTypeFrom" id="lossTypeFrom1" type="text" value=""/>
+            </span>   
+            <span class="yw-table-filter">
+                <label>承担方:</label>
+                <input name="search_EQS_lossTypeTo" id="lossTypeTo1" type="text" value=""/>
+            </span>    
+            <span class="btn-group">
+				<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" class="easyui-linkbutton btn-empty btn64" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+<div id="ctrContract-loss-detail" class="easyui-window" title="损耗详情" data-options="width:830,height:600"></div>
+<div id="detail" title="损耗详情" data-options="width:900,height:600"></div>
+
+<script type="text/javascript">
+    var lossTypeJson = eval('[(${lossTypeJson})]');
+
+    $("#lossTypeFrom1").combobox({
+        data:lossTypeJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        editable:false,
+        panelHeight:"auto"
+    });
+    $("#lossTypeTo1").combobox({
+        data:lossTypeJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        editable:false,
+        panelHeight:"auto"
+    });
+
+    $('#ctrContract-loss-detail').window({
+        modal:true,
+        closed: true,
+        collapsible : false,
+        minimizable : false,
+        cache:false,
+        title:"货损详情"
+    });
+    $('#w').window({
+        title: '送货单',
+        modal:true,
+        closed: true,
+        collapsible : false,
+        minimizable : false,
+        maximizable : false,
+        cache:false
+    });
+
+    $(function(){
+        $('#tt').datagrid({
+            pagination:true,
+            pageSize:30,
+            rownumbers:true,
+            showFooter:true,
+            queryParams:Convert.getJson4Form('searchForm'),
+            pageList:[500,200,100,50,30,20],
+            url:_ctx+"/ctr/contractLoss/findAllCtrContractLossLoading",
+            columns:[ [
+                {field:'companyName',title:'企业名称',align:'left',width:160},
+                {field:'contractNo',title:'合同编号',align:'left',width:110},
+                {field:'ourCompanyName',title:'我方',align:'left',width:160},
+                {field:'lossTypeFrom', title:'责任方',align:'center',width:80,
+                    formatter : function(value, row, index) {
+                        return Convert.findValueByKey(lossTypeJson, "dictCd",value, "dictName");
+                    }},
+                {field:'lossTypeTo',title:'承担方',align:'center',width:80,
+                    formatter : function(value, row, index) {
+                        return Convert.findValueByKey(lossTypeJson, "dictCd",value, "dictName");
+                    }
+                },
+                {field:'lossNum',title:'货损数量(吨)',align:'center',width:80},
+                {field:'lossAmount',title:'货损金额(元)',align:'center',width:80},
+                // {field:'payAmount',title:'赔付金额(元)',align:'center',width:80},
+                {field:'createdDate',title:'登记日期',align:'center', width:130},
+                {field:'remark',title:'备注',align:'center',width:150},
+                {
+                    field: 'option', title: '操作', align: 'left', width: 200, formatter: function (value, row, index) {
+                        var str = "";
+                        debugger;
+                        if (!row.status) {
+                            str += '<span style="pointer-events: auto" onclick="editrow(\''+row.id+'\',\''+row.contractNo+'\')" class="contract-btn contract-btn-4">详情</span>';
+                            str += '<span style="pointer-events: auto" onclick="deleteContractLoss(\''+row.id+'\',\''+row.contractId+'\')" class="contract-btn contract-btn-4">删除</span>';
+                            return str;
+                        }
+                    }
+                },
+            ]],
+            onDblClickCell : function(index, field) {
+                var row = $('#tt').datagrid('getSelected');
+                debugger;
+                editrow(row.id, row.contractNo);
+            },
+            onClickRow:function(index,row){
+                lastIndex = index;
+            },
+            onLoadSuccess:function(data){
+
+            }
+        });
+        $('#detail').window({
+            title:"货损详情",
+            modal:true,
+            closed: true,
+            collapsible : false,
+            minimizable : false,
+            maximizable : false,
+            cache:false,
+            onClose:function(){
+                $('#tt').datagrid('reload');
+            }
+        });
+        
+    });
+    function editrow(id) {
+        var url = _ctx + "/ctr/contractLoss/detail/" + id;
+        $('#detail').window({href : url});
+        $('#detail').window("open");
+    }
+    function openChooseData(){
+        // var url=_ctx+"/changeApply/deliveryOut/findApplyDeliveryOut"
+        var url = _ctx + "/ctr/contractLoss/detail/" + id;
+        $('#ctrContract-loss-detail').attr('callbackExec', 'outChooseCallback');
+        $('#ctrContract-loss-detail').window({href:url});
+        $('#ctrContract-loss-detail').window("open");
+    }
+    
+    // function editrow(id,contractNo) {
+    //     debugger;
+    //     var url = _ctx + "/ctr/contractLoss/detail/" + id;
+    //     var title = '损耗详情:' + contractNo
+    //     window.parent.addTab(title,url);
+    //     // $('#ctrContract-loss-detail').window({href:url});
+    //     // $('#ctrContract-loss-detail').window("open");
+    //
+    //     // $('#w').window({href : url});
+    //     // $('#w').window("open");
+    // }
+    
+   
+    function deleteContractLoss(id,contractId){
+        $.messager.confirm('提示','确定要删除该损耗记录么?',function(t){
+            if(t){
+                if(id){
+                    $.post(_ctx + "/ctr/contractLoss/deleteContractLoss",
+                        {"id":id,"contractId":contractId}, function(result) {
+                            var rObj = eval(result);
+                            if (rObj.success) {
+                                $.messager.show({title:'Tip',msg:'删除成功',timeout:2000,showType:'show'});
+                                $('#tt').datagrid('reload');
+                            } else {
+                                $.messager.alert('error',rObj.failure,'warning');
+                            }
+                        }
+                    )
+                }
+            }
+        });
+    }
+    //查看附件
+    function showFile(contractId) {
+        $.post(_ctx + "/ctr/loading/getByFileId?fileId=" + contractId, function (result) {
+            window.open(result, "_blank")
+        });
+    }
+</script>
+</body>
+</html>

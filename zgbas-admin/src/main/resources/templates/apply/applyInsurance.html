@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div id="inputForm" method="post" class="editForm_approve content_div" style="margin-bottom:20px">
+        <input type="hidden" name="id" id="entityId" th:value="${entity.id}"/>
+        <div class="mb6 applyInsurance_content">
+            <p class="yw-table-filter w4">
+                <label>买方地址:</label>
+                <input type="text" id="riskCompAddress" name="riskCompAddress"
+                       th:value="${entity.riskCompAddress}" readonly="readonly"/>
+            </p>
+        </div>
+
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>风险方电话:</label>
+                <input type="text" id="riskPhone" name="riskPhone"
+                       th:value="${entity.riskPhone}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>支付方式:</label>
+                <input type="text" id="payWay" name="payWay" th:value="${entity.payWay}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>付款期限（整数）:</label>
+                <input name="paidTerm" id="paidTerm" type="text"
+                       th:value="${entity.paidTerm}" readonly="readonly"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>商品类别:</label>
+                <input type="text" id="exportTrade" name="exportTrade"
+                       th:value="${entity.exportTrade}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>商品类别，16位时必填项:</label>
+                <input type="text" id="exportTradeInput" name="exportTradeInput"
+                       th:value="${entity.exportTradeInput}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>与该买方以往是否存在交易:</label>
+                <input type="text" id="historyBusiness" name="historyBusiness"
+                       th:value="${entity.historyBusiness}" readonly="readonly"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>是否调取资信报告:</label>
+                <input type="text" id="isReport" name="isReport"
+                       th:value="${entity.isReport}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>申请限额是否循环使用 :</label>
+
+                <input type="text" id="isCycleUse" name="isCycleUse"
+                       th:value="${entity.isCycleUse}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>报告类型(开行证):</label>
+                <input type="text" id="reportType" name="reportType"
+                       th:value="${entity.reportType}" readonly="readonly"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>限额变更原因代码：</label>
+                <input type="text" id="changeReasonCode" name="changeReasonCode"
+                       th:value="${entity.changeReasonCode}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>赊销记录:</label>
+                <input type="text" id="changeReasonRemark" name="changeReasonRemark"
+                       th:value="${entity.changeReasonRemark}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>买方省份:</label>
+                <input type="text" id="province" name="province"
+                       th:value="${entity.province}" readonly="readonly"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>交易商品:</label>
+                <input type="text" id="bargainCommodity" name="bargainCommodity"
+                       th:value="${entity.bargainCommodity}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>预计年度总额:</label>
+                <input type="text" id="intendingAmount" name="intendingAmount"
+                       th:value="${entity.intendingAmount}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>最大单次出运金额。:</label>
+                <input type="text" id="maxSingleAmount" name="maxSingleAmount"
+                       th:value="${entity.maxSingleAmount}" readonly="readonly"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>上年信用(赊销)交易总金额（元）:</label>
+                <input type="text" id="sntotalTransactionAmount" name="sntotalTransactionAmount"
+                       th:value="${entity.sntotalTransactionAmount}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>截至目前为止的信用(赊销)交易总金额（元）:</label>
+                <input type="text" id="currentlytotalAmount" name="currentlytotalAmount"
+                       th:value="${entity.currentlyTotalAmount}" readonly="readonly"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label> 发生年份:</label>
+                <input name="happenDate" id="happenDate" type="text"
+                       th:value="${entity.happenDate}" readonly="readonly"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <th:block
+                    th:replace="~{tags/apply :: remark(${#maps.containsKey(psv.mapEdit, 'remark')}?${psv.mapEdit['remark'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+        </div>
+
+        <div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640"></div>
+    </div>
+</div>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+    var _curStatus = '[[${status}]]';
+    $(function () {
+        $('.easyui-linkbutton').linkbutton();
+        var payWayJson= {
+            "LC":"LC",
+            "DP":"DP",
+            "DA":"DA",
+            "OA":"OA"
+        }
+        var exportTradeJson = {
+            "1":"01、家用电器、电脑及其周边产品",
+            "2":"2、汽车、摩托车及其零配件",
+            "3":"3、医药化学品",
+            "4":"4、农产品及农药、化肥",
+            "5":"5、纺织品、皮革及其制品",
+            "6":"6、金属及其制品",
+            "7":"7、家具",
+            "8":"8、陶瓷产品",
+            "9":"9、通讯产品",
+            "10":"10、光伏产品",
+            "11":"11、燃料",
+            "12":"12、机械及其零配件",
+            "13":"13、船舶、零件及修理",
+            "14":"14、印刷电路板及原材料",
+            "15":"15、玩具",
+            "16":"16、其他"
+        }
+        var historyBusinessJson = {
+            "0":"不存在",
+            "1":"存在"
+        }
+
+        var isReportJson = {
+            "1":"已调取资信报告",
+            "2":"未调取资信报告",
+            "3":"自行掌握限额",
+            "4":"hold cover"
+        }
+
+        var isCycleUseJson = {
+            "0":"否",
+            "1":"是"
+        }
+
+        var reportTypeJson = {
+            "1":"普通",
+            "2":"加急",
+        }
+
+        var changeReasonCodeJson = {
+            "1":"信用限额提高",
+            "2":"信用限额降低",
+            "3":"信用期限调整",
+            "4":"支付方式调整",
+            "5":"信用限额生效日期倒签"
+        }
+
+        replaceValue("payWay");
+        replaceValue("exportTrade");
+        replaceValue("historyBusiness");
+        replaceValue("isReport");
+        replaceValue("isCycleUse");
+        replaceValue("reportType");
+        replaceValue("changeReasonCode");
+
+        function replaceValue(h_id) {
+            var _value = $("#" + h_id).val();
+            _value = eval(h_id + "Json")[_value];
+            $("#" + h_id).val(_value);
+        }
+    });
+
+
+</script>
+</html>

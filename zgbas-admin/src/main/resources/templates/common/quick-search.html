@@ -1,0 +1,80 @@
+
+<!--<script th:src="@{/static/jquery-easyui/jquery.easyui.min.js}" type="text/javascript"></script>-->
+
+
+<div class="tab-pane fade height-full" >
+    <ul id="quickSearchUl">
+        <li th:each="item : ${sysQuickSearchList}" class="tooltip-ul" >
+            <span class="searchText" th:attr="data-prop-json=${item.propJson}" onclick="onClickQuickSearch(this)">[[${item.searchName}]]</span>
+            <span class="delete" th:attr="data-prop-id=${item.id}" onclick="deleteQuickSearch(this)">ⓧ</span>
+        </li>
+    </ul>
+</div>
+<input type="hidden" id="quickSearchSize" th:value = "${quickSearchSize}">
+
+<div id="btn" class="add-btn" style="margin-top: 20px;margin-bottom: 20px">
+    <a  href="#" class="saveSearchParamsBtn" onclick="saveSearchParams(0)">保存查询条件</a>
+</div>
+
+<script type="text/javascript">
+
+    $(function(){
+        
+        
+    });
+</script>
+
+<style>
+    .tooltip-ul{
+        height: 27px;
+        display: flex;
+        padding-left: 10px;
+        align-items: center; /* 垂直居中 */
+    }
+    
+    #quickSearchUl li:hover {
+        background-color: #EAF6FD; /* 选中时的背景颜色 */
+        /*color: #fff; !* 选中时的文字颜色 *!*/
+        
+    }
+    /* 鼠标悬浮时显示 "X" 图标 */
+    .tooltip-ul:hover .delete {
+        display: inline; /* 显示 "X" 图标 */
+        
+    }
+
+    /* 默认情况下隐藏 "X" 图标 */
+    .delete {
+        display: none;
+        margin-left: auto; /* 将 "X" 图标推到最右侧 */
+        color: red;
+        width: 10%;
+        cursor: pointer; /* 鼠标悬浮时的光标样式 */
+    }
+    .searchText{
+        width: 80%;
+        cursor: pointer; /* 鼠标悬浮时的光标样式 */
+    }
+    .saveSearchParamsBtn{
+        color: #fff;
+        background-color: #43b77f;
+        box-shadow: 0 2px 6px 0 #43b77f;
+        border-radius: 2px;
+        text-decoration: none;
+        overflow: hidden;
+        cursor: pointer;
+        outline: none;
+        text-align: center;
+        display: inline-block;
+        vertical-align: top;
+        width: 100px;
+        line-height: 24px;
+        font-size: 12px;
+        padding: 0;
+        margin: 0 10px 0 10px;
+    }
+    .messager-body .messager-input{
+        width: 80%;
+    }
+</style>
+

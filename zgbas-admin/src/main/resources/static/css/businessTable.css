@@ -1,0 +1,39 @@
+*{margin: 0; padding: 0; border: 0; }
+body{font-family: 'microsoft yahei','microsoft yahei ui','PingFangSC','helvetica neue','hiragino sans gb','arial','simsun','sans-serif'; }
+.fz12{font-size: 12px;}
+.clearFix{content: ""; clear: both; display: block; }
+.outContain {width: 968px; box-sizing: border-box; margin: 0 auto; }
+.model-list {width: 845px; box-sizing: border-box; margin: 40px auto 0; }
+.m-top {width: 100%; height: 60px; border-bottom: 1px solid #333; }
+.logo-left{width: 350px; height: 50px; margin: 5px 0; float: left; background: url("../images/company.png") no-repeat; background-size: 350px 50px; }
+.print-right{cursor: pointer; width: 68px; height: 28px; color: #4a9bff; border-radius: 4px; border: 1px solid rgb(74, 155, 255); background-color: #fff; float: right; margin-top: 20px; line-height: 28px; font-size: 14px; }
+.print-ico{width: 16px; height: 16px; display: inline-block; background: url("../images/print.png") no-repeat; background-size: 16px 16px; position: relative; top: 2px; margin-left: 10px; }
+.title{text-align: center; font-size: 22px; font-weight: normal; padding: 10px 0; }
+.number-div{width: 100%; height: 48px; color: #2d2d2d; font-size: 18px; }
+.num {font-weight: bold; float: right; }
+.date{float: right; clear: right; }
+.m-content{width:98%;margin: 10px 0; border-top: 1px solid #333; border-left: 1px solid #333; border-collapse: collapse; border-spacing: 0; }
+td{border-right: 1px solid #333; border-bottom: 1px solid #333; }
+.padding-left{padding-left: 5px; }
+.tr0{font-size:16px;height:55px;}
+.tr1,.tr2{font-size: 16px; height: 39px; }
+.td1{min-width: 65px; max-width: 65px; text-align: left; padding-left: 5px; }
+.center-text{text-align: center; }
+.td2{min-width: 145px; max-width: 145px; }
+.td3,.td5,.td7{min-width: 46px; max-width: 45px; }
+.td4,.td6,.td8{min-width: 55px; max-width: 55px; }
+.td10{min-width: 95px; max-width: 95px; }
+.td9{min-width: 55px; max-width: 55px; }
+.td11{text-align: center; min-width: 165px; max-width: 165px; }
+.num-num,.read-and-read,.in-price{border-bottom: 1px solid #333; }
+.tr3{font-size: 18px; height: 28px; }
+.tr3-td1{padding-left: 108px; }
+.tr4{height: 55px; font-size: 12px; }
+.tr4-td3{font-size: 14px; }
+.tr4-td4{font-size: 20px; }
+.d1{width:140px;}
+.d2{width:40px;}
+.d3{width:65px;}
+.d4{width:100px;}
+.d5{width:95px;}
+@media print{.print-right{display:none;}}

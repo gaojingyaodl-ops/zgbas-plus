@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>库存查询</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+<style>/*
+.control{width:140px !important;}
+.large{width:369px !important;}*/
+</style>
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div" border="false" th:if="${id eq null}" style="height: 100px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>品名:</label>
+				<input id="productTypeCd_query" name="productCd" type="text" value=""/>
+			</span>
+			<span class="input-colspan" id="srh_span_brandNumber" >
+				<label>牌号:</label>
+				<input type="text" name="brandNumber" />
+			</span>
+			<span class="input-colspan">
+				<label>状态:</label>
+				<input type="text" name="status" id="stockStatus"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan" id="srh_span_factoryName">
+				<label>厂商:</label>
+				<input type="text" name="factoryName" />
+			</span>
+			<span class="input-colspan">
+				<label>仓库:</label>
+				<input type="text" name="warehouseName" />
+			</span>
+			<span class="input-colspan">
+				<label>我方抬头:</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"></input>
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+				<a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcel()">导出</a>
+			</span>			
+		</p>
+	</form>
+	
+</div>
+
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w_detail" title="库存流水" data-options="width:1190,height:400">		
+</div>
+
+<script type="text/javascript">
+	var lastIndex;
+	var _productType =eval('[(${productType})]');
+	var factoryJson=eval('[(${factory})]');
+	var _productAttr=eval('[(${productTypeJson})]');
+	var warehouseJson=eval('[(${warehouse})]');
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	$(function(){
+		var columns = [ [
+			{field:'productCd',title:'品名',width:130,sortable:true,formatter:function(value,row,index){
+				if(value!=undefined){
+					return Convert.findTreeValueByKey(_productType,'id',value,'text');
+				}
+			}},		
+			{field:'brandNumber',title:'牌号',width:100,sortable:true},
+			{field:'factoryId',title:'厂商', width:100,sortable:true,formatter:function(value,row,index){
+				if(value!=undefined){
+					return Convert.findValueByKey(factoryJson,'id',value,'factoryName');
+				}				
+			}},
+			{field:'warehouseName',title:'仓库',sortable:true, width:150},
+			{field:'averagePrice',title:'平均价(元)', width:100,align:'right'},
+			{field:'totalNumber',title:'总数量(吨)',sortable:true, width:100,align:'right'},
+			{field:'frozenNumber',title:'冻结数量(吨)', width:100,align:'right'},
+			{field:'realNumber',title:'可用数量(吨)', width:100,align:'right'},
+			{field:'productAttr',title:'在途/现货',sortable:true, width:100,align:'right',formatter:function(value,row,index){
+				if(value!=undefined){
+					return Convert.findValueByKey(_productAttr,'dictCd',value,'dictName');
+				}}},
+			{field:'action',title:'操作', width:100,align:'center',formatter:function(value, row, index){
+				if (row.id){
+				var str = "";
+		        str = "<div class='btnSpan' onclick='queryStockDetailHis(\""+row.id+"\")' class='l-btn'><span style='width:60px;cursor: pointer;'>查看流水</span></div>"; 
+		        return str; 
+				}
+			}}
+		]];
+		
+		if (_industry.indexOf('SL')==-1){
+			for(var i in columns[0]){
+				var col =columns[0][i];
+				if (col.field=='brandNumber' || col.field=='factoryId'){
+					col.hidden = true;
+				}
+			}
+			
+			$('#srh_span_brandNumber').hide();
+			$('#srh_span_factoryName').hide();
+		}
+		
+		$('#tt').datagrid({
+			pagination:true,
+			width:400,
+			pageSize:20,
+			rownumbers:true,
+			showFooter:true,
+			pageList:[50,40,30,20,10],
+			url:_ctx+"/bas/stock/stockList",
+			columns:columns
+		});		
+		//品名下拉
+		$('#productTypeCd_query').combotree({
+			data:_productType,
+			method:"get",
+			multiple : false,
+			editable : true,
+			onSelect: function(record){
+				if(record.children.length!=0){
+					$("#productTypeCd_query").combotree('clear');
+				}
+			}
+		});
+		
+		$("#stockStatus").combobox({
+			data:[{id:'A',text:'历史'},{id:'C',text:'当前'},{id:'',text:'全部'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			onLoadSuccess:function(){
+				$("#stockStatus").combobox('setValue','C');
+			}
+		});
+		
+		$('#ourCompanyName').combobox({
+			data:_ourCompanyJson, 
+			valueField:'dictName',
+			textField:'dictName',
+			//panelWidth:'220px',
+			panelHeight:"auto"
+		});
+		
+		$('#w_detail').window({
+			title: '库存流水',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:""
+		});
+		
+	});
+	function queryStockDetailHis(id){
+		if(id){
+			var url = _ctx+"/bas/stock/stockFlow/"+id;
+			$('#w_detail').window({href:url});
+			$('#w_detail').window("open");
+		}
+	}
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/bas/stock/exportExcel"});
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选择费用</title>
+</head>
+<body>
+<div style="display: flex;justify-content: center;width: 100%;height: 100%;flex-wrap: wrap;">
+    <input type="hidden" name="id" id="litigationCaseId" th:value="${entity.id}"/>
+    <div class="feeApply-div">
+        <span class="feeApply-item" id="attorneyFee" th:if="${entity.attorneyApproveStatus ne 'A' and entity.attorneyApproveStatus ne 'D'}">
+            <span style="width: 50%;margin-right: 20px">律师费</span>
+            <span style="width: 50%"  th:text="${#numbers.formatDecimal(entity.attorneyFee, 1, 'COMMA',2,'POINT')} + '元'"></span>
+        </span>
+        <span class="feeApply-item" id="processingFee" th:if="${entity.processingApproveStatus ne 'A' and entity.processingApproveStatus ne 'D'}">
+             <span style="width: 50%;margin-right: 20px">案件受理费</span>
+             <span style="width: 50%" th:text="${#numbers.formatDecimal(entity.processingFee, 1, 'COMMA',2,'POINT')} + '元'"></span>
+        </span>
+        <span class="feeApply-item" id="preservationFee" th:if="${entity.preservationApproveStatus ne 'A' and entity.preservationApproveStatus ne 'D'}">
+             <span style="width: 50%;margin-right: 20px">保全费</span>
+             <span style="width: 50%" th:text="${#numbers.formatDecimal(entity.preservationFee, 1, 'COMMA',2,'POINT')} + '元'"></span>
+        </span>
+        <span class="feeApply-item" id="liabilityFee" th:if="${entity.liabilityApproveStatus ne 'A' and entity.liabilityApproveStatus ne 'D'}">
+              <span style="width: 50%;margin-right: 20px">诉责险</span>
+             <span style="width: 50%" th:text="${#numbers.formatDecimal(entity.liabilityFee, 1, 'COMMA',2,'POINT')} + '元'"></span>
+
+        </span>
+    </div>
+    <div style="margin-bottom: 20px;width: 70%;text-align: center">
+        <span id="submitSave" class="easyui-linkbutton btn64" onclick="submitApply()">确认</span>
+        <span id="cancelSave" class="easyui-linkbutton btn-empty btn64 ml10"  onclick="cancelApply()">取消</span>
+    </div>
+</div>
+
+
+<script>
+    var processListJson = eval('[(${processListJson})]');
+    // 为每个 span 元素添加点击事件，实现选中状态
+    document.querySelectorAll('.feeApply-item').forEach(item => {
+        item.addEventListener('click', () => {
+            // 取消其他选项的选中状态
+            document.querySelectorAll('.feeApply-item').forEach(i => i.classList.remove('selected'));
+            // 选中当前项
+            item.classList.add('selected');
+        });
+    });
+    function submitApply(){
+        const selectedItem = document.querySelector('.feeApply-item.selected');
+        if (!selectedItem) {
+            $.messager.alert('提示', "请先选择费用", 'info');
+             // 如果没有选中项，则中止提交
+            return;
+        }
+        var title ='新建:供应链费用申请';
+        var processCode = "APPLY_OPERATING_BUSINESS_PAY";
+        var litigationCaseId = $("#litigationCaseId").val()
+        const feeType = selectedItem.id;
+        doRedirect(title,processCode,litigationCaseId,feeType)
+        $('#feeApplyWindow').window("close");
+    }
+    function doRedirect(title,processCode,litigationCaseId,feeType){
+        var processId = Convert.findValueByKey(processListJson,"processCode",processCode,"id");
+        window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+processId+'?litigationCaseId='+litigationCaseId+'&feeType='+feeType);
+    }
+    function cancelApply(){
+        $('#feeApplyWindow').window("close");
+    }
+</script>
+<style>
+
+    /* 包裹 span 的容器 */
+    .feeApply-div {
+        display: flex;
+        flex-direction: column;
+        padding: 0;
+        height: 70%;
+        width: 70%;
+        margin-top: 20px;
+    }
+
+    /* 每个 span 的样式 */
+    .feeApply-item {
+        position: relative; /* 使圆圈定位相对 span */
+        margin-top: 20px;
+        font-size: 17px;
+        padding-left: 30px; /* 给圆圈留出空间 */
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+    }
+
+    /* 使用伪元素 ::before 创建圆圈 */
+    .feeApply-item::before {
+        content: ''; /* 必须添加 content 才能显示 */
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        border: 2px solid #999; /* 初始灰色边框 */
+        background-color: white;
+        transition: all 0.3s ease;
+    }
+
+    /* 选中时的样式 */
+    .feeApply-item.selected::before {
+        background-color: #3F8CFE; /* 选中时变为黑色 */
+        border-color: #3F8CFE; /* 选中时圆圈的边框变为黑色 */
+    }
+
+    /* 鼠标悬停时改变圆圈边框 */
+    .feeApply-item:hover::before {
+        border-color: #666;
+    }
+</style>
+</body>
+</html>

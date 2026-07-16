@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>结算列表查询</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter mobile-display-none">
+				<label>业务区域:</label>
+				<input name="deptId" id="regionContrastDeptId"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同签订日期</label>
+				<input   name="contractTimeBegin" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter">
+				<input   name="contractTimeEnd" class="easyui-datebox" />
+			</p>
+			<a href="#" id="btnEdit" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btnDel" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<span class="" th:if="${permReportFundReceivableStatisticsExport == true}">
+				<a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none" onclick="exportExcel()">导出</a>
+			</span>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<p style="margin-bottom: 10px">统计资金方对应的下游客户应收余额</p>
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+</div>
+<script type="text/javascript">
+	var _regionContrastJson=eval('[(${regionContrastJson})]');
+	$(function(){
+		$("#regionContrastDeptId").combobox({
+			data:_regionContrastJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto"
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:20,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/fundReceivableStatistics/findPage",
+			columns:[ [
+				{field:'companyAbbr',title:'代采方', align:"center",width:150},
+				{field:'receivableContractNum',title:'应收合同数', align:"right",width:150},
+				{field:'receivableBreachAmount',title:'应收逾期罚息（元）', align:"right",width:150,formatter:formaterNumTon},
+				{field:'receivableBalance',title:'应收余额（元）',align:"right", width:150,formatter:formaterReceivableBalance}
+			]],
+		});
+	});
+	// 跳转赊销界面
+	function openDCSX(companyName){
+		console.log(companyName,555)
+		window.parent.addTab('赊销订单', _ctx + '/ctr/contract/findDCSX?contractType=S&payType=PN&ourCompanyName='+companyName);
+	}
+	function formaterReceivableBalance(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			const value = num.join(".");
+			return `<span onclick="openDCSX('${row.companyName}')" class="contract-btn contract-btn-3">${value}</span>`;
+		}
+	}
+	/*  导出Excel表格 */
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/fundReceivableStatistics/exportExcel"});
+	}
+	function formaterNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+
+</script>
+</body>
+</html>

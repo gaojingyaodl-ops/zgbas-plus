@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>额度管理</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <input type="hidden" id="currentUserId" th:value="${currentUserId}">
+        <!--<input type="hidden" id="canDelete" th:value="${canDelete}">-->
+        <input type="hidden" id="lookAllCompany" th:value="${lookAllCompany}">
+        <input type="hidden" id="operationFlg" th:value="${operationFlg}">
+        <input type="hidden" id="editFlg" th:value="${editFlg}">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>企业名称:</label>
+                <input name="search_LIKES_companyName" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter">
+                <lable>评价等级</lable>
+                <input name="search_EQS_creditRating" type="text" id="credit_rating"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>企业类型:</label>
+                <input name="search_EQS_companyType" id="company_type" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter">
+                <label>企业类别:</label>
+                <input name="search_EQS_companyCategory" id="company_category" type="text" value=""/>
+            </p>
+
+            <!--<p class="yw-table-filter">-->
+                <!--<label>是否准入:</label>-->
+                <!--<input name="search_EQS_allowed" id="is_allowed" type="text" value=""/>-->
+            <!--</p>-->
+
+            <p class="yw-table-filter">
+                <label>业务员:</label>
+                <input name="search_EQL_matchUserId" id="ass_matchUserId" type="text" value=""/>
+            </p>
+            <a href="#" id="btn" class="easyui-linkbutton btn64" onclick="query()">查询</a>
+            <a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+        </div>
+    </form>
+</div>
+
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+    <table id="tt1" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id">
+    </table>
+</div>
+
+<!--<div id="quotaOperate_window" title="申请额度" data-options="width:630,height:300"></div>-->
+
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+    var lastIndex;
+    var enableFlgs = eval('[(${enableFlgs})]');
+    var companyStatus = eval('[(${companyStatus})]');
+    var creditRating = eval('[(${creditRating})]');
+    var companyType = eval('[(${companyType})]');
+    var userJson = eval('[(${userJson})]');
+    var areaJson = eval('[(${areaJson})]');
+    var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');// 业务员树
+    var currentUserId = $("#currentUserId").val();
+    var isAdmin = $("#canDelete").val();// 删除权限
+    var canLookAll = $("#lookAllCompany").val();// 查看所有企业权限
+    var operationFlg = $("#operationFlg").val();// 不可操作权限
+    var editFlg = $("#editFlg").val();
+    var allowedJson = eval('[(${allowedJson})]');
+    var companyCategoryJson = eval('[(${companyCategoryJson})]');
+    //	var industryModeJson = eval('[(${industryModeJson})]');
+    var processListJson = eval('[(${processListJson})]');
+    var companyIndustryJson = eval('[(${companyIndustryJson})]');
+
+    $(function() {
+        $("#company_type").combobox({
+            data:companyType,
+            textField:'dictName',
+            valueField:'dictCd',
+            editable:false,
+            panelHeight:"auto"
+        });
+        $("#credit_rating").combobox({
+            data:creditRating,
+            textField:'dictName',
+            valueField:'dictCd',
+            editable:false,
+            panelHeight:"auto"
+        });
+        $("#credit_rating").combobox('setValue', "W");
+
+        $("#status_srh").combobox({
+            data : companyStatus,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            width : 150,
+            panelHeight:"auto",
+            editable : false
+        });
+
+        $("#is_allowed").combobox('setValue', "NEW");
+
+        //企业类别
+        $("#company_category").combobox({
+            data:companyCategoryJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:"auto",
+            editable:false
+        });
+
+        $('#tt1').datagrid(
+            {
+                pagination : true,
+                pageSize : 30,
+                rownumbers : true,
+                remoteSort : false,
+                pageList : [ 50, 40, 30, 20, 10 ],
+                singleSelect:true,
+                url : _ctx + "/bs/company/listCompany",
+                queryParams: {
+                    "search_EQS_allowed": "Y",
+                    "search_EQS_creditRating": "W",
+                },
+
+                columns : [ [
+                    {
+                        field : 'companyName',
+                        title : '客户名称',
+                        sortable : false,
+                        width : 140,
+                        align: 'left',
+                        formatter : function(value, row, index) {
+                            if(row.creditRating == "W"){
+                                return '<p title="' + row.companyName + '" class="note" style="color:green">' + value + '</p>';
+                            }else if(row.creditRating == "G"){
+                                return '<p title="' + row.companyName + '" class="note" style="color:#ccc">' + value + '</p>'
+                            }else{
+                                return '<p title="' + row.companyName + '" class="note" style="color:red">' + value + '</p>'
+                            }
+
+                        }
+                    },
+                    {
+                        field : 'creditRating',
+                        title : '评价等级',
+                        width : 120,
+                        align:'center',
+                        formatter : function(value, row, index) {
+                            if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                                return '******';
+                            }else{
+                                return Convert.findValueByKey(creditRating, "dictCd",value, "dictName");
+                            }
+                        }
+                    },
+                    // {
+                    //     field : 'allowed',
+                    //     title : '是否准入',
+                    //     width : 120,
+                    //     align:'center',
+                    //     formatter : function(value, row, index) {
+                    //         if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                    //             return '******';
+                    //         }else{
+                    //             return Convert.findValueByKey(allowedJson, "dictCd",value, "dictName");
+                    //         }
+                    //     }
+                    // },
+                    {
+                        field : 'companyType',
+                        title : '企业类型',
+                        sortable : false,
+                        width : 100,
+                        align:'left',
+                        formatter : function(value, row, index) {
+                            if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                                return '******';
+                            }else{
+                                return Convert.findValueByKey(companyType, "dictCd",value, "dictName");
+                            }
+                        }
+                    },
+                    {
+                        field : 'companyArea',
+                        title : '区域',
+                        width : 100,
+                        align:'left',
+                        formatter : function(value, row, index) {
+                            if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                                return '******';
+                            }else{
+                                return Convert.findValueByKey(areaJson, "code",value, "name");
+                            }
+                        }
+                    },
+                    {
+                        field : 'contactName',
+                        title : '联系人',
+                        width : 100,
+                        align:'left',
+                        formatter : function(value, row, index) {
+                            if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                                return '******';
+                            }else{
+                                return value;
+                            }
+                        }
+                    },
+                    {
+                        field : 'contactPhone',
+                        title : '联系电话',
+                        align : 'left',
+                        width : 120,
+                        formatter : function(value, row, index) {
+                            if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                                return '******';
+                            }else{
+                                return value;
+                            }
+                        }
+                    },
+                    {
+                        field : 'totalCreditAmount',
+                        title : '赊销额度',
+                        align : 'left',
+                        width : 120,
+                        formatter : function(value, row, index) {
+                            if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                                return '******';
+                            }else{
+                                return value;
+                            }
+                        }
+                    },
+                    {
+                        field : 'totalSpotAmount',
+                        title : '现货额度',
+                        align : 'left',
+                        width : 120,
+                        formatter : function(value, row, index) {
+                            if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                                return '******';
+                            }else{
+                                return value;
+                            }
+                        }
+                    },
+                    {
+                        field : 'totalFuturesAmount',
+                        title : '期货额度',
+                        align : 'left',
+                        width : 120,
+                        formatter : function(value, row, index) {
+                            if(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                                return '******';
+                            }else{
+                                return value;
+                            }
+                        }
+                    },
+                    {
+                        field : 'matchUserId',
+                        title : '领用人',
+                        width : 80,
+                        align : 'left',
+                        formatter : function(value, row, index) {
+                            return Convert.findValueByKey(userJson, "id",value, "name");
+                        }
+                    },
+
+                    {
+                        field : 'action',
+                        title : '额度操作',
+                        width : 100,
+                        align : 'center',
+                        formatter : function(value, row, index) {
+                            if(row.allowed!='Y'){
+                                return;
+                            }
+                            var control = "";
+                            control += "<a onclick='quotaOperate(\""+ row.id+ "\")' style='color:#ff8153'>额度操作</a>"
+                            return control;
+                        }
+                    },
+                ] ],
+                toolbar : '#toolbar',
+                onDblClickCell : function(index, field) {
+                    var row = $('#tt1').datagrid('getSelected');
+                    if(!(canLookAll=='false' && row.status =='F' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false)){
+                        console.log("company - onDblClickCell : " , row);
+                    }
+                },
+                onClickCell : function(index, field) {
+                    lastIndex = index;
+                }
+            });
+        if(isAdmin == 'true'){
+            $('#tt1').datagrid('showColumn', 'operate');
+        }
+
+        if(operationFlg == 'true'){
+            $('#tt1').datagrid('hideColumn', 'operate');
+            $('#tt1').datagrid('hideColumn', 'action');
+        }
+
+        // $('#quotaOperate_window').window({
+        //     title : '额度申请',
+        //     modal : true,
+        //     closed : true,
+        //     cache : false
+        // });
+
+        $('#ass_matchUserId').combotree({
+            data : matchUserNameTreeJson,
+            multiple : false,
+            editable : true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#ass_matchUserId').combotree('clear');
+                }
+            }
+        });
+        $('#ass_matchUserId1').combotree({
+            data : matchUserNameTreeJson,
+            multiple : false,
+            editable : true,
+            height : 30,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#ass_matchUserId1').combotree('clear');
+                }
+            }
+        });
+    });
+
+    function quotaOperate(companyId){
+        var title ='新建:公司额度申请';
+        var processCode = "APPLY_CPN_QUOTA";
+        doRedirect(title,processCode,companyId);
+    }
+
+    function doRedirect(title, processCode, companyId){
+        var processId = Convert.findValueByKey(processListJson,"processCode",processCode,"id");
+        console.log(title, " - ", companyId, " - ", processId, " - ", processListJson);
+        window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+processId+'?companyId='+companyId);
+    }
+
+
+    function query() {
+        var param = Convert.getJson4Form('searchForm');
+        //必须为有效企业
+        // param.search_EQL_enableFlg = 1;
+        // console.log("search", param);
+        param.search_EQS_allowed = 'Y';
+        $('#tt1').datagrid('options').queryParams = param;
+        $('#tt1').datagrid('reload');
+    }
+</script>
+</body>
+</html>

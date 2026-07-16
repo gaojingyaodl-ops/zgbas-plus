@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>业务指标</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>所属地区:</label>
+                <input id="branch_name" name="search_LIKES_branchName" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter">
+                <label>指标月份:</label>
+                <input id="targetMonth" name="search_LIKES_targetMonth" type="text" th:value="${nowTargetMonth}"/>
+            </p>
+            <a href="#" id="btn" class="easyui-linkbutton btn64"
+               onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10"
+               onclick="$('#searchForm').form('reset');">清空</a>
+        </div>
+    </form>
+    <div id="btn" class="add-btn" style="margin-top: 10px">
+        <a href="#" class="easyui-linkbutton btn64 addBtn"
+           onclick="addWorkTarget(0)">新增</a>
+    </div>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+<div id="add_workTarget" title="添加目标" data-options="width:450,height:340"></div>
+    <script type="text/javascript">
+        $(function () {
+            $('#tt').datagrid({
+                pagination: true,
+                pageSize: 20,
+                rownumbers: true,
+                queryParams: Convert.getJson4Form('searchForm'),
+                pageList: [50, 40, 30, 20, 10],
+                url: _ctx + "/work/target/workTargetList",
+                columns: [ [
+                    {
+                        field: 'branchName',
+                        title: '所属地区',
+                        width: 200,
+                        align: 'left',
+                    },
+                    {
+                        field: 'targetMonth',
+                        title: '指标月份',
+                        width: 200,
+                        align: 'left',
+                    },
+                    {
+                        field: 'targetTotalAmount',
+                        title: '总金额（万元）',
+                        width: 100,
+                        formatter:formateNum
+                    },
+                    {
+                        field: 'targetTypeStr',
+                        title: '总价类型',
+                        width: 100,
+                    },
+                    {field: 'updateTime', title: '更新时间', width: 150},
+                    {
+                        field: 'operate',
+                        title: '操作',
+                        width: 85,
+                        align: 'center',
+                        formatter: function (value, row, index) {
+                            return '<img onclick="remove(' + row.id + ')" style="cursor:pointer;width:16px;height:18px" src="../../static/new-version/images/icon_delete.png"/>';
+                        }
+                    }
+                ]],
+                toolbar: '#toolbar',
+                onDblClickCell: function (index, field) {
+                    let row = $('#tt').datagrid('getSelected');
+                    addWorkTarget(row.id)
+                },
+            });
+
+            $('#add_workTarget').window({
+                title: '添加业务指标',
+                modal: true,
+                closed: true,
+                collapsible: false,
+                minimizable: false,
+                maximizable: false,
+                cache: false,
+                onClose: function () {
+                    $('#tt').datagrid('reload');
+                }
+            });
+            $('#targetMonth').datebox({
+            });
+            intiMonthBox('targetMonth');
+        });
+
+        function addWorkTarget(id) {
+            var url = _ctx + "/work/target/workTargetAdd/" + id;
+            $('#add_workTarget').window({href: url});
+            $('#add_workTarget').window("open");
+        }
+
+        function formatTargetType(){
+
+        }
+
+        function remove(id) {
+            $.ajax({
+                type: 'get',
+                async: false,
+                url: _ctx + '/work/target/delete/' + id,
+                success: function (response) {
+                    if (response.success) {
+                        $.messager.show({
+                            title: 'Tip',
+                            msg: '删除成功',
+                            timeout: 2000,
+                            showType: 'show'
+                        });
+                    } else {
+                        $.messager.alert('error', response.failure, 'warning');
+                    }
+                    $('#tt').datagrid('reload');
+                },
+                error: function () {
+                    console.log("删除出错！")
+                }
+            });
+        }
+        function formateNum(num,row,index) {
+            if (num){
+                num = num/10000;
+                num = parseFloat(num).toFixed(2).toString().split(".");
+                num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+                return num.join(".");
+            }else{
+                return num;
+            }
+        }
+        function intiMonthBox(id){
+            var db = $('#'+id);
+            db.datebox({
+                onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                    span.trigger('click'); //触发click事件弹出月份层
+                    if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                        tds = p.find('div.calendar-menu-month-inner td');
+                        tds.click(function (e) {
+                            e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                            var year = /\d{4}/.exec(span.html())[0]//得到年份
+                                , month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+                            db.datebox('hidePanel')//隐藏日期对象
+                                .datebox('setValue', year + '-' + month); //设置日期的值
+                        });
+                    }, 0);
+                    yearIpt.unbind();//解绑年份输入框中任何事件
+                },
+                parser: function (s) {
+                    if (!s) return new Date();
+                    var arr = s.split('-');
+                    return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+                },
+                formatter: function (d) {
+                    let year = d.getFullYear();
+                    let month = d.getMonth() + 1;
+                    if (month < 10) {
+                        month = '0' + month;
+                    }
+                    return year + '-' + month;
+                }
+            });
+            var p = db.datebox('panel'), //日期选择对象
+                tds = false, //日期选择对象中月份
+                yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+                span = p.find('span.calendar-text'); //显示月份层的触发控件
+        }
+
+    </script>
+</body>
+</html>

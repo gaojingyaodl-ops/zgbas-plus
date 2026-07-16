@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>审批代办事项</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div" border="false"  style="height: 60px">
+		      <form id="searchForm" class="form-search from-input-layout" method="post" style="min-width:900px;overflow:hidden">		  
+			  			<p class="p_text" style="line-height:30px;">
+						    <span class="input-colspan">
+								<label style="width:80px;">审批类型:</label>
+			                	<input  class="control" name="search_EQS_dealType" id="dealType" type="text" value=""/>
+							</span>
+							<span class="input-colspan2">
+								<label>摘要:</label>
+	                			<input  class="control" type="text" name="search_LIKES_subject" id="subject"/>
+							</span>
+							<span class="btn-group">
+								<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-search'" onclick="Convert.search('searchForm','tt');">查询</a>
+					    		<a href="#" class="easyui-linkbutton ml10" data-options="iconCls:'icon-clear'" onclick="$('#searchForm').form('reset');">清空</a>
+							</span>
+					    </p>
+			  </form>
+	</div>
+    <div region="center" border="false" class="panel_padding"  style="padding-right:30px;">		
+			  <table id="tt" class="easyui-datagrid" style="width:100%;height:99%;"
+				data-options="idField:'id',rownumbers:true,singleSelect: true,iconCls: 'icon-save'">
+			  </table>	 
+	</div>
+
+
+<script type="text/javascript" th:inline="javascript">
+  var dealTypeJson=eval('[(${dealTypeJson})]');
+	var lastIndex;
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[200,100,50,30,20],
+			queryParams:Convert.getJson4Form('searchForm'), 
+			url:_ctx+"/approve/deal/approveDealList",
+			columns:[ [
+				{field:'dealTypeName',title:'类型',width:70},
+				{field:'subject',title:'摘要',width:400,formatter: function(value, row, index) {
+			        var abValue = value;
+			        var content = '<a href="#" title="' + value + '" class="note">' + abValue + '</a>';
+			        return content;
+			    }},
+				{field:'userName',title:'责任人',width:70},
+				{field:'updatedDate',title:'更新时间',width:140},
+				{field:'发起申请',title:'操作',align:'center',width:80,formatter:function(value, row, index){ 
+					var control = "";
+					control += "<a onclick='approveDetail(\""+ row.id+ "\")' style='color:#ff8153'>执行</a>"
+					return control;}}
+			]],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				approveDetail(row.id);
+			},
+			onLoadSuccess:function(data){
+			    $(".note").tooltip(
+			            {
+			                onShow: function(){
+			                    $(this).tooltip('tip').css({
+			                        width:'400',
+			                        boxShadow: '1px 1px 3px #292929'
+			                    });
+			                }
+			            }
+			    );
+			}
+			
+		});
+		
+		$("#dealType").combobox({
+			data:dealTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		});
+		
+	});	
+	
+	//详情
+	function approveDetail(id){
+		$('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		if(row.relationId==0){				//发情申请
+			var title =row.processName+ ':' +row.processId;
+			window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+row.processId+"?contractId="+row.remark);
+			//reloading();
+		}else{								//审核
+			var title =row.processName+ ':' +row.relationId;
+			window.parent.addTab(title,_ctx+'/pm/approve/detail/'+row.relationId);
+			//reloading();
+		}
+	} 
+	function reloading(){
+		$('#tt').datagrid('reload');
+	}
+	
+</script>
+</body>
+</html>

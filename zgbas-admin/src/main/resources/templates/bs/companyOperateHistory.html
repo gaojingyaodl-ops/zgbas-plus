@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">	
+  <div style="height:400px;">
+   <input type="hidden" id="entityCompanyId" th:value="${companyId}" />
+			 <table id="hisTable" style="height:400px;" border="0"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+			</table>
+	</div>
+</div>
+<script type="text/javascript">
+var companyStatus = eval('[(${companyStatus})]');
+$(function(){
+	var _companyId = $("#entityCompanyId").val();
+	var _url = _ctx+"/bs/companyOphis/opreateHisList/"+_companyId;
+	$('#hisTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:[ [
+			{field:'createUserName',title:'创建用户',align:'center',width:100},
+			{field:'status',title:'公司状态',align:'center',width:100,formatter : function(value, row, index) {
+				var status = Convert.findValueByKey(companyStatus,"dictCd", value,"dictName");
+				return status;
+			}},
+			{field:'remark',title:'备注',align:'center',width:120},
+			{field:'createdDate',title:'创建时间',align:'center',width:200},
+		]]
+	});
+})
+</script>

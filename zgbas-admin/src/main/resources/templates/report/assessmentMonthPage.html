@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>业务员月度考核表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+<!--			<p class="yw-table-filter">-->
+<!--				<label style="width: 80px;">年份:</label>-->
+<!--				<input id="year" name="year" type="text" value=""/>-->
+<!--			</p>-->
+			<p class="yw-table-filter">
+				<label style="width: 80px;">月份:</label>
+				<input id="yearAndMonth" name="yearAndMonth" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter" >
+				<label style="width: 80px;">事业部:</label>
+				<input id="deptId" name="deptId" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">业务员:</label>
+				<input type="text" id="matchUserName" class="control text_padding" name="userId"></input>
+			</p>
+
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="exportExcel()">导出</a>
+
+			<input type="hidden" name="searchType" id="refreshColumns" value = "U"></input>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+</div>
+<script type="text/javascript" >
+	var matchUserJson = eval('[(${matchUserNameTree})]');
+	$(function(){
+		findByDept();//查询业务部门
+		$('#matchUserName').combotree({
+			data : matchUserJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#matchUserName').combotree('clear');
+				}
+			}
+		})
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/assessmentMonth/selectAssessmentMonth",
+			columns:[ [
+				{field:'userName', title: '姓名', width: 80},
+				{field:'deptName',title:'事业部', width:120},
+				{field:'entryDate',title:'入职时间', width:200},
+			    {field:'createdDate',title:'月份', width:80},
+				{field:'sellMoney',title:'赊销额(元)', align:"right", width:100,formatter:formateNumTon},
+				{field:'sellMoneyProfit',title:'赊销利润(元)', align:"right", width:100,formatter:formateNumTon},
+				{field:'buyMoney',title:'代采额(元)', align:"right", width:100,formatter:formateNumTon},
+				{field:'buyMoneyProfit',title:'代采利润(元)', align:"right", width:100,formatter:formateNumTon},
+				{field:'sumProfitMoney',title:'利润合计(元)', align:"right", width:100,formatter:formateNumTon},
+			]]
+		});
+
+		intiMonthBox('yearAndMonth');
+	});
+	/*  导出Excel表格 */
+	 function exportExcel(){
+     	$('#searchForm').form('submit', {url:_ctx+"/rpt/assessmentMonth/exportExcel"});
+	 }
+
+	//格式化时间
+	function forMateDate(date){
+		let newDate=/\d{4}-\d{1,2}-\d{1,2}/g.exec(date)
+		return newDate;
+	}
+	//保留两位小数
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+	//保留三位小数
+	// function formateNumTom(num, row, index) {
+	// 	if (num) {
+	// 		num = parseFloat(num).toFixed(3).toString().split(".");
+	// 		num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+	// 		return num.join(".");
+	// 	} else {
+	// 		return num;
+	// 	}
+	// }
+	/*  获取事业部列表 */
+	function findByDept(){
+		$.ajax({
+			type: 'POST',
+			url: _ctx+'/rpt/contractReport/findProfitByDeptId',
+			data: Convert.getJson4Form('searchForm'),
+			success: function (result) {
+				var sc  = eval('('+result+')');//由Json字符串转换成Javascript对象
+				var deptByIdJson = sc.rows;
+				$('#deptId').combobox({
+					data : deptByIdJson,
+					textField:'deptName',
+					valueField:'deptId',
+					panelHeight:"auto",
+					editable:false
+				});
+			},
+		});
+	}
+
+	// 只显示年月，不显示日
+	var intiMonthBox = function(id){
+		var db = $('#'+id);
+		db.datebox({
+			onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+				span.trigger('click'); //触发click事件弹出月份层
+				if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+					tds = p.find('div.calendar-menu-month-inner td');
+					tds.click(function (e) {
+						e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+						var year = /\d{4}/.exec(span.html())[0]//得到年份
+								, month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+						db.datebox('hidePanel')//隐藏日期对象
+								.datebox('setValue', year + '-' + month); //设置日期的值
+					});
+				}, 0);
+				yearIpt.unbind();//解绑年份输入框中任何事件
+			},
+			parser: function (s) {
+				if (!s) return new Date();
+				var arr = s.split('-');
+				return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+			},
+			formatter: function (d) {
+				return d.getFullYear() + '-' + (d.getMonth() + 1);
+			}
+		});
+		var p = db.datebox('panel'), //日期选择对象
+				tds = false, //日期选择对象中月份
+				yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+				span = p.find('span.calendar-text'); //显示月份层的触发控件
+	}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>合同管理</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+	<style>
+		.custom-combobox{
+			width:65px;
+			background-color: rgb(67, 183, 127);
+			color: white;
+		}
+		.custom-combobox .textbox,
+		.custom-combobox .textbox-inner {
+			background-color: rgb(67, 183, 127);
+			color: white;
+		}
+	</style>
+</head>
+<body class="easyui-layout">
+<div region="north" id="serchDev" class="search_div pt20 pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input type="hidden" id="type" th:value="${type}"/>
+		<input type="hidden" name="search_EQS_businessType" th:value="${businessType}">
+		<input type="hidden" id = "businessType" name="businessType" th:value="${businessType}">
+		<input type="hidden" name="search_EQB_matchCreditFlg" th:value="${matchCreditFlg}">
+		<input type="hidden" name="matchCreditFlg" id="matchCreditFlg" th:value="${matchCreditFlg}">
+		<input type="hidden" name="violateTreatyFlgUpdate" id="violateTreatyFlgUpdate" th:value="${violateTreatyFlgUpdate}">
+		<input type="hidden" name="updateCostFlg" id="updateCostFlg" th:value="${updateCostFlg}">
+		<input type="hidden"  id="contractType_index" th:value="${contractType}">
+		<input type="hidden"  id="billCondition_index" th:value="${billCondition}">
+		<input id="deliveryDateStart" type="hidden" th:value="${deliveryDateStart}"/>
+		<input id="deliveryDateEnd" type="hidden" th:value="${deliveryDateEnd}"/>
+		<input id="contractTimeStart" type="hidden" th:value="${contractTimeStart}"/>
+		<input id="contractTimeEnd" type="hidden" th:value="${contractTimeEnd}"/>
+		<input id="companyNameJump" type="hidden" th:value="${companyNameJump}"/>
+		<input id="userId" type="hidden" th:value="${userId}"/>
+		<input id="isGcy" type="hidden" th:value="${isGcy}"/>
+		<input id="toReportQueryFlg" name="toReportQueryFlg" type="hidden" th:value="${toReportQueryFlg}"/>
+		<div class="mb6">
+			<p class="yw-table-filter mobile-display-none">
+				<label>合同类型</label>
+				<input type="text" id="contractType_src" class="control text_padding" name="search_EQS_contractType"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同编号</label>
+				<input  class="control" id="contractNo" type="text" name="search_LIKES_contractNo_OR_LIKES_virtualContractNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>企业名称</label>
+				<input  class="control" id="companyName" type="text" name="search_LIKES_companyName"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>业务部门:</label>
+				<input name="search_EQL_deptId" id="regionContrastDeptId"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>业务员</label>
+				<input type="text" id="matchUserName" class="control text_padding" name="search_EQS_matchUserId"/>
+			</p>
+			<span style="margin-left: 10px;" class="mobile-display-none">
+				<select id="refreshColumnsViews" class="easyui-combobox custom-combobox">
+					<option value="G">概 要</option>
+					<option value="X">详 情</option>
+					<option value="Y">业 务</option>
+				</select>
+			</span>
+			<a href="#" id="queryBtn" class="easyui-linkbutton btn64 ml10 mobile-display-none" onclick="refresh_query();"><span id="refreshQueryText">更多</span></a>
+			<input type="hidden" id="refreshQuery" value="M"/>
+			<a  href="#" class="easyui-linkbutton btn-empty btn64 ml10 mobile-display-none" id="quickSearchId" onclick="showQuickSearch()">快速查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none" onclick="downLoadZipContract()">导出双签</a>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter mobile-display-none">
+				<label>我方抬头</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="search_LIKES_ourCompanyName"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>确认收货状态</label>
+				<input type="text" id="confirmReceiveFlgSrh" class="control text_padding" name="search_EQB_confirmReceiptFlg"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>回款日期变动</label>
+				<input type="text" id="payDateChange" class="control text_padding" name="payDateChange"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>授信类别:</label>
+				<input name="search_EQB_companyPiccFlg" id="companyPiccFlg"  value=""/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>交货方式</label>
+				<input type="text" id="deliveryType" class="control text_padding" name="search_EQS_deliveryType"/>
+			</p>
+			<a href="#" class="easyui-linkbutton btn64 ml10" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">重置</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none" onclick="exportExcel()">导出</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn80 ml6 mobile-display-none" onclick="exportBusinessExcel()">导出业务表</a>
+		</div>
+		<div class="mb6 hide mobile-display-none" id="query1">
+			<p class="yw-table-filter mobile-display-none">
+				<label id="payTypeName"></label>
+				<input type="text" id="payType" class="control text_padding" name="payCondition"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>签订日期</label>
+				<input  id="srh_contractTime_from" name="search_GTED_contractTime" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input  id="srh_contractTime_to"  name="search_LTD_contractTime" class="easyui-datebox" />
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>收货确认日期</label>
+				<input id="confirmDate_from" name="search_GTED_confirmDate" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input id="confirmDate_to" name="search_LTD_confirmDate" class="easyui-datebox"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>类型</label>
+				<input type="text" id="contractTypes" class="control text_padding" name="contractTypes" th:value="Y"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>是否货到票到</label>
+				<input type="text" id="receiptArrivedFlgSrh" class="control text_padding" name="search_EQB_receiptArrivedFlg"/>
+			</p>
+		</div>
+		<div class="mb6 hide mobile-display-none" id="query2">
+			<p class="yw-table-filter mobile-display-none">
+				<label id="warehouseTypeName"></label>
+				<input type="text" id="warehouseType" class="control text_padding" name="warehouseCondition"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>收/付全款日期</label>
+				<input id="payFullTime_from" name="search_GTED_payFullTime" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input id="payFullTime_to" name="search_LTD_payFullTime" class="easyui-datebox"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>收货单据上传时间</label>
+				<input id="confirmFileDate_from" name="confirmFileDateBegin" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input id="confirmFileDate_to" name="confirmFileDateEnd" class="easyui-datebox"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>货名</label>
+				<input  class="control" id="productsName" type="text" name="search_LIKES_productsName"/>
+			</p>
+		</div>
+		<div class="mb6 hide mobile-display-none" id="query3">
+			<p class="yw-table-filter mobile-display-none">
+				<label id="billTypeName"></label>
+				<input type="text" id="billType" class="control text_padding" name="billCondition"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>交货日期</label>
+				<input  id="srh_deliveryDate_from" name="search_GTED_deliveryDateTo" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input  id="srh_deliveryDate_to"  name="search_LTD_deliveryDateTo" class="easyui-datebox" />
+			</p>
+			<p class="yw-table-filter srh_creditCycle mobile-display-none">
+				<label>账期</label>
+				<input  name="search_GTEL_creditCycle" id="search_GTEL_creditCycle" class="easyui-numberbox"/>
+			</p>
+			<span style="margin-left: -15px;" class="srh_creditCycle mobile-display-none">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter srh_creditCycle mobile-display-none">
+				<input  name="search_LTL_creditCycle" id="search_LTL_creditCycle" class="easyui-numberbox" />
+			</p>
+			<p class="yw-table-filter mobile-display-none" id="performanceStatus_src">
+				<label>履约状态</label>
+				<input type="text" id="performanceStatus" class="control text_padding" name="search_EQS_performanceStatus"/>
+			</p>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+		   title="" iconCls="icon-edit" singleSelect="true"
+		   idField="id">
+	</table>
+</div>
+<div id="w_saveContractLoading_window"  title="生成提货单" data-options="width:1045,height:420"></div>
+<div id="w_saveContractLoading_delivery_window"  title="生成配送单" data-options="width:1045,height:470"></div>
+<div id="w_updateCost_window"  title="合同费用调整" data-options="width:550,height:350"></div>
+<div id="w" class="easyui-window" title="增加收货单" data-options="width:765,height:720"></div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+<div id="w_detail" title="操作记录" data-options="width:950,height:350"></div>
+<div id="w_dealedAmount_detail" title="收付款明细" data-options="width:920,height:330"></div>
+<div id="w_contractLoss" title="合同损耗登记" data-options="width:800,height:280"></div>
+<div id="w_confirm" class="easyui-window" title="确认收货" data-options="width:570,height:400"></div>
+<div id="w_doubleCheck_window"  title="上传双签协议" data-options="width:400,height:260"></div>
+<script type="text/javascript">
+	var $deliveryDateStart = $('#deliveryDateStart').val();
+	var $deliveryDateEnd = $('#deliveryDateEnd').val();
+	var $contractTimeStart = $('#contractTimeStart').val();
+	var $contractTimeEnd = $('#contractTimeEnd').val();
+	var $companyNameJump ='[(${companyNameJump})]';
+	var $userId = $('#userId').val();
+	var lastIndex=0;
+	var deptJson =eval('[(${deptJson})]');
+	var companyJson =eval('[(${companyJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var productTypeJson = eval('[(${productTypeJson})]');
+	var deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+	var applyTypeJson = eval('[(${applyTypeJson})]');
+	var processListJson = eval('[(${processListJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var sellAndBuyStatusJson = eval('[(${sellAndBuyStatusJson})]');
+	var deliveryModeJson = eval('[(${deliveryModeJson})]');
+	var contractAttrJson = eval('[(${contractAttrJson})]');
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	var businessTypeJson=eval('[(${businessTypeJson})]');
+	var _businessType='[(${businessType})]';
+
+	var performanceStatusJson=eval('[(${performanceStatusJson})]');
+	var businessKindJson=eval('[(${businessKindJson})]');
+	var _regionContrastJson=eval('[(${regionContrastJson})]');
+	var _payFullTime_index = '[[${payFullTime}]]';
+	var _payType_index = '[[${payType}]]';
+	var _warehouseType_index = '[[${warehouseType}]]';
+	var _payFullTimeFrom_index = '[[${payFullTimeFrom}]]';
+	var _payFullTimeTo_index = '[[${payFullTimeTo}]]';
+	var preSellFlg = [[${preSellFlg}]];
+	var confirmFlg = [[${confirmFlg}]];
+	var signingFlg = [[${signingFlg}]];
+	var refreshFlg = [[${refreshFlg}]];
+	var funderViewFlg = [[${funderViewFlg}]];
+	var assistantFlg = [[${assistantFlg}]];
+	var updateFileFlg = [[${canEditContractFile}]];
+	var _matchCreditFlg = [[${matchCreditFlg}]];
+	var _clearPenaltyFlg = [[${clearPenaltyFlg}]];
+	console.log("updateFileFlg:" + updateFileFlg);
+	console.log('preSellFlg:' + preSellFlg);
+	console.log('confirmFlg:' + confirmFlg);
+	console.log('signingFlg:' + signingFlg);
+	console.log('refreshFlg:' + refreshFlg);
+	console.log('funderViewFlg:' + funderViewFlg);
+	console.log('clearPenaltyFlg:' + _clearPenaltyFlg);
+	console.log('assistantFlg:' + assistantFlg);
+	var $contractType_index = $('#contractType_index').val();
+	var $billCondition_index = $('#billCondition_index').val();
+	var _$warehouseNumber ='出/入库数量(吨)';
+	var _$dealedAmount='已收/付金额(元)';
+	var _$billedAmount='开/收票金额(元)';
+	var _$payType="收/付款状态";
+	var _$warehouseType="出/入库状态";
+	var _$billType="开/收票状态";
+	var _$bondTime="收/付定金日期";
+	var _$fullTime="收/付全款日期";
+	var _$amountTime="收/付款时间";
+	var _$warehouseTime="出/入库时间";
+	var _$billTime="开/收票时间";
+	var payTypeJson = [{id:'PY',text:'已收款'},{id:'PN',text:'未收款'}];
+	var warehouseTypeJson = [{id:'WY',text:'已出库'},{id:'WN',text:'未出库'}];
+	var billTypeJson = [{id:'BY',text:'已开票'},{id:'BN',text:'未开票'}];
+	var sourceModeJson = [{id:'ZY-XS',text:'自营销售'},{id:'ZY-BB',text:'背靠背'},{id:'SY-XS',text:'质押销售'},{id:'SX-SX',text:'赊销'},
+		{id:'SX-HK',text:'货到付款'},{id:'DL-KZ',text:'代理开证'},{id:'DL-DC',text:'国企代采'}];
+	var buyAndSell_status = [{id:'WN',text:'未出库'},{id:'PN',text:'未收款'},{id:'BN',text:'未开票'}];
+	var payDateChangeJson = [{id:'true',text:'有变动'},{id:'false',text:'无变动'}];
+	var _confirmReceiveFlgSrhJson = [{id:'true',text:'已确认收货'},{id:'false',text:'未确认收货'}];
+	var _receiptArrivedFlgJson = [{id:'',text:'--全部--'},{id: "true", text: '是'}, {id: "false", text: '否'}];
+	var companyPiccFlgJson = [{dictCd:'',dictName:'--全部--'},{dictCd:'true',dictName:'人保授信'},{dictCd:'false',dictName:'自主授信'}];
+	// 是否是观察员角色
+	var isGcy = $("#isGcy").val() == 'true' ? true : false;
+
+	// type是合同类型 B为采购 S为销售  代采预算不分采购合同或销售合同 一同显示
+	var type=$("#type").val();
+	// 是否使用授信标识
+	var matchCredit_flg = $("#matchCreditFlg").val() === "true";
+	var _selectViewTarget = 'G';
+	document.addEventListener("DOMContentLoaded", function() {
+		var selectElement = document.getElementById('viewSelect');
+		selectElement.addEventListener('click', function() {
+			var selectedValue = selectElement.value;
+			refresh_columns(selectedValue);
+		});
+	});
+	if(type=='B'){
+		_$warehouseNumber='入库数量';
+		_$dealedAmount='已付金额(元)';
+		_$billedAmount='收票金额(元)';
+		_$payType="付款状态";
+		_$warehouseType="入库状态";
+		_$billType="收票状态";
+		_$bondTime="付定金日期";
+		_$fullTime="付全款日期";
+		_$amountTime="付款时间";
+		_$warehouseTime="入库时间";
+		_$billTime="收票时间";
+		payTypeJson = [{id:'PY',text:'已付款'},{id:'PN',text:'未付款'}];
+		warehouseTypeJson = [{id:'WY',text:'已入库'},{id:'WN',text:'未入库'}];
+		billTypeJson = [{id:'BY',text:'已收票'},{id:'BN',text:'未收票'}];
+		sourceModeJson = [{id:'ZY-CG',text:'自营采购'},{id:'ZY-JK',text:'自营进口'},{id:'ZY-BB',text:'背靠背'},{id:'SY-CG',text:'质押采购'},
+			{id:'DL-KZ',text:'代理开证'},{id:'DL-DC',text:'国企代采'}];
+		buyAndSell_status = [{id:'WN',text:'未入库'},{id:'PN',text:'未付款'},{id:'BN',text:'未收票'}];
+	}
+	// 详细
+	var columns_detail = [ [
+		{field:'pairCode', title:'代采排序号', width:125,align:'center',hidden:true},
+		{field:'businessKind',title:'业务类型', width:105,align:'left',formatter:function(value,row,index){
+			return Convert.findValueByKey(businessKindJson,"dictCd",value,"dictName");
+		}},
+		{field:'productsName',title:'货名', width:140,align:'left',formatter:function(value,row){
+				if (value){
+					var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					return content;
+				}
+			}} ,
+		{field:'ourCompanyName',title:'我方企业',align:'left', width:200},
+		{field:'companyName',title:'对方企业名称',align:'left', width:180,formatter:function(value,row){
+				if (value){
+					var s_str = value.split("有限公司");
+					if (s_str) {
+						value = s_str[0];
+					}
+					var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					return content;
+				}
+			}},
+		{field:'liabilityFlg',title:'连带',align:"center", width:60},
+		{field:'accessReportFlg',title:'访厂',align:"center", width:60},
+		{field:'fileId',title:'附件数量',width:70,formatter:showImg,align:'center'},
+		{field:'deliveryType',title:'交货方式', width:70,align:'center',formatter:function(value,row,index){
+				return Convert.findValueByKey(deliveryModeJson,"dictCd",value,"dictName");
+			}},
+		{field:'totalNumber',title:'合同数量(吨)',align:"right", width:120},
+		{field:'totalAmount',title:'合同总价(元)', align:"right", width:120,formatter:formateNum},
+		{field:'settlementTotalAmount',title:'合同决算总价(元)', align:"right", width:120,formatter:formateNum},
+		{field:'payBondTime',title:_$bondTime,align:"center", width:100},
+		{field:'appointPayFullTime',title:'约定收/付全款日期',align:"center", width:120},
+		{field:'receivableBalance',title:'应收余额(元)',align:"right", width:110,formatter:formateNum},
+		{field:'usedDeliveryAmount',title:'已提货款',align:"right", width:110,formatter:formateNum},
+		{field:'remainingDeliveryAmount',title:'剩余货款',align:"right", width:110,formatter:formateNum},
+		{field:'approveTpInterest',title:'预估托盘利息',align:"right", width:110,formatter:formateNum},
+		{field:'tpInterest',title:'实际托盘利息',align:"right", width:110,formatter:formateNum},
+		{field:'dealedAmount',title:_$dealedAmount,align:"right", width:110,formatter:formateNum},
+		{field:'lastPayDate',title:_$amountTime,align:"center", width:100},
+		{field:'deliveryDateTo',title:'交/收货时间',align:"center", width:100},
+		{field:'warehouseNumber',title:_$warehouseNumber,align:"right", width:100},
+		{field:'warehouseAmount',title:'仓储费(元)',align:"right", width:90,formatter:formateNum},
+		{field:'deliveryFee',title:'出库费(元)',align:"right", width:90,formatter:formateNum},
+		{field:'transportAmount',title:'运输费(元)',align:"right", width:90,formatter:formateNum},
+		{field:'confirmReceiveNumber',title:'确认收货数量(吨)',align:"right", width:120},
+		{field:'confirmDate',title:'确认收货时间',align:"center", width:120},
+		{field:'insuranceRate',title:'保费费率',align:"right", width:120},
+		{field:'insuranceAmount',title:'保费',align:"right", width:120,formatter:formateNum},
+		{field:'lastDeliveryDate',title:_$warehouseTime,align:"center", width:100},
+		{field:'billedAmount',title:_$billedAmount,align:"right", width:110,formatter:formateNum},
+		{field:'lastBillDate',title:_$billTime,align:"center", width:100},
+		{field:'status',title:'审批状态',align:'left',width:60,hidden:'hidden'},
+		{field:'contractStatus', title: '合同状态', width: 200,align:'left',formatter:function(value,row,index){
+				return contractStatusView(value, row);
+			}},
+		{field:'contractTime',title:'签订日',width:130,align:'center'} ,
+		{field:'contractDifTime',title:'合同时长(天)', width:90,align:"right"} ,
+		{field:'matchUserName',title:'业务员',align:"left", width:70},
+		{field:'deptId',title:'业务部门',align:"left", width:90,formatter:function (value, row, index) {
+				return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+		} },
+		{field:'option',title:'合同预览',align:'center',formatter:function(value, row, index){
+				if (row.id){
+					var str = "";
+					var contractType = row.contractType;
+					if (contractType=="B"){
+						if (row.existContractTextFileId){
+							str += '<a href="'+row.contractFileUrl+'" target="_blank" class="contract-btn contract-btn-10">采购合同</a>';
+						}else if (row.existContractText){
+							str += '<span onclick="printContract('+row.id+')" class="contract-btn contract-btn-10">采购合同</span>';
+						}
+
+					}else{
+						if (row.existContractTextFileId){
+							str += '<a href="'+row.contractFileUrl+'" target="_blank" class="contract-btn contract-btn-10">销售合同</a>';
+						}else if (row.existContractText){
+							str += '<span onclick="printContract('+row.id+')" class="contract-btn contract-btn-10">销售合同</span>';
+						}
+						if (row.existServiceText){
+							if (row.existServiceTextFileId){
+								str += '<a href="'+row.serviceFileUrl+'" target="_blank" class="contract-btn contract-btn-10">服务合同</a>';
+							}else{
+								str += '<span onclick="printServiceContract('+row.id+')" class="contract-btn contract-btn-10">服务合同</span>';
+							}
+						}
+					}
+					return str;
+				}
+			}},
+			{field:'option2',title:'补充协议附件',align:'center', width:110, formatter:function(value, row, index){
+				if (row.id){
+					var str = "";
+					var contractType = row.contractType;
+					if (contractType=="B"){
+
+					}else{
+						if (row.protocolFileUrl){
+							str += '<a href="'+row.protocolFileUrl+'" target="_blank" class="contract-btn contract-btn-10">补充协议</a>';
+						} else {
+
+						}
+					}
+					return str;
+				}
+			}},
+		{field:'options',title:'业务操作',align:'left',hidden:isGcy,formatter:function(value, row, index){
+				return businessOptionColumnInit(value, row);
+			}}
+	]];
+	// 概要
+	var columns_brief = [ [
+		{field:'pairCode', title:'代采排序号', width:125,align:'center',hidden:true},
+		{field:'businessKind',title:'业务类型', width:105,align:'left',formatter:function(value,row,index){
+			return Convert.findValueByKey(businessKindJson,"dictCd",value,"dictName");
+		}},
+		{field:'productsName',title:'货名', width:130,align: 'left',formatter:function(value,row){
+				if (value){
+					var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					return content;
+				}
+			}},
+		{field:'',title:'',width:30},
+		{field:'companyName',title:'对方企业名称',align:'left', width:130,formatter:function(value,row){
+				if (value){
+					var s_str = value.split("有限公司");
+					if (s_str) {
+						value = s_str[0];
+					}
+					var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					return content;
+				}
+			}},
+		{field:'liabilityFlg',title:'连带',align:"center", width:60},
+		{field:'accessReportFlg',title:'访厂',align:"center", width:60},
+		{field:'totalNumber',title:'合同数量(吨)',align:"right", width:90},
+		{field:'totalAmount',title:'合同总价(元)', align:"right", width:120,formatter:formateNum},
+		{field:'settlementTotalAmount',title:'合同决算总价(元)', align:"right", width:120,formatter:formateNum},
+		{field:'warehouseNumber',title:_$warehouseNumber,align:"right", width:110},
+		{field:'warehouseAmount',title:'仓储费(元)',align:"right", width:90,formatter:formateNum},
+		{field:'transportAmount',title:'运输费(元)',align:"right", width:90,formatter:formateNum},
+		{field:'stevedorage',title:'装卸费(元)',align:"right", width:90,formatter:formateNum},
+		{field:'confirmReceiveNumber',title:'确认收货数量(吨)',align:"right", width:120},
+		{field:'confirmDate',title:'确认收货时间',align:"center", width:120},
+		{field:'usedDeliveryAmount',title:'已提货款',align:"right", width:110,formatter:formateNum},
+		{field:'remainingDeliveryAmount',title:'剩余货款',align:"right", width:110,formatter:formateNum},
+		{field:'approveTpInterest',title:'预估托盘利息',align:"right", width:110,formatter:formateNum},
+		{field:'tpInterest',title:'实际托盘利息',align:"right", width:110,formatter:formateNum},
+		{field:'receivableBalance',title:'应收余额(元)',align:"right", width:110,formatter:formateNum},
+		{field:'dealedAmount',title:_$dealedAmount,align:"right", width:110,formatter:formateNum},
+		{field:'billedAmount',title:_$billedAmount,align:"right", width:110,formatter:formateNum},
+		{field:'contractStatus', title: '合同状态', width: 200,align:'left',formatter:function(value,row,index){
+				return contractStatusView(value, row);
+			}},
+		{field:'contractTime',title:'签订日', width:130,align:'center'},
+		{field:'matchUserName',title:'业务员',align:"left", width:70},
+		{field:'deptId',title:'业务部门',align:"left", width:90,formatter:function (value, row, index) {
+				return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+		} },
+		{field:'option',title:'合同预览',align:'center',formatter:function(value, row, index){
+				if (row.id){
+					var str = "";
+					var contractType = row.contractType;
+					if (contractType=="B"){
+						if (row.existContractTextFileId){
+							str += '<a href="'+row.contractFileUrl+'" target="_blank" class="contract-btn contract-btn-10">采购合同</a>';
+						}else if (row.existContractText){
+							str += '<span onclick="printContract('+row.id+')" class="contract-btn contract-btn-10">采购合同</span>';
+						}
+					}else{
+						if (row.existContractTextFileId){
+							str += '<a href="'+row.contractFileUrl+'" target="_blank" class="contract-btn contract-btn-10">销售合同</a>';
+						}else if (row.existContractText){
+							str += '<span onclick="printContract('+row.id+')" class="contract-btn contract-btn-10">销售合同</span>';
+						}
+						if (row.existServiceText){
+							if (row.existServiceTextFileId){
+								str += '<a href="'+row.serviceFileUrl+'" target="_blank" class="contract-btn contract-btn-10">服务合同</a>';
+							}else{
+								str += '<span onclick="printServiceContract('+row.id+')" class="contract-btn contract-btn-10">服务合同</span>';
+							}
+						}
+					}
+					return str;
+				}
+			}},
+		{field:'option2',title:'补充协议附件',align:'center', width:110,formatter:function(value, row, index){
+				if (row.id){
+					var str = "";
+					var contractType = row.contractType;
+					if (contractType=="B"){
+
+					}else{
+						if (row.protocolFileUrl){
+							str += '<a href="'+row.protocolFileUrl+'" target="_blank" class="contract-btn contract-btn-10">补充协议</a>';
+						} else {
+
+						}
+					}
+					return str;
+				}
+			}},
+		{field:'options',title:'业务操作',align:'left',hidden:isGcy,formatter:function(value, row, index){
+				return businessOptionColumnInit(value, row);
+			}}
+	]];
+
+	// 业务
+	var columns_business = [ [
+		{field:'pairCode', title:'代采排序号', width:125,align:'center',hidden:true},
+		{field:'productsName',title:'货名', width:120,align: 'left',formatter:function(value,row){
+				if (value){
+					var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					return content;
+				}
+			}},
+		{field:'',title:'',width:30},
+		{field:'companyName',title:'对方企业名称',align:'left', width:120,formatter:function(value,row){
+				if (value){
+					var s_str = value.split("有限公司");
+					if (s_str) {
+						value = s_str[0];
+					}
+					var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					return content;
+				}
+			}},
+		{field:'totalNumber',title:'合同数量(吨)',align:"right", width:90},
+		{field:'usedDeliveryAmount',title:'已提货款',align:"right", width:110,formatter:formateNum},
+		{field:'remainingDeliveryAmount',title:'剩余货款',align:"right", width:110,formatter:formateNum},
+		{field:'approveTpInterest',title:'预估托盘利息',align:"right", width:110,formatter:formateNum},
+		{field:'tpInterest',title:'托盘利息',align:"right", width:110,formatter:formateNum},
+		{field:'receivableBalance',title:'应收余额(元)',align:"right", width:90,formatter:formateNum},
+		{field:'dealedAmount',title:_$dealedAmount,align:"right", width:100,formatter:formateNum},
+		{field:'billedAmount',title:_$billedAmount,align:"right", width:100,formatter:formateNum},
+		{field:'contractStatus', title: '合同状态', width: 200,align:'left',formatter:function(value,row,index){
+				return contractStatusView(value, row);
+			}},
+		{field:'contractTime',title:'签订日', width:130,align:'center'},
+		{field:'matchUserName',title:'业务员',align:"left", width:70},
+		{field:'options',title:'业务操作',align:'left',hidden:isGcy,formatter:function(value, row, index){
+				return businessOptionColumnInit(value, row);
+			}}
+	]];
+
+	/**
+	 * 合同状态图标展示逻辑
+	 */
+	function contractStatusView(value, row) {
+		let str = '';
+		let contractType = row.contractType;
+		if (!row.id){
+			return str;
+		}
+		if (value === 'B') {
+			// 已审批
+			str += '<img class="icon-contract-approve"/>';
+		} else if (value === 'S') {
+			// 已签约
+			str += '<img class="icon-contract-sign"/>';
+		} else if (value === 'D') {
+			// 已完成
+			str += '<img class="icon-contract-complete"/>';
+		} else if (value === 'C') {
+			// 作废
+			return '<img class="icon-contract-invalid"/>';
+		} else {
+			str += '<img class="icon-contract-sign"/>';
+		}
+		// 出入库
+		if (row.warehouseNumber >= row.totalNumber){
+			str += contractType === 'B' ?  '<img class="icon-deliveryIn"/>' : '<img class="icon-deliveryOut"/>';
+		}
+
+		// 确认收货
+		if (row.confirmReceiveNumber >= row.totalNumber){
+			str += '<img class="icon-confirmReceipt"/>';
+		}
+
+		// 收付款
+		if (row.dealedAmount >= row.totalAmount && contractType === 'B') {
+			str += '<img class="icon-pay"/>';
+		}
+		// 收货款
+		if (row.dealedAmount >= (row.totalAmount + row.tpInterest - row.approveTpInterest)  && contractType === 'S') {
+			str += '<img class="icon-receive"/>';
+		}
+
+		// 收开票
+		if (row.billedAmount >= row.totalAmount) {
+			str += contractType === 'B' ?  '<img class="icon-invoiceReceive"/>' : '<img class="icon-invoice"/>';
+		}
+
+		if (row.performanceStatus === 'B'){
+			// 履约状态-宽限
+			str += '<img class="icon-grace"/>';
+		}else if (row.performanceStatus === 'D'){
+			// 履约状态-催告
+			str += '<img class="icon-interpellation"/>';
+		}else if (row.performanceStatus === 'S'){
+			// 履约状态-逾期
+			str += '<img class="icon-overdue"/>';
+		}else if (row.performanceStatus === 'P'){
+			// 履约状态-违约
+			str += '<img class="icon-breach"/>';
+		}
+		return str;
+	}
+
+	/**
+	 * 业务操作列数据初始化
+	 */
+	function businessOptionColumnInit(value, row) {
+		var str = '';
+		//更新违约标识
+		var viFlgUpdate = $('#violateTreatyFlgUpdate').val();//是否有权限
+		var contractType = row.contractType;
+		if (row.violateTreatyFlg != 'true' && viFlgUpdate == 'true' && row.violateFlg =='逾期' && contractType != 'B' && row.dealedAmount < row.totalAmount){
+			str += '<span onclick="violateFlgUpdate('+row.id+')" class="contract-btn contract-btn-4">逾期</span>';
+		}
+		// 是否已通过盖章审核
+		if (row.sealFlg == "true" && row.contractStatus != 'Z'){
+			if(row.id>0 && row.contractStatus != "C"){// 合同不是作废状态
+				if(row.dealedAmount < (row.totalAmount + row.tpInterest) && row.contractStatus != "B"){// 已收付款金额 小于 合同总价加罚息 && 合同不是已审批状态
+					if(row.contractType == "B"){ // 采购合同
+						str += '<span class="contract-btn contract-btn-2" onclick="startPay('+row.id+','+row.applyCancelFlg+')">付款</span>';
+					}
+				}
+				if (row.contractType == "S" && row.contractStatus != "B") {
+					if ((row.dealedAmount < (row.totalAmount + row.tpInterest - row.approveTpInterest)) || row.warehouseNumber < row.totalNumber || row.discountChargeAmount > row.discountReceiveAmount) {
+						str += '<span class="contract-btn contract-btn-2" onclick="startReceive('+row.id+','+row.applyCancelFlg+')">收货款</span>';
+					}
+				}
+				if (matchCredit_flg) { // 白条预算才有可能有服务费
+					if ((row.receiveServiceAmount < row.serviceAmount+ row.breachAmount) && row.contractStatus != "B" && !isBlank(row.serviceContractId)){
+						str += '<span class="contract-btn contract-btn-2" onclick="startServiceReceive('+row.id+','+row.serviceContractId+','+row.applyCancelFlg+')">收服务款</span>';
+					}
+				}
+				if(row.warehouseNumber < row.totalNumber && row.contractStatus != "B"){// 实际已入\出库数量 小于合同数量 && 合同不是已审批状态
+					if(row.contractType == "B"){ // 采购
+						str += '<span class="contract-btn contract-btn-1" onclick="startDeliveryIn(\''+row.id+'\',\''+row.contractNo+'\',\''+row.virtualType+'\','+row.applyCancelFlg+')">入库</span>';
+					}else if(matchCredit_flg
+						 || (row.dealedAmount/(row.totalAmount - row.approveTpInterest + row.tpInterest)) > (row.warehouseNumber/row.totalNumber) ){
+							str += '<span class="contract-btn contract-btn-1" onclick="startDeliveryOut(\''+row.contractNo+'\','+row.applyCancelFlg+')">出库</span>';
+						// 销售白条 或 已收付款金额 大于 实际出库金额
+					}
+				}
+				if(row.warehouseNumber > 0){ // 实际已入\出库数量 大于0
+					str += '<span class="contract-btn contract-btn-4" onclick="contLoss('+row.id+','+row.applyCancelFlg+')">损耗申请</span>';
+				}
+				// 销售合同非则一的且出库数量小于总数量显示新增送货单
+				if(matchCredit_flg&&row.contractType == "S"&&(row.biddinStatus =="N" || !row.biddinStatus)&&row.allWarehouse){
+					if(row.deliveryStaus=="D"){
+						str += '<span class="contract-btn contract-btn-2" onclick="show(' + row.id + ')">查看送货单</span>';
+					}else{
+						str += '<span class="contract-btn contract-btn-2" onclick="inssert(' + row.id + ')">新增送货单</span>';
+					}
+				}
+				if(row.warehouseNumber > 0 && row.contractStatus != "B" && row.contractType == "S"){
+					str += '<span class="contract-btn contract-btn-1" onclick="logisticsAdjust('+row.id+','+row.applyCancelFlg+')">物流调整</span>';
+				}
+				if((row.billedAmount < row.totalAmount) && row.contractStatus != "B" && row.contractType == "B"){
+					str += '<span class="contract-btn contract-btn-3" onclick="startInvoiceReceive('+row.id+','+row.applyCancelFlg+')">收票</span>';
+				}
+				if (row.contractStatus != "B" && row.contractType == "S"){
+					if (row.warehouseNumber >= row.totalNumber && (row.totalAmount + row.tpInterest - row.approveTpInterest - row.billedAmount) > 0) {
+						str += '<span class="contract-btn contract-btn-3" onclick="startInvoice('+row.id+','+row.applyCancelFlg+')">开票</span>';
+					}
+				}
+				if (matchCredit_flg) {
+					if (row.serviceBilledAmount < (row.serviceAmount+ row.breachAmount) && row.contractStatus != "B" && !isBlank(row.serviceContractId)){
+						str += '<span class="contract-btn contract-btn-2" onclick="startServiceInvoice('+row.serviceContractId+','+row.applyCancelFlg+','+row.serviceContractId+')">服务费开票</span>';
+					}
+				}
+				if(row.canStartBuy && preSellFlg && row.contractStatus != "B"){
+					str += '<span onclick="getBuyContract('+row.id+','+row.applyCancelFlg+')" class="contract-btn contract-btn-4">发起采购</span>';
+				}
+				if (row.contractType == 'S') {
+					if (row.warehouseNumber > row.confirmReceiveNumber) {
+						if( row.biddinStatus =="N" || !row.biddinStatus){
+							str += '<span onclick="startConfirmReceipt('+row.id+','+row.applyCancelFlg+')" class="contract-btn contract-btn-4">确认收货</span>';
+						}
+					}
+				}
+
+				// 合同调整
+				if(row.contractStatus != 'D'){
+					str += '<span onclick="startContractAdjust('+row.id+','+row.applyCancelFlg+')" class="contract-btn contract-btn-4">合同调整</span>';
+				}
+
+				// 收退款(采购合同 并且 已付金额大于合同金额时)
+				if (row.contractType == "B" && Number(row.totalAmount.toFixed(2)) < row.dealedAmount.toFixed(2)) {
+					str += '<span class="contract-btn contract-btn-1" onclick="receiveRefund(' + row.id + ',' + row.applyCancelFlg + ')">收退款</span>';
+				}
+
+				// 付退款(销售合同 并且 已收金额大于合同金额时)
+				if (row.contractType == "S") {
+					if (Number(row.dealedAmount) > (Number(row.totalAmount) + Number(row.tpInterest) - Number(row.approveTpInterest))) {
+						str += '<span class="contract-btn contract-btn-1" onclick="payRefund(' + row.id + ',' + row.applyCancelFlg + ')">付退款</span>';
+					}
+				}
+				if (updateFileFlg) {
+					str += '<span class="contract-btn contract-btn-2" onclick="updateContractFile(' + row.id + ',' + row.applyCancelFlg + ')">合同附件</span>';
+				}
+
+				if (row.contractType=="S"){
+					str += '<span class="contract-btn contract-btn-1" onclick="exportBusinessDelivery(' + row.approveId + ')">导出面单</span>';
+				}
+			}
+			var updateCostFlg = $('#updateCostFlg').val();//是否有合同费用调整权限
+			if (updateCostFlg == 'true'){
+				str += '<span class="contract-btn contract-btn-9" onclick="updateCost(' + row.id + ')">费用调整</span>';
+			}
+		}
+		if (row.contractStatus != "C" && row.contractType=="B" && row.totalNumber > row.warehouseNumber){
+			if (row.deliveryType === 'P1') {
+				str += '<span class="contract-btn contract-btn-2" onclick="saveContractLoadingPS(\'' + row.id + '\')">生成配送单</span>';
+			} else {
+				str += '<span class="contract-btn contract-btn-2" onclick="saveContractLoadingTH(\'' + row.id + '\')">生成提货单</span>';
+			}
+		}
+
+		if (row.virtualContractId){
+			str = '<span class="contract-btn contract-btn-2" onclick="openVirtualDetail(\'' + row.virtualContractId + '\',\'' + row.virtualContractNo + '\')">'+ row.virtualContractNo +'</span>';
+		}
+		return str;
+	}
+
+	// 默认概要列
+	columns = columns_brief;
+	if (type=='B'){
+		for(var i in columns_detail[0]){
+			var col = columns_detail[0][i];
+			if (col.field=='confirmReceiveNumber'){
+				col.hidden = true;
+			}
+			if (col.field=='piccMessage'){
+				col.hidden = true;
+			}
+		}
+		for(var i in columns_brief[0]){
+			var col = columns_brief[0][i];
+			if (col.field=='confirmReceiveNumber'){
+				col.hidden = true;
+			}
+			if (col.field=='piccMessage'){
+				col.hidden = true;
+			}
+		}
+	}
+	$("#payTypeName").html(_$payType);
+	$("#warehouseTypeName").html(_$warehouseType);
+	$("#billTypeName").html(_$billType);
+	$(function(){
+		$("#companyPiccFlg").combobox({
+			data:companyPiccFlgJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto"
+		});
+
+		$("#regionContrastDeptId").combobox({
+			data:_regionContrastJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto"
+		});
+		// 如果参数不为空，则说明是业务统计跳转过来的
+		if(!strIsNull($deliveryDateStart)){
+			$('#srh_deliveryDate_from').datebox('setValue',$deliveryDateStart);
+			$('#srh_deliveryDate_to').datebox('setValue',$deliveryDateEnd);
+		}
+		if(!strIsNull($contractTimeStart)){
+			$('#srh_contractTime_from').datebox('setValue',$contractTimeStart);
+			$('#srh_contractTime_to').datebox('setValue',$contractTimeEnd);
+		}
+		if(!strIsNull($companyNameJump)){
+			$('#companyName').val($companyNameJump);
+		}
+		$('.easyui-layout').layout();
+		setHeight();
+		$("#contractNo,#companyName,#productsName").textbox({});
+		$("#adjustFlg").combobox({
+			data:[{id:'true',text:'是'},{id:'false',text:'否'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:'auto',
+			editable:false
+		});
+		$("#contractTypes").combobox({
+			data:[{id:'',text:'--全部--'},{id:'Y',text:'有效'},{id:'N',text:'作废'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			onLoadSuccess:function(){
+				$("#contractTypes").combobox('setValue','Y');
+			}
+		});
+
+		$("#refreshColumnsViews").combobox({
+			panelHeight: "auto",
+			editable: false,
+			onLoadSuccess: function () {
+				$("#refreshColumnsViews").combobox('setValue', 'G');
+			},
+			onChange: function (v1) {
+				refresh_columns(v1);
+			}
+		});
+		$("#contractType_src").combobox({
+			data:[{id:'',text:'--选择--'},{id:'B',text:'采购合同'},{id:'S',text:'销售合同'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		// 首页跳转的时候使用
+		if(!strIsNull($contractType_index)){
+			$("#contractType_src").combobox('setValue',$contractType_index);
+		}
+		$("#deliveryType").combobox({
+			data:deliveryModeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:true
+		});
+		$("#performanceStatus").combobox({
+			data:performanceStatusJson,
+			multiple : true,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:false
+		});
+		$("#contractStatus").combobox({
+			data:contractStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:true
+		});
+		$("#contractAttr").combobox({
+			data:contractAttrJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:true
+		});
+		$("#source").combobox({
+			data:sourceModeJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			editable:true
+		});
+		$("#payType").combobox({
+			data:payTypeJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		// 首页跳转的时候使用
+		if(!strIsNull(_payType_index)){
+			$("#payType").combobox('setValue',_payType_index);
+		}
+		$("#warehouseType").combobox({
+			data:warehouseTypeJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		// 首页跳转的时候使用
+		if(!strIsNull(_warehouseType_index)){
+			$("#warehouseType").combobox('setValue',_warehouseType_index);
+		}
+		if(!strIsNull(_payFullTimeFrom_index)){
+			$("#payFullTime_from").datebox('setValue',_payFullTimeFrom_index);
+		}
+		if(!strIsNull(_payFullTimeTo_index)){
+			$("#payFullTime_to").datebox('setValue',_payFullTimeTo_index);
+		}
+		
+		$("#billType").combobox({
+			data:billTypeJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		// 首页跳转的时候使用
+		if(!strIsNull($billCondition_index)){
+			console.log("$billCondition_index="+$billCondition_index);
+			$("#billType").combobox('setValue',$billCondition_index);
+		}
+		// 首页跳转的时候使用
+		if(!strIsNull(_payFullTime_index)){
+			// 如果参数不为空，则说明是业务统计跳转过来的
+			$('#payFullTime_from').datebox('setValue',_payFullTime_index);
+			$('#payFullTime_to').datebox('setValue',_payFullTime_index);
+		}
+		$("#sellAndBuyStatusJson").combobox({
+			data:buyAndSell_status,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		$("#payDateChange").combobox({
+			data:payDateChangeJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		$("#confirmReceiveFlgSrh").combobox({
+			data:_confirmReceiveFlgSrhJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		$("#receiptArrivedFlgSrh").combobox({
+			data:_receiptArrivedFlgJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		$('#matchUserName').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#matchUserName').combotree('clear');
+				}
+			}
+		})
+		if(!strIsNull($userId)){
+			$('#matchUserName').combotree('setValue',Number($userId));
+		}
+		//我方抬头
+		$('#ourCompanyName').combobox({
+			data:_ourCompanyJson,
+			valueField:'dictName',
+			textField:'dictName',
+			panelWidth:250,
+			panelHeight:"auto"
+		});
+
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:false,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/ctr/contract/contractList",
+			frozenColumns:[ [
+				{field:'pairId', title:'',align:'center',hidden:false,width: 30},
+				{field:'contractNo', title:'合同编号', width:120}
+			] ],
+			columns:columns,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				approveDetail(row);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				$(".tip").tooltip(
+						{
+							onShow: function(){
+								$(this).tooltip('tip').css({
+									width:'400',
+									boxShadow: '1px 1px 3px #292929'
+								});
+							}
+						}
+				);
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+				if(type=='S'){
+					$("#tt").datagrid("hideColumn", "contractDifTime");
+				}
+				//合并datagrid行
+				var mark = 1;
+				for (var i = 1; i < data.rows.length; i++) {
+					if (data.rows[i]['pairId'] == data.rows[i - 1]['pairId'] && data.rows[i]['pairId'] != null
+							&& data.rows[i]['pairId'] != "") {
+						mark += 1;
+						$("#tt").datagrid('mergeCells', {
+							index: i + 1 - mark,
+							field: 'pairId',
+							rowspan: mark
+						});
+					} else {
+						mark = 1;
+					}
+				}
+			}
+		});
+		if (funderViewFlg == true || assistantFlg == true){
+			$('#tt').datagrid('hideColumn','options');
+		}
+
+		$.extend($.fn.datagrid.methods, {
+			autoMergeCells : function (jq, fields) {
+				return jq.each(function () {
+					var target = $(this);
+					if (!fields) {
+						fields = target.datagrid("getColumnFields");
+					}
+					var rows = target.datagrid("getRows");
+					var i = 0,
+							j = 0,
+							temp = {};
+					for (i; i < rows.length; i++) {
+						var row = rows[i];
+						j = 0;
+						for (j; j < fields.length; j++) {
+							var field = fields[j];
+							var tf = temp[field];
+							if (!tf) {
+								tf = temp[field] = {};
+								tf[row[field]] = [i];
+							} else {
+								var tfv = tf[row[field]];
+								if (tfv) {
+									tfv.push(i);
+								} else {
+									tfv = tf[row[field]] = [i];
+								}
+							}
+						}
+					}
+					$.each(temp, function (field, colunm) {
+						$.each(colunm, function () {
+							var group = this;
+
+							if (group.length > 1) {
+								var before,
+										after,
+										megerIndex = group[0];
+								for (var i = 0; i < group.length; i++) {
+									before = group[i];
+									after = group[i + 1];
+									if (after && (after - before) == 1) {
+										continue;
+									}
+									var rowspan = before - megerIndex + 1;
+									if (rowspan > 1) {
+										target.datagrid('mergeCells', {
+											index : megerIndex,
+											field : field,
+											rowspan : rowspan
+										});
+									}
+									if (after && (after - before) != 1) {
+										megerIndex = after;
+									}
+								}
+							}
+						});
+					});
+				});
+			}
+		});
+
+		$('#w_contract').window({
+			title: '电子合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+
+		$('#w').window({
+			title: '送货单',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+		$('#w_dealedAmount_detail').window({
+			title: '收付款明细',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+		});
+		$('#w_doubleCheck_window').window({
+			title: '上传双签协议附件',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+		$('#w_updateCost_window').window({
+			title: '合同费用调整',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+		$('#w_confirm').window({
+			title: '确认收货',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+		$('#w_contractLoss').window({
+			title: '合同损耗登记',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+
+		});
+		$('#w_saveContractLoading_window').window({
+			title: '生成提货单',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+		$('#w_saveContractLoading_delivery_window').window({
+			title: '生成配送单',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+
+	});
+	function showImg(value,row,index){
+		if(value!=undefined){
+			var arrayObj = new Array();
+			var j=0;
+			arrayObj.push(row.fileId);
+			arrayObj.push(row.invoiceFileId);
+			arrayObj.push(row.amountFileId);
+			arrayObj.push(row.warehouseFileId);
+			arrayObj.push(row.doubleCheckFileId);
+			var str = "";
+			for(i = 0,len=arrayObj.length; i < len; i++) {
+				if(arrayObj[i]){
+					str += arrayObj[i];
+				}
+			}
+			if (str != null && str.length > 1){
+				str = str.substr(0,str.length-1);
+				var arr = str.split(",");
+				arr = arr.filter(n=>n);
+				j = arr.length;
+			}
+			return j;
+		}
+	}
+	function editrow(id,contractNo){
+		var url=_ctx+"/ctr/contract/detail/"+id;
+		var title=contractNo;
+		window.parent.addTab(title,url);
+	}
+
+	//合同预览
+	function printContract(contractId){
+		if(contractId){
+			var url = _ctx+"/ctr/contractText/getBycontractId/"+contractId;
+			$('#w_contract').window({href:url});
+			$('#w_contract').window("open");
+		}
+	}
+	//服务合同预览
+	function printServiceContract(contractId){
+		if(contractId){
+			var url = _ctx+"/ctr/contractText/getServiceText/"+contractId;
+			$('#w_contract').window({href:url});
+			$('#w_contract').window("open");
+		}
+	}
+	//刷新合同
+	function refreshContract(contractId){
+		$.messager.confirm('提示','确定要刷新该合同么?',function(t){
+			if(t){
+				if(contractId){
+					$.post(_ctx + "/ctr/contract/refreshContractText",
+						{"contractId":contractId}, function(result) {
+							var rObj = eval(result);
+							if (rObj.success) {
+								$.messager.show({title:'Tip',msg:'刷新成功',timeout:2000,showType:'show'});
+								$('#tt').datagrid('reload');
+							} else {
+								$.messager.alert('error',rObj.failure,'warning');
+							}
+						}
+					)
+				}
+			}
+		});
+	}
+
+
+	function getBuyContract(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:预售采购申请';
+		var processCode = "APPLY_PRESELL_BUY";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function startDeliveryIn(contractId,contractNo,virtualType,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		if (virtualType) {
+			var title = '新建:入库申请';
+			var processCode = "APPLY_DELIVERYIN";
+			doRedirect(title, processCode, contractId);
+			return false;
+		}
+		var contractNoStr = contractNo.replace(/\D/g, '');
+		$.ajax({
+			type:"GET",
+			url:_ctx+"/ctr/logistics/exists/"+contractNoStr,
+			dataType:"JSON",
+			success:function(data){
+				if(data!=null){
+					var url = _ctx + "/ctr/logistics/getLogisticsLoading/" + data;
+					window.parent.addTab('物流单据-'+contractNoStr,url);
+				}else{
+					$.messager.alert('error', "未查询到物流单据", 'warning');
+				}
+
+			},
+		})
+	}
+
+	function startDeliveryOut(contractNo,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var contractNoStr = contractNo.replace(/\D/g, '');
+		$.ajax({
+			type:"GET",
+			url:_ctx+"/ctr/logistics/exists/"+contractNoStr,
+			dataType:"JSON",
+			success:function(data){
+				if(data!=null){
+					var url = _ctx + "/ctr/logistics/getLogisticsLoading/" + data;
+					window.parent.addTab('物流单据-'+contractNoStr,url);
+				}else{
+					debugger;
+					$.messager.alert('error', "未查询到物流单据", 'warning');
+				}
+
+			},
+		})
+	}
+
+	function startPay(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:付款申请';
+		var processCode = "APPLY_PAY";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function startReceive(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:收货款申请';
+		var processCode = "APPLY_RECEIVE";
+		doRedirect(title,processCode,contractId);
+	}
+	function startServiceReceive(contractId,serviceContractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:收服务款申请';
+		var processCode = "APPLY_SERVICE_RECE";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function startInvoiceReceive(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:收票申请';
+		var processCode = "APPLY_INRECEIVED";
+		doRedirect(title,processCode,contractId);
+	}
+	function contLoss(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:损耗申请';
+		var processCode = "APPLY_LOSS";
+		doRedirect(title,processCode,contractId);
+	}
+	function logisticsAdjust(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:物流调整申请';
+		var processCode = "APPLY_LOGISTICS_ADJUST";
+		doRedirect(title,processCode,contractId);
+	}
+	function contdiscuss(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:议短申请';
+		var processCode = "APPLY_DISCUSS";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function receiveRefund(contractId,applyCancelFlg) {
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:收退款申请';
+		var processCode = "APPLY_PAY_REFUND";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function payRefund(contractId,applyCancelFlg) {
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:付退款申请';
+		var processCode = "APPLY_RECEIVE_REFUND";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function updateTitle(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:更换抬头申请';
+		var processCode = "APPLY_COMPANY_TITLE";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function startInvoice(contractId,applyCancelFlg){
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:开票申请';
+		var processCode = "CTR_INVOICE";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function startServiceInvoice(contractId,applyCancelFlg) {
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:开票申请';
+		var processCode = "CTR_INVOICE";
+		doServiceInvoiceRedirect(title,processCode,contractId);
+	}
+
+	function startConfirmReceipt(contractId,applyCancelFlg) {
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:确认收货';
+		var processCode = "CONFIRM_RECEIPT";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function startManualSettlement(contractId,applyCancelFlg) {
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:手动结算审批';
+		var processCode = "MANUAL_SETTLEMENT";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function startDispute(contractId,applyCancelFlg) {
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:争议审批';
+		var processCode = "APPLY_DISPUTE";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function startContractAdjust(contractId,applyCancelFlg) {
+		if (applyCancelFlg){
+			$.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+			return false;
+		}
+		var title ='新建:合同调整审批';
+		var processCode = "APPLY_CONTRACT_ADJUST";
+		doRedirect(title,processCode,contractId);
+	}
+
+	function doRedirect(title,processCode,contractId){
+		var processId = Convert.findValueByKey(processListJson,"processCode",processCode,"id");
+		window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+processId+'?contractId='+contractId);
+	}
+
+
+	function doServiceInvoiceRedirect(title,processCode,contractId){
+		var processId = Convert.findValueByKey(processListJson,"processCode",processCode,"id");
+		window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+processId+'?contractId='+contractId+'&isServiceInvoice=0');
+	}
+
+
+	function queryStockDetailHis(id){
+		if(id){
+			var url =_ctx+"/ctr/contractOphis/findBuyAndSellOphis/"+id;
+			$('#w_detail').window({href:url});
+			$('#w_detail').window("open");
+		}
+	}
+
+	function exportExcel(){
+		$.messager.confirm({
+			title: '提示',
+			msg: '确认要导出合同列表吗？',
+			ok: "导出",
+			cancel: "取消",
+			cls: 'c9',
+			border: 'thin',
+			fn: function (r) {
+				if (r) {
+					$('#searchForm').form('submit', {url:_ctx+"/ctr/contract/exportExcelTp"});
+				}
+			}
+		});
+	}
+
+	function exportBusinessExcel(){
+		$.messager.confirm({
+			title: '提示',
+			msg: '确认要导出业务表吗？',
+			ok: "导出",
+			cancel: "取消",
+			cls: 'c9',
+			border: 'thin',
+			fn: function (r) {
+				if (r) {
+					$('#searchForm').form('submit', {url:_ctx+"/ctr/contract/exportBusinessExcelTp"});
+				}
+			}
+		});
+	}
+
+	function downLoadZipContract() {
+		$.messager.confirm({
+			width: 540,
+			height: 200,
+			title: '提示',
+			msg: '<p style="padding-left:15px;padding-right:15px;line-height: 1.5;font-size: 15px;">为保证系统性能和用户体验，导出数据不宜过大，单次导出附件数量最多返回500单，如果您需要导出全部数据，请考虑缩小查询区间分批次进行操作！</p>',
+			ok: "导出",
+			cancel: "取消",
+			cls: 'c9',
+			border: 'thin',
+			fn: function (r) {
+				if (r) {
+					$('#searchForm').form('submit', {url:_ctx+"/ctr/contract/downLoadZipContract"});
+				}
+			}
+		});
+	}
+
+	//确认收货
+	function confirm(id) {
+		var url = _ctx + "/ctr/contract/getEntityById?id=" + id;
+		$('#w_confirm').window({href : url});
+		$('#w_confirm').window("open");
+	}
+
+	//字符串转日期
+	function strDateForDate(str){
+		var strDate = str.split(" ");
+		var strDatepart = strDate[0].split("-");
+		var dtDate = new Date(strDatepart[0],strDatepart[1]-1,strDatepart[2]);
+		return dtDate;
+	}
+
+	//计算两个日期的天数差
+	function dateDiff(firstDate,secondDate){
+		var firstDate = new Date(firstDate);
+		var secondDate = new Date(secondDate);
+		var diff = Math.abs(firstDate.getTime() - secondDate.getTime())
+		var result = parseInt(diff / (1000 * 60 * 60 * 24));
+		return result
+	}
+
+	//刷新datagrid
+	function refresh_columns(v){
+		if (v === _selectViewTarget){
+			return;
+		}
+		var col;
+		if (v == "G"){
+			col = columns_brief;
+		}else if (v == "X"){
+			col = columns_detail;
+		}else if (v == 'Y'){
+			col = columns_business;
+		}
+		_selectViewTarget = v;
+		$('#tt').datagrid({columns:col});
+		$('#tt').datagrid('reload');
+		if (funderViewFlg == true || assistantFlg == true){
+			$('#tt').datagrid('hideColumn','options');
+		}
+	}
+
+	function refresh_query() {
+		var textValue = "";
+		var new_query_value = "";
+		var refreshValue = $("#refreshQuery").val();
+		if (refreshValue == 'I') {
+			textValue = "更多";
+			new_query_value = "M";
+			$("#query1").addClass("hide");
+			$("#query2").addClass("hide");
+			$("#query3").addClass("hide");
+			// $("#queryBtn").attr('iconCls','icon-up');
+		} else if (refreshValue == 'M') {
+			textValue = "收起";
+			new_query_value = "I";
+			$("#query1").removeClass("hide");
+			$("#query2").removeClass("hide");
+			$("#query3").removeClass("hide");
+			if (_matchCreditFlg) {
+				$("#performanceStatus_src").removeClass("hide");
+				$(".srh_creditCycle").removeClass("hide");
+			} else {
+				$("#performanceStatus_src").addClass("hide");
+				$(".srh_creditCycle").addClass("hide");
+			}
+		}
+		$('#refreshQueryText').text(textValue);
+		$('#refreshQuery').val(new_query_value);
+		setHeight();
+	}
+
+	//设置layout的自适应高度
+	function setHeight() {
+		var c = $('.easyui-layout');
+		var p = c.layout('panel', 'north');
+		var oldHeight = p.panel('panel').outerHeight();
+		p.panel('resize', { height: 'auto' });
+		var newHeight = p.panel('panel').outerHeight();
+		c.layout('resize', {
+			height: (c.height() + newHeight - oldHeight)
+		});
+	}
+
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+
+	function formateNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+
+	function approveDetail(row) {
+		var approveId = row.approveId;
+		var title = "预算详情" + ':' + approveId;
+		var virtualId = row.virtualId;
+		var linkContractId = row.linkContractId;
+		if(row.businessType == 'ZY-TP'){
+			// 托盘
+			window.parent.addTab(title, _ctx + '/bs/matchDetail/contentTP/' + approveId+"?dctpMiddleFlg=false");
+		} else if (!linkContractId && virtualId) {
+			// 赊销库存采购
+			window.parent.addTab(title, _ctx + "/ctr/contract/detail/" + row.id);
+		} else if (matchCredit_flg == true) {
+			// 赊销
+			window.parent.addTab(title, _ctx + '/bs/matchDetail/content2/' + approveId);
+		} else {
+			// 代采
+			window.parent.addTab(title, _ctx + '/bs/matchDetail/content/' + approveId);
+		}
+	}
+
+	function show(id) {
+		var url=_ctx+"/ctr/delivery/show?id="+id;
+		$('#w').window({href:url});
+		$('#w').window("open");
+	}
+	function inssert(id) {
+		var url=_ctx+"/ctr/delivery/inssert?id="+id;
+		$('#w').window({href:url});
+		$('#w').window("open");
+	}
+	function updateContractFile(contractId, applyCancelFlg) {
+		if (applyCancelFlg) {
+			$.messager.alert('提示', '本合同已发起作废申请，当前不可发起申请 !', 'info');
+			return false;
+		}
+		var url=_ctx+"/ctr/contract/openCtrUpdateFile/"+contractId;
+		var title='上传合同附件';
+		$('#w_doubleCheck_window').window({href:url});
+		$('#w_doubleCheck_window').window("open");
+	}
+
+	// 判断是否为空
+	function isBlank(val) {
+		if (val == undefined
+				|| val == ''
+				|| val == null) {
+			return true;
+		}
+		return false;
+	}
+	//	更新逾期标识
+	function violateFlgUpdate(id){
+		console.log('编号:'+id);
+		$.messager.confirm('提示','确定要更新逾期标识吗?', function(t){
+			if(t){
+				if(id){
+					$.post(_ctx + "/ctr/contract/violateFlgUpdate/"+id, function(result) {
+						var rObj = eval(result);
+						if (rObj.success) {
+							$.messager.show({title:'Tip',msg:'更新逾期标识成功!!',timeout:2000,showType:'show'});
+							$('#tt').datagrid('reload');
+						} else {
+							$.messager.alert('error',rObj.failure,'warning');
+						}
+					})
+				}
+			}
+		});
+	}
+
+	function openVirtualDetail(id, contractNo) {
+		var url = _ctx + "/ctr/contract/detail/" + id;
+		window.parent.addTab(contractNo, url);
+	}
+
+	// 清除罚金
+	function clearPenalty(id){
+		console.log('编号:'+id);
+		$.messager.confirm('提示','确定要清除罚金吗?', function(t){
+			if(t){
+				if(id){
+					$.post(_ctx + "/ctr/contract/clearPenalty/"+id, function(result) {
+						var rObj = eval(result);
+						if (rObj.success) {
+							$.messager.show({title:'Tip',msg:'清除罚金成功!!',timeout:2000,showType:'show'});
+							$('#tt').datagrid('reload');
+						} else {
+							$.messager.alert('error',rObj.failure,'warning');
+						}
+					})
+				}
+			}
+		});
+	}
+
+	// 费用调整
+	function updateCost(contractId){
+		var url=_ctx+"/ctr/contract/getContractCost/"+contractId;
+		$('#w_updateCost_window').window({href:url});
+		$('#w_updateCost_window').window("open");
+	}
+
+	function saveContractLoadingTH(contractId) {
+		$("#w_saveContractLoading_window").window('clear');
+		$("#w_saveContractLoading_delivery_window").window('clear');
+		var url = _ctx + "/ctr/contract/getContractLoading/" + contractId + "/B";
+		$('#w_saveContractLoading_window').window({href: url});
+		$('#w_saveContractLoading_window').window("open");
+	}
+
+	function saveContractLoadingPS(contractId) {
+		$("#w_saveContractLoading_window").window('clear');
+		$("#w_saveContractLoading_delivery_window").window('clear');
+		var url = _ctx + "/ctr/contract/getContractLoading/" + contractId + "/B";
+		$('#w_saveContractLoading_delivery_window').window({href: url});
+		$('#w_saveContractLoading_delivery_window').window("open");
+	}
+
+
+	// 导出面单
+	function exportBusinessDelivery(approveId) {
+		$('#searchForm').form('submit', {url:_ctx+"/ctr/contractOphis/exportBusinessDelivery?approveId="+approveId});
+	}
+
+	function showQuickSearch(){
+
+		var moduleUrl = '/ctr/contract/findDCSX';
+		
+		if(matchCredit_flg == true) {
+			// 赊销
+			moduleUrl = '/ctr/contract/findDCSX';
+		} else {
+			// 代采
+			moduleUrl = '/ctr/contract/findDC';
+			
+		}
+		
+		$('#quickSearchId').tooltip({
+			content: $('<div></div>'),
+			showEvent: 'click',
+			position: 'bottom',
+			trackMouse: false, // 启用鼠标跟踪
+			onUpdate: function (content) {
+				// 发送 AJAX 请求
+				$.ajax({
+					url:_ctx+"/sys/quick/search/content",
+					type: 'post', // 或 'POST'，根据您的需求
+					data:{moduleUrl:moduleUrl},
+					dataType: 'html', // 假设您的后台返回HTML内容
+					success: function (data) {
+						// 在成功回调中将返回的页面内容添加到 Tooltip 中
+						content.html(data);
+						// 根据您的需要，您还可以进行其他操作，例如绑定事件等
+						content.panel({
+							width: 300,
+							border: false,
+							title: '快速查询'
+						});
+						// 更新 Tooltip 的位置和显示
+						$('#quickSearchId').tooltip('reposition').tooltip('show');
+					},
+					error: function () {
+						// 处理请求错误的情况
+						content.html('请求失败，请重试。');
+					}
+				});
+			},
+			onShow: function () {
+				var t = $(this);
+				t.tooltip('show');
+				t.tooltip('tip').unbind().bind('mouseenter', function () {
+					t.tooltip('show');
+				}).bind('mouseleave', function () {
+					t.tooltip('hide')
+				});
+			}
+		});
+	}
+	// 快速查询点击事件
+	function onClickQuickSearch(element){
+		var propJson = element.getAttribute("data-prop-json");
+		var jsonObject = JSON.parse(propJson);
+
+		$('#contractType_src').combobox('setValue',jsonObject.contractType_src);
+		$("#contractNo").textbox('setValue',jsonObject.contractNo);
+		$("#companyName").textbox('setValue',jsonObject.companyName);
+		$('#payFullTime_from').datebox('setValue',jsonObject.payFullTime_from);
+		$('#payFullTime_to').datebox('setValue',jsonObject.payFullTime_to);
+		$('#ourCompanyName').combobox('setValue',jsonObject.ourCompanyName);
+		$('#confirmReceiveFlgSrh').combobox('setValue',jsonObject.confirmReceiveFlgSrh);
+		$('#payDateChange').combobox('setValue',jsonObject.payDateChange);
+		$('#srh_deliveryDate_from').datebox('setValue',jsonObject.srh_deliveryDate_from);
+		$('#srh_deliveryDate_to').datebox('setValue',jsonObject.srh_deliveryDate_to);
+		$('#payType').combobox('setValue',jsonObject.payType);
+		$('#warehouseType').combobox('setValue',jsonObject.warehouseType);
+		$('#billType').combobox('setValue',jsonObject.billType);
+		$('#srh_contractTime_from').datebox('setValue',jsonObject.srh_contractTime_from);
+		$('#srh_contractTime_to').datebox('setValue',jsonObject.srh_contractTime_to);
+		$('#performanceStatus').combobox('setValues',jsonObject.performanceStatus);
+		$('#contractTypes').combobox('setValue',jsonObject.contractTypes);
+		$("#matchUserName").combotree('setValue',jsonObject.matchUserName);
+		$('#deliveryType').combobox('setValue',jsonObject.deliveryType);
+		$("#search_GTEL_creditCycle").textbox('setValue',jsonObject.search_GTEL_creditCycle);
+		$("#search_LTL_creditCycle").textbox('setValue',jsonObject.search_LTL_creditCycle);
+		$("#productsName").textbox('setValue',jsonObject.productsName);
+		$('#quickSearchId').tooltip('hide');
+		Convert.search('searchForm','tt');
+
+	}
+
+	// 快速查询删除事件
+	function deleteQuickSearch(element){
+		var id = element.getAttribute("data-prop-id");
+		if(id) {
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '删除提示',
+				msg: '确定要删除该查询条件吗？',
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				fn: function(r){
+					if (r){
+						$.post(_ctx+"/sys/quick/search/delete/"+id,function(result) {
+							var rObj = eval(result);
+							if(rObj.success){
+								showQuickSearch();
+							}else{
+								showQuickSearch();
+								$.messager.alert('error',rObj.failure,'warning');
+							}
+
+						});
+					} else {
+						showQuickSearch();
+					}
+				}
+			});
+		}
+
+	}
+
+	// 快速查询保存事件
+	function saveSearchParams(){
+		var moduleUrl = '/ctr/contract/findDCSX';
+
+		if(matchCredit_flg == true) {
+			// 赊销
+			moduleUrl = '/ctr/contract/findDCSX';
+		} else {
+			// 代采
+			moduleUrl = '/ctr/contract/findDC';
+
+		}
+		
+		var quickSearchSize = $("#quickSearchSize").val();
+		if(quickSearchSize >= 10) {
+			$.messager.alert('error','最多可保存10条快速查询','warning');
+		} else {
+			$.messager.prompt('请输入保存的名称', '', function(r){
+				if (r){
+					var params = {
+						contractType_src:$("#contractType_src").val(),
+						contractNo:$("#contractNo").val(),
+						companyName:$("#companyName").val(),
+						payFullTime_from:$("#payFullTime_from").val(),
+						payFullTime_to:$("#payFullTime_to").val(),
+						ourCompanyName:$("#ourCompanyName").val(),
+						confirmReceiveFlgSrh:$("#confirmReceiveFlgSrh").val(),
+						payDateChange:$("#payDateChange").val(),
+						srh_deliveryDate_from:$("#srh_deliveryDate_from").val(),
+						srh_deliveryDate_to:$("#srh_deliveryDate_to").val(),
+						payType:$("#payType").val(),
+						warehouseType:$("#warehouseType").val(),
+						billType:$("#billType").val(),
+						srh_contractTime_from:$("#srh_contractTime_from").val(),
+						srh_contractTime_to:$("#srh_contractTime_to").val(),
+						performanceStatus:$("#performanceStatus").val(),
+						contractTypes:$("#contractTypes").val(),
+						matchUserName:$("#matchUserName").val(),
+						deliveryType:$("#deliveryType").val(),
+						search_GTEL_creditCycle:$("#search_GTEL_creditCycle").val(),
+						search_LTL_creditCycle:$("#search_LTL_creditCycle").val(),
+						productsName:$("#productsName").val()
+					}
+					$.post(_ctx+"/sys/quick/search/saveQuickSearch", {propJson:JSON.stringify(params),moduleUrl:moduleUrl,searchName:r} ,function(result) {
+						var rObj = eval(result);
+						if(rObj.success){
+							//若datagrid的url为空，则需添加
+							$.messager.show({
+								height:150,
+								title:'提示',
+								msg:'保存成功',
+								timeout:2000,
+								border:'thin',
+								cls:'c9',
+								showType:'show'
+							});
+						}else{
+							$.messager.alert('error',rObj.failure,'warning');
+						}
+					});
+				}
+			});
+		}
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>合同管理</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 70px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input type="hidden" name="search_EQS_contractType" th:value="S" />
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">合同编号:</label>
+				<input  class="control" type="text" name="search_LIKES_contractNo"/>
+			</span>
+			<!-- <span class="input-colspan">
+				<label>业务编号:</label>
+				<input  class="control" type="text" name="search_LIKES_businessNo"/>
+			</span>	 -->
+			<span class="input-colspan">
+				<label>企业名称:</label>
+				<input  class="control" type="text" name="search_LIKES_companyName"/>
+			</span>
+			<span class="input-colspan">
+					<label>合同时间:</label>
+					<input  id="srh_contractTime_from" name="search_GTED_contractTime" class="easyui-datebox"/>
+			</span>
+			<span class="input-colspan">
+					<label style="margin-left: -70px;">到:</label>
+					<input  id="srh_contractTime_to"  name="search_LTD_contractTime" class="easyui-datebox" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+
+		</p>
+
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<div id="w" class="easyui-window" title="合同详情" data-options="width:820,height:550">
+</div>
+
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:900,height:600">
+</div>
+
+<script type="text/javascript">
+	var lastIndex=0;
+	var companyJson =eval('[(${companyJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var productTypeJson = eval('[(${productTypeJson})]');
+	var deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+	var applyTypeJson = eval('[(${applyTypeJson})]');
+	$(function(){
+
+		$("#srh_status").combobox({
+			data:approveStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			width:150,
+			editable:true
+		});
+
+		/* $('#srh_contractTime_from,#srh_contractTime_to').datebox({
+			width:150,
+			height:30
+		}); */
+
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/ctr/contract/contractList",
+			columns:[ [
+				{field:'source',title:'业务类型', width:100,formatter:function(value,row,index){
+					return Convert.findValueByKey(applyTypeJson,"dictCd",value,"dictName");
+				}},
+				{field:'businessNo', title:'业务编号', width:128},
+				{field:'fileId',title:'附件',align:'center', width:40,formatter:showImg},
+				{field:'ourCompanyName',title:'我方企业名称', width:180},
+				{field:'companyName',title:'对方企业名称', width:180},
+				{field:'totalNumber',title:'合同数量(吨)',align:"right", width:90},
+				{field:'warehouseNumber',title:'出库数量(吨)',align:"right", width:90},
+				{field:'totalAmount',title:'合同总价(元)', align:"right", width:100},
+				{field:'dealedAmount',title:'已收金额(元)',align:"right", width:90},
+				{field:'billedAmount',title:'开票金额(元)',align:"right", width:90},
+				{field:'contractStatus', title: '合同状态', width: 80,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+				}},
+				{field:'contractTime',title:'合同时间', width:140} ,
+				{field:'matchUserName',title:'业务员',align:"center", width:55},
+				{field:'option',title:'操作',align:'center',width:120,formatter:function(value, row, index){
+					if (row.id){
+						var str = '<span onclick="printContract('+row.id+')" style="cursor:pointer;">合同预览</span>';
+						return str;
+					}
+				}}
+			]],
+
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+
+		$('#w_contract').window({
+			title: '电子合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false
+		});
+
+	});
+	function showImg(value,row,index){
+		var patrn=/[\d]+/;
+		 if(value!=undefined &&patrn.test(value)){
+			return '<img src="../../static/images/icon_scfj.png"/>';
+		}
+	}
+	function editrow(id){
+		var url=_ctx+"/ctr/contract/detail/"+id;
+		var title="合同详情";
+		if (id ==0){
+			title="新增合同";
+		}
+		var headerCls = '';
+		$('#w').window({href:url,title:title,headerCls:headerCls});
+		$('#w').window("open");
+	}
+	//合同预览
+	function printContract(contractId){
+		if(contractId){
+			var url = _ctx+"/ctr/contractText/getBycontractId/"+contractId;
+			$('#w_contract').window({href:url});
+			$('#w_contract').window("open");
+		}
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/css/tihuodan.css}" rel="stylesheet" type="text/css" />
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+<script th:src="@{/static/jquery/jquery.jqprint-0.3.js}" type="text/javascript"></script>
+<script th:src="@{/static/jquery/FileSaver.js}" type="text/javascript"></script>
+<script th:src="@{/static/jquery/jquery.wordexport.js}" type="text/javascript"></script>
+</head>
+
+<div th:utext="${contractText}" id="contractText"></div>
+<input id="printCount" name="printCount" style="display: none;" th:value="${printCount}"></input>
+<input id="id" name="id" th:value="${id}" style="display: none;"></input>
+
+<script type="text/javascript">
+//配送单
+function printTheContract(){
+	//window.print();
+	$('.print').addClass("hide");
+	$('#contractText').jqprint();
+	$('.print').removeClass("hide");
+	startPrint();
+}
+
+function startPrint(){
+	var printCount=parseInt($("[name=printCount]").val());
+	var id=$("[name=id]").val();
+	$.ajax({
+	    url:_ctx+"/apply/deliveryPrint/startPrint",
+	    dataType:"json",
+	    async:true,
+	    data:{"printCount":printCount,"id":id},
+	    type:"post",
+	    success:function(obj){
+	    	$("[name=printCount]").val(obj);
+	    }
+	});			
+}
+</script>

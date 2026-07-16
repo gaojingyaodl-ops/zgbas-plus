@@ -1,0 +1,144 @@
+<!--替换签署原文件-->
+<div class="easyui-layout" fit="true">
+    <div id="inputForm" method="post" class="editForm_approve content_div">
+        <div class="editForm" style="margin-left: 77px">
+            <p style="width:240px">
+				<span class="upload-btn" id="btn_replace_fileId">
+	               	 <a  href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传文件</a>
+	           	</span>
+                <input class="control" id="replaceFileId" name="replaceFileId" type="hidden" />
+            </p>
+            <p class="controls showImg fileId" id="span_replaceFileId"></p>
+        </div>
+    </div>
+    <div id="btn" class="add-btn" style="margin-top: 15px;margin-left: 130px">
+        <a  href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveReplaceSignFile()" style="margin-left: 30px">保存</a>
+    </div>
+</div>
+
+</html>
+
+<script type="text/javascript">
+
+    var replaceFilePlugin = new FilePlugin('#replaceFileId', null, '/apply/sealUsageDCSX/updateReplaceFileId', false);
+    $(function () {
+
+        //加载附件列表
+        replaceFilePlugin.load($('#replaceFileId').val(), '#span_replace_fileId');
+        if ($('#btn_replace_fileId').length > 0) {
+            fileUpload("btn_replace_fileId", "replaceFileId");
+        }
+
+    });
+
+    function saveReplaceSignFile() {
+        var fileId = $('#replaceFileId').val();
+        var approveId = $('#approveId').val();
+        var contractNo = $('#contractNo').val();
+        var companyName = $('#companyName').val();
+        var ourCompanyName = $('#ourCompanyName').val();
+        if(!fileId){
+            $.messager.alert('error', '请先上传附件', 'warning');
+            return;
+        }
+        $('#w_replace_sign_file_pdf').window("close");
+        $.modal.loading("正在替换中，请稍候...");
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: _ctx + "/apply/sealUsageDCSX/saveReplaceSignFile",
+            data: {
+                fileId:fileId,
+                approveId:approveId,
+                contractNo:contractNo,
+                companyName:companyName,
+                ourCompanyName:ourCompanyName
+            },
+            success: function (data) {
+                $.modal.closeLoading();
+                if(data.failure != null) {
+                    $.messager.alert('error', data.failure, 'warning');
+                } else {
+                    filePlugin.load($('#replaceFileId').val(), '#span_fileId');
+                    $('#fileId').val($('#replaceFileId').val());
+                }
+            },
+        })
+    }
+    function fileUpload(fileUploadId, fuSaveId) {
+        var $this = $('#' + fuSaveId);
+        // fileUploadId:点击弹出选择文件事件的dom对象
+        // fusaveId:文件上传成功后，保存的服务文件Id
+        // --start-文件上传---
+        var uploader = WebUploader.create({
+            auto : true,
+            // swf文件路径
+            swf : _ctx + '/static/webuploader-0.1.5/Uploader.swf',
+            // 文件接收服务端。
+            server : _ctx + '/file/uploadFile',
+            // 选择文件的按钮。可选。
+            // 内部根据当前运行是创建，可能是input元素，也可能是flash.
+            pick : '#' + fileUploadId,
+            paste: document.body,
+            // 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
+            resize : false,
+            duplicate :true ,//true可重复上传，默认不可多次重复上传
+            // 只允许选择图片文件。
+            accept : {
+                title : 'file',
+                extensions : 'pdf',
+                // extensions : '*',
+                // mimeTypes :	"image/jpg,image/jpeg,image/gif,image/bmp,image/png,application/pdf,application/rar,application/zip,application/excel"
+                mimeTypes :	"*"
+            }
+        });
+        // 去掉文件上传组件样式，使用上传dom 自己样式
+        $(".webuploader-pick").removeClass();
+        uploader.on('beforeFileQueued', function(file) {
+            if (file.name == "image.png"){
+                file.name = 'IMG' + Convert.getNowDateStr() + '.png';
+                // file.name = 'IMG' + new Date().getTime() + '.png';
+            }
+            $.messager.progress('close');
+            if(file &&file.size > 10485760){
+                $.messager.alert('tip',"上传文件不能超过10M!",'info');
+                return false;
+            }
+        })
+        // 当有文件添加进来的时候
+        uploader.on('fileQueued', function(file) {
+            $.messager.progress();
+            //var $li = $('<div id="' + file.id + '" class="file-item thumbnail">' + '<img>' + '<div class="info">' + file.name + '</div>' + '</div>'), $img = $li.find('img');
+        });
+        // 文件上传成功，给item添加成功class, 用样式标记上传成功。
+        uploader.on('uploadSuccess', function(file, response) {
+            $.messager.progress('close');
+            if(file &&file.size > 10485760){
+                $.messager.alert('tip',"上传文件不能超过10M!",'info');
+                return;
+            }
+            $this.val("");
+            if(response && response.result){//上传成功
+                var fileId = response.fileId;
+
+                replaceFilePlugin.uploadSuccess(fileId);
+                //加载附件列表
+                replaceFilePlugin.load($this.val(),'#span_'+fuSaveId);
+
+            }else{
+                $.messager.alert('tip',"上传文件失败，失败信息："+ response._raw,'info');
+            }
+
+        });
+        uploader.on('error',function(file){
+            $.messager.progress('close');
+            $.messager.alert('tip','文件格式不支持!请上传【pdf】格式的文件','info');
+        })
+        // 文件上传失败，显示上传出错。
+        uploader.on('file', function(file) {
+            $.messager.progress('close');
+            $.messager.alert('tip','文件上传失败,请重试!','info');
+        });
+        // --end-文件上传---
+    }
+</script>

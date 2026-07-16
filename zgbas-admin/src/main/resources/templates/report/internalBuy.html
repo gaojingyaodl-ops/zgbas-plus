@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>内部采购统计</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div" border="false"  style="height: 65px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">品名:</label>
+				<input type="text" id="brandNumber" name="brandNumber"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">采购人:</label>
+				<input type="text" id="matchUserName" name="matchUserName"/>
+			</span>
+			<span class="input-colspan"> 
+					<label style="width: 80px;">采购日期:</label>
+					<input name="beginTime" id="beginTime" class="easyui-datebox" />
+			</span> 
+			<span class="input-colspan">
+					<label style="width: 20px;">到:</label> 
+					<input name="endTime"  id="endTime" class="easyui-datebox" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#searchForm').form('reset');">清空</a>
+				<a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcel()">导出</a>
+			</span>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;" >
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var productTypeJson = eval('[(${productTypeJson})]');// 品名树
+	$(function(){
+		$('#matchUserName').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			height : 30,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#matchUserName').combotree('clear');
+				} else {
+					$('#matchUserName').combotree('setValue', node.text);
+				}
+			}
+		});
+		//品名下拉
+	    $('#brandNumber').combotree({
+			data:productTypeJson, 
+			multiple : false,
+			editable : true,
+			onSelect:function(data){
+				$('#brandNumber').val(data.typeName);
+			}
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/internalBuy/findInternalBuy",
+			columns:[ [
+				{field:'productName', title: '货名',width:180,formatter:function(value, row, index){
+					if(value){
+						var str=row.productName+'/'+row.brandNumber+'/'+row.factoryName;
+						return str;
+					}
+				}},
+				{field:'warehouseName',title:'仓库',align:'center', width:180},
+				{field:'buyNumber',title:'采购数量(吨)',align:'right', width:110},
+				{field:'matchUserName',title:'采购人',align:'center', width:110},
+				{field:'shipperUserName',title:'原货主',align:'center', width:110},
+				{field:'createdDate', title:'采购日期',align:'center', width:150}
+			]],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			} 
+		});
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:"",
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+	});
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/internalBuy/exportExcel"});
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css?v=5565}" type="text/css" rel="stylesheet"/>
+<div class="easyui-layout" fit="true" id="tab">
+    <div region="center" border="false" class="pl20 pt20">
+        <form id="inputForm" method="post" class="from-input-layout"
+              style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>签署短链接：</label>
+                    <input name="contractNo" th:value="${entity.signShortUrl}" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>签署人手机：</label>
+                    <input name="contractNo" th:value="${entity.signUserPhone}" readonly="readonly" />
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>签署公司：</label>
+                    <input name="contractNo" th:value="${entity.companyName}" readonly="readonly" />
+                </p>
+                <p class="yw-table-filter">
+                    <label>签署人姓名：</label>
+                    <input name="contractNo" th:value="${entity.signUserName}" readonly="readonly" />
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <img th:src="${entity.signImageData}">
+                </p>
+            </div>
+        </form>
+        <div region="south" border="false" class="panel_padding mt10">
+<!--            <a href="#" class="easyui-linkbutton btn-info" onclick="closeFrom();" style="width: 60px;">确 定</a>-->
+            <a href="#" class="easyui-linkbutton btn-danger" onclick="closeFrom();" style="width: 60px;">关 闭</a>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+	$(function(){
+
+	});
+    function closeFrom(){
+        $('#w_confirmReceiptDcsx_sign_window').window('close');
+    }
+</script>

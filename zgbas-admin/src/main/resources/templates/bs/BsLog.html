@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>日志管理</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 60px;"> 操作人:</label>
+				<input name="search_EQS_operatorName"  type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>操作模块:</label>
+				<input name="search_LIKES_targetName" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>内容查詢:</label>
+				<input name="search_LIKES_remark" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>操作日期:</label>
+				<input  name="search_GTED_updatedDate" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter">
+				<input  id="search_LTED_updatedDate"  name="search_LTED_updatedDate" class="easyui-datebox" />
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+	</div>
+	<div region="center" border="false" class="panel_padding pl20 pr20">
+		<table id="tt" fit="true"
+				title="" iconCls="icon-edit" singleSelect="true"
+				th:url="@{/bs/dict/list}">
+		</table>
+	</div>
+<div id="w" title="详细信息" style="height: 425px;width: 645px" class="easyui-window" >
+</div>
+<script type="text/javascript">
+
+	var lastIndex=0;
+	$(function(){
+		$('#w').window("close");
+		init();
+
+	});
+	function init(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:50,
+			pageList:[50,40,30,20,10],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/bs/log/LogList",
+			columns:[ [
+				{field: 'id',title:'ID',align: 'left',width: 50},
+				{field:'ipAddre',title:'IP',align:'left',sortable:false,width:120,height:30},
+				{field:'operation',title:'操作类型',align:'left',width:100},
+				{field:'operatorName',title:' 操作人',width:120,align:'left'},
+				{field:'remark',title:' 操作内容',width:1000,align:'left'},
+				{field:'targetName',title:' 操作模块',width:130,align:'left'},
+				{field:'updatedDate',title:'操作时间',width:150}
+			] ],
+			toolbar:'#toolbar',
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onDblClickRow:function(index,row){
+						lastIndex = index;
+						editrow(row.id);
+					},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				$('#tt').datagrid('selectRow', lastIndex);
+			}
+		});
+		function editrow(id){
+			var url=_ctx+"/bs/log/detail?id="+id;
+			$('#w').window({href:url});
+			$('#w').window("open");
+		}
+	}
+</script>
+</body>
+</html>

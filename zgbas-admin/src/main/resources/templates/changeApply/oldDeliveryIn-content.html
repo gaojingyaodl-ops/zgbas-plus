@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<fieldset class="form-section" style="padding: 35px 30px 10px 20px;">
+	<legend class="form-section-title"><span class="approve_text">调整前</span><i></i></legend>
+	    <div id="inputForm" method="post" class="editForm_approve firstDiv">
+	    <input type="hidden" id="entityId" th:value="${entity.id}" />
+	    <p class="p_text" style="margin-bottom: 5px">
+	    	<span class="input-colspan" style="width: initial;">
+				<label>入库编号:</label>
+				<input id="applyNo" class="chooseBtnStyle" readonly type="text" th:value="${entity.applyNo}"></input>
+			</span>
+	    	<span class="input-colspan">
+				<label>合同编号:</label>
+				<input id="contractNo" class="chooseBtnStyle" readonly type="text" th:value="${entity.contractNo}"></input>
+			</span>
+	    </p>
+    	
+    	<table id="inTable" style="height: 120px;"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+		</table>
+		
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>提货方式:</label>
+				<input id="deliveryType" type="text" th:value="${entity.deliveryType}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>提货电话:</label>
+				<input id="deliveryPhone" type="text" th:value="${entity.deliveryPhone}"></input>
+			</span>
+			<span class="input-colspan2">
+				<label>提货地址:</label>
+				<input id="deliveryAddr" type="text"  th:value="${entity.deliveryAddr}"></input>
+			</span>
+		</p>
+		
+		<p class="p_text">
+			<input id="companyId" type="hidden" th:value="${entity.companyId}"></input>
+			<span class="input-colspan">
+				<label>供货商名称:</label>
+				<input id="companyName" readonly type="text" th:value="${entity.companyName}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>联系人:</label>
+				<input id="contactName" type="text" th:value="${entity.contactName}"></input>
+			</span>
+			<span class="input-colspan">
+			<label>联系电话:</label>
+			<input id="contactPhone" type="text" th:value="${entity.contactPhone}"></input>
+			</span>
+			<span class="input-colspan">
+			<label>联系地址:</label>
+			<input id="contactAddr" type="text" th:value="${entity.contactAddr}"></input>
+			</span>
+		</p>
+		
+		<p class="p_text">
+				 <span class="input-colspan">
+				<label>批号:</label>
+				<input id="warehouseBatchNo" type="text" th:value="${entity.warehouseBatchNo}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>仓位/货位:</label>
+				<input id="warehousePosition" type="text" th:value="${entity.warehousePosition}"></input>
+			</span>
+			<span class="input-colspan">
+				<label></label>
+				<span onchange="$(this).toggleClass('on')" th:class="${entity.transferFlg} ? 'ckbox on' : 'ckbox'">
+					<input type="checkbox" th:checked="${entity.transferFlg}" onchange="$('#transferFlg').val($(this).attr('checked')=='checked');" id="tranCheckbox"/>
+            		<span id="receiveSpan" th:classappend="!${entity.transferFlg}?'color_hong'">需转货权</span>
+           			<input type="hidden" th:value="${entity.transferFlg}" id="transferFlg" />
+				</span>
+			</span>
+		</p>
+		
+		<p class="p_text">
+			<span class="input-colspan2">
+				<label>备注:</label>
+				<input id="remark" type="text" th:value="${entity.remark}"></input>
+			</span>         	
+		</p>
+		
+		<div class="editForm" id="approveFile"> 
+			<p>
+				<input class="control" id="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>	
+	</div>
+	</div> 
+</fieldset>
+<script type="text/javascript">
+var lastIndex;
+var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+var _factoryJson = eval('[(${factoryJson})]');
+var _warehouseJson = eval('[(${warehouseJson})]');
+var _productJson = eval('[(${productJson})]');
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/deliveryIn/updateFileId',[[${param.hasEditFile}]]);
+var prouctDetailJson;
+$(function(){
+	var _deliveryType = $('#deliveryType').val();
+	var _conDeliveryType = Convert.findValueByKey(_deliveryTypeJson,"dictCd",_deliveryType,"dictName");
+	$("#deliveryType").val(_conDeliveryType);
+	$("#inputForm").find("input").attr("readonly",true);
+	
+	var _url = _ctx+"/apply/productDetail/productList?search_EQS_applyType=I&search_EQL_applyId="+$("#entityId").val();
+	$('#inTable').datagrid({
+		pageSize:10,
+		url:_url,
+		rownumbers:true,
+		pagination:false,
+		columns:[ [
+			{field:'productCd',title:'品名',align:'center',width:120,
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_productJson,"typeCode",value,"typeName");
+			}},
+			{field:'brandNumber',title:'牌号',align:'center',width:120},
+			{field:'factoryId',title:'厂商',align:'center',width:120,
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_factoryJson,"id",value,"factoryName");
+			}},
+			{field:'warehouseId',title:'仓库',align:'center',width:180,editor:{type:'combobox',options:{required:'true',panelWidth:180,data:_warehouseJson,textField:'warehouseName',valueField:'id',onHidePanel:function(){BasCombobox.onHidePanel(this);}}},
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_warehouseJson,"id",value,"warehouseName");
+			}},
+			{field:'dealNumber',title:'数量(吨)', align:'right', width:80,
+				formatter: function (value, row, index) {
+                    if (row != null) {
+                        return parseFloat(value).toFixed(3);
+                    }	
+            }},
+			{field:'dealPrice',title:'单价(元)',align:'right',  width:80},
+			{field:'totalPrice',title:'总价(元)', align:'right', width:80},
+			{field:'curNumber',title:'当前入库数量(吨)',align:'right', width:120,editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4}},
+				formatter: function (value, row, index) {
+                    if (row != null) {
+                        return parseFloat(value).toFixed(3);
+                    }		
+			}}
+		]],
+		
+	});
+	
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($("#btn_fileId").length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+	
+})
+
+</script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-bottom:20px">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>企业名:</label>
+				<input readonly name="companyName" id="companyName" type="text" th:value="${entity.companyName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>提升后额度:</label>
+				<input readonly name="extendedServeRate" id="extendedServeRate" type="text" th:value="${entity.promoteCreditAmount}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>VIP差额服务费:</label>
+				<input readonly name="extendedServeRate" id="extendedServeRate" type="text" th:value="${entity.promoteVipAmout}"></input>
+			</p>
+
+			<p class="yw-table-filter">
+				<label>VIP剩余天数:</label>
+				<input readonly name="extendedServeRate" id="extendedServeRate" type="text" th:value="${daysRemaining}"></input>
+			</p>
+
+		</div>
+
+		</div>
+	</div>
+</div>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+
+</script>

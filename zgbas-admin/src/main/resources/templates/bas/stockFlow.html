@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<div class="easyui-layout" fit="true">	
+  <div style="height:150px;">
+   <input type="hidden" id="stockId" th:value="${stockId}" />
+			 <table id="stockTable3" style="height:300px;" border="0"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+			</table>
+	</div>
+</div>
+<div id="w_contract" title="合同详情" data-options="width:820,height:550"></div>
+<script type="text/javascript">
+var canViewContract = '[(${canViewContract})]';//查看合同权限
+$(function(){
+	var _stockId = $("#stockId").val();
+	var _operationTypeJson = eval('[(${operationTypeJson})]');
+	var _url = _ctx+"/bas/stock/listStockFlow/"+_stockId;
+	
+	var columns = [ [
+		{field:'productName',title:'品名',align:'center',width:100},
+		{field:'brandNumber',title:'牌号',align:'center',width:100},
+		{field:'factoryName',title:'厂商',align:'center',width:100},
+		{field:'contractNo',title:'合同编号', align:'center',width:120},
+		//{field:'deliveryOutNum',title:'出入库单号', align:'center',width:150},
+		{field:'warehouseName',title:'仓库',align:'center',width:120},
+		{field:'operationType',title:'操作类型',align:'right',width:80,formatter:function(value,row,index){
+			if(value!=undefined){
+				return Convert.findValueByKey(_operationTypeJson,'dictCd',value,'dictName');
+			}}},
+		{field:'dealNumber',title:'发生数量(吨)', align:'right', width:100},
+		{field:'restFrozenNumber',title:'剩余冻结', align:'right', width:80},
+		{field:'restRealNumber',title:'剩余可用', align:'right', width:80},
+		{field:'createdDate',title:'创建时间', align:'right', width:150},
+		{field:'action',title:'操作', width:85,align:'center',formatter:function(value, row, index){ 
+			var str = "";
+			if(row.contractId){
+		        str = "<div class='btnSpan' onclick='queryContract(\""+row.contractId+"\")' class='l-btn'><span style='width:60px;cursor: pointer;'>查看合同</span></div>"; 
+			}
+	        return str; }}
+	]];
+	if (_industry.indexOf('SL')==-1){
+		for(var i in columns[0]){
+			var col =columns[0][i];
+			if (col.field=='brandNumber' || col.field=='factoryName'){
+				col.hidden = true;
+			}
+		}
+	}
+	
+	$('#stockTable3').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:columns
+	});
+	
+	$('#w_contract').window({
+		title:'合同详情',
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		onClose:function(){
+			$('#tt').datagrid('reload');
+		}
+	});
+})
+
+
+function queryContract(id){
+	if (canViewContract == 'true'){
+		if(id){
+			var url=_ctx+"/ctr/contract/detail/"+id+"?from=stock";
+			$('#w_contract').window({href:url});
+			$('#w_contract').window("open");
+		}
+	}else{
+		$.messager.alert('提示','暂无该权限 , 如有疑问请联系管理员!','info');
+	}
+}
+</script>

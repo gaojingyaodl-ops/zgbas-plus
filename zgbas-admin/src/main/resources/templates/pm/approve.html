@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<style>
+	.datagrid-cell-check{height: 26px;}
+	.datagrid-header-check{height: 26px;}
+</style>
+<body class="easyui-layout">
+    <div data-options="region:'center',border:false" style="padding:15px 15px 10px;box-shadow: 0px 1px 8px 0px rgba(104, 104, 104, 0.5);">
+    	<div data-options="region:'north'" style="line-height: 30px;margin-bottom:15px;">
+			<input name="statusFromIndex" id="statusFromIndex" th:value="${statusFromIndex}" type="hidden"/>
+			<input type="hidden" id="current_userId" th:value = "${@shiroUtil.getCurrentUserId()}">
+		    <form id="searchForm" class="form-search from-input-layout" method="post">
+	      		<div class="mb6">
+					<p class="yw-table-filter">
+						<label>类型:</label>
+	                	<input  class="control" name="mode" id="mode_srh" type="text" value=""/>
+						<input class="control" type="hidden" name="search_LIKES_currApproverUserId" id="currApproverUserId"/>
+					</p>
+					<p class="yw-table-filter ">
+						<label>流程:</label>
+               			<input  class="control" type="text" name="search_EQL_processId" id="processId_srh"/>
+					</p>
+					<p class="yw-table-filter mobile-display-none">
+						<label>审批状态:</label>
+               			<input  class="control" name="search_EQS_status" id="status_srh" type="text" value=""/>
+					</p>
+					<p class="yw-table-filter mobile-display-none">
+						<label>审批编号:</label>
+               			<input  class="control" name="search_LIKES_approveNo" onkeyup="value=value.replace(/\s+/g,'')" id="approveNo_srh" type="text" value=""/>
+					</p>
+					<p class="yw-table-filter mobile-display-none">
+						<label>发起人:</label>
+						<input  class="control" name="search_LIKES_createUserName"  id="createUserName_srh" type="text" value=""/>
+					</p>
+	      		</div>
+	      		<div class="mb6 ">
+					<p class="yw-table-filter">
+						<label>摘要:</label>
+	                	<input  class="control" name="search_LIKES_subject" id="subject_srh" type="text" value=""/>
+<!--	                	<input  class="control" name="search_LIKES_subject" onkeyup="value=value.replace(/\s+/g,'')" id="subject_srh" type="text" value=""/>-->
+					</p>
+					<p class="yw-table-filter mobile-display-none">
+						<label>发起时间:</label>
+						<input  id="srh_updatedDate_from" name="search_GTED_updatedDate" class="easyui-datebox"/>
+					</p>
+					<span style="margin-left: -15px;" class="mobile-display-none">
+						<label>~</label>
+					</span>
+					<p class="yw-table-filter mobile-display-none">
+						<input  id="srh_updatedDate_to"  name="search_LTD_updatedDate" class="easyui-datebox" />
+					</p>
+					<p class="yw-table-filter mobile-display-none" th:if="${batchSelectDel}">
+						<label>是否删除:</label>
+						<input  class="control" name="batchSelectDel" id="batchSelectDel" type="text" value="0"/>
+					</p>
+					<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+					<a href="#" class="easyui-linkbutton btn-empty btn64 ml10"  onclick="$('#searchForm').form('reset');">清空</a>
+					<a href="#" th:if="${batchApproveFlg}" class="easyui-linkbutton btn-empty btn64 ml10 mobile-display-none" onclick="batchApprove();">一键同意</a>
+					<a href="#" class="easyui-linkbutton btn-empty btn64 ml10 mobile-display-none" id="quickSearchId" onclick="showQuickSearch()">快速查询</a>
+					<a href="#" th:if="${exportApproveFlg}" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none" onclick="exportApproveExcel()">导出</a>
+	      		</div>
+				<input  type="hidden" name="pid" id="pid" value="">
+			 </form>
+		  </div>
+		<div data-options="region:'center',border:false" style="height:calc(100vh - 157px);" id="tHeight">
+			<table id="tt"  title="" iconCls="icon-edit" fit="true" singleSelect="true" idField="id" style="flex: auto;height: 100%;overflow-y:auto">
+			</table>
+		</div>
+	</div>
+	<script type="text/javascript" th:inline="javascript">
+	var lastIndex;
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var approveOpinionJson =eval('[(${approveOpinionJson})]');
+	var processTree =eval('[(${processTree})]');
+	var processAllJson =eval('[(${processAllJson})]');
+	var hasAllType = [[${hasAllType}]];
+	var $batchSelectDel = [
+		{
+			value: '是',
+			key: 1,
+		},
+		{
+			value: '否',
+			key: 0,
+		},
+		{
+			value: '全部',
+			key: 2,
+		}
+	]
+	var _batchApproveFlg = [[${batchApproveFlg}]];
+	// 首页跳转标记
+	var $statusFromIndex = $('#statusFromIndex').val();
+	var $currentUserId = $('#current_userId').val();
+	window.onload = function (){
+		parent._callbackMethod['审批流程']=function(){
+			reloading();
+		}
+	}
+	$(function(){
+		window.top["reload_approve_datagrid"]=function(){
+			$('#tt').datagrid('reload');
+		}
+
+		window.top["open_window_choose"]=function(url){
+			//closeChoose();
+			openChoose(url);
+		}
+
+		setInterval(reloading, 60000);
+
+		// var modeSrhData_1 = [{id:'',text:'--全部--'},{id:'C',text:'待处理'},{id:'H',text:'我审批过'},{id:'S',text:'我发起'},{id:'P',text:'推送给我'}];
+		// var modeSrhData_2 = [{id:'C',text:'待处理'},{id:'H',text:'我审批过'},{id:'S',text:'我发起'},{id:'P',text:'推送给我'}];
+
+		var modeSrhData_1 = [{id:'',text:'--全部--'},{id:'MC',text:'待我处理'},{id:'CM',text:'我发起待处理'},{id:'H',text:'我审批过'},{id:'S',text:'我发起的'},{id:'P',text:'推送给我'}];
+		var modeSrhData_2 = [{id:'MC',text:'待我处理'},{id:'CM',text:'我发起待处理'},{id:'H',text:'我审批过'},{id:'S',text:'我发起的'},{id:'P',text:'推送给我'}];
+		var modeSrhData = modeSrhData_2;
+		if (hasAllType) {
+			modeSrhData = modeSrhData_1;
+		}
+		$("#mode_srh").combobox({
+			data:modeSrhData,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			editable: false,
+			value:"MC"
+		});
+
+		$("#status_srh").combobox({
+			data:approveStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable: false
+		});
+		$("#batchSelectDel").combobox({
+			data:$batchSelectDel,
+			textField:'value',
+			valueField:'key',
+			panelHeight:"auto"
+		});
+
+		$("#processId_srh").combobox({
+			data:processAllJson,
+			textField:'processName',
+			valueField:'id'
+		});
+		// 首页跳转参数
+		if (!strIsNull($statusFromIndex)){
+			// 审批状态为审批中
+			$('#status_srh').combobox('setValue',$statusFromIndex);
+			// 类型为全部
+			$('#mode_srh').combobox('setValue','');
+			// 当前审批人是自己的
+			$('#currApproverUserId').val('|'+$currentUserId+'|');
+		}
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			singleSelect:!_batchApproveFlg,
+			selectOnCheck:_batchApproveFlg,
+			checkOnSelect:!_batchApproveFlg,
+			// pageList:[2000,1000,200,100,50,30],
+			pageList:[30,50,100,200,1000,2000],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/pm/approve/listApprove",
+			rowStyler: function (index, row){
+				if (row.enableFlg === 'false') {
+					return 'color:#CCCCCC';
+				}
+			},
+			columns:[ [
+				{title: '全选', field: 'ck',checkbox : true, sortable: false, hidden: !_batchApproveFlg},
+				{field:'approveNo',title:'审批编号', width:120,formatter:function(value, row, index){
+					return '<span class="yw-menu-section")">'+value+'</span>';
+				} },
+				{field:'processName',title:'流程名称', width:113,align:'left'},
+				{field:'subject',title:'摘要', width:635,align:'left',
+					formatter: function(value, row, index) {
+				        var abValue = value;
+				        var content = '<p title="' + value + '" class="note">' + abValue + '</p>';
+				        return content;
+				    }
+				},
+				{field:'status',title:'状态', width:100,align:'center',formatter:function(value,row,index){
+					var status = Convert.findValueByKey(approveStatusJson,"dictCd",value,"dictName");
+					var a = '';
+					if(value=="A"){
+						a="<span style='color:#ff8153'>"+status+"</span>";
+					}else if(value=="D"){
+						a = status;
+					}else if(value=="B"){
+						a="<span style='color:red'>"+status+"</span>";
+					}else if(value=="N"){
+						a="<span style='color:#4a9bff'>"+status+"</span>";
+					}else if(value=="C"){
+						a="<span style='color:#ccc'>"+status+"</span>";
+					}else if(value=="E"){
+						a="<span style='color:#b266ff'>"+status+"</span>";
+					}
+					if (row.enableFlg === 'false'){
+						a="<span style='color:#CCCCCC'>"+status+"</span>";
+					}
+					return a;
+				}},
+				{field:'currStepName',title:'当前步骤', width:120,align:'left'},
+				{field:'currApproverUserName',title:'当前审批人', width:150,align:'left',formatter:function(value, row, index){
+					var str = value;
+					if(str && value.indexOf("|",value.length-1)!=-1){
+						str = value.substr(0,value.length-1);
+			        }
+			        return str;
+			        }
+				},
+				{field:'lastApproveUserName',title:'最近审批人', width:120,align:'left'},
+				{field:'lastApproveDate',title:'最近审批时间', width:130,formatter:function(value, row, index){
+					if (value == null || value == undefined || value == ''){
+						if(row.updatedDate) {
+							return row.updatedDate.substr(0,16);
+						}
+					}
+					return value;
+				}},
+				{field:'lastApproveRemark',hidden:true, title:'最近审批意见', width:90},
+				{field:'createUserName',title:'发起人', width:100,align:'left'},
+				{field:'fileId',title:'附件标识',hidden:true, width:70},
+				{field:'operate',title:'操作', width:70,align:'center',formatter:function(value, row, index){
+					var str = "";
+						if (row.status == 'N' || row.status == 'B' || row.status == 'C' || row.status == 'E') {
+							if (row.enableFlg === 'true') {
+								str += '<img onclick="remove(' + row.id + ')" style="cursor:pointer;width:16px;hight:18px;padding-right: 10px;" src="../static/new-version/images/icon_delete.png"/>';
+							}
+						}
+					if(row.processName=="代采预算"||row.processName=="赊销预算"||row.processName=="托盘预算"||row.processName=="代采赊销预算"||row.processName=="代采托盘预算"){
+						if (row.enableFlg === 'true') {
+							str += '<span onclick="launch(	' +row.id+ ',\'' +row.processId+'\',\'' +row.processName+'\')" class="contract-btn contract-btn-10">发起</span>';
+						}
+					}
+			        return str;
+				}}
+			]],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				approveDetail(row);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+				if (row.status!='N' || _curUserId!=row.createUserId ){
+					$('#btnDel').linkbutton('disable');
+				}else{
+					$('#btnDel').linkbutton('enable');
+				}
+			}
+		});
+
+		$("#mode_srh").combobox('options').onClick=function(record){
+				$("#mode_srh").combobox('setValue',record.id);
+				Convert.search('searchForm','tt');
+		};
+
+		$("#status_srh").combobox('options').onClick=function(record){
+				$("#status_srh").combobox('setValue',record.dictCd);
+				Convert.search('searchForm','tt');
+		};
+
+		$("#processId_srh").combobox('options').onClick=function(record){
+				$("#processId_srh").combobox('setValue',record.id);
+				Convert.search('searchForm','tt');
+		};
+	});
+
+	function batchApprove() {
+		var checkedItems = $('#tt').datagrid('getChecked');
+		var batchApproveFlg = true;
+		var approveIds = [];
+		var approveNo = '';
+		var message = '';
+		var message_approveNo = '';
+		$.each(checkedItems, function (index, item) {
+			approveNo = item.approveNo;
+			if (!item.currApproverUserId) {
+				message = '审批单：【' + approveNo + '】当前无需审批，请重新勾选!';
+				batchApproveFlg = false;
+				return false;
+			} else if (item.currApproverUserId.indexOf(_curUserId) === -1) {
+				message = '审批单：【' + approveNo + '】当前审批人不是您，请重新勾选!';
+				batchApproveFlg = false;
+				return false;
+			} else {
+				approveIds.push(item.id);
+				message_approveNo += approveNo + "；"
+			}
+		});
+		if (checkedItems.length <= 0) {
+			// top.layer.msg('请勾选需要审批的审批单！', { icon: modal_status.WARNING, time: 1000, shift: 5,area:['600px','400px'] });
+			$.modal.alertWarning('请勾选需要审批的审批单！');
+		} else if (!batchApproveFlg) {
+			$.modal.alertWarning(message);
+		} else if (approveIds.length <= 0) {
+			$.modal.alertWarning('当前勾选没有符合条件进行审批的审批单！');
+		} else if (batchApproveFlg) {
+			$.modal.confirm("确认要批量审批：【" + message_approveNo + "】吗？", function() {
+				submitBathApprove(approveIds);
+			});
+		}
+	}
+
+	function submitBathApprove(approveIds){
+		var _approveIds = approveIds.join(",");
+		var url = _ctx + "/pm/approve/doBatchStep/" + _approveIds;
+		$.modal.loading("一键同意处理中，请稍候...");
+		$.get(url, function (data) {
+			var rObj = eval(data);
+			if (rObj.success) {
+				$.modal.closeLoading();
+				$.modal.msgSuccess('一键审批成功！')
+				$('#tt').datagrid('clearChecked');
+				$('#tt').datagrid('reload');
+			} else {
+				$.modal.msgError(rObj.failure)
+			}
+		});
+	}
+
+
+	function startApprove(){
+		var node = $("#tree_process").tree('getSelected');
+		if(node==undefined){
+			$.messager.alert({
+				width:388,
+				height:170,
+				title: '提示',
+				msg: '请选择一个流程',
+				ok: "确定",
+				cls:'c9',
+				icon:'info',
+				border:'thin',
+				fn: function(r){
+
+	            }
+	        });
+			return;
+		}
+		var processCode = node.attributes.processCode;
+		if (processCode!=undefined && processCode !=''){
+			addFlowTab(node.id,processCode,node.text);
+		}
+	}
+	//发起流程
+	function approveDetail(row){
+		if (row.source === '1') {
+			if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+				window.open(row.mobileOpenUrl, '_blank')
+			} else {
+				window.open(row.openUrl, '_blank')
+			}
+		} else {
+			var title = row.processName + ':' + row.id;
+			window.parent.addTab(title, _ctx + '/pm/approve/detail/' + row.id);
+		}
+	}
+
+	function reloading(){
+		// $(".tooltip-bottom").remove();
+		$('#tt').datagrid('reload');
+	}
+
+	// 清空查询参数
+	function cleanQueryParams(){
+		$("#currApproverUserId").val('');
+		$('#searchForm').form('reset');
+	}
+
+
+	function launch(id,processId,processName){
+		$("#pid").val(id);
+		var title =processName+ ':' +id;
+		window.parent.addTab(title,_ctx+'/pm/approve/newFlow2/'+processId+'/'+id);
+
+	}
+
+	function exportApproveExcel(){
+		$.messager.confirm({
+			title: '提示',
+			msg: '确认要导出当前审批列表吗？',
+			ok: "导出",
+			cancel: "取消",
+			cls: 'c9',
+			border: 'thin',
+			fn: function (r) {
+				if (r) {
+					$('#searchForm').form('submit', {url:_ctx+"/pm/approve/exportExcel"});
+				}
+			}
+		});
+	}
+
+	function remove(id){
+		$('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		if(row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			if (row.id==undefined){
+				$('#tt').datagrid('deleteRow',index);
+			}else{
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗【'+ index.approveNo +'】？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+		                if (r){
+							$.post(_ctx+"/pm/approve/deleteRecord/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									$('#tt').datagrid('reload');
+									$('#tt').datagrid('clearSelections');
+								}else{
+									 $.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+		                }
+		            }
+		        });
+			}
+		}
+	}
+	
+	
+	function showQuickSearch(){
+		$('#quickSearchId').tooltip({
+			content: $('<div></div>'),
+			showEvent: 'click',
+			position: 'bottom',
+			trackMouse: false, // 启用鼠标跟踪
+			onUpdate: function (content) {
+				// 发送 AJAX 请求
+				$.ajax({
+					url:_ctx+"/sys/quick/search/content",
+					type: 'post', // 或 'POST'，根据您的需求
+					data:{moduleUrl:'/pm/approve'},
+					dataType: 'html', // 假设您的后台返回HTML内容
+					success: function (data) {
+						// 在成功回调中将返回的页面内容添加到 Tooltip 中
+						content.html(data);
+						// 根据您的需要，您还可以进行其他操作，例如绑定事件等
+						content.panel({
+							width: 300,
+							border: false,
+							title: '快速查询'
+						});
+						// 更新 Tooltip 的位置和显示
+						$('#quickSearchId').tooltip('reposition').tooltip('show');
+					},
+					error: function () {
+						// 处理请求错误的情况
+						content.html('请求失败，请重试。');
+					}
+				});
+			},
+			onShow: function () {
+				var t = $(this);
+				t.tooltip('show');
+				t.tooltip('tip').unbind().bind('mouseenter', function () {
+					t.tooltip('show');
+				}).bind('mouseleave', function () {
+					t.tooltip('hide')
+				});
+			}
+		});
+	}
+	// 快速查询点击事件
+	function onClickQuickSearch(element){
+		var propJson = element.getAttribute("data-prop-json");
+		var jsonObject = JSON.parse(propJson);
+		
+		$('#mode_srh').combobox('setValue',jsonObject.mode_srh);
+		$('#processId_srh').combobox('setValue',jsonObject.processId_srh);
+		$('#status_srh').combobox('setValue',jsonObject.status_srh);
+		$("#approveNo_srh").val(jsonObject.approveNo_srh);
+		$("#createUserName_srh").val(jsonObject.createUserName_srh);
+		$("#subject_srh").val(jsonObject.subject_srh);
+		$('#batchSelectDel').combobox('setValue',jsonObject.batchSelectDel);
+		$('#srh_updatedDate_from').datebox('setValue',jsonObject.srh_updatedDate_from);
+		$('#srh_updatedDate_to').datebox('setValue',jsonObject.srh_updatedDate_to);
+		
+		
+		$('#quickSearchId').tooltip('hide');
+		Convert.search('searchForm','tt');
+
+	}
+
+	// 快速查询删除事件
+	function deleteQuickSearch(element){
+		var id = element.getAttribute("data-prop-id");
+		if(id) {
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '删除提示',
+				msg: '确定要删除该查询条件吗？',
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				fn: function(r){
+					if (r){
+						$.post(_ctx+"/sys/quick/search/delete/"+id,function(result) {
+							var rObj = eval(result);
+							if(rObj.success){
+								showQuickSearch();
+							}else{
+								showQuickSearch();
+								$.messager.alert('error',rObj.failure,'warning');
+							}
+							
+						});
+					} else {
+						showQuickSearch();
+					}
+				}
+			});
+		}
+
+	}
+
+	// 快速查询保存事件
+	function saveSearchParams(){
+
+		var quickSearchSize = $("#quickSearchSize").val();
+		if(quickSearchSize >= 10) {
+			$.messager.alert('error','最多可保存10条快速查询','warning');
+		} else {
+			$.messager.prompt('请输入保存的名称', '', function(r){
+				if (r){
+					var params = {
+						mode_srh:$("#mode_srh").val(),
+						processId_srh:$("#processId_srh").val(),
+						status_srh:$("#status_srh").val(),
+						approveNo_srh:$("#approveNo_srh").val(),
+						createUserName_srh:$("#createUserName_srh").val(),
+						subject_srh:$("#subject_srh").val(),
+						batchSelectDel:$("#batchSelectDel").val(),
+						srh_updatedDate_from:$("#srh_updatedDate_from").val(),
+						srh_updatedDate_to:$("#srh_updatedDate_to").val()
+					}
+					$.post(_ctx+"/sys/quick/search/saveQuickSearch", {propJson:JSON.stringify(params),moduleUrl:'/pm/approve',searchName:r} ,function(result) {
+						var rObj = eval(result);
+						if(rObj.success){
+							//若datagrid的url为空，则需添加
+							$.messager.show({
+								height:150,
+								title:'提示',
+								msg:'保存成功',
+								timeout:2000,
+								border:'thin',
+								cls:'c9',
+								showType:'show'
+							});
+						}else{
+							$.messager.alert('error',rObj.failure,'warning');
+						}
+					});
+				}
+			});
+		}
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>仓库管理</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>仓库名称:</label>
+				<input  name="search_LIKES_warehouseName" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>仓库地址:</label>
+				<input type="text" name="search_LIKES_fullAddr"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>是否有效:</label>
+				<input name="search_EQB_enableFlg" id="srh_enableFlg" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>托盘业务:</label>
+				<input name="search_EQB_tpBusinessFlg" id="tpBusinessFlgs" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>自营业务:</label>
+				<input name="search_EQB_zyBusinessFlg" id="zyBusinessFlgs" type="text" value=""/>
+			</p>
+			<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#"  class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		  <a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="editrow1(0)">新增</a>
+	</div>
+</div>
+
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w" title="新增仓库" data-options="width:720,height:400"></div>
+<div id="w_detail" title="仓库地址" data-options="width:680,height:400">
+</div>
+<script type="text/javascript">
+	var lastIndex;
+	var enableFlgs = eval('[(${enableFlgs})]');
+	var whetherFlgs = [
+		{
+			label: '是',
+			value: "true"
+		},
+		{
+			label: '否',
+			value: "false"
+		}
+	]
+	$(function(){
+		$("#srh_enableFlg").combobox({
+			data : enableFlgs,
+			textField : 'dictName',
+			valueField : 'dictCd',
+			width : 150,
+			height : 30,
+			editable : true
+		});
+		$("#tpBusinessFlgs").combobox({
+			data:whetherFlgs,
+			textField:'label',
+			valueField:'value',
+			width:140,
+			height:30
+		});
+		$("#zyBusinessFlgs").combobox({
+			data:whetherFlgs,
+			textField:'label',
+			valueField:'value',
+			width:140,
+			height:30
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			width:400,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[50,40,30,20,10],
+			url:_ctx+"/bas/warehouse/findWarehouses",
+			columns:[ [	
+				{field:'id',title:'ID',hidden:true},
+				{field:'warehouseName',title:'仓库名称', width:120,editor:{type:'validatebox',options:{required:true,validType:{}}}},
+				{field:'fullAddr',title:'仓库地址', width:250,editor:{type:'validatebox',options:{required:false}}},
+				{field:'contactName',title:'联系人', width:120,editor:{type:'validatebox',options:{required:false,validType:'length[1,10]'}}},
+				{field:'contactPhone',title:'联系电话', width:120,editor:{type:'validatebox',options:{required:false}}},
+				{field:'warehouseUnitCost',title:'仓储费单价(元)', width:120},
+				{field:'remark',title:'备注', width:120,editor:{type:'validatebox'}},
+				{field:'updatedDate',title:'更新日期',align:'center',width:150},
+				{field:'enableFlg',title:'是否有效', width:100,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+					if(value=='true'){
+						return'是';
+					}else{
+						return'否';
+					}
+				}},
+				{field:'tpBusinessFlg',title:'托盘业务', width:100,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+						if(value=='true'){
+							return'是';
+						}else{
+							return'否';
+						}
+					}},
+				{field:'zyBusinessFlg',title:'自营业务', width:100,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+						if(value=='true'){
+							return'是';
+						}else{
+							return'否';
+						}
+					}},
+				{field:'operate',title:'操作', width:80,align:'center',formatter:function(value, row, index){
+					 var flg= row.enableFlg;
+					if(flg=='true'){
+						var id =row.id;
+			        	var str = '<img onclick="removeWarehouse('+id+')" style="cursor:pointer;width:16px;hight:18px;float:left;margin-left:24px" src="../static/new-version/images/icon_delete.png"/>';  
+ 			        	//var strs = "<img onclick='queryWarehouseAddr(\""+row.id+"\")' title='显示更多地址' style='cursor:pointer;width:16px;hight:18px;float:left;margin-left:24px' src='../static/images/icon_addr.png'/>";  
+			       	 	return str;
+			        }else{
+			        	 return null;
+			        }
+				}}
+			]],
+			toolbar:'#toolbar',
+			onDblClickCell:function(index,field){
+				var row = $('#tt').datagrid('getSelected');
+				editrow1(row.id);
+			},
+			onBeginEdit:function(index,row){
+				var ed_warehouseName = $('#tt').datagrid('getEditor', {index:index,field:'warehouseName'});
+				var id =row.id;
+				$(ed_warehouseName.target).validatebox('options').validType={length:[1,30],remote:[_ctx+"/bas/warehouse/validateWarehouse?id=" + id,'warehouseName']};
+			}
+		});	
+		$('#w_detail').window({
+			title : '仓库地址',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			}
+		});
+		$('#w').window({
+			title : '新增仓库',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			},
+			onOpen: function(){
+				$(this).window('center');
+			}
+		});
+	});	
+	
+	function validateWarehouse(row){
+// 		var _this = $(this);
+		var _val = $.trim(row.warehouseName);
+// 		var row = $('#tt').datagrid('getSelected');
+// 		var oriWarehouseName ="";
+		var _id = row.id;
+		var flag=true;
+		if(""==_val){
+			flag= false;
+			return flag;
+		}
+		if(row!=null){
+// 			oriWarehouseName = row.warehouseName;
+// 			if(oriWarehouseName==_val){
+// 				return false;
+// 			}
+			_id = row.id;
+		}
+		$.ajax({
+			"url":_ctx+"/bas/warehouse/validateWarehouse",
+			"type":"GET",
+			"async":false,
+			"data":{warehouseName:_val,id:_id},
+			beforeSend:function(){
+			},success:function(data){
+				if(data.failure){
+					$.messager.alert('提示','仓库（'+_val+'）已存在','info');
+					flag = false;
+				}
+			}
+		});
+		return flag;
+// 		$.post(_ctx+"/bas/warehouse/validateWarehouse",{warehouseName:_val,id:_id},function(data){
+// 			if(data.failure){
+// 				$.messager.alert('提示','仓库（'+_val+'）已存在','info');
+// // 				if(_id!=0){
+// // 					_this.val(oriWarehouseName);
+// // 				}else{
+// // 					_this.val("");
+// // 				}
+// 				return false;
+// 			}
+// 		});
+	}
+	
+	/* function insert(){
+		$("#tt").datagrid("appendRow",{productCd:'',brandNumber:'',id:'0'});
+		var rows=$("#tt").datagrid('getRows');					
+		$("#tt").datagrid('beginEdit', rows.length - 1);
+		$("#tt").datagrid('beginEdit', rows.length - 1);
+		$('#tt').datagrid('clearSelections'); 
+	} */
+	
+	
+	function saveEdit(){
+		var flag=true;
+		var row = $('#tt').datagrid('getSelected');
+		if (row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			flag=$('#tt').datagrid('validateRow',index);
+			if (!flag){
+				return;
+			}
+			$('#tt').datagrid('endEdit', index);
+		}
+		var changeRows=[];
+		var inserted = $('#tt').datagrid('getChanges','inserted');
+		var updated = $('#tt').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+    		var curRow = changeRows[i];
+    		
+			var index = $('#tt').datagrid('getRowIndex', curRow);
+			
+			flag=$('#tt').datagrid('validateRow',index);
+			console.log('flag',flag);
+    		if (!flag){
+    			$('#tt').datagrid('selectRow',index);
+    			$('#tt').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#tt').datagrid('endEdit', index);
+    		}
+		}
+		if (flag){
+			
+		$.post(_ctx+"/bas/warehouse/saveBatch",Convert.ToSaveParam("tt") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+	
+	function removeWarehouse(id){
+		$('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		var index = $('#tt').datagrid('getRowIndex', row);
+		if (id=='0'){
+			$('#tt').datagrid('deleteRow',index);
+			var nextSelect=index>0?index-1:0;
+			$('#tt').datagrid('selectRow', nextSelect);
+		}else{
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '删除提示',
+				msg: '确定要删除该信息吗？',
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				fn: function(r){
+	                if (r){
+	                	//TODO:如果该记录被引用,是否强制不允许删除?
+						$.post(_ctx+"/bas/warehouse/delete/"+id,function(result) {
+							var rObj = eval(result);
+							if(rObj.success){
+								$('#tt').datagrid('reload');
+								$('#tt').datagrid('clearSelections');
+							}else{
+								 $.messager.alert('error',rObj.failure,'warning');
+							}
+						});
+	                }
+	            }
+	        });
+		}
+	}
+	//弹出新增框
+	function editrow1(id) {
+		var url = _ctx + "/bas/warehouse/detail/" + id;
+		$('#w').window({href:url,width: 1000,height: 600});
+		$('#w').window("open");
+	}
+	function queryWarehouseAddr(id){
+		if(id){
+			var url = _ctx+"/bas/warehouseAddr/querywarehouseAddr/"+id;
+			$('#w_detail').window({href:url});
+			$('#w_detail').window("open");
+		}
+	}
+</script>
+</body>
+</html>

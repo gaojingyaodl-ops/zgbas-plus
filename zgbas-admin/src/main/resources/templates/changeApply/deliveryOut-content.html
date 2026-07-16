@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<div class="easyui-layout" fit="true">
+
+	<div id="btn" class="add-btn" th:if="${entity.status eq 'B' or entity.status eq 'N'}">
+		<a id="addBtn" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="openChooseData()">选择</a>
+	</div>
+
+	<div id="oldData"></div>
+
+	<div id="newInputForm" method="post" class="editForm_approve firstDiv">
+		<fieldset class="form-section" style="padding: 35px 30px 10px 20px;">
+	 		<legend class="form-section-title"><span class="approve_text">调整后</span><i></i></legend>
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<input type="hidden" name="contractId" th:value="${entity.contractId}" id="contractId">
+			<input type="hidden" id="entityStatus" th:value="${entity.status}" />
+			<input name="businessNo" id="businessNo" type="hidden" th:value="${entity.businessNo}" />
+			<input type="hidden" id="companyId" name="companyId" />
+			<input type="hidden" id="oldApplyId" name="oldApplyId" th:value="${entity.oldApplyId}"/>
+			<p class="p_text" style="margin-bottom: 5px">
+				<span class="input-colspan" style="width: initial;">
+					<label>出库编号:</label>
+					<input name="applyNo" id="applyNo" class="chooseBtnStyle" readonly type="text" th:value="${entity.applyNo}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="contractNo" class="control-label">合同编号:</label>
+					<input name="contractNo" id="contractNo" class="control chooseBtnStyle" readonly type="text" th:value="${entity.contractNo}"></input>
+				</span>
+			</p>
+
+			<div style="min-height: 120px;">
+				<table id="newOutTable" style="height: 120px;" title=""
+					iconCls="icon-edit" singleSelect="true" idField="id">
+				</table>
+			</div>
+
+			<p class="p_text">
+				<span class="input-colspan">
+					<label>配送方式:</label>
+					<input name="deliveryType" id="deliveryType" readonly="readonly" type="text" th:value="${entity.deliveryType}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>交货方式:</label>
+					<input name="deliveryMode" id="deliveryMode" readonly="readonly" type="text" th:value="${entity.deliveryMode}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>已付金额(元):</label>
+					<input name="payAmount" id="payAmount" type="text" onkeyup="value=value.replace(/^(\d*\.?\d{0,2}).*/,'$1')" th:value="${entity.payAmount}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>车牌号:</label>
+					<input name="plateNumber" id="plateNumber" type="text" th:value="${entity.plateNumber}"></input>
+				</span>
+			</p>
+
+			<p class="p_text">
+				<span class="input-colspan">
+					<label>采购商名称:</label>
+					<input name="companyName" id="companyName" readonly="readonly" type="text" th:value="${entity.companyName}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>联系人:</label>
+					<input name="contactName" id="contactName" type="text" th:value="${entity.contactName}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>联系电话:</label>
+					<input name="contactPhone" id="contactPhone" type="text" th:value="${entity.contactPhone}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>联系地址:</label>
+					<input name="contactAddr" id="contactAddr" type="text"th:value="${entity.contactAddr}"></input>
+				</span>
+			</p>
+
+			<p class="p_text">
+				<span class="input-colspan">
+					<label>司机:</label>
+					<input name="driverName" id="driverName" type="text" th:value="${entity.driverName}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>身份证:</label>
+					<input name="driverCardNo" id="driverCardNo" type="text" th:value="${entity.driverCardNo}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>司机电话:</label>
+					<input name="driverPhone" id="driverPhone" type="text" th:value="${entity.driverPhone}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="deliveryAddr">配送地:</label>
+					<input name="deliveryAddr" id="deliveryAddr" type="text" th:value="${entity.deliveryAddr}"></input>
+				</span>
+			</p>
+
+			<p class="p_text">
+				<span class="input-colspan">
+					<label>批号:</label>
+					<input name="warehouseBatchNo" id="warehouseBatchNo" type="text" th:value="${entity.warehouseBatchNo}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>仓位/货位:</label>
+					<input name="warehousePosition" id="warehousePosition" type="text" th:value="${entity.warehousePosition}"></input>
+				</span>
+			</p>
+			<p class="p_text" style="margin-top: 5px">
+				<span class="input-colspan2">
+					<label for="remark" style='vertical-align: top; position: relative; top: -1px;'>备注:</label>
+					<textarea name="remark" id="remark" th:text="${entity.remark}"></textarea>
+				</span>
+			</p>
+
+			<div class="editForm">
+				<p>
+					<span class="upload-btn" id="btn_fileId">
+						<i></i>
+						<span>附件上传</span>
+					</span>
+					<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+				</p>
+				<p class="controls showImg fileId" id="span_fileId"></p>
+			</div>
+		</fieldset>
+	</div>
+
+</div>
+<div id="deliveryOut_choose" class="easyui-window" title="出库申请" data-options="width:830,height:600"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+	$('#addBtn').linkbutton();
+    /*弹框垂直居中*/
+    var easyuiPanelOnOpen = function(left, top) {
+	var iframeWidth = $(this).parent().parent().width();
+
+	var iframeHeight = $(this).parent().parent().height();
+
+	var windowWidth = $(this).parent().width();
+	var windowHeight = $(this).parent().height();
+
+	var setWidth = (iframeWidth - windowWidth) / 2;
+	var setHeight = (iframeHeight - windowHeight) / 2;
+	$(this).parent().css({/* 修正面板位置 */
+		left : setWidth,
+		top : setHeight
+	});
+
+	if (iframeHeight < windowHeight) {
+		$(this).parent().css({/* 修正面板位置 */
+			left : setWidth,
+			top : 0
+		});
+	}
+	$(".window-shadow").hide();
+};
+$.fn.window.defaults.onOpen = easyuiPanelOnOpen;
+var lastIndex;
+var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+var _productDeliveryJson = eval('[(${productDeliveryJson})]');
+var _factoryJson = eval('[(${factoryJson})]');
+var _productType = eval('[(${productType})]');
+var _companyJson = eval('[(${companyJson})]');
+var _productTypeJson = eval('[(${productTypeJson})]');
+var _productJson = eval('[(${productJson})]');
+var _deliveryModeJson=eval('[(${deliveryMode})]');
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/deliveryOut/updateFileId',[[${param.hasEditFile}]]);
+var prouctDetailJson;
+//原出库数量
+var arry = [];
+$(function(){
+	var _curStatus = $("#entityStatus").val();
+	//除新增状态的其他状态首先需要加载调整前的组件
+	if(_curStatus && _curStatus!="N"){
+		$.get(_ctx+"/apply/deliveryOut/content/"+$('#oldApplyId').val()+"?from=new",function(data){
+			$('#oldData').html(data);
+		});
+	}
+
+	if(_curStatus == "A" || _curStatus =="D"){
+		var _deliveryType = $('#deliveryType').val();
+		var _conDeliveryType = Convert.findValueByKey(_deliveryTypeJson,"dictCd",_deliveryType,"dictName");
+		$("#deliveryType").val(_conDeliveryType);
+		var _deliveryMode = $('#deliveryMode').val();
+		var _conDeliveryMode = Convert.findValueByKey(_deliveryModeJson,"dictCd",_deliveryMode,"dictName");
+		$("#deliveryMode").val(_conDeliveryMode);
+		$("#newInputForm").find("input").attr("readonly",true);
+		$(".chooseBtn").hide();
+	}else{
+		$('#deliveryType').combobox({
+			data:_deliveryTypeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto"
+		});
+		$('#deliveryMode').combobox({
+			data:_deliveryModeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto"
+		});
+	}
+
+	if($("#contractId").val()){
+		$.ajax({
+	        url:_ctx+"/ctr/product/list?search_EQL_ctrContractId="+$("#contractId").val(),
+	        type:"post",
+	        async:false,
+	        success:function(data){
+	        	prouctDetailJson = JSON.parse(data);
+	        }
+     	});
+	}
+
+	var _url =  _ctx+"/apply/productDetail/productList?search_EQS_applyType=Q&search_EQL_applyId="+$("#entityId").val();
+	$('#newOutTable').datagrid({
+		pageSize:10,
+		url:_url,
+		rownumbers:true,
+		pagination:false,
+		columns:[ [
+			{field:'id',title:'ID',hidden:true,
+				formatter:function(value,row,index){
+					return value;
+			}},
+			{field:'productCd',title:'品名',align:'center',width:120,
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_productJson,"typeCode",value,"typeName");
+			}},
+			{field:'ctrProductId',title:'商品id',width:120,hidden:true},
+			{field:'productName',title:'货品名',width:120,hidden:true},
+			{field:'brandNumber',title:'牌号',width:120},
+			{field:'factoryId',title:'厂商',width:120,
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_factoryJson,"id",value,"factoryName");
+			}},
+			{field:'warehouseName',title:'仓库', width:180,editor:{type:'combobox',options:{required:'true',valueField:'text',textField:'text',onHidePanel:function(){BasCombobox.onHidePanel(this);}}}},
+			{field:'productAttr',title:'在途/现货',align:'center', width:100,editor:{type:'combobox',options:{required:'true',readonly:'readonly',data:_productType,textField:'dictName',valueField:'dictCd'}},
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_productType,"dictCd",value,"dictName");}
+			},
+			{field:'dealNumber',title:'数量(吨)', width:80,align:'right',
+				formatter: function (value, row, index) {
+                    if (row != null) {
+                        return parseFloat(value).toFixed(3);
+                    }
+            }},
+			{field:'dealPrice',title:'单价(元)', width:80,align:'right'},
+			{field:'totalPrice',title:'总价(元)', width:80,align:'right'},
+			{field:'warehouseNumber',title:'已提数量', width:100,hidden:true},
+			{field:'curApproveNumber',title:'审批中数量', width:100,hidden:true},
+			{field:'curNumber',title:'出库数量(吨)', width:150,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4}},
+				formatter: function (value, row, index) {
+                    if (row != null) {
+                    	arry.push();
+                        return parseFloat(value).toFixed(3);
+                    }
+			}}
+		]],
+		onClickCell:function(index,field){
+			var rows =$('#newOutTable').datagrid('getData').rows;
+			var row =rows[index];
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				if (lastIndex != index){
+					$('#newOutTable').datagrid('endEdit', lastIndex);
+					$('#newOutTable').datagrid('beginEdit', index);
+				}
+				lastIndex = index;
+				Convert.focusEditor('newOutTable',field,lastIndex);
+			}
+		},
+		onDblClickRow:function(index,row,field){
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				//进入可编辑状态
+				$('#newOutTable').datagrid('endEdit', lastIndex);
+				$('#newOutTable').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("newOutTable",field,lastIndex);
+			}
+		},
+		onBeginEdit:function(index,row){
+			var ed_curNumber = $('#newOutTable').datagrid('getEditor', {index:index,field:'curNumber'});
+			var max_curNumber= 0;
+			if (_curStatus=='N'){
+				max_curNumber = row.dealNumber -row.curApproveNumber - row.warehouseNumber;
+			}
+			if(_curStatus=='B'||_curStatus=='C'){
+				$.each(prouctDetailJson.rows, function(i, item) {
+	        		 if(item.productCd == row.productCd && item.brandNumber == row.brandNumber &&
+	        				 item.factoryId == row.factoryId){
+	        			 max_curNumber = row.dealNumber -item.curApproveNumber - item.warehouseNumber;
+	        			 return false;
+	        		 }
+	         	});
+			}
+
+			max_curNumber = Number(max_curNumber);
+			$(ed_curNumber.target).numberbox({max:max_curNumber,min:0});
+			var ed_warehouseName = $('#newOutTable').datagrid('getEditor', {index:index,field:'warehouseName'});
+			var _sellContractId = $("#contractId").val();
+			$(ed_warehouseName.target).combobox('reload',_ctx+'/bas/stockDetail/findWarehoseList?productCd='+row.productCd +"&brandNumber="+row.brandNumber+"&factoryId="+row.factoryId+"&sellContractId="+_sellContractId);
+			$(ed_warehouseName.target).combobox('options').onSelect=function(record){
+				var buyContractId = record.buyContractId;
+				if(buyContractId){
+					$.post(_ctx+"/apply/deliveryOut/findDeliveryInContractId?buyContractId="+buyContractId,function(result){
+						if(!result.failure){
+							$("#warehouseBatchNo").val(result.warehouseBatchNo);
+							$("#warehousePosition").val(result.warehousePosition);
+							$("#remark").val(result.remark);
+						}
+
+					});
+				}
+			}
+		}
+	});
+
+	$('#deliveryOut_choose').window({
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		title:"出库申请"
+	});
+
+
+	$('#driverCardNo').validatebox({
+		//required: true,
+		validType: 'cardRex'
+	});
+
+	//身份证号合法性验证
+	//支持15位和18位身份证号
+	//支持地址编码、出生日期、校验位验证
+	$.extend($.fn.validatebox.defaults.rules, {
+		cardRex: {
+	        validator: function(code){
+	        	 var city={11:"北京",12:"天津",13:"河北",14:"山西",15:"内蒙古",21:"辽宁",22:"吉林",23:"黑龙江 ",31:"上海",32:"江苏",33:"浙江",34:"安徽",35:"福建",36:"江西",37:"山东",41:"河南",42:"湖北 ",43:"湖南",44:"广东",45:"广西",46:"海南",50:"重庆",51:"四川",52:"贵州",53:"云南",54:"西藏 ",61:"陕西",62:"甘肃",63:"青海",64:"宁夏",65:"新疆",71:"台湾",81:"香港",82:"澳门",91:"国外 "};
+	            var tip = "";
+	            var pass= true;
+
+	            if(!code || !/^\d{6}(18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/i.test(code)){
+	                tip = "身份证号格式错误";
+	                pass = false;
+	            }
+
+	           else if(!city[code.substr(0,2)]){
+	                tip = "地址编码错误";
+	                pass = false;
+	            }
+	            else{
+	                //18位身份证需要验证最后一位校验位
+	                if(code.length == 18){
+	                    code = code.split('');
+	                    //∑(ai×Wi)(mod 11)
+	                    //加权因子
+	                    var factor = [ 7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2 ];
+	                    //校验位
+	                    var parity = [ 1, 0, 'X', 9, 8, 7, 6, 5, 4, 3, 2 ];
+	                    var sum = 0;
+	                    var ai = 0;
+	                    var wi = 0;
+	                    for (var i = 0; i < 17; i++)
+	                    {
+	                        ai = code[i];
+	                        wi = factor[i];
+	                        sum += ai * wi;
+	                    }
+	                    var last = parity[sum % 11];
+	                    if(parity[sum % 11] != code[17]){
+	                        tip = "校验位错误";
+	                        pass =false;
+	                    }
+	                }
+	            }
+	            return pass;
+	        },
+	        message: '请输入正确的18位身份证号!'
+	    }
+	});
+
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($('#btn_fileId').length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+	_beforSaveOper = true;
+});
+
+function openChooseData(){
+	var url=_ctx+"/changeApply/deliveryOut/findApplyDeliveryOut"
+	$('#deliveryOut_choose').attr('callbackExec', 'outChooseCallback');
+	$('#deliveryOut_choose').window({href:url});
+	$('#deliveryOut_choose').window("open");
+}
+
+function outChooseCallback(deliveryOutRows){
+	var _oldData = $('#oldData').html();
+	if(_oldData !='')  $('#oldData').html('');
+	var deliveryOut = deliveryOutRows[0];
+
+	$('#applyNo').val(deliveryOut.applyNo);
+	$('#contractNo').val(deliveryOut.contractNo);
+	$('#deliveryType').combobox('setValue',deliveryOut.deliveryType);
+	$('#deliveryMode').combobox('setValue',deliveryOut.deliveryMode);
+	$('#payAmount').val(deliveryOut.payAmount);
+	$('#plateNumber').val(deliveryOut.plateNumber);
+	$('#companyId').val(deliveryOut.companyId);
+	$('#companyName').val(deliveryOut.companyName);
+	$('#contactName').val(deliveryOut.contactName);
+	$('#contactPhone').val(deliveryOut.contactPhone);
+	$('#contactAddr').val(deliveryOut.contactAddr);
+	$('#driverName').val(deliveryOut.driverName);
+	$('#driverCardNo').val(deliveryOut.driverCardNo);
+	$('#driverPhone').val(deliveryOut.driverPhone);
+	$('#deliveryAddr').val(deliveryOut.deliveryAddr);
+	$('#warehouseBatchNo').val(deliveryOut.warehouseBatchNo);
+	$('#warehousePosition').val(deliveryOut.warehousePosition);
+	//$('#fileId').val(deliveryOut.fileId);
+	$('#oldApplyId').val(deliveryOut.id);
+	$('#contractId').val(deliveryOut.contractId);
+	$('#businessNo').val(deliveryOut.businessNo);
+	var _url =  _ctx+"/apply/productDetail/productList?search_EQS_applyType=O&search_EQL_applyId="+deliveryOut.id;
+	$('#newOutTable').datagrid('load',_url);
+
+	$.get(_ctx+"/apply/deliveryOut/content/"+deliveryOut.id+"?from=new",function(data){
+		$('#oldData').html(data);
+	});
+}
+
+//发起申请前操作
+function beforSaveOper(){
+	var changeRows = $('#newOutTable').datagrid('getRows');
+	var sumNumber = 0;
+	for(var i=0;i<changeRows.length;i++){
+		var rowIndex=$('#newOutTable').datagrid('getRowIndex',changeRows[i]);
+		flag=$('#newOutTable').datagrid('validateRow',rowIndex);
+		if (!flag){
+			$('#newOutTable').datagrid('selectRow',rowIndex);
+			$('#newOutTable').datagrid('beginEdit', rowIndex);
+			break;
+		}else{
+			$('#newOutTable').datagrid('endEdit', rowIndex);
+			var row = changeRows[i];
+			if(row.applyType == "O") row.id=0;
+			sumNumber +=row.curNumber;
+			var max_curNumber=0;
+			var _sellContractId = $("#contractId").val();
+			var url =_ctx+'/bas/stockDetail/findWarehoseList';
+			$.ajax({
+				  url: url,
+				  data : {productCd:row.productCd,brandNumber:row.brandNumber,factoryId:row.factoryId,sellContractId:_sellContractId},
+				  async: false,
+				  success:function(data, textStatus){
+					  for(var i = 0;i<data.length;i++){
+						  if(data[i].text == row.warehouseName){
+							  max_curNumber = data[i].frozenNumber;
+							  break;
+						  }
+					  }
+				  }
+			});
+			max_curNumber = Number(max_curNumber)+arry[i];
+			if(max_curNumber<row.curNumber){
+				$.messager.alert('提示',row.warehouseName+'仓库的库存数量不足！最多可出库'+max_curNumber+'吨','info');
+				return false;
+			}
+		}
+	}
+	$('#newOutTable').datagrid('endEdit', lastIndex);
+	if(sumNumber <= 0) {
+		$.messager.alert('提示','当前出库数量必须大于0！','info');
+		return false;
+	}
+
+    Convert.setChildren2Form("inputFormApprove","newOutTable");
+    var _obj = Convert.getJson4Form("inputFormApprove");
+	return true;
+}
+
+</script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>

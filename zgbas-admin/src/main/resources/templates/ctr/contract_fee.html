@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>费用登记列表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div" border="false">
+		<form id="searchForm" class="form-search from-input-layout" method="post">
+			<p class="p_text">
+			<span class="input-colspan">
+				<label>合同编号:</label>
+				<input class="control" name="search_LIKES_contractNo" type="text"/>
+			</span>
+			
+				<span class="input-colspan"> 
+					<label>费用类型:</label> 
+					<input class="control" name="search_EQS_feeType" id="_contractFeeType" type="text"/>
+				</span> 
+				<span class="input-colspan"> 
+					<label>业务员:</label> 
+					<input type="text" id="matchUserName" class="control text_padding" name="search_EQS_bizUserName"></input>
+				</span> 
+				<span class="input-colspan">
+					<label>费用时间:</label>
+					<input  id="srh_feeDate_from" name="search_GTED_feeDate" class="easyui-datebox"/>				
+			</span>		
+			<span class="input-colspan">
+					<label>到:</label>
+					<input  id="srh_feeDate_to"  name="search_LTD_feeDate" class="easyui-datebox" />
+			</span>
+				<span class="btn-group"> 
+					<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+					<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#searchForm').form('reset');">清空</a>
+				</span>
+			</p>
+		</form>
+		<div id="btn" class="add-btn" style="margin-top: 10px">
+			<a href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="editrow(0)">新增</a> 
+		</div>
+	</div>
+	<div region="center" border="false" class="panel_padding" style="padding-right: 30px;">
+		<table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id">
+		</table>
+	</div>
+ 	<div id="w" title="费用详情" data-options="width:800,height:300,border:'thin',collapsible:false,minimizable:false,cls:'c9'"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+
+var _contractFeeType = eval('[(${contractFeeType})]');
+var _contractFeeRate = eval('[(${contractFeeRate})]');
+var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+$(function(){
+	$('#matchUserName').combotree({
+		data: matchUserNameTreeJson,
+		multiple : false,
+		editable : true,
+		//required:true,
+		formatter:function(node){
+			var enableFlg = node.attributes.enableFlg;
+			if (enableFlg==false){
+				return '<span style="color:red;">'+node.text+'(无效)</span>';
+			}
+			return node.text;
+		},
+		onSelect : function(node){
+			if(node.children.length!=0){
+				$('#matchUserName').combotree('clear'); 
+			}else{
+			
+				$('#matchUserName').combotree('setValue',node.text);	
+			}
+		} 
+	});
+	
+ 	$("#_contractFeeType").combobox({
+		data:_contractFeeType,
+		textField : 'dictName',
+		valueField : 'dictCd',
+		panelHeight : "auto"
+	});
+ 	
+	$('#tt').datagrid({
+		pagination:true,
+		rownumbers:true,
+		pageSize:10,
+		pageList:[50,40,30,20,10],
+		queryParams:Convert.getJson4Form('searchForm'),
+		url:_ctx+"/ctr/contractFee/findContractFeeList",
+		columns: [ [
+			{field:'contractId',title:'合同号', align:'center', width:200,hidden:'hidden'},
+			{field:'contractNo',title:'合同编号', align:'center', width:200},
+			{field:'feeType',title:'费用类型', width:200, align:'center', formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_contractFeeType,"dictCd",value,"dictName");
+			}},
+			{field:'feeAmount',title:'金额', width:200, align:'center'},
+			{field:'feeRate',title:'费率', width:80, align:'center',formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_contractFeeRate,"dictCd",value,"dictName");
+			}},
+			{field:'assumePerson',title:'承担人', width:80, align:'center'},
+			{field:'fileId', title:'附件ID', width:200, align:'center'},
+			{field:'bizUserName', title:'业务员', width:200, align:'center'},
+			{field:'feeDate', title:'费用日期', width:200, align:'center'},
+			{field:'opt',title:'操作',width:60,align:'center',
+				formatter:function(value,row,index){
+					var id =row.id;
+					var d = '<img href="#" style="cursor:pointer;width:16px;hight:18px" onclick=deleterow("'+id+'") src="../static/new-version/images/icon_delete.png"></img>';
+					return d;
+				}
+			}
+			/* {field:'content',title:'模板内容', width:1000} */
+		] ],
+		onDblClickCell:function(index,field){
+			lastIndex = index;
+			var row = $('#tt').datagrid('getSelected');
+			editrow(row.id);
+		}
+	});
+});
+
+function editrow(id) {
+	var url = _ctx + "/ctr/contractFee/detail/" + id;
+	$('#w').window({href : url});
+	$('#w').window("open");
+}
+function deleterow(id){
+ 	$('#tt').datagrid('selectRecord',id);
+	var row = $('#tt').datagrid('getSelected');
+	var index = $('#tt').datagrid('getRowIndex',row);
+	if (id=='0'){
+		$('#tt').datagrid('deleteRow', index);
+		var nextSelect=index>0?index-1:0;
+		$('#tt').datagrid('selectRow', nextSelect);
+	}else{
+		$.messager.confirm({
+			width:388,
+			height:170,
+			title: '删除提示',
+			msg: '确认删除数据?',
+			ok: "确定",
+			cancel: "取消",
+			cls:'c9',
+			border:'thin',
+			fn: function(r){
+                if (r){
+                	if(id){
+						$.post(_ctx+"/ctr/contractFee/delete/"+id, function(result) {
+							$('#tt').datagrid('reload');
+						});
+					}
+                }
+            }
+        });					
+	} 
+}
+</script>
+</body>
+</html>

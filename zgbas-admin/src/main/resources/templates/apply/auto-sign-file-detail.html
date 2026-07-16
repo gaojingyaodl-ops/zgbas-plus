@@ -1,0 +1,512 @@
+<!-- 签署文件 -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+</head>
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<input type="hidden" id="seal_usage_approve_no" th:value="${entity.sealUsageApproveNo}"/>
+	<input type="hidden" id="sign_status" th:value="${entity.signStatus}"/>
+	<div region="north"  border="false">
+		<form id="proForm" class="from-input-layout" method="post" action="/documents/sign/saveSign">
+			<input type="hidden" name="signType" value="2" />
+			<input type="hidden" name="entityid" id="entityid" th:value="${entityid}" />
+			<input type="hidden" name="id" id="signFileId" th:value="${entity.id == null ? 0 : entity.id }"/>
+			<div class="mb10">
+				<p class="yw-table-filter" id="fileIdBtn">
+					<a href="#"  class="easyui-linkbutton addBtn btn64" style="width: auto">上传签署附件</a>
+				</p>
+				<p class="yw-table-filter w2">
+					<input type="hidden" name="fileId" id="fileId" th:value="${entity.fileId}" />
+					<label class="control-label" id="fileIdPath"></label>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter" th:if="${entityid == 0 || entityid == null}">
+					<label>文件类型:</label>
+					<input id="fileType"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>文件名称:</label>
+					<input  name="fileName" id="fileName" required="required" th:value="${entity.fileName}"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>安心签合同号:</label>
+					<input readonly name="cfcaContractNo" id="cfcaContractNo" th:value="${entity.cfcaContractNo}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>创建人:</label>
+					<input readonly  type="text" id="creator" name="creator" th:value="${entity.creator}"/>
+				</p>
+				<p class="yw-table-filter">
+					<a href="#" class="easyui-linkbutton mb6 signBtn" data-options="iconCls:'icon-add'" onclick="insert()">新增签署方</a>
+				</p>
+			</div>
+		</form>
+	</div>
+	<div id="boxDiv">
+		<div style="height:270px;">
+			<table id="ta" fit="true" title="" singleSelect="true" idField="id" class="mt20 yw-menu-section"></table>
+		</div>
+		<div class="mt15">
+			<a href="#" class="easyui-linkbutton btn-info-empty signBtn" data-options="iconCls:'icon-save'" onclick="saveSign();">保存</a>
+			<a href="#" class="easyui-linkbutton btn-info-empty hide signBtn" id="generateSignature" data-options="iconCls:'icon-save'" onclick="generateAutoSignature();">自动签署</a>
+		</div>
+	</div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js?v=1}" type="text/javascript"></script>
+<script type="text/javascript">
+	var lastIndex2;
+	var _signStatus = $("#signStatus").val();
+	var _initFlg = true;
+	var _file_edit = true;
+	if (_signStatus == "D"){
+		_file_edit = false;
+		_initFlg= false;
+	}
+	var filePlugin = new FilePlugin('#fileId',$('#signFileId').val(),'/documents/sign/updateFileId',_file_edit);
+	var statusJson = [{id:'N',text:'未签署'},{id:'P',text:'部分签署'},{id:'D',text:'已签署'}];
+	var _fileTypeJson = [{id:'C',text:'双签合同'},{id:'W',text:'货物签收单'},{id:'D',text:'债权凭证'},{id:'O',text:'其它'}];
+	var _signStatusTypeJson = [{id:'N',text:'未签署'},{id:'D',text:'已签署'}];
+	// 印章类型
+	var signTypeJson = eval('[(${signTypeJson})]');
+	//我方企业抬头
+	var companyNameJson = eval('[(${companyNameJson})]');
+	var ftk_company = {"dictCd":"范太克供应链管理（宁波）有限公司","dictName":"范太克供应链管理（宁波）有限公司"};
+	companyNameJson.push(ftk_company);
+	$(function(){
+		var signFileId = $("#signFileId").val();
+		var _sign_status = $("#sign_status").val();
+
+		if (signFileId && signFileId > 0){
+			$("#generateSignature").removeClass("hide");
+		}
+
+		$("#fileType").combobox({
+			data : _fileTypeJson,
+			editor : false,
+			required: true,
+			textField : 'text',
+			valueField : 'id',
+			panelHeight : "auto",
+			onSelect: function (node){
+				let selectType = node.id;
+				if (selectType === 'C'){
+					console.log("双签合同");
+					doubleContract();
+				}else if (selectType === 'W'){
+					console.log("货物签收单");
+					receiptGoods();
+				}else if (selectType === 'D'){
+					console.log("债权凭证");
+					voucher();
+				} else{
+					removeRows();
+					setTimeout(function (){
+						insert();
+					}, 400);
+				}
+			}
+		});
+
+		$("#fileName").textbox({
+			required: true
+		});
+
+		$("#signStatus").combobox({
+			data : statusJson,
+			textField : 'text',
+			valueField : 'id',
+			panelHeight : "auto",
+			onLoadSuccess : function() {
+				var _signStatus = $("#signStatus").val();
+				if(_signStatus == "" || _signStatus == null) {
+					$("#signStatus").combobox("setValue", 'N');
+				}
+			}
+		});
+
+		filePlugin.load($('#fileId').val(),'#fileIdPath');
+		if ($("#fileId").length>0 && _signStatus != 'D'){
+			fileUpload("fileIdBtn", "fileId", "fileIdPath", filePlugin);
+		}
+
+		if (_sign_status == 'D'){
+			$("#proForm").find("input").not('.tags input').not("[type='button']").attr("readonly",true);
+			$(".signBtn").addClass("hide");
+		}
+		$('#ta').datagrid({
+			pageSize:60,
+			pageList:[500,200,100,60],
+			rownumbers:true,
+			pagination:false,
+			url: _ctx+"/documentsUser/sign/list?search_EQL_signFileId=" + $("#signFileId").val(),
+			columns:[ [
+				{
+					field: 'companyName', title: '签署公司', align: 'left', width: 210, editor: {
+						type: 'combobox',
+						options: {
+							required: true,
+							data: companyNameJson,
+							textField: 'dictName',
+							panelWidth: 270,
+							panelHeight: 'auto',
+							valueField: 'dictName',
+							editable: true
+						}
+					}
+				},
+				{
+					field: 'keyWord',
+					title: '签署关键字',
+					align: 'left',
+					editor: {type: 'validatebox', options: {validType: 'length[1,50]',align: 'left',required: true}},
+					width: 335
+				},
+				{
+					field: 'imageWidth',
+					title: '印章宽度',
+					align: 'left',
+					editor: {type: 'numberbox', options: {validType: 'length[1,16]',align: 'left',precision:0,required: true}},
+					width: 100
+				},
+				{
+					field: 'imageHeight',
+					title: '印章高度',
+					align: 'left',
+					editor: {type: 'numberbox', options: {validType: 'length[1,16]',align: 'left',precision:0,required: true}},
+					width: 100
+				},
+				{
+					field: 'offsetCoordX',
+					title: 'X轴偏移量',
+					align: 'left',
+					editor: {type: 'numberbox', options: {validType: 'length[1,16]',align: 'left',precision:0,required: true}},
+					width: 100
+				},
+				{
+					field: 'offsetCoordY',
+					title: 'Y轴偏移量',
+					align: 'left',
+					editor: {type: 'numberbox', options: {validType: 'length[1,16]',align: 'left',precision:0,required: true}},
+					width: 100
+				},
+				{
+					field: 'signType', title: '印章类型', align: 'left', width: 120, editor: {
+						type: 'combobox',
+						options: {
+							required: true,
+							data: signTypeJson,
+							textField: 'dictName',
+							panelWidth: 100,
+							panelHeight: 'auto',
+							valueField: 'dictCd'
+						}
+					}, formatter: function (value) {
+						return Convert.findValueByKey(signTypeJson, "dictCd", value, "dictName");
+					}
+				},
+				{field:'option',title:'', width:80, align:'center',formatter:function(value, row, index){
+					if (_sign_status == 'D'){
+						return "";
+					}else{
+						return '<i class="icon-add icon cursor operator mt4" onclick="insert()"></i><i class="icon-remove ml10 icon cursor mt4" onclick="remove(\''+row.id+'\',\'' + index + '\',event,this)"></i>';
+					}
+				}}
+			]],
+			onDblClickCell:function(index,field){
+				if (_file_edit){
+					$('#ta').datagrid('endEdit', lastIndex2);
+					$('#ta').datagrid('beginEdit', index);
+					lastIndex2 = index;
+					Convert.focusEditor("ta",field,lastIndex2);
+				}
+			},
+			onClickCell:function(index,field){
+				lastIndex2 = index;
+			},
+			onSelect:function(rowIndex,rowData){
+			},
+			onLoadSuccess:function(data){
+				var entityId = $('#entityid').val();
+				if ((!entityId || entityId == 0) && _initFlg === true){
+					insert();
+					_initFlg = false;
+				}
+			}
+		});
+	});
+	function saveSign(){
+		var fileId = $("#fileId").val();
+		if (!fileId){
+			$.messager.alert({
+				title: '提示',
+				msg: '请上传签署文件!',
+				type: 'info',
+				width:388
+			});
+			return false;
+		}
+		$("#proForm").form('submit',{
+			onSubmit:function(){
+				var flag=true;
+				var changeRows=[];
+				var inserted = $('#ta').datagrid('getChanges','inserted');
+				var updated = $('#ta').datagrid('getChanges','updated');
+				changeRows = inserted.concat(updated);
+				for(var i=0;i<changeRows.length;i++){
+					var rowIndex=$('#ta').datagrid('getRowIndex',changeRows[i]);
+					flag=$('#ta').datagrid('validateRow',rowIndex);
+					if (!flag){
+						$('#ta').datagrid('selectRow',rowIndex);
+						$('#ta').datagrid('beginEdit', rowIndex);
+						break;
+					}else{
+						$('#ta').datagrid('endEdit', rowIndex);
+					}
+				}
+				if(flag){
+					$('#ta').datagrid('endEdit', lastIndex2);
+					Convert.setChildren2Form("proForm","ta");
+				}
+				return flag;
+			},
+			success:function(data){
+				$("#signFileId").val(eval('('+ data +')').success);
+				//保存签署文件签署方
+				$.messager.show({
+					title:'Tip',
+					msg:'保存成功',
+					timeout:2000,
+					showType:'show'
+				});
+				$("#generateSignature").removeClass("hide");
+				$('#win').window('close');
+				$('#tt').datagrid('reload');
+				$('#ta').datagrid('reload');
+				var entityid= $("#entityid").val();
+				var url="/documents/autoSign/detail2/";
+				$('#win').window({href:url+entityid});
+				$('#win').window('open');
+			}
+		});
+	}
+	function insert(){
+		var changeRows = $('#ta').datagrid('getRows');
+		if(changeRows.length>9){
+			$.messager.alert('提示','最多只能添加10条签署方！','info');
+			return;
+		}
+		if(!lastIndex2){
+			lastIndex2 = 1;
+		}
+		var _$ta = $('#ta');
+		_$ta.datagrid('endEdit', lastIndex);
+		var field={companyName:'', signType:'DEF',status:'N',imageWidth:140,imageHeight:140,offsetCoordX:30,offsetCoordY:-50};
+		_$ta.datagrid('appendRow',field);
+		lastIndex = _$ta.datagrid('getRows').length-1;
+		_$ta.datagrid('selectRow', lastIndex);
+		_$ta.datagrid('beginEdit', lastIndex);
+		Convert.focusEditor("ta",field,lastIndex);
+	}
+
+	function remove(id,_index,event,target) {
+		if(id==='0' ||id ==='' || id === undefined || id === 'undefined') {
+			$('#ta').datagrid('deleteRow',_index);
+		}else{
+			$('#ta').datagrid('selectRecord',id);
+			var row = $('#ta').datagrid('getSelected');
+			if (row && row.id){
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+						if (r){
+							$.post(_ctx+"/documentsUser/sign/delete/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									$('#ta').datagrid('reload');
+								}else{
+									$.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+						}
+					}
+				});
+			}
+		}
+		event.stopPropagation();
+	}
+
+
+	function fileUpload(fileBtn, fileId, filePath, filePlugin) {
+		var $this = $('#' + fileId);
+		// --start-文件上传---
+		var uploader = WebUploader.create({
+			auto : true,
+			// swf文件路径
+			swf : _ctx + '/static/webuploader-0.1.5/Uploader.swf',
+			// 文件接收服务端。
+			server : _ctx + '/file/uploadFile',
+			// 选择文件的按钮。可选。
+			// 内部根据当前运行是创建，可能是input元素，也可能是flash.
+			pick: {
+				id: '#' + fileBtn,
+				multiple:false
+			},
+			// 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
+			resize : false,
+			multiple:false,
+			duplicate :false ,//true可重复上传，默认不可多次重复上传
+			// 只允许选择图片文件。
+			accept : {
+				title : 'file',
+				extensions : 'pdf',
+				mimeTypes: "*"
+			}
+		});
+		// 去掉文件上传组件样式，使用上传dom 自己样式
+		$(".webuploader-pick").removeClass();
+
+		uploader.on('beforeFileQueued', function(file) {
+			$.messager.progress('close');
+			$('#' + fileId).val(null);
+			var _file = $('#' + fileId).val();
+			if (_file){
+				$.messager.alert('tip',"文件签署每次仅可签署一份文件!",'info');
+				return false;
+			}
+			if(file &&file.size > 104857600){
+				$.messager.alert('tip',"上传文件不能超过100M!",'info');
+				return false;
+			}
+		})
+
+		// 当有文件添加进来的时候
+		uploader.on('fileQueued', function(file) {
+			$.messager.progress();
+		});
+
+		// 文件上传成功，给item添加成功class, 用样式标记上传成功。
+		uploader.on('uploadSuccess', function(file, response) {
+			$.messager.progress('close');
+			if(file &&file.size > 104857600){
+				$.messager.alert('tip',"上传文件不能超过100M!",'info');
+				return;
+			}
+			if(response && response.result){//上传成功
+				// console.log("uploadSuccess", response);
+				var fileId = response.fileId;
+
+				// console.log("fileId", fileId);
+				filePlugin.uploadSuccess(fileId);
+				//加载附件列表
+				filePlugin.load($this.val(),'#'+filePath);
+				//设置文件名称
+				try {
+					$("#fileName").textbox("setValue", file.name.split(".")[0]);
+				}catch (e){}
+			}else{
+				$.messager.alert('tip',"上传文件失败，失败信息："+ response._raw,'info');
+			}
+
+		});
+	}
+
+
+	// 生成电子签
+	function generateAutoSignature() {
+		var _signFileId = $("#signFileId").val();
+		if (_signFileId != "0"){
+			var url = _ctx+"/documentsUser/sign/generateSignature/"+_signFileId;
+			$.get(url,function(data) {
+				var rObj = eval(data);
+				if(rObj.success){
+					$.messager.show({
+						title : '提示',
+						msg : '自动签署成功!',
+						timeout : 2000,
+						height:120,
+						showType : 'show'
+					});
+					$('#win').window('close');
+					$('#tt').datagrid('reload');
+					$('#ta').datagrid('reload');
+					var entityid= $("#entityid").val();
+					var url="/documents/autoSign/detail2/";
+					$('#win').window({href:url+entityid});
+					$('#win').window('open');
+				}else{
+					$.messager.alert({
+						title: '提示',
+						msg: rObj.failure,
+						type: 'warning',
+						width:388
+					});
+				}
+			});
+		}else{
+			$.messager.alert({
+				title: '提示',
+				msg: '请先保存文件签署信息后，再生成电子签',
+				type: 'info',
+				width:388
+			});
+		}
+
+	}
+
+	// 双签合同
+	function doubleContract(){
+		removeRows();
+		setTimeout(function (){
+			var row_1 = {companyName:'浙江网塑科技股份有限公司',keyWord:'则由甲方决定本合同是否生效', signType:'CTR',status:'N',imageWidth:140,imageHeight:140,offsetCoordX:-55,offsetCoordY:-85};
+			$("#ta").datagrid('insertRow',{index:0,row:row_1});
+			$("#ta").datagrid('beginEdit', 0);
+			var row_2 = {companyName:'',keyWord:'则由甲方决定本合同是否生效', signType:'DEF',status:'N',imageWidth:140,imageHeight:140,offsetCoordX:150,offsetCoordY:-85};
+			$("#ta").datagrid('insertRow',{index:1,row:row_2});
+			$("#ta").datagrid('beginEdit', 1);
+		}, 400);
+	}
+
+	// 货物签收单
+	function receiptGoods(){
+		removeRows();
+		setTimeout(function (){
+			var row_1 = {companyName:'',keyWord:'收货单位(签章)', signType:'DEF',status:'N',imageWidth:140,imageHeight:140,offsetCoordX:65,offsetCoordY:-50};
+			$("#ta").datagrid('insertRow',{index:0,row:row_1});
+			$("#ta").datagrid('beginEdit', 0);
+		}, 400);
+	}
+
+	// 债权凭证
+	function voucher(){
+		removeRows();
+		setTimeout(function (){
+			var row_1 = {companyName:'浙江网塑科技股份有限公司',keyWord:'应收账款债权流转记录', signType:'OFC',status:'N',imageWidth:140,imageHeight:140,offsetCoordX:-156,offsetCoordY:-110};
+			$("#ta").datagrid('insertRow',{index:0,row:row_1});
+			$("#ta").datagrid('beginEdit', 0);
+			var row_2 = {companyName:'',keyWord:'本债权已经本单位（债务人）', signType:'DEF',status:'N',imageWidth:140,imageHeight:140,offsetCoordX:30,offsetCoordY:-50};
+			$("#ta").datagrid('insertRow',{index:1,row:row_2});
+			$("#ta").datagrid('beginEdit', 1);
+		}, 400);
+	}
+
+	function removeRows() {
+		$("#ta").datagrid('reload');
+		$('#ta').datagrid('endEdit', lastIndex2);
+		var rows = $("#ta").datagrid('getRows');
+		for (var i = 0; i < rows.length; i++) {
+			$('#ta').datagrid('deleteRow', i);
+		}
+	}
+</script>
+

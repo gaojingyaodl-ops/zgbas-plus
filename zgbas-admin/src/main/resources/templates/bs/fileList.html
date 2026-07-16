@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<div region="north" border="false">
+		<div  >
+		<div style="border: #0e0e0e;margin-top: 5px" class="mb6" th:each="list,index:${list}">
+				<a th:text="${list.fileName}"  style="font-size: 5px" th:onclick="showFile([[${list.id}]])"></a>
+		</div>
+	</div>
+	</div>
+</div>
+</div>
+<script type="text/javascript">
+
+	//查看附件
+	function showFile(fileId) {
+		debugger;
+		$.post(_ctx + "/ctr/loading/getByFileId?fileId=" + fileId, function (result) {
+			window.open(result, "_blank")
+		});
+	}
+
+</script>

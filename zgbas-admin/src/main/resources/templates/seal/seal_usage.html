@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>盖章查询</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<form id="searchForm" class="form-search from-input-layout" method="post" >
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>印章类型:</label>
+				<input id="sealType" type="text" name="search_LIKES_sealType"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>公司名称:</label>
+				<input id="companyName" type="text" name="search_LIKES_companyName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>客户:</label>
+				<input id="customerName" type="text" name="search_LIKES_customerName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>文件类型:</label>
+				<input id="fileType" type="text" name="search_EQS_fileType"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>申请人:</label>
+				<input id="applyUserName" type="text" name="search_EQS_applyUserName"/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<!-- <a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6 btn-export" style="position: fixed;right:20px;top:38px;" onclick="exportExcel()">导出</a> -->
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<div id="w_seal_usage_ophis" title="流水信息" class="easyui-window" data-options="width:690,height:402"></div>
+<script type="text/javascript">
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]')
+	var customerNameJson = eval('[(${customerNameJson})]');
+	var sealTypeJson = eval('[(${sealTypeJson})]');
+	var sealFileTypeJson = eval('[(${sealFileTypeJson})]');
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[30,40,50,100,200],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/apply/sealUsage/findUsagePage",
+			columns:[ [
+				{field:'sealType',title:'印章类型',width:120,align:'left',formatter:function(value,row){
+					if (value){
+						var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					    return content;
+					}
+			    }} ,
+				{field:'companyName',title:'公司名称', width:200,align:'left',formatter:function(value,row){
+					if (value){
+						var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					    return content;
+					}
+			    }} ,
+				{field:'customerName',title:'客户', width:170,align:'left'},
+				{field:'applyUserName',title:'申请人', width:70,align:'left'},
+				{field:'fileType',title:'文件类型', width:70,align:'left',formatter:function(value,row,index){
+					return Convert.findValueByKey(sealFileTypeJson,"dictCd",value,"dictName");
+				}},
+				{field:'fileName',title:'文件名称', width:170,align:'left'},
+				{field:'sealDate',title:'盖章日期',width:120,align:'center'},
+				{field:'remark',title:'备注', width:170,align:'left'},
+				{field:'detail',title:'详情',align:'center',width:80,formatter:function(value, row, index){
+					var str = "";
+					if (row.approveId){
+						str = '<i onclick="approveDetail('+row.approveId+')" class="contract-btn contract-btn-10">申请详情</i>'
+					}
+					return str;
+				}},
+				{field:'options',title:'操作',align:'center',width:70,formatter:function(value, row, index){
+					var str = '<img onclick="detail(\''+row.id+'\')" style="cursor:pointer;width:16px;hight:18px;" src="../static/images/icon_alter.png"/>'
+					return str;
+				}}
+			]],
+			onDblClickRow:function(index,row){
+				//lastIndex = index;
+				//detail(row.id);
+			}
+			
+		});
+	    //业务员下拉 
+	    $('#applyUserName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			//required:true,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#applyUserName').combotree('clear'); 
+				}else{
+					$('#applyUserName').combotree('setValue',node.text);	
+				}
+			} 
+		});
+		$("#sealType").combobox({
+			data:sealTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:false
+		});
+		$("#fileType").combobox({
+			data:sealFileTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:false
+		});
+		$("#companyName").combobox({
+			data:customerNameJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:200,
+			panelWidth:320,
+			editable:false
+		});
+
+	    $('#w_seal_usage_ophis').window({
+			title : '加盖记录',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			iconCls : ""
+		});
+	});
+	function detail(id){
+		if (id) {
+			var url = _ctx + "/apply/sealUsageOphis?id=" + id;
+			$('#w_seal_usage_ophis').window({
+				href : url
+			});
+			$('#w_seal_usage_ophis').window("open");
+		}	
+	}
+	function approveDetail(approveId){
+		var title ="盖章申请"+ ':' +approveId;
+		window.parent.addTab(title,_ctx+'/pm/approve/detail/'+approveId);
+	} 
+	
+</script>
+</body>
+</html>

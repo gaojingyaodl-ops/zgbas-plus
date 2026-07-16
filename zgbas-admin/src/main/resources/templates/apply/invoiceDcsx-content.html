@@ -1,0 +1,439 @@
+<!--开票申请-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+
+</head>
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" name="contractId" id="contractId" th:value="${entity.contractId}" />
+		<input type="hidden" name="status" id="entityStatus" th:value="${entity.status}" />
+		<input id="businessNo" name="businessNo"  type="hidden" th:value="${entity.businessNo}" />
+		<input type="hidden" name="canApproveEdit" id="canApproveEdit" th:value="${psv.canApproveEdit}"/>
+		<input type="hidden" id="hashEdit" th:value="${psv.hasEdit}"/>
+		<input name="buyCompanyId" type="hidden" id="buyCompanyId" th:value="${entity.buyCompanyId}"/>
+		<input name="isServiceInvoice" type="hidden" id="isServiceInvoice" th:value="${isServiceInvoice}"/>
+		<input name="fileServerUrl" type="hidden" id="fileServerUrl" th:value="${fileServerUrl}"/>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同编号</label>
+				<input id="contractNo" name="contractNo" class="chooseBtnStyle" readonly type="text" th:value="${entity.contractNo}" ></input>
+				<!-- <input type="button" value="选择" onclick="openChoose();" class="chooseBtn" style="width:50px"/> -->
+			</p>
+			<a id="addBtn" href="#" class="easyui-linkbutton btn-empty btn64" onclick="approveSeal()">合同详情</a>
+			<a id="contractSealView" href="#" class="easyui-linkbutton btn-empty btn64" onClick="contractSealView()">合同预览</a>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同总价(元):</label>
+				<input name="totalAmount" id="totalAmount" readonly type="text"  th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>已收金额(元):</label>
+				<input name="receiveAmount" id="receiveAmount" type="text" readonly="readonly" th:value="${#numbers.formatDecimal(entity.receiveAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>已开金额(元):</label>
+				<input name="billedAmount" id="billedAmount" readonly type="text" th:value="${#numbers.formatDecimal(entity.billedAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label for="matchUserName">业务员:</label>
+				<input name="matchUserName" id="matchUserName" readonly type="text"  th:value="${contractContent !=null?contractContent.matchUserName:' '}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>供方:</label>
+				<input name="ourCompanyName" id="ourCompanyName" type="text" th:value="${entity.ourCompanyName}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>发票抬头(需):</label>
+				<input type="text" readonly="readonly" name="companyName" id="companyName" th:value="${entity.companyName}"/>
+				<input name="companyId" id="companyId" type="hidden" th:value="${entity.companyId}"></input>
+			</p>
+			<p class="yw-table-filter hide">
+				<label for="interestAmount">逾期罚息(元):</label>
+				<input name="interestAmount" id="interestAmount" readonly type="text"></input>
+			</p>
+		</div>
+		<!-- <hr class="editor_hr"></hr> -->
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label><i>*</i>开户行:</label>
+				<input name="bankName" id="bankName" type="text" th:value="${entity.bankName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label><i>*</i>开票金额(元):</label>
+				<input name="dealAmount" id="dealAmount" type="text" th:value="${#numbers.formatDecimal(entity.dealAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label><i>*</i>开票日期:</label>
+				<input name="invoiceDate" id="invoiceDate" class="easyui-datebox" required="required" th:value="${#dates.format(entity.invoiceDate,'yyyy-MM-dd')}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label><i>*</i>银行账号:</label>
+				<input name="bankAccount" id="bankAccount" type="text" th:value="${entity.bankAccount}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>公司地址:</label>
+				<input name="address" id="address"  type="text"  th:value="${entity.address}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label><i>*</i>税号:</label>
+				<input name="taxNo" id="taxNo" type="text" th:value="${entity.taxNo}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>公司电话:</label>
+				<input name="companyPhone"  id="companyPhone" type="text" th:value="${entity.companyPhone}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>发票号码:</label>
+				<input name="invoiceNo" id="invoiceNo" type="text" th:value="${entity.invoiceNo}"></input>
+			</p>
+<!--			<th:block th:replace="~{tags/apply :: invoiceNo (${#maps.containsKey(psv.mapEdit, 'invoiceNo')}?${psv.mapEdit['invoiceNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'invoiceNo')}?${psv.mapEdit['invoiceNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>-->
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>记账凭证号:</label>
+				<input name="billNo" id="billNo" type="text"  th:value="${entity.billNo}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<div class="yw-table-filter">
+				<label>附件类型:</label>
+				<input name="fileTypeId" id="fileTypeId" type="text" th:value="${entity.fileTypeId}"></input>
+			</div>
+		</div>
+		<div class="mb6" style="width: 250px;" >
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+		</div>
+	</div>
+</div>
+<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640">
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<!--<script th:src="@{/static/js/admin/apply_base.js?v=1}" type="text/javascript"></script>-->
+<script type="text/javascript">
+	var imgShowUrl =_filePath+'/view/small/';
+	var companyJson =eval('[(${companyJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var ourCompanyJson=eval('[(${ourCompanyJson})]');
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/invoice/updateFileId',[[${param.hasEditFile}]]);
+	var _productDeliveryJson = eval('[(${productDeliveryJson})]');
+	// 附件类型
+	var fileTypeJson=eval('[(${fileTypeJson})]');
+	var _fileServerUrl = $("#fileServerUrl").val()
+	var _sealFileId;
+	// _beforSaveOper = true;
+	$(function(){
+		$("#address").blur(function (){
+			var addr =  $("#address").val();
+			if(addr==null||addr==undefined||addr==""){
+				$('#address').textbox({
+					required: false
+				});
+			}
+		})
+		$('#companyPhone').textbox({
+			required: false
+		});
+		$('#w_contract_choose').window({
+			title: '请选择合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false
+		});
+		$('.easyui-linkbutton').linkbutton();
+		var _curStatus = $("#entityStatus").val();
+		var _entityId = $("#entityId").val();
+		var _companyId;
+		if (_curStatus=='N' && _entityId=='0'){
+			_companyId = contract.companyId;
+		}else{
+			_companyId = $("#companyId").val();
+		}
+
+		if(contract!=null){
+			var ourCompanyName=	contract.ourCompanyName;
+		}
+		$("#receiveAmount,#dealAmount,#totalAmount,#billedAmount").numberbox({
+			min:0,
+			precision:2,
+			required: true,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+				$("#bankName").combobox({
+					url:_ctx+"/bs/companyAccount/findCompanyAccountDcsxFlg/"+ourCompanyName,
+					valueField:'bankName',
+					textField:'bankName',
+					panelHeight:"auto",
+					required:true,
+					editable:false,
+					onLoadSuccess:function(data){
+
+						$(this).combobox('select',data[0].bankName);
+					},
+					onSelect:function(record){
+						if (record){
+							$('#bankAccount').textbox('setValue',record.bankAccount);
+							$('#taxNo').textbox('setValue',record.taxNo);
+							$('#companyPhone').textbox('setValue',record.companyPhone);
+							$('#address').val((record.address));
+						}
+					}
+				});
+
+			$('#bankAccount,#taxNo').textbox({
+				readonly: true,
+				required:true
+			});
+
+			$('#invoiceDate,#receiveDate').datebox({
+			    required:true
+			});
+
+			$("#invoiceNo").removeAttr('readonly');
+			//我方抬头
+			$('#ourCompanyName').combobox({
+				data:ourCompanyJson,
+				valueField:'dictName',
+				textField:'dictName',
+				panelHeight:"auto",
+				editable:false,
+				hasDownArrow:false,
+				readonly:true,
+				onHidePanel:function(){
+					BasCombobox.onHidePanel(this);
+				}
+			});
+			var _ourcompanyName = $('#ourCompanyName').val();
+			if(_ourcompanyName == ''){
+				$('#ourCompanyName').combobox('select', ourCompanyJson[0].dictName);
+			}
+			// 附件类型列表
+			// 附件类型列表
+			$("#fileTypeId").combobox({
+				data:fileTypeJson,
+				valueField:'fileTypeId',
+				textField:'fileTypeName',
+				panelHeight:'auto',
+				editable:true,
+				required:false,
+				limitToList: true,
+				onLoadSuccess:function(){
+					var value = $(this).val();
+					if (!value){
+						$(this).combobox('setValue',fileTypeJson[0].fileTypeId);
+					}
+				},
+			})
+			$("#fileTypeId").combobox('setValue',null);
+			applyLoadSucess();
+		}
+		if(_curStatus&&(_curStatus=='A'||_curStatus=='D')){
+			$(".chooseBtn").hide();
+			//$("#businessNo").removeClass("busSelect").attr("style","width:342px");
+			/* $.post(_ctx+"/bs/company/findCompany/"+_companyId,function(result){
+				var ConvertcompanyId = Convert.findValueByKey(result,"id",_companyId,"text");
+				if (ConvertcompanyId == null){
+					ConvertcompanyId = $("#companyName").val();
+				}
+				$("#companyId").val(ConvertcompanyId);
+			}); */
+			// $("#pm_content_div").find("input").not('.tags input').not("[type='button']").attr("readonly",true);
+			// $("#pm_content_div").find("input").not('#invoiceNo,#entityId').removeAttr('name');
+
+			// 附件类型
+			var _fileTypeId = $('#fileTypeId').val();
+			var flag = $("#canApproveEdit").val();
+			if (flag == 'true'){
+				$("#invoiceNo").removeAttr('readonly');
+				$("#dealAmount").removeAttr('readonly');
+				// 附件类型列表
+				$("#fileTypeId").combobox({
+					data:fileTypeJson,
+					valueField:'fileTypeId',
+					textField:'fileTypeName',
+					panelHeight:'auto',
+					editable:true,
+					required:false,
+					limitToList: true,
+					onLoadSuccess:function(){
+						var value = $(this).val();
+						if (!value){
+							$(this).combobox('setValue',_fileTypeId);
+						}
+					},
+				})
+				$("#fileTypeId").combobox('setValue',null);
+			}else{
+				var fileType = Convert.findValueByKey(fileTypeJson,"fileTypeId",_fileTypeId,"fileTypeName");
+				$("#fileTypeId").val(fileType);
+				$("#pm_content_div").find("input").not('.tags input').not("[type='button']").attr("readonly",true);
+				$("#pm_content_div").find("input").not('#invoiceNo,#entityId').removeAttr('name');
+			}
+		}
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+		var $contract_id = $("#contractId").val();
+		getCtrContractDetail($contract_id);
+	});
+	function approveSeal() {
+		var contrctId = $("#contractId").val();
+			var title="代采赊销详情";
+			window.parent.addTab(title, _ctx + '/bs/matchDetail/contentdcsx2/' +contrctId);
+	}
+ 	//选择合同
+ 	function openChoose(){
+		var url=_ctx+"/ctr/contract/choose?contractType=S&contractStatus=C&billFlg=0&type=I&contract_Status=G2";
+		$('#w_contract_choose').attr('callbackExec', 'chooseCallback');
+		$('#w_contract_choose').window({href:url});
+		$('#w_contract_choose').window("open");
+	}
+	function chooseCallback(contractRows){
+		var contract = contractRows[0];
+		byContract(contract);
+	}
+	var superAmount;
+	function byContract(contract){
+		if (contract!=undefined){
+			$("#contractId").val(contract.id);
+			/* $("#businessNo").val(contract.businessNo); */
+			if (isBlank(contract.contractNo)) {
+				// 服务合同
+				$("#contractNo").val(contract.serviceContractNo);
+			}else {
+				// 销售合同
+				$("#contractNo").val(contract.contractNo);
+			}
+			$("#totalAmount").numberbox('setValue',contract.totalAmount);
+			var contractNo=contract.contractNo.substr(0,4);
+			var dealedAmount = contract.dealedAmount;
+			var companyId = contract.companyId;
+			if(contractNo=="SPTX" || contractNo=="KCX2" || contractNo=="XYX2"){
+				$("#receiveAmount").numberbox('setValue',contract.receiveAmount);
+				if(contract.invoiceBillAmount==undefined){
+					$("#billedAmount").numberbox('setValue',0.00);
+				}else {
+					$("#billedAmount").numberbox('setValue', contract.invoiceBillAmount);
+				}
+				$('#ourCompanyName').combobox('setValue',contract.companyName);
+				$("#companyName,#payCompanyName").val(contract.ourCompanyName);
+				$("#companyId").val(contract.ourCompanyId);
+			}else{
+				$("#billedAmount").numberbox('setValue',contract.billedAmount);
+				$("#receiveAmount").numberbox('setValue',dealedAmount);
+				$('#ourCompanyName').combobox('setValue',contract.ourCompanyName);
+				$("#companyName,#payCompanyName").val(contract.companyName);
+				$("#companyId").val(companyId);
+			}
+			var totalAmount = contract.totalAmount;
+			var billedAmount = contract.billedAmount;
+			var applyBillAmount = contract.applyBillAmount;
+			var interestAmount = contract.interestAmount;
+			if (!interestAmount){
+				interestAmount = 0;
+			}
+			if (contract.businessType == "ZY-TP") {
+				totalAmount = contract.settlementTotalAmount;
+			}
+			totalAmount = totalAmount + interestAmount;
+			superAmount = totalAmount - applyBillAmount;
+			if(contractNo=="SPTX" || contractNo=="KCX" || contractNo=="XYX"){
+				$("#dealAmount").numberbox('setValue',totalAmount- contract.invoiceBillAmount);
+			}else{
+				$("#dealAmount").numberbox('setValue',superAmount);
+			}
+			//$("#companyId").combobox('select',contract.companyId);
+			//$("#companyId").combobox('validate');
+			$("#productName").val(contract.productsName);
+			$("#matchUserName").val(contract.matchUserName);
+			// $.post(_ctx+"/bs/company/findCompanyByName?ourCompanyName="+contract.ourCompanyName,function(result){
+			// 	$('#address').val((result.address))
+			// 	if(result.address==null||result.address==undefined||result.address==""){
+			// 		$('#address').numberbox({
+			// 			required: true
+			// 		});
+			// 	}
+			// });
+			$("#buyCompanyId").val(contract.buyCompanyId);
+			// 双签附件
+			_sealFileId =contract.fileId
+		}
+	}
+	function getCtrContractDetail(contractId){
+		if (contractId){
+			$.ajax({
+		        url:_ctx+"/ctr/contract/findDetailByContractId?contractId="+contractId,
+		        type:"post",
+		        async:false,
+		        success:function(contract){
+		        	if (contract != null && contract != undefined){
+			        	var a = contract.receiveInterestAmount;
+		        		$("#interestAmount").val(Number(contract.interestAmount).toFixed(2));
+			        }
+		        }
+	     	});
+		}
+	}
+	function contractSealView(){
+		var fileIdArray = _sealFileId.split(",").filter(item => item.trim() !== "");
+		console.log(fileIdArray,'双签附件')
+		console.log(_fileServerUrl,'文件路径')
+		if(fileIdArray && fileIdArray.length>0){
+			fileIdArray.forEach((id,index) => {
+				// 浏览器不支持同时下载多个，定时任务隔开一下
+				setTimeout(()=>{
+					const url = _fileServerUrl+id;
+					window.open(url, '_blank');
+				},index*1000)
+			});
+		}
+	}
+</script>

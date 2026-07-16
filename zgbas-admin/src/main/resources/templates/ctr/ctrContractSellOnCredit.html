@@ -1,0 +1,252 @@
+		<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>赊销合同</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 140px">
+	<form id="sellOnCreditSearchForm" class="form-search from-input-layout" method="post">
+		<input name="search_NEQS_contractStatus" type="hidden" value="C"/>
+		<input name="search_EQB_creditFlg" type="hidden" value = "true"/>
+		<input name="search_EQL_enterpriseId" type="hidden" th:value="${enterpriseId}"/>
+		<p class="p_text">
+			<span class="input-colspan" >
+				<label>合同编号:</label>
+				<input class="control" type="text" name="search_EQS_contractNo"/>
+			</span>
+			<span class="input-colspan">
+				<label>我方抬头:</label>
+				<input class="control" type="text" id="ourCompanyName" name="search_LIKES_ourCompanyName"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 90px;">对方企业名:</label>
+				<input class="control" type="text" name="search_LIKES_companyName"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>收货时间:</label>
+				<input id="srh_receiveTime_from"  name="search_GTED_confirmDate" class="easyui-datebox"/>	
+			</span>
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>		
+			<span class="input-colspan">
+				<input  id="srh_receiveTime_to"  name="search_LTD_confirmDate" class="easyui-datebox" />
+			</span>
+			<span class="input-colspan" >
+				<label style="width: 90px;">人保状态:</label>
+				<input  type="text" id="piccPushFlg" name="search_EQB_piccPushFlg"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>合同时间:</label>
+				<input  name="search_GTED_contractTime" class="easyui-datebox"/>	
+			</span>	
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>	
+			<span class="input-colspan">
+				<input  name="search_LTD_contractTime" class="easyui-datebox" />
+			</span>
+			<span class="input-colspan">
+				<label style="width: 90px;">人保可用额度:</label>
+				<input id="piccRemainCredit" name="piccRemainCredit"/>
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('sellOnCreditSearchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#sellOnCreditSearchForm').form('reset');">清空</a>
+				<a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcels()">导出</a>
+			</span>
+		</p>
+		
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+<script type="text/javascript">
+	var lastIndex=0;
+	//var companyJson =eval('[(${companyJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	var businessJson = eval('[(${businessJson})]');
+	var businessTypeJson = eval('[(${businessTypeJson})]');
+	var deliveryModeJson =eval('[(${deliveryModeJson})]');
+	var deptListJson =eval('[(${deptListJson})]');
+	var business_type = [{dictCd:'SX-SX',dictName:'赊销'},{dictCd:'SX-HK',dictName:'货到付款'}];
+	var _piccCreditJson = [{id:"",text:"全部"},{id:"true",text:"大于等于0"},{id:"false",text:"小于0"}];
+	var _piccPushFlg=[{
+		piccTag:'',piccName:"不限"},{
+		piccTag:'false',piccName:"投保失败"},{
+		piccTag:'true',piccName:"投保成功"
+	}]
+	$(function(){
+		//人保可用额度
+		$('#piccRemainCredit').combobox({
+			data:_piccCreditJson,
+			valueField:'id',
+			textField:'text',
+			panelHeight:"auto",
+			editable:false
+		});
+		$('#ourCompanyName').combobox({
+			data:_ourCompanyJson, 
+			valueField:'dictName',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false
+		});
+		//人保状态
+		$("#piccPushFlg").combobox({
+			data:_piccPushFlg,
+			textField:'piccName',
+			valueField:'piccTag',
+			panelHeight:"auto",
+			editable:false
+			
+		});
+		$('#businessType').combobox({
+			data:business_type,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		});
+		var _url = _ctx+"/ctr/contract/contractList";
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:false,
+			queryParams:Convert.getJson4Form('sellOnCreditSearchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_url,
+			columns:[ [
+				{field:'businessType',title:'业务类型',align:'center', width:70,formatter:function(value,row,index){
+					return Convert.findValueByKey(businessTypeJson,"dictCd",value,"dictName");
+				}},
+				{field:'contractNo', title:'合同编号', width:128},
+				{field:'productsName',title:'货名', width:200,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="tip">' + value + '</p>';
+					    return content;
+					}
+			        }} ,
+		        {field:'ourCompanyName',title:'我方抬头', width:200,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="tip">' + value + '</p>';
+					    return content;
+					}
+			        }} ,
+				{field:'companyName',title:'对方企业名称', width:200,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="tip">' + value + '</p>';
+					    return content;
+					}
+			        }} ,
+			    {field:'deliveryMode',title:'交货方式',align:'center', width:70,formatter:function(value,row,index){
+					return Convert.findValueByKey(deliveryModeJson,"dictCd",value,"dictName");
+				}},
+				{field:'totalNumber',title:'合同数量(吨)',align:"right", width:90},
+				{field:'warehouseNumber',title:'出库数量(吨)',align:"right", width:90},
+				//定金
+				{field:'totalAmount',title:'合同总价(元)', align:"right", width:100},
+				{field:'dealedAmount',title:'已收金额(元)',align:"right", width:90},	
+				{field:'billedAmount',title:'开票金额(元)',align:"right", width:90},	
+				/* {field:'overdueAmount',title:'逾期金额(元)',align:"right", width:90},	 */
+				{field:'contractStatus', title: '合同状态',align:'center', width: 80,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+				}},
+				{field:'lastPayDate',title:'收款日期', width:100} ,
+				{field:'payBondTime',title:'收定金日期', width:100} ,
+				{field:'contractTime',title:'合同时间', width:140} ,
+				{field:'confirmDate',title:'确认收货时间',align:"left", width:100},
+				{field:'piccPushFlg',title:'人保投保状态',align:"center", width:100,formatter:function(value,row,index){
+					if(value == "true"){
+						return "投保成功";
+					} else if(value == "false" && row.piccMessage !=null){
+						return "投保失败";
+					}
+				}},
+				{field:'piccRemainCredit',title:'人保可用额度(元)',align:'right',width:120},
+				{field:'piccMessage',title:'人保投保信息',align:'left',width:250},
+				{field:'piccReceiveFlg',title:'回款状态',align:"center", width:100,formatter:function(value,row,index){
+					if(value == "true"){
+						return "回款成功";
+					} else if(value == "false"){
+						return "回款失败";
+					}
+				}},
+				{field:'piccReceiveMessage',title:'人保回款信息',align:'left',width:300},
+				{field:'matchUserName',title:'业务员',align:"center", width:55},
+				{field:'deptId',title:'事业部',align:"center", width:80,formatter:function(value,row,index){
+					return Convert.findValueByKey(deptListJson,"deptId",value,"deptName");
+				}},
+				{field:'option',title:'操作',align:'center',width:100,formatter:function(value, row, index){
+					if (row.existContractText){
+						var str = '<span onclick="printContract('+row.id+')" class="contract-btn">合同预览</span>';
+						return str;
+					}
+				}}
+			]],
+			onLoadSuccess:function(data){
+				 $(".tip").tooltip(
+				            {
+				                onShow: function(){
+				                    $(this).tooltip('tip').css({
+				                        width:'400',
+				                        boxShadow: '1px 1px 3px #292929'
+				                 });
+				             }
+				         }
+				 );
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			},
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id,row.contractNo);
+			}
+		});
+			
+		//合同预览
+		$('#w_contract').window({
+			title: '电子合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false
+		});
+	});
+	function editrow(id,contractNo){
+		var url=_ctx+"/ctr/contract/detail/"+id;
+		var title=contractNo;
+		window.parent.addTab(title,url);
+	}
+	//合同预览
+	function printContract(contractId){
+		if(contractId){
+			var url = _ctx+"/ctr/contractText/getBycontractId/"+contractId;
+			$('#w_contract').window({href:url});
+			$('#w_contract').window("open");
+		}
+	}
+	function exportExcels(){
+    	$('#sellOnCreditSearchForm').form('submit', {url:_ctx+"/ctr/sellOnCredit/exportExcels"});
+	}
+</script>
+</body>
+</html>

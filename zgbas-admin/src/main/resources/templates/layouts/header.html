@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>footer</title>
+</head>
+<body>
+	<!-----页头 S---->
+	<div class="width_100 header" th:fragment="header (title)">
+		<div class="width_1200 marginAuto clearFix">
+			<div class="logo float_left loginBtns" btnType="btnToHome">
+				<img th:src="@{/static/images/new_logo.png}">
+			</div>
+			<div class="float_left header1"></div>
+			<div class="float_left header2" th:text="${title}">登录</div>
+		</div>
+	</div>
+</body>
+</html>
+

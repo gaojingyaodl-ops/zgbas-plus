@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>花旗收款凭证</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>花旗订单编号</label>
+                <input  class="control"  type="text" name="search_LIKES_outOrderNo"/>
+            </p>
+            <span class="btn-group">
+				<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+
+<script type="text/javascript">
+
+    $(function(){
+        $('#tt').datagrid({
+            pagination:true,
+            pageSize:30,
+            rownumbers:true,
+            showFooter:true,
+            queryParams:Convert.getJson4Form('searchForm'),
+            pageList:[500,200,100,50,30,20],
+            url:_ctx+"/hq/externalPaymentProof/findAllExternalPaymentProofLoading",
+            columns:[ [
+                {field:'outOrderNo',title:'花旗商品订单编号',align:'left',width:200},
+                {field:'companyName', title:'付款方',align:'center',width:150},
+                {
+                    field: 'option', title: '操作', align: 'left', width: 100, formatter: function (value, row, index) {
+                        var str = "";
+                        if (row.fileId != "" && row.fileId != null) {
+                            str += '<span onclick="showFile(' + row.fileId + ')" class="contract-btn contract-btn-5">查看附件</span>';
+                        }
+                        return  str;
+                    }
+                },
+
+            ]],
+            onClickRow:function(index,row){
+                lastIndex = index;
+            },
+            onLoadSuccess:function(data){
+
+            }
+        });
+    });
+    //查看附件
+    function showFile(contractId) {
+        $.post(_ctx + "/ctr/loading/getByFileId?fileId=" + contractId, function (result) {
+            window.open(result, "_blank")
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>库存查询</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/css/businessManageIndex.css}" rel="stylesheet"/>
+</head>
+<body class="easyui-layout">
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <input type="hidden" name="companyType" id="companyType" th:value="${companyType}" />
+    <div style="height: 550px">
+        <table id="list" fit="true"
+               title="" iconCls="icon-edit" singleSelect="true"
+               idField="id">
+        </table>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var companySourceJson = eval('[(${companySourceJson})]');
+    var columnsI =[
+        {field:'companyName',title:'用户名称',align:'left', width:150,formatter:function(value,row){
+                if (value){
+                    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                    return content;
+                }
+            }},
+        {field:'creditInfo',title:'授信信息', width:450,align:'left',formatter: function(value, row, index) {
+                // 针对 "人保" 和 "大地" 设置不同的颜色
+                if (value) {
+                    value = value.replace(/人保/g, '<span style="color: #005977;">人保</span>');
+                    value = value.replace(/大地/g, '<span style="color: #5e00b3;">大地</span>');
+                    value = value.replace(/中银/g, '<span style="color: #f3bc0a;">中银</span>');
+                    value = value.replace(/自主/g, '<span style="color: #e3142c;">自主</span>');
+                }
+
+                return value;
+            },
+            styler: function(value,row,index){
+                return 'padding: 5px';
+            }
+        },
+        {field:'contactName',title:'联系人', width:100,align:'center'},
+        {field:'contactPhone',title:'联系电话', width:120,align:'center'},
+        {field:'firstContractTime',title:'首次成交时间', width:100,align:'center'},
+        {field:'lastContractTime',title:'最近成交时间', width:100,align:'center'},
+        {field:'totalContractAmount',title:'交易总金额', width:100,align:'right',formatter:formateNum}
+    ]
+    var columnsT =[
+        {field:'companyName',title:'供应商名称',align:'left', width:150,formatter:function(value,row){
+                if (value){
+                    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                    return content;
+                }
+            }},
+        {field:'companySource',title:'来源', width:120,align:'center',formatter:function(value,row,index){
+                return Convert.findValueByKey(companySourceJson,"dictCd",value,"dictName");
+            }},
+        {field:'contactName',title:'联系人', width:100,align:'center'},
+        {field:'contactPhone',title:'联系电话', width:120,align:'center'},
+        {field:'firstContractTime',title:'首次成交时间', width:100,align:'center'},
+        {field:'lastContractTime',title:'最近成交时间', width:100,align:'center'},
+        {field:'totalContractAmount',title:'交易总金额', width:100,align:'right',formatter:formateNum}
+    ]
+    $(function(){
+        let companyType = $("#companyType").val()
+        let param = {}
+        if(companyType==='I'){
+            param.companyType='I'
+            getDataShow(param,columnsI)
+        } else {
+            param.companyType='T'
+            getDataShow(param,columnsT)
+        }
+    });
+    function getDataShow(params,columns){
+        $('#list').datagrid({
+            pagination:true,
+            pageSize:10,
+            height: 550,
+            rownumbers:true,
+            queryParams: params,
+            pageList:[10,20,30,40,50],
+            method: 'post',
+            url:_ctx+"/business/manager/workbench/findHyCompanyPage",
+            columns:[columns],
+        });
+    }
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+</script>
+</body>
+<style>
+    .active {
+        background-color: #FFFFFF; /* 点击时的背景颜色 */
+    }
+</style>
+</html>

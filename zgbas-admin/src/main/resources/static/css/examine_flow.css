@@ -1,0 +1,126 @@
+@charset "utf-8";
+body{margin:0;padding:0;font-size: 12px;font-family:"Lantinghei SC", "Open Sans", Arial, "Hiragino Sans GB", "Microsoft YaHei", "Î¢ÈíÑÅºÚ", "STHeiti", "WenQuanYi Micro Hei", SimSun, sans-serif;}
+img,input,select,textarea{ vertical-align:middle; }
+ul{margin:0;padding: 0;}
+li{list-style: none;}
+i{font-style: normal;}
+a{text-decoration: none;}
+.colorLan{color: #3f6ccd!important;}
+.colorhong{color: #de4059!important;}
+.colorhei{color: #222!important;}
+.colorlv{color: #4ec17f!important;}
+.colorhui{color: #878787!important;}
+.colorhuang{color: #d1a45f!important;}
+.color66{color: #666;}
+body{height: 100%;background: #e2e2e2;}
+html{height: 100%;background: #e2e2e2;}
+.nowrap{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.spt_bg{background: #efefef!important;}
+.my_spt{background: #efefef;}
+/*--- 分页  ---*/
+.paging{text-align: right;padding-right: 40px;min-width: 460px;}
+.accountDetail{background: #efefef;height: 100%;z-index: 1;min-width: 1200px;padding-top: 1px;}
+
+.prefecture .preferRight{border-left: 1px solid #c7dcff;}
+/*--- 审批系统-头部栏---*/
+.preferRight .cont_tit{width: 100%;height: 40px;border-bottom: 1px solid #c7dcff;}
+.preferRight .cont_tit > div{width: 120px;height: 40px;line-height: 40px;text-indent: 23px;border-left:1px solid #e2e2e2;background: #bebebe;cursor: pointer;}
+.preferRight .cont_tit > div span{font-size: 14px;color: #fff;}
+.preferRight .cont_tit > div i{display: block;width: 12px;height: 12px;background: url(../images/close_lightgray.png) no-repeat;margin: 14px 14px 0 0;}
+.preferRight .cont_tit > div.on i{background: url(../images/close_darkgray.png) no-repeat;}
+.preferRight .cont_tit > div.on{background: #fff;height: 41px;border-right: 1px solid #c7dcff;}
+.preferRight .cont_tit > div.on:hover{background: #fff;}
+.preferRight .cont_tit > div.on span{color: #5e9bff!important;}
+.preferRight .cont_tit > div:hover{background: #969696;}
+/*---审批系统---*/
+.compareBill_titl{height: 38px;margin: 10px 0;}
+.compareBill_titl_div{margin:3px 0 0 20px;}
+.compareBill_titl_div select{cursor: pointer;border-radius: 3px;border: 1px solid #c5c5c5!important;}
+.compareBill_titl_span1{font-size: 14px;color: #333;height: 32px;line-height: 32px;margin-right: 10px;}
+.div_select{background: #fff;width: 156px;height: 34px;}
+.compareBill_titl_select{border: 1px solid #c5c5c5;width: 150px;height: 32px;color: #333;padding-left: 8px;background: url(../images/combo_xiala.png) no-repeat scroll 128px center transparent;line-height: 32px;font-size: 14px;}
+/*---通用按钮---*/
+.btn_com{height: 26px;width: 66px;line-height: 26px;cursor: pointer;margin-left: 10px;}
+.btn_com i{width: 14px;height: 14px;display: block;margin: 6px 4px 0 8px;}
+.btn_com i.i_inquire{background: url(../images/icon_seach.png) center;}
+.btn_com i.i_empty{background: url(../images/icon_qk.png) center;}
+.btn_com i.i_add{background: url(../images/icon_add.png) center;width: 14px;height: 14px;margin: 5.5px 4px 0 8px !important;}/*新增按钮*/
+.btn_com i.i_save{background: url(../images/icon_save.png) center;width: 14px;height: 14px;margin: 5.5px 4px 0 8px !important;}/*存草稿按钮*/
+.btn_com i.i_savew{background: url(../images/icon_save_white.png) center;width: 14px;height: 14px;margin: 5.5px 4px 0 8px !important;}/*白色同意按钮*/
+.btn_com i.i_applyfor{background: url(../images/icon_fqsq.png) center;}/*申请按钮*/
+.btn_com i.i_close{background: url(../images/icon_close.png) center;width: 14px;height: 14px;margin: 5.5px 4px 0 8px !important;}/*关闭按钮*/
+.btn_com i.i_ty{background: url(../images/icon_ty.png) center;width: 14px;height: 14px;margin: 5.5px 4px 0 8px !important;}/*同意按钮*/
+.btn_com i.i_jj{background: url(../images/icon_jj.png) center;width: 14px;height: 14px;margin: 5.5px 4px 0 8px !important;}/*拒绝按钮*/
+.btn_com i.i_ch{background: url(../images/icon_ch.png) center;width: 14px;height: 14px;margin: 5.5px 4px 0 8px !important;}/*拒绝按钮*/
+.btn_com i.i_upload{background: url(../images/icon_upload.png) center;width: 10px;height: 14px;margin: 5.5px 4px 0 8px !important;}/*上传附件按钮*/
+.btn_com i.i_scfj{background: url(../images/icon_scfj.png) center;width: 15px;height: 20px;}/*上传附件*/
+.btn_com span{color: #fff;font-size: 14px;}
+.fontLan{color: #4a9bff!important;}/*存草稿字体颜色*/
+.fontBlack{color: black !important;font-size:10px!important;}/*黑色字体颜色*/
+.borderNone{border: none!important;}/*无边框*/
+.borderCheng{border: 1px solid #ff713e!important;}/*关闭按钮边框*/
+.borderLan{border: 1px solid #53A0FF!important;}/*申请按钮边框*/
+.bglan{
+	background:-moz-linear-gradient(left,#88bdff,#519fff)!important; /* IE 10 */
+	background:-webkit-gradient(linear, 0% 0%, 100% 0%,from(#88bdff), to(#519fff))!important;/*谷歌*/ 
+	background: -webkit-gradient(linear, 0% 0%, 100% 0%, from(#88bdff), to(#519fff))!important; /* Safari 4-5, Chrome 1-9*/
+	background: -webkit-linear-gradient(left, #88bdff, #519fff)!important;   /*Safari5.1 Chrome 10+*/
+	background: -o-linear-gradient(left,#88bdff,#519fff)!important;  /*Opera 11.10+*/
+}
+.bgchegn{
+	background:-moz-linear-gradient(left,#ff9873,#ff713e)!important; /* IE 10 */
+	background:-webkit-gradient(linear, 0% 0%, 100% 0%,from(#ff9873), to(#ff713e))!important;/*谷歌*/ 
+	background: -webkit-gradient(linear, 0% 0%, 100% 0%, from(#ff9873), to(#ff713e))!important; /* Safari 4-5, Chrome 1-9*/
+	background: -webkit-linear-gradient(left, #ff9873, #ff713e)!important;   /*Safari5.1 Chrome 10+*/
+	background: -o-linear-gradient(left,#ff9873,#ff713e)!important;  /*Opera 11.10+*/
+}
+.bgbai{
+	background:-moz-linear-gradient(left,#fff,#fff)!important; /* IE 10 */
+	background:-webkit-gradient(linear, 0% 0%, 100% 0%,from(#fff), to(#fff))!important;/*谷歌*/ 
+	background: -webkit-gradient(linear, 0% 0%, 100% 0%, from(#fff), to(#fff))!important; /* Safari 4-5, Chrome 1-9*/
+	background: -webkit-linear-gradient(left, #fff, #fff)!important;   /*Safari5.1 Chrome 10+*/
+	background: -o-linear-gradient(left,#fff,#fff)!important;  /*Opera 11.10+*/
+}
+
+.preferRight .inventCont{width: auto;margin: 20px 20px 10px;max-width: 1650px;background: #fff;min-width: 1000px;}
+.preferRight .inventCont .td1{width: 180px;}
+.preferRight .inventCont .td4{width: 400px;}
+.preferRight .inventCont .td6{width: 210px;}
+.preferRight .inventCont table{border:1px solid #c5c5c5;border-collapse:collapse;width: 100%;font-size: 15px;}
+.preferRight .inventCont td{height: 50px;line-height: 50px;text-align: center;border:1px solid #c5c5c5;}
+.preferRight .inventCont .tr1{color: #666;background: #e7e7e7;font-weight: bold;}
+/*预算/合同申请单列表*/
+.apply_form{width: auto;margin: 20px 20px 10px;max-width: 1650px;background: #fff;min-width: 1000px;border:1px solid #c7dcff;padding: 0 0 20px;position: relative;}
+.form_tit{width: 148px;height: 38px;color: #5e9bff;font-size: 14px;background: url(../images/border.png) center;line-height: 38px;text-indent: 15px;margin-bottom: 15px;font-weight: bold;}
+
+.cont_div{float:left;}
+.cont_div .span_width{width: 80px;text-align: right;margin-right: 10px;color: #666;font-size: 14px;line-height: 34px;}
+.cont_div .input_div{background: #fff;width: 160px;height: 34px;position: relative;}
+.cont_div .must_cont{background: #ffebea!important;border: 1px solid #fe4a48!important;}
+.cont_div .input_div .input1{width: 158px;height: 30px;background: #dedede;text-indent: 8px;}
+.cont_div .input_div .i_data{position: absolute;right: 10px;top: 10px;width: 14px;height: 14px;background: url(../images/icon_date.png) center;cursor: pointer;}
+.cont_div .select_div .select1{width: 155px;height: 32px;color: #333;padding-left: 8px;background: url(../images/combo_xiala.png) no-repeat scroll 133px center transparent;line-height: 32px;}
+.cont_div .select_div .select1,.cont_div .input_div .input1{cursor: pointer;border: 1px solid #dedede;border-radius: 3px;font-size: 14px;}
+.cont_div .select_div{background: #dedede;}
+/*审批流程*/
+.step{width: auto;margin-left: 30px;}
+.step_cont{width: 75px;text-align: center;}
+.step_cont i{width: 32px;height: 32px;display: block;background: url(../images/step_unselected.png) center;color: #fff;font-size: 14px;line-height: 32px;text-align: center;margin: 0 auto 10px;}
+.step_cont span{color: #a3a3a3;font-size: 14px;font-weight: bold;}
+.step .borderBot{width: 80px;height: 1px;background: #c7dcff;margin: 16px -10px 0 -10px;}
+.step .on i{background: url(../images/step_selected.png) center;color: #5e9bff;}
+.step .on span{color: #222;}
+
+div.tab_toolbar{margin:0px 0;float:left;border: 0}
+.fjsc_span{
+	height: 26px;
+	width: 80px !important;
+	border: 1px solid #4a9bff;
+	line-height: 26px;
+	cursor: pointer;
+	margin-left: 20px;
+}
+.fjsc_text{
+	margin-top:2px;
+	margin-left:2px;
+}

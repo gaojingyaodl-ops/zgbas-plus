@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+
+</head>
+<div class="easyui-layout" fit="true">	
+	<div region="center" style="padding:0px 20px 5px 5px;+position: relative;overflow:hidden;" border="false">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<input type="hidden" name="contractId" id="contractId" th:value="${entity.contractId}" />
+			<input type="hidden" name="contractNo" id="contractNo" th:value="${entity.contractNo}" />
+			<input type="hidden" name="productCode" id="productCode" th:value="${entity.productCode}" />
+			<input type="hidden" name="status" id="entityStatus" th:value="${entity.status}" />
+			<input type="hidden" name="bondRate" id="bondRate" th:value="${entity.bondRate}" />
+			<input type="hidden" name="closeFlg" id="closeFlg" th:value="${entity.closeFlg}" />
+			<input type="hidden" name="payBond" id="payBond" th:value="${contract?.payBond}" />
+			<p  class="p_text">
+				<span class="input-colspan">
+					<label for="businessNo">合同编号:</label>
+					<input name="businessNo" id="businessNo" readonly type="text" th:value="${entity.businessNo}" class="chooseBtnStyle"></input>
+					<input type="button" value="选择" onclick="openChoose();" class="chooseBtn"/>
+				</span>
+			</p>
+			<p  class="p_text">
+				<span class="input-colspan">
+					<label for="productName"  class="control-label" id="pp">品名:</label>
+					<input name="productName" id="productName" readonly class="control" type="text" th:value="${entity.productName}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="dealPrice"  class="control-label">单价:</label>
+					<input name="dealPrice" id="dealPrice" class="control" type="text" th:value="${entity.dealPrice}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="dealNumber"  class="control-label">数量:</label>
+					<input name="dealNumber" id="dealNumber" class="control" type="text" th:value="${entity.dealNumber}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="numberUnit"  class="control-label" >数量单位:</label>
+					<input name="numberUnit" id="numberUnit" class="control"  type="text" th:value="${entity.numberUnit}"></input>
+				</span>
+			</p>
+			
+			<p  class="p_text">
+				<span class="input-colspan">
+					<label for="payDate"  class="control-label">付款日期:</label>
+					<input name="payDate" id="payDate" class="control" type="text" th:value="${#dates.format(entity.payDate,'yyyy-MM-dd')}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="payType"  class="control-label">付款类型:</label>
+					<input name="payType" id="payType" class="control" type="text" th:value="${entity.payType}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="payAmount">付款金额:</label>
+					<input name="payAmount" id="payAmount" type="text" th:value="${entity.payAmount}"></input>
+				</span>
+			</p>
+			
+			<p  class="p_text">
+				<span class="input-colspan">
+					<label for="dealAmount"  class="control-label">合同总价:</label>
+					<input name="dealAmount" id="dealAmount" class="control readonly"  readonly="readonly" type="text"  th:value="${entity.dealAmount}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="dealAmountNotax"  class="control-label" id="buha">不含税价:</label>
+					<input name="dealAmountNotax" id="dealAmountNotax" class="control readonly"  readonly="readonly" type="text" th:value="${entity.dealAmountNotax}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="taxAmount"  class="control-label">进项税:</label>
+					<input name="taxAmount" id="taxAmount" class="control readonly"  readonly="readonly" type="text" th:value="${entity.taxAmount}"></input>
+				</span>
+				<span class="input-colspan">
+					<label></label>
+					<span onchange="$(this).toggleClass('on')" th:class="${entity.receiveFlg} ? 'ckbox on' : 'ckbox'">
+						<input type="checkbox" th:checked="${entity.receiveFlg}" onchange="$('#receiveFlg').val($(this).attr('checked')=='checked');"/>
+	            		<span id="receiveSpan" th:classappend="!${entity.receiveFlg}?'color_hong'">对应收款已经到账</span>
+	           			<input type="hidden" name="receiveFlg" th:value="${entity.receiveFlg}" id="receiveFlg" />
+					</span>
+				</span>
+			</p>
+			
+			<p  class="p_text">
+				<span class="input-colspan">
+					<label for="companyId"  class="control-label">我方抬头:</label>
+					<input name="ourCompanyName" id="ourCompanyName" class="control large" type="text" th:value="${entity.ourCompanyName}"></input>
+				</span>
+				<!-- <span class="input-colspan">
+					<label class="checkbox" style="margin-left:70px">
+			            <input type="checkbox" th:checked="${entity.receiveFlg}" onchange="$('#receiveFlg').val($(this).attr('checked')=='checked');" />
+			            <span id="receiveSpan" th:classappend="!${entity.receiveFlg}?'color_hong'">对应收款已经到账</span>
+			           	<input type="hidden" name="receiveFlg" th:value="${entity.receiveFlg}" id="receiveFlg" />
+	           		</label>
+	           	</span> -->
+	           	
+	           	<span class="input-colspan2">
+					<label for="companyId"  class="control-label">对方企业:</label>
+					<input type="hidden" name="companyName" id="companyName" />
+					<input name="companyId" id="companyId" class="control large" type="text" th:value="${entity.companyId}"></input>
+				</span>
+			</p>
+			
+			<p  class="p_text">
+				<span class="input-colspan">
+					<label for="bankName"  class="control-label">开户行:</label>
+					<input name="bankName" id="bankName" class="control large" type="text"  th:value="${entity.bankName}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="billNo"  class="control-label">记账凭证号:</label>
+					<input name="billNo" id="billNo" class="control " type="text"  th:value="${entity.billNo}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="bankAccount"  class="control-label">银行账号:</label>
+					<input name="bankAccount" id="bankAccount" class="control large" type="text" th:value="${entity.bankAccount}"></input>
+				</span>
+			</p>
+			
+			<p  class="p_text">
+				<span class="input-colspan">
+					<label for="inAmount"  class="control-label">发票金额:</label>
+					<input name="inAmount" id="inAmount" class="control" type="text"  th:value="${entity.inAmount}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="inAmountNotax"  class="control-label ">不含税价:</label>
+					<input name="inAmountNotax" id="inAmountNotax" class="control readonly"  readonly="readonly" type="text" th:value="${entity.inAmountNotax}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="inTaxAmount"  class="control-label">进项税:</label>
+					<input name="inTaxAmount" id="inTaxAmount" class="control readonly"  readonly="readonly" type="text" th:value="${entity.inTaxAmount}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="inInvoiceDate"  class="control-label">发票日期:</label>
+					<input name="inInvoiceDate" id="inInvoiceDate" class="control" type="text" th:value="${#dates.format(entity.inInvoiceDate,'yyyy-MM-dd')}"></input>
+				</span>
+			</p>
+			
+			
+			<p  class="p_text">
+				<span class="input-colspan">
+					<label for="inInvoiceNo"  class="control-label">发票号码:</label>
+					<input name="inInvoiceNo" id="inInvoiceNo" class="control large" type="text"  th:value="${entity.inInvoiceNo}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="inBillNo"  class="control-label" >记账凭证号:</label>
+					<input name="inBillNo" id="inBillNo" class="control " type="text"  th:value="${entity.inBillNo}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="remark"  class="control-label">备注:</label>
+					<input name="remark" id="remark" class="control large" type="text" th:value="${entity.remark}"></input>
+				</span>
+			</p>
+	</div>
+	<div class="editForm"> 
+			<p>
+				<span class="upload-btn" id="btn_fileId">
+				 	<i></i>
+                	<span>附件上传</span>
+            	</span>
+            	<!-- <a id="btn_fileId" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-upload'" style="width:106px;margin-top:10px;background:transparent;color: #2d2d2d;">上传附件 </a> -->
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+	</div>
+</div>
+<div id="w_contract_choose" title="合同详情" data-options="width:830,height:640"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+	var isExists=false;
+	var imgShowUrl =_filePath+'/view/small/';
+	var companyJson =eval('[(${companyJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var payTypeJson =eval('[(${payTypeJson})]');
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/bas/pay/updateFileId',[[${param.hasEditFile}]]);
+	$(function(){
+		var _recevieFlg = $("#receiveFlg").val();
+		if(_recevieFlg){
+			$("#recevieSpan").addClass("color_hong");
+		}
+		$('#w_contract_choose').window({
+			title: '请选择合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:""
+		});
+		
+		/* $("#status").combobox({
+			data:approveStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			readonly: true,
+			editable:false,
+			width:150,
+			height:30
+		}); */
+
+		/* $("#bankName").combobox({
+			width:285,
+			height:28
+		}); */
+		/* $("#ourCompanyName,#inInvoiceNo").combobox({
+			width:285,
+			height:28
+		}); */
+		/* $("#bankAccount").combobox({
+			width:285,
+			height:28
+		}); */
+		
+		var _curStatus = $("#entityStatus").val();
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='B')){
+			$(".insertContent").show();
+			$("#companyId").combobox({
+				data:companyJson,
+				textField:'companyName',
+				valueField:'id',
+				required: true,
+				editable:false,
+				onSelect:function(record){
+					$('#companyName').val(record.companyName);
+					$('#taxNo').val(record.taxNo);
+					$('#bankName').val(record.bankName);
+					$('#address').val(record.address);
+					$('#companyPhone').val(record.companyPhone);
+					$('#bankAccount').val(record.bankAccount);
+				}
+			});
+			
+			$("#payType").combobox({
+				data:payTypeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				required: true,
+				editable:false,
+				panelHeight:"auto"
+			});
+			
+			$("#dealNumber").numberbox({
+				required: true,
+				min:0,
+			    precision:3
+			}); 
+			
+			$("#payType").combobox('options').onSelect=function(record){
+				var cd = record.dictCd;
+				curPayAmount(cd);
+			};
+			
+	 		$('#payAmount').numberbox({
+	 		    min:0,
+	 		    precision:2,
+	 		   required: true
+	 		});
+	 		
+	 		$('#dealPrice').numberbox({
+	 		    min:0,
+	 		    precision:2,
+	 		   	required: true
+	 		});
+	 		
+	 		$('#inAmount').numberbox({
+	 		    min:0,
+	 		    precision:2
+	 		});
+	 		$('#businessNo').validatebox({
+				required: true
+			});
+			
+			$('#payDate,#inInvoiceDate').datebox({
+			    required:true
+			});
+			
+			$('#dealPrice').numberbox('textbox').on('keyup',function(){
+		 		var dealNumber =$('#dealNumber').numberbox('getValue');
+		 		var dealPrice = $(this).val();
+		 		var dealAmount = (dealNumber*dealPrice).toFixed(2);
+		 		$('#dealAmount').val(dealAmount);
+		 		var dealAmountNotax = (dealAmount/1.17).toFixed(2);
+		 		$('#dealAmountNotax').val(dealAmountNotax);
+		 		$('#taxAmount').val((dealAmountNotax*0.17).toFixed(2));
+		 	});
+			
+		 	$('#dealNumber').numberbox('textbox').on('keyup',function(){
+		 		var dealPrice =$('#dealPrice').numberbox('getValue');
+		 		var dealNumber = $(this).val();
+		 		var dealAmount = (dealNumber*dealPrice).toFixed(2);
+		 		$('#dealAmount').val(dealAmount);
+		 		var dealAmountNotax = (dealAmount/1.17).toFixed(2);
+		 		$('#dealAmountNotax').val(dealAmountNotax);
+		 		$('#taxAmount').val((dealAmountNotax*0.17).toFixed(2));
+		 	});
+		 	
+		 	$('#inAmount').numberbox('textbox').on('keyup',function(){
+		 		var dealAmount = $(this).val();
+		 		var dealAmountNotax = (dealAmount/1.17).toFixed(2);
+		 		$('#inAmountNotax').val(dealAmountNotax);
+		 		$('#inTaxAmount').val((dealAmountNotax*0.17).toFixed(2));
+		 	});
+		}
+		if(_curStatus&&(_curStatus=='A'||_curStatus=='D')){
+			$(".chooseBtn").hide();
+			$("#businessNo").attr("style","width:342px");
+			//$("[type='checkbox']").hide();
+			//转换付款类型
+			var _payType = $("#payType").val();
+			var ConvertPayType = Convert.findValueByKey(payTypeJson,"dictCd",_payType,"dictName");
+			$("#payType").val(ConvertPayType);
+			//转换对方企业
+			var _companyId = $("#companyId").val();
+			var ConvertcompanyId = Convert.findValueByKey(companyJson,"id",_companyId,"companyName");
+			$("#companyId").val(ConvertcompanyId);
+			$("#inputForm").find("input").not("[type='button']").attr("readonly",true);
+			$("#dealNumber").val(Number($("#dealNumber").val()).toFixed(3));	
+		}
+		
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+// 		window.setTimeout(function(){
+// 		},2000);
+	
+	});
+	 	
+ 	//选择合同
+ 	function openChoose(){
+		var url=_ctx+"/bas/contract/choose?contractType=B";
+		$('#w_contract_choose').attr('callbackExec', 'chooseCallback');
+		$('#w_contract_choose').window({href:url});
+		$('#w_contract_choose').window("open");
+	}
+	function chooseCallback(contractRows){
+		var contract = contractRows[0];
+		console.log(contract);
+		if (contract!=undefined){
+			$("#contractId").val(contract.id);
+			$("#businessNo").val(contract.businessNo);
+			$("#contractNo").val(contract.contractNo);
+			$("#productCode").val(contract.productCode);
+			$("#productName").val(contract.productName);
+			$("#ourCompanyName").val(contract.ourCompanyName);
+			$("#dealPrice").numberbox('setValue',contract.dealPrice);
+			$("#dealNumber").numberbox('setValue',contract.dealNumber);
+			$("#taxAmount").val(contract.taxAmount);
+			$("#dealAmountNotax").val(contract.dealAmountNotax);
+			$("#dealAmount").val(contract.dealAmount);
+			$("#payAmount").numberbox('setValue',contract.dealAmount);
+			$("#numberUnit").val(contract.numberUnit);
+			$("#companyId").combobox('setValue',contract.oppCompanyId);
+			$("#companyId").combobox('select',contract.oppCompanyId);
+			$("#companyId").combobox('validate');
+			$("#businessNo").validatebox('validate');
+			$("#payAmount").numberbox('validate');
+			$("#bondRate").val(contract.bondRate);
+			$("#payBond").val(contract.payBond);
+			$("#closeFlg").val(contract.closeFlg); 
+			var _payTypeValue = $('#payType').combobox('getValue');
+			curPayAmount(_payTypeValue);
+		}
+	}
+	
+	function curPayAmount(cd){
+		var bondRate = $("#bondRate").val();
+		var dealAmount = $("#dealAmount").val();
+		var payBond = $("#payBond").val();
+		var _amount;
+		if(dealAmount){
+			if("B"==cd){
+				//定金入账
+				_amount = (Number(dealAmount)*Number(bondRate)/100).toFixed(2);
+			}else if("P"==cd){
+				//追加保证金
+				_amount = (Number(dealAmount)*Number(bondRate)/100).toFixed(2);
+				
+			}else if("R"==cd){
+				_amount = (Number(dealAmount)-Number(payBond)).toFixed(2);
+			}else{
+				_amount = dealAmount;
+			}
+		}
+		$("#payAmount").numberbox('setValue',_amount);
+	}
+</script>

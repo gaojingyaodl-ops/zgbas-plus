@@ -1,0 +1,85 @@
+<fieldset class="form-section" style="padding: 0px 30px 10px 20px;">
+<legend class="form-section-title" style="margin-bottom:25px;"><span class="approve_text">销售</span><i></i></legend>
+	<div region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+		<form th:id="form+${randomNumber}">
+		<input type="hidden" th:value="${randomNumber}" name="randomNumber" id="randomNumber" />
+		<p class="p_text">
+		
+		<span class="input-colspan">
+			<label>合同编号:</label>
+			<input th:id="contractNo+${randomNumber}" readonly name="contractNo" class="control contractType text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+			<label>合同类型:</label>
+			<input th:id="contractType+${randomNumber}" name="contractType" readonly="readonly"  class="control contractType text_padding" value="S" type="text"></input>
+		</span>
+		<span class="input-colspan">
+			<label>结算方式:</label>
+			<input th:id="deliveryModeS+${randomNumber}" name="deliveryMode" class="control  text_padding"  type="text"></input>
+		</span>
+		</p>
+		<p class="p_text">	
+		<span class="input-colspan">
+			<label>保证金(元):</label>
+			<input th:id="receiveBondAmount+${randomNumber}" data-options="required:true"  name="receiveBondAmount" class="control text_padding"  type="text"></input>
+		</span>
+		<span class="input-colspan">
+			<label>仓储费(元):</label>
+			<input th:id="warehouseCost+${randomNumber}"  name="warehouseCost" class="control text_padding sell_warehouse" type="text"></input>
+		</span>
+		<span class="input-colspan">
+			<label>运输费(元):</label>
+			<input th:id="transportCost+${randomNumber}"  name="transportCost" class="control text_padding sell_transport"  type="text"></input>
+		</span>
+		</p>
+		<p class="p_text">
+		<span class="input-colspan">
+			<label>清关费(元):</label>
+			<input th:id="qingguanFee+${randomNumber}" data-options="required:true"  name="qingguanFee" class="control text_padding"  type="text"></input>
+		</span>
+		<span class="input-colspan">
+			<label>代理费(元):</label>
+			<input th:id="dailiFee+${randomNumber}" data-options="required:true"  name="dailiFee" class="control text_padding"  type="text"></input>
+		</span>
+		<span class="input-colspan">
+			<label>支付方式:</label>
+			<input th:id="receiveTypeAdd+${randomNumber}" data-options="required:true"  name="receiveType" class="control text_padding" type="text"></input>
+		</span>
+		</p>
+		<p class="p_text">
+		<span class="input-colspan2">
+			<label>需货商:</label>
+			<input th:id="companyIdAdd+${randomNumber}" data-options="required:true" name="companyId" class="control companyId companyId text_padding" type="text"></input>
+		</span>	
+		<span class="input-colspan">
+			<label >联系电话:</label>
+			<input th:id="contactPhone+${randomNumber}"  name="contactPhone" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+			<label >目的港:</label>
+			<input th:id="objectivePort+${randomNumber}" data-options="required:true"  name="objectivePort" class="control text_padding" type="text"></input>
+		</span>
+		</p>	
+		<p class="p_text">
+		<span class="input-colspan2">
+			<label >联系地址:</label>
+			<input  th:id="contactAddr+${randomNumber}" data-options="required:true"  name="contactAddr" class="control text_padding" type="text"></input>
+		</span>
+			<span class="input-colspan2">
+			<label>备注:</label>
+			<input th:id="payRemark+${randomNumber}" data-options="required:true"  name="payRemark" class="control text_padding large" type="text"></input>
+		</span>
+		</p>
+		</form>
+	  	</div>
+		<div style="margin-bottom:20px;">
+		<table th:id="relaTable+${randomNumber}"  th:attr="pointer=${randomNumber}" atr="S" class="relaTable" id="relaTable"
+					title="" iconCls="icon-edit" singleSelect="true"
+					idField="id">
+		</table>
+		</div>
+		<div region="south" border="true" style="float: right;">
+			<input type="hidden" th:value="${randomNumber}"></input>
+	        <a href="#" class="easyui-linkbutton btn-danger" data-options="iconCls:'icon-clear'" id="removeSell" th:attr="detailId=${randomNumber}" onclick="applyMatch.removeNode(this)">删除</a>
+		</div>
+	</fieldset>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>代采代销明细统计</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 60px;">合同编号:</label>
+				<input type="text" id="businessNo" name="businessNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 60px;">品名:</label>
+				<input type="text" id="brandNumber" name="brandNumber"/>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 100px;">采购合同时间:</label>
+				<input name="buyContractSatrtTime" class="easyui-datebox"/>				
+			</p>
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter">
+				<input name="buyContractEndTime" class="easyui-datebox" />
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 60px;">需货商:</label>
+				<input type="text" id="sellCompanyName" name="sellCompanyName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 60px;">供货商:</label>
+				<input type="text" id="buyCompanyName" name="buyCompanyName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 100px;">我方抬头:</label>
+				<input name="ourCompanyName" id="ourCompanyName"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 100px;">销售合同时间:</label>
+				<input name="sellContractSatrtTime" class="easyui-datebox"/>	
+			</p>
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter">
+				<input name="sellContractEndTime" class="easyui-datebox" />
+			</p>
+			<p class="yw-table-filter">
+				<label>收票时间:</label>
+				<input name="beginTime" class="easyui-datebox"/>				
+			</p>
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>	
+			<p class="yw-table-filter">
+				<input name="endTime" class="easyui-datebox" />
+			</p>
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6 btn-export" style="position: fixed;right:20px;top:85px;" onclick="exportExcel()">导出</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;" >
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var userJson =eval('[(${userJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var productTypeJson = eval('[(${productTypeJson})]');// 品名树
+	var applyTypeJson = eval('[(${applyTypeJson})]');
+	var deliveryModeJson = eval('[(${deliveryModeJson})]');
+	var ourCompanyJson = eval('[(${ourCompanyJson})]');
+	$(function(){
+		$('#matchUserName').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			height : 30,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#matchUserName').combotree('clear');
+				} else {
+					$('#matchUserName').combotree('setValue', node.text);
+				}
+			}
+		});
+		$('#ourCompanyName').combobox({
+			data:ourCompanyJson,
+			valueField:'dictName',
+			textField:'dictName',
+			editable:false,
+			panelHeight:"auto",
+		});
+		//品名下拉
+	    $('#brandNumber').combotree({
+			data:productTypeJson, 
+			multiple : false,
+			editable : true,
+			onSelect:function(data){
+				$('#brandNumber').val(data.typeName);
+			}
+		});
+		 $("#srh_procurementName").combobox({
+				data:userJson,
+				textField:'name',
+				valueField:'id',
+				panelHeight:"auto"
+			}); 
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter :true,
+			fitColumns:false,
+			remoteSort: false,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/agency/findAgency",
+			columns:[ [
+				/* {field:'productsName', title: '货名',width:180,formatter:function(value, row, index){
+				if(value){
+					var str=row.productsName+'/'+row.brandNumber+'/'+row.factoryName;
+					return str;
+				}
+				}}, */
+				{field:'buyContractNo',title:'采购合同号',align:'center', width:120,
+					formatter:function(value,row,index){
+						if(value){
+							return '<span class="c_blue_b yw-menu-section">'+value+'</span>';
+						}
+					}
+				},
+				{field:'source',title:'业务类型', width:70,align:'left',formatter:function(value,row,index){
+					return Convert.findValueByKey(applyTypeJson,"dictCd",value,"dictName");
+				}}, 
+				{field:'buyContractDate',title:'采购合同时间', width:100,align:'center'},
+				/* {field:'ourCompanyName',title:'我方抬头', width:200,align:'left'}, */
+				{field:'productName', title:'货名',align:'left', width:100, formatter:function(value, row, index){
+					if(row.productName){
+						var str = row.productName+'/'+row.brandNumber+'/'+row.factoryName;
+						if (_industry.indexOf('SL')==-1){
+							//不是塑料行业主要显示品名
+							str = row.productName;
+						}
+						return str;
+					}
+				}},
+				{field:'buyCompanyName',title:'供货商',align:'left', width:120,formatter:function(value,row){
+					if (value){
+						var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					    return content;
+					}
+			    }} ,
+				{field:'buyPrice',title:'采购单价(元)',align:'right', width:90},
+				{field:'buyTotalNumber',title:'采购数量(吨)',align:'right', width:110,formatter:formateNumTon},
+				{field:'buyTotalAmount',title:'采购总额(元)',align:'right', width:110,formatter:formateNum},
+				{field:'receiveBillNo',title:'采购发票',align:'left', width:110},
+				{field:'invoiceBillAmount', title:'未收金额(元)',align:'right', width:90,formatter:formateNum},
+				{field:'billFlg', title:'发票状态',align:'center', width:80,formatter:function(value){
+					if (value){
+						var str = "未收票";
+						if(value == 'true'){
+							str = "已收票"
+						}
+						return str;
+					}
+				}},
+				{field:'lastBillDate', title:'最后收票时间',align:'center', width:100},
+				{field:'buyDeliveryMode', title:'采购方式',align:'center', width:100,formatter:function(value){
+					if (value){
+						return Convert.findValueByKey(deliveryModeJson,"dictCd",value,"dictName");
+					}
+				}}, 
+				{field:'buyTransportAmount', title:'运输费(元)',align:'right', width:100,formatter:formateNum},
+				{field:'buyWarehouseAmount', title:'仓储费(元)',align:'right', width:100,formatter:formateNum},
+				{field:'buyMatchUserName', title:'采购业务员',align:'center', width:80},
+				{field:'sellContractNo', title:'销售合同号',align:'center', width:120,
+					formatter:function(value,row,index){
+						if(value){
+							return '<span class="c_blue_b yw-menu-section">'+value+'</span>';
+						}
+					}
+				},
+				{field:'sellCompanyName',title:'需货商',align:'left', width:120,formatter:function(value,row){
+					if (value){
+						var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					    return content;
+					}
+			    }} ,
+				{field:'sellPrice',title:'销售单价(元)',align:'right', width:90,formatter:formateNum},				
+				{field:'sellTotalNumber',title:'销售数量(吨)',align:'right', width:100,formatter:formateNumTon},
+				{field:'sellTotalAmount',title:'销售总额(元)',align:'right', width:100,formatter:formateNum},
+				{field:'invoiceBillNo',title:'销售发票',align:'left', width:110},
+				{field:'sellContractDate',title:'销售合同时间',align:'center', width:100},
+				{field:'receiveBillAmount',title:'未开金额(元)',align:'right', width:90,formatter:formateNum},
+				{field:'sellDeliveryMode', title:'销售方式',align:'center', width:100,formatter:function(value){
+					if (value){
+						return Convert.findValueByKey(deliveryModeJson,"dictCd",value,"dictName");
+					}
+				}}, 
+				{field:'sellTransportAmount', title:'运输费(元)',align:'right', width:100,formatter:formateNum},
+				{field:'sellWarehouseAmount', title:'仓储费(元)',align:'right', width:100,formatter:formateNum},
+				{field:'sellMatchUserName',title:'销售业务员',align:'center', width:80},
+				{field:'warehouseNumber',title:'出库数量(吨)',align:'right', width:90,formatter:formateNumTon},
+				{field:'profit',title:'毛利(元)',align:'right', width:90,formatter:formateNum}
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			} ,
+			onLoadSuccess(data) {
+                var mark = 1;
+                for (var i = 1; i < data.rows.length; i++) {
+                    if (data.rows[i]['buyId'] == data.rows[i - 1]['buyId'] &&
+                    		data.rows[i]['productsName'] == data.rows[i - 1]['productsName']&&
+                    		data.rows[i]['buyTotalNumber'] == data.rows[i - 1]['buyTotalNumber']&&
+                    		data.rows[i]['buyPrice'] == data.rows[i - 1]['buyPrice']) {
+                        mark += 1;
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'productsName',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'buyCompanyName',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'buyPrice',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'buyTotalNumber',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'buyTotalAmount',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'receiveBillNo',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'invoiceBillAmount',
+                            rowspan: mark
+                        });
+                    }else if(data.rows[i]['sellId'] == data.rows[i - 1]['sellId'] &&
+                    		data.rows[i]['sellPrice'] == data.rows[i - 1]['sellPrice']&&
+                    		data.rows[i]['sellTotalNumber'] == data.rows[i - 1]['sellTotalNumber']&&
+                    		data.rows[i]['sellCompanyName'] == data.rows[i - 1]['sellCompanyName']  ){
+                    	mark += 1;
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'sellCompanyName',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'sellPrice',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'sellTotalNumber',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'sellTotalAmount',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'invoiceBillNo',
+                            rowspan: mark
+                        });
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'receiveBillAmount',
+                            rowspan: mark
+                        });
+                    } else {
+                        mark = 1;
+                    }
+                }
+            }
+		    /*, onLoadSuccess: function(data){
+		         $(this).datagrid("autoMergeCells");
+		    } */
+			/* onSortColumn:function(sort, order){
+	            $(this).datagrid("autoMergeCells");
+	        }, */
+	        /* onLoadSuccess: function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+	            $(this).datagrid("autoMergeCells");
+	        }  */
+		});
+		
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:"",
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		$.extend($.fn.datagrid.methods, {
+		    autoMergeCells : function (jq, fields) {
+		        return jq.each(function () {
+		            var target = $(this);
+		            if (!fields) {
+		                fields = target.datagrid("getColumnFields");
+		            }
+		            var rows = target.datagrid("getRows");
+		            var i = 0,
+		            j = 0,
+		            temp = {};
+		            for (i; i < rows.length; i++) {
+		                var row = rows[i];
+		                j = 0;
+		                for (j; j < fields.length; j++) {
+		                    var field = fields[j];
+		                    var tf = temp[field];
+		                    if (!tf) {
+		                        tf = temp[field] = {};
+		                        tf[row[field]] = [i];
+		                    } else {
+		                        var tfv = tf[row[field]];
+		                        if (tfv) {
+		                            tfv.push(i);
+		                        } else {
+		                            tfv = tf[row[field]] = [i];
+		                        }
+		                    }
+		                }
+		            }
+		            $.each(temp, function (field, colunm) {
+		                $.each(colunm, function () {
+		                    var group = this;
+		                    
+		                    if (group.length > 1) {
+		                        var before,
+		                        after,
+		                        megerIndex = group[0];
+		                        for (var i = 0; i < group.length; i++) {
+		                            before = group[i];
+		                            after = group[i + 1];
+		                            if (after && (after - before) == 1) {
+		                                continue;
+		                            }
+		                            var rowspan = before - megerIndex + 1;
+		                            if (rowspan > 1) {
+		                                target.datagrid('mergeCells', {
+		                                    index : megerIndex,
+		                                    field : field,
+		                                    rowspan : rowspan
+		                                });
+		                            }
+		                            if (after && (after - before) != 1) {
+		                                megerIndex = after;
+		                            }
+		                        }
+		                    }
+		                });
+		            });
+		        });
+		    }
+		});
+	});
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/agency/exportExcel"});
+	}
+	function formateNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+
+
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+</script>
+</body>
+</html>

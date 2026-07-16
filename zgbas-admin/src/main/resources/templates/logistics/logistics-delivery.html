@@ -1,0 +1,83 @@
+<div class="deliveryDiv deliveryDivShowFlg" th:id="deliveryDivId+${randomNumber}">
+	<div class="mb6" style="margin-top: 10px;">
+		<input type="hidden" class="randomNumberInput" th:value="${randomNumber}"/>
+		<input type="hidden" name="logisticsId" th:id="logisticsId+${randomNumber}" th:value="${logisticsId}"/>
+		<input type="hidden" name="deliveryId" th:id="deliveryId+${randomNumber}" th:value="${deliveryEntity.id}"/>
+		<p class="yw-table-filter">
+			<label>提货数量(吨):</label>
+			<input name="logisticsNumber" class="easyui-textbox" th:id="logisticsNumber+${randomNumber}" type="text" th:value="${deliveryEntity.logisticsNumber}"/>
+		</p>
+
+		<p class="yw-table-filter">
+			<label >车数:</label>
+			<input name="trainNum" th:id="trainNum+${randomNumber}" type="text" th:value="${deliveryEntity.trainNum}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label><i>*</i>日期:</label>
+			<input name="logisticsDate" th:id="logisticsDate+${randomNumber}" type="text" th:value="${#dates.format(deliveryEntity.logisticsDate,'yyyy-MM-dd')}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label ><i>*</i>提货次数:</label>
+			<input name="logisticsCount" th:id="logisticsCount+${randomNumber}" class="logisticsCount" readonly type="text" th:value="${randomNumber}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label><i>*</i>手机号保护:</label>
+			<input name="phoneProtect" th:id="phoneProtect+${randomNumber}" type="text" th:value="${deliveryEntity.phoneProtect}"/>
+		</p>
+	</div>
+	<div class="mb6" style="margin-top: 10px;">
+		<p class="yw-table-filter">
+			<label>运费总金额</label>
+			<input name="transportAmount" th:id="transportAmount+${randomNumber}" type="text" th:value="${deliveryEntity.transportAmount}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>装卸费总金额:</label>
+			<input name="stevedorage" th:id="stevedorage+${randomNumber}" type="text" th:value="${deliveryEntity.stevedorage}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>其他费用总金额:</label>
+			<input name="otherFee" th:id="otherFee+${randomNumber}" type="text" th:value="${deliveryEntity.otherFee}"/>
+		</p>
+		<p class="yw-table-filter w2">
+			<label><i>*</i>承运商</label>
+			<input name="carrier" th:id="carrier+${randomNumber}"  type="hidden" th:value="${deliveryEntity.carrier}"/>
+			<input name="carrierId" th:id="carrierId+${randomNumber}"  type="text" th:value="${deliveryEntity.carrierId}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label><i>*</i>实际提货时间:</label>
+			<input name="realDeliveryDate" th:id="realDeliveryDate+${randomNumber}" type="text" th:value="${#dates.format(deliveryEntity.realDeliveryDate,'yyyy-MM-dd')}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label><i>*</i>实际到货时间:</label>
+			<input name="realArrivalDate" th:id="realArrivalDate+${randomNumber}" type="text" th:value="${#dates.format(deliveryEntity.realArrivalDate,'yyyy-MM-dd')}"/>
+		</p>
+	</div>
+	<div class="mb6" style="margin-top: 10px;">
+		
+		<p class="yw-table-filter">
+			<label><i>*</i>联系人:</label>
+			<input name="masterPorter" th:id="masterPorter+${randomNumber}" type="text" th:value="${deliveryEntity.masterPorter}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label><i>*</i>联系电话:</label>
+			<input name="masterPhone" th:id="masterPhone+${randomNumber}" type="text" th:value="${deliveryEntity.masterPhone}"/>
+		</p>
+		<p class="yw-table-filter w2">
+			<label>提货单（配送单）备注:</label>
+			<input name="remark" th:id="remark+${randomNumber}" type="text" th:value="${deliveryEntity.remark}"/>
+		</p>
+		<p class="yw-table-filter w2">
+			<label>送货通知单备注:</label>
+			<input name="deliveryRemark" th:id="deliveryRemark+${randomNumber}" type="text" th:value="${deliveryEntity.deliveryRemark}"/>
+		</p>
+	</div>
+	<div title="司机信息" id="">
+		<div class="mt20 yw-menu-section" style="height:200px;width: 60%">
+			<table th:id="relaTable+${randomNumber}" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id" class="easyui-datagrid" style="height:200px;"
+				   data-options="fitColumns:true">
+			</table>
+		</div>
+	</div>
+
+</div>
+	

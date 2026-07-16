@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>预决算审批单</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false">
+	<form id="searchForm" class="form-search" method="post">
+		<p>
+			<label>类别:</label>
+			<input  class="control" type="text" id="srh_contractType" name="search_EQS_contractType"/>
+			<label>合同编号:</label>
+			<input  class="control" type="text" name="search_EQS_contractNo"/>
+			<label>商品名称:</label>
+			<input  class="control" type="text" name="search_LIKES_productName"/>
+		</p>
+		<p>
+			<label>企业名称:</label>
+			<input  class="control" type="text" name="search_LIKES_oppCompanyName"/>
+			<label>合同时间:</label>
+			<input  class="control" id="srh_contractTime_from" name="search_GTED_contractTime" type="text" value="" />
+			<label>到:</label>
+			<input  class="control" id="srh_contractTime_to" name="search_LTD_contractTime" type="text" value="" />
+			<label>
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" iconCls="icon-filter" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			</label>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w" class="easyui-window" style="width:800px;height:590px;"></div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var companyJson =eval('[(${companyJson})]');
+	var contractTypeJson =eval('[(${contractTypeJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	$(function(){
+		$("#srh_contractType").combobox({
+			data:contractTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			width:128,
+			editable:true
+		});
+		
+		$('#srh_contractTime_from,#srh_contractTime_to').datebox({
+		    width:128,
+			height:27
+		});
+		
+		var toolbar =[{
+			text:'编辑',
+			iconCls:'icon-save',
+			handler:function(){
+				var row = $('#tt').datagrid('getSelected');  
+				editrow(row.id);
+			}
+		},'-'];
+		
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/bas/contract/list",
+			columns:[ [
+				{field:'contractType',title:'类型', width:60,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractTypeJson,"dictCd",value,"dictName");
+				}},
+				{field:'status',title:'状态', width:60,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+				}},
+				{field:'linkContractId',title:'关联合同', width:80},
+				{field:'businessNo',title:'业务编号', width:80},
+				{field:'contractNo',title:'合同编号', width:80},
+				{field:'contractTime',title:'合同时间', width:100},
+				{field:'oppCompanyName',title:'企业名称', width:70},
+				{field:'productName',title:'商品名称', width:100},
+				{field:'dealPrice',title:'单价', width:70, align:'right'},
+				{field:'dealNumber',title:'数量', width:70, align:'right'},
+				{field:'numberUnit',title:'单位', width:70},
+				{field:'dealAmount',title:'合同总价', width:70, align:'right'},
+				{field:'taxAmount',title:'进项税', width:70, align:'right'},
+				{field:'dealAmountNotax',title:'不含税价', width:70, align:'right'},
+				{field:'deliveryDateFrom',title:'交货期开始', width:100},
+				{field:'deliveryDateTo',title:'交货期结束', width:100},
+				{field:'warehouse',title:'仓库', width:70},
+				{field:'updatedDate',title:'更新时间',width:130}
+			]],
+			toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+		
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		
+	});
+	function editrow(id){
+		var url=_ctx+"/bas/contract/detail/"+id;
+		var title="合同详情";
+		var iconCls ="icon-edit";
+		if (id ==0){
+			title="新增合同";
+			iconCls ="icon-add";
+		}
+		$('#w').window({href:url,title:title,iconCls:iconCls});
+		$('#w').window("open");
+	}
+	
+</script>
+</body>
+</html>

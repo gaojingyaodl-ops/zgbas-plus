@@ -1,0 +1,369 @@
+<!--保理预算保证金付款-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+</head>
+<div class="easyui-layout" fit="true">
+    <div id="inputForm" method="post" style="margin-bottom:20px">
+        <input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+        <input type="hidden" name="contractId" id="contractId" th:value="${entity.contractId}" />
+        <input name="businessNo" id="businessNo"  type="hidden" th:value="${entity.businessNo}" />
+        <input type="hidden" name="status" id="entityStatus" th:value="${entity.status}" />
+        <input type="hidden" name="bondAmount" id="bondAmount" th:value="${contract?.bondAmount}" />
+        <input type="hidden" name="canApproveEdit" id="canApproveEdit" th:value="${psv.canApproveEdit}" />
+        <input type="hidden" id="hashEdit" th:value="${psv.hasEdit}"/>
+        <input type="hidden"  id="contractApproveId" />
+        <input type="hidden"  id="contractMatchCreditFlg" />
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>付款编号:</label>
+                <input name="applyNo" class="chooseBtnStyle" id="applyNo" readonly type="text" th:value="${entity.applyNo}"></input>
+            </p>
+            <p class="yw-table-filter">
+                <label>合同编号</label>
+                <input id="contractNo" name="contractNo" class="chooseBtnStyle" readonly type="text" th:value="${entity.contractNo}" ></input>
+                <!-- <input type="button" value="选择" onclick="openChoose();" class="chooseBtn"/> -->
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>业务类型</label>
+                <input id="business" class="chooseBtnStyle" readonly type="text" th:value="${business}" ></input>
+            </p>
+            <p class="yw-table-filter">
+                <label>保证金金额(元):</label>
+                <input name="totalAmount" id="totalAmount" readonly type="text"  th:value="${entity.factorAmount}"></input>
+            </p>
+<!--            <p class="yw-table-filter">-->
+<!--                <label>已付金额(元):</label>-->
+<!--                <input name="payedAmount" id="payedAmount" readonly type="text" th:value="${entity.payedAmount}"></input>-->
+<!--            </p>-->
+
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>我方:</label>
+                <input name="ourCompanyName" id="ourCompanyName" type="text" required="required" th:value="${entity.ourCompanyName}"></input>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>收款方:</label>
+                <input type="text" name="companyName" readonly="readonly" th:value="${entity.companyName}"></input>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label  class="control-label">开户行:</label>
+                <input name="bankName" type="text" th:value="${entity.bankName}" readonly></input>
+            </p>
+            <p class="yw-table-filter w2">
+                <label class="control-label">账号:</label>
+                <input name="bankAccount" type="text" th:value="${entity.bankAccount}" readonly></input>
+            </p>
+        </div>
+        <!-- <hr class="editor_hr"></hr> -->
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label><i>*</i>付款类型:</label>
+                <input name="payType" id="payType" type="text" th:value="${entity.payType}"></input>
+            </p>
+            <p class="yw-table-filter">
+                <label><i>*</i>付款金额(元):</label>
+                <input name="payAmount" id="payAmount" onkeyup="value=value.replace(/^(\d*\.?\d{0,2}).*/,'$1')" type="text" th:value="${entity.payAmount}"></input>
+            </p>
+            <p class="yw-table-filter">
+                <label><i>*</i>支付方式:</label>
+                <input name="payMode" id="payMode" type="text" th:value="${entity.payMode}"></input>
+            </p>
+            <p class="yw-table-filter">
+                <label><i>*</i>付款日期:</label>
+                <input name="payDate" id="payDate" class="easyui-datebox" required="required"  th:value="${#dates.format(entity.payDate,'yyyy-MM-dd')}"></input>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>票证期限:</label>
+                <input name="ticketDueTime" id="ticketDueTime" class="easyui-datebox" th:value="${#dates.format(entity.ticketDueTime,'yyyy-MM-dd')}"></input>
+            </p>
+            <p class="yw-table-filter">
+                <label>到期时间:</label>
+                <input name="dueTime" id="dueTime" class="easyui-datebox"   th:value="${#dates.format(entity.dueTime,'yyyy-MM-dd')}"></input>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>备注:</label>
+                <input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+            </p>
+        </div>
+        <div class="mb6">
+            <div class="yw-table-filter w2">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+                <input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+                <p class="controls showImg fileId" id="span_fileId"></p>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640">
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+    var isExists=false;
+    var imgShowUrl =_filePath+'/view/small/';
+    var companyJson =eval('[(${companyJson})]');
+    var approveStatusJson =eval('[(${approveStatusJson})]');
+    var payModeJson =eval('[(${payModeJson})]');
+    var applyPayTypeJson = eval('[(${applyPayTypeJson})]');
+    var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+    var bankInfoJson=eval('[(${bankInfoJson})]');
+    // 附件类型
+    var fileTypeJson=eval('[(${fileTypeJson})]');
+    var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/pay/updateFileId',[[${param.hasEditFile}]]);
+    $(function(){
+        _beforSaveOper = true;
+        $('#w_contract_choose').window({
+            title: '请选择合同',
+            modal:true,
+            closed: true,
+            collapsible : false,
+            minimizable : false,
+            cache:false
+        });
+        $('.easyui-linkbutton').linkbutton();
+        var _curStatus = $("#entityStatus").val();
+        var _entityId = $("#entityId").val();
+        var _companyId;
+        if (_curStatus=='N' && _entityId=='0'){
+            // contract由父页面approve-detail提供
+            _companyId = contract.companyId;
+        }else{
+            _companyId = $("#companyId").val();
+        }
+        if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+
+
+            $("#bankName").val(bankInfoJson[0].dictName);
+            $("#bankAccount").val(bankInfoJson[1].dictName);
+
+            $("#payMode").combobox({
+                data:payModeJson,
+                textField:'dictName',
+                valueField:'dictCd',
+                required: true,
+                panelHeight:"auto",
+                editable:false,
+                onSelect:function(record){
+                    var paymode = record.dictCd;
+                    if(paymode=="A"){
+                        $('#ticketDueTime,#dueTime').datebox({
+                            required: true
+                        });
+                    }else{
+                        $('#ticketDueTime,#dueTime').datebox({
+                            required: false
+                        });
+                    }
+                },
+                onHidePanel:function(){
+                    BasCombobox.onHidePanel(this);
+                }
+            });
+
+            $("#payType").combobox({
+                data:applyPayTypeJson,
+                textField:'dictName',
+                valueField:'dictCd',
+                required: true,
+                panelHeight:"auto",
+                editable:false,
+                onHidePanel:function(){
+                    BasCombobox.onHidePanel(this);
+                }
+            });
+
+            $("#payType").combobox('options').onSelect=function(record){
+                var cd = record.dictCd;
+                // curPayAmount(cd);
+            };
+
+            $('#payAmount,#totalAmount,#payedAmount').numberbox({
+                min:0,
+                precision:2,
+                required: true,
+                height:30
+            });
+
+            $('#ticketDueTime,#dueTime').datebox({
+                editable:false
+            });
+
+            //我方抬头
+            $('#ourCompanyName').combobox({
+                data:_ourCompanyJson,
+                valueField:'dictName',
+                textField:'dictName',
+                panelHeight:"auto",
+                editable:false,
+                hasDownArrow:false,
+                readonly:true,
+                onHidePanel:function(){
+                    BasCombobox.onHidePanel(this);
+                }
+            });
+            var _ourcompanyName = $('#ourCompanyName').val();
+            if(_ourcompanyName == ''){
+                $('#ourCompanyName').combobox('select', _ourCompanyJson[0].dictName);
+            }
+
+
+
+            // 附件类型列表
+            $("#fileTypeId").combobox({
+                data:fileTypeJson,
+                valueField:'fileTypeId',
+                textField:'fileTypeName',
+                panelHeight:'auto',
+                editable:true,
+                required:false,
+                limitToList: true,
+                onLoadSuccess:function(){
+                    var value = $(this).val();
+                    if (!value){
+                        $(this).combobox('setValue',fileTypeJson[0].fileTypeId);
+                    }
+                },
+            })
+            $("#fileTypeId").combobox('setValue',null);
+            applyLoadSucess();
+        }else if(_curStatus&&(_curStatus=='A'||_curStatus=='D')){
+            //转换付款类型
+            var _payType = $("#payType").val();
+            var ConvertPayType = Convert.findValueByKey(applyPayTypeJson,"dictCd",_payType,"dictName");
+            $("#payType").combobox({
+                data:ConvertPayType,
+                valueField:'paytypeId',
+                textField:'paytypeName',
+            });
+
+            // 附件类型
+            var _fileTypeId = $('#fileTypeId').val();
+            var fileType = Convert.findValueByKey(fileTypeJson,"fileTypeId",_fileTypeId,"fileTypeName");
+            $("#fileTypeId").val(fileType);
+
+            $("#payType").val(ConvertPayType);
+            //转换付款方式
+            var _payMode = $("#payMode").val();
+
+            var ConvertPayMode = Convert.findValueByKey(payModeJson,"dictCd",_payMode,"dictName");
+
+            $("#payMode").combobox({
+                data:ConvertPayType,
+                valueField:'dictCd',
+                textField:'dictName',
+            });
+
+
+
+            $("#inputForm").find("input").not("[type='button']").not("#payDate").attr("readonly",true);
+            $('#payAmount').numberbox({
+                min:0,
+                precision:2,
+                required: true,
+                height:30
+            });
+            $(".chooseBtn").hide();
+        }
+        //加载附件列表
+        filePlugin.load($('#fileId').val(),'#span_fileId');
+        if ($('#btn_fileId').length>0){
+            fileUpload("btn_fileId", "fileId");
+        }
+        $("#payType").combobox({
+            data:applyPayTypeJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            required: true,
+            panelHeight:"auto",
+            editable:false,
+            onHidePanel:function(){
+                BasCombobox.onHidePanel(this);
+            }
+        });
+        $("#payMode").combobox({
+            data:payModeJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            required: true,
+            panelHeight:"auto",
+            editable:false,
+            onHidePanel:function(){
+                BasCombobox.onHidePanel(this);
+            }
+        });
+
+
+    });
+    function chooseCallback(contractRows){
+        var contract = contractRows[0];
+        byContract(contract);
+    }
+
+    function byContract(contract){
+        if (contract!=undefined){
+            $("#contractApproveId").val(contract.approveId);
+            $("#contractMatchCreditFlg").val(contract.matchCreditFlg);
+            $("#contractId").val(contract.id);//合同id
+            $("#contractNo").val(contract.contractNo);//合同编号
+            $("#businessNo").val(contract.businessNo);
+            // $("#totalAmount").numberbox('setValue',contract.factoringAmount);//合同总价
+            $("#payedAmount").numberbox('setValue',contract.dealedAmount);//已付金额
+            $("#payAmount").numberbox('setValue',$("#totalAmount").val());//金额
+            $("#payAmount").numberbox({max:contract.factoringAmount});// 最大可付款金额等于未支付金额
+            $("#companyName").val(contract.companyName);
+            $("#companyId").val(contract.companyId);
+            $("#bondAmount").val(contract.bondAmount);
+            $("#payMode").combobox('setValue',contract.payType);
+            $('#ourCompanyName').combobox('setValue',contract.ourCompanyName);
+            $("#payType").combobox('setValue','');
+            var  business="代采赊销";
+            $("#business").val(business);
+        }
+    }
+
+    function curPayAmount(cd){
+        var bondAmount = $("#bondAmount").val();
+        var totalAmount = $("#totalAmount").val();
+        var payedAmount = $("#payedAmount").val();
+        var _amount = 0;
+
+        if(totalAmount){
+            if("B"==cd){
+                if(Number(payedAmount) == 0){
+                    _amount = bondAmount;
+                }else{
+                    _amount = '0';
+                }
+            }else {
+                _amount = $("#unpayedAmount").val();
+            }
+        }
+        $("#payAmount").numberbox('setValue',Number(_amount));
+    }
+
+    function contractDetail() {
+        var contractNo = $("#contractNo").val();
+        var contractId = $("#contractId").val();
+        var title=contractNo;
+        $.post(_ctx + '/bs/matchDetail/content5/' + contractId, function (result) {
+            var title="代采赊销详情"+contractNo;
+            window.parent.addTab(title, _ctx + '/bs/matchDetail/content2/' + result.approveId);
+        });
+    }
+    //发起申请前操作
+    function beforSaveOper(){
+        return true;
+    }
+</script>

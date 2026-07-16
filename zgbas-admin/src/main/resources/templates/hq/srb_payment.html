@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>塑融宝付款管理</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+<!--        <input type="hidden" name="search_EQB_enableFlg" value="true">-->
+<!--        <input type="hidden" name="search_EQS_billType" value="T">-->
+        <div class="mb6">
+			<span class="yw-table-filter">
+				<label style="width: 60px;">合同编号:</label>
+				<input  class="control" type="text" name="search_LIKES_contractNo"/>
+			</span>
+<!--            <span class="yw-table-filter">-->
+<!--				<label style="width: 60px;">我方抬头:</label>-->
+<!--				<input  class="control" type="text" name="search_LIKES_ourCompanyName"/>-->
+<!--			</span>-->
+            <p class="yw-table-filter">
+                <label>付款日期:</label>
+                <input  id="srh_payDate_from" name="search_GTED_payDate" class="easyui-datebox"/>
+            </p>
+            <span style="margin-left: -15px;">
+							<label>~</label>
+						</span>
+            <p class="yw-table-filter">
+                <input  id="srh_payDate_to"  name="search_LTD_payDate" class="easyui-datebox" />
+            </p>
+            <span class="btn-group">
+				<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+
+<script type="text/javascript">
+
+    $(function(){
+        $('#tt').datagrid({
+            pagination:true,
+            pageSize:30,
+            rownumbers:true,
+            showFooter:true,
+            queryParams:Convert.getJson4Form('searchForm'),
+            pageList:[500,200,100,50,30,20],
+            url:_ctx+"/hq/srbPayment/findAllExternalPayLoading",
+            columns:[ [
+                {field:'contractNo',title:'合同编号',align:'left',width:100},
+                {field:'outOrderNo',title:'花旗订单编号',align:'left',width:100},
+                {field:'totalAmount', title:'订单合同总金额',align:'center',width:100},
+                {field:'dealedAmount',title:'已付款金额',align:'center',width:100},
+                {field:'payAmount',title:'本次付款金额',align:'center',width:100},
+                {field:'payDate',title:'付款日期',align:'center',width:100},
+                {field:'remark',title:'备注',align:'center',width:120},
+                // {field:'driverName',title:'司机姓名',align:'left',width:80},
+                // {field:'driverPhone',title:'司机手机号',align:'left',width:90},
+                // {field:'driverCardNo',title:'司机身份证',align:'left',width:150},
+                // {field:'createdDate',title:'创建日期',align:'center', width:130},
+                // {field:'loadingDate',title:'提货日期',align:'center', width:120},
+                // {field:'signDate',title:'签署日期',align:'center', width:120},
+                {
+                    field: 'option', title: '操作', align: 'left', width: 200, formatter: function (value, row, index) {
+                        var str = "";
+                        if (!row.status) {
+                            str += '<span onclick="paymentConfirm(' + row.id + ',' + row.outOrderNo + ')" class="contract-btn contract-btn-1"">确认收款</span>';
+                            if (row.fileId != "" && row.fileId != null) {
+                                str += '<span onclick="showFile(' + row.fileId + ')" class="contract-btn contract-btn-5">查看附件</span>';
+                            }
+                            return str;
+                        }
+                    }
+                },
+            ]],
+            onClickRow:function(index,row){
+                lastIndex = index;
+            },
+            onLoadSuccess:function(data){
+
+            }
+        });
+    });
+
+    //刷新状态
+    function refreshStatus(loadingId){
+        var url = _ctx+"/ctr/loading/refreshLoadingBillStatus/"+loadingId;
+        $.get(url,function(data) {
+            var rObj = eval(data);
+            if(rObj.success){
+                $.messager.show({
+                    title : 'Tip',
+                    msg : '刷新状态成功!',
+                    timeout : 2000,
+                    height:120,
+                    showType : 'show'
+                });
+                $('#tt').datagrid('reload');
+            }else{
+                $.messager.alert('error',rObj.failure,'warning');
+            }
+        });
+    }
+
+    function paymentConfirm(paymentId,outOrderNo){
+        $.messager.confirm('提示','确定要确认已收款么?',function(t){
+            if(t){
+                if(paymentId){
+                    $.post(_ctx + "/hq/srbPayment/paymentConfirm",
+                        {"paymentId":paymentId,"outOrderNo":outOrderNo}, function(result) {
+                            var rObj = eval(result);
+                            if (rObj.success) {
+                                $.messager.show({title:'Tip',msg:'确认成功',timeout:2000,showType:'show'});
+                                $('#tt').datagrid('reload');
+                            } else {
+                                $.messager.alert('error',rObj.failure,'warning');
+                            }
+                        }
+                    )
+                }
+            }
+        });
+    }
+    
+    // 查看签署链接
+    function showShortUrl(shortUrl) {
+        $.messager.alert({
+            title: '签署短链接',
+            msg: shortUrl,
+            type: 'info',
+            width:388
+        });
+    }
+
+    // 导出功能
+    function exportExcel(loadingId) {
+        $('#searchForm').form('submit', {url:_ctx+"/ctr/loading/exportExcel?loadingId="+loadingId});
+    }
+
+    // 生成电子签合同
+    function axqLoadingBill(loadingId) {
+        var url = _ctx+"/ctr/loading/axqLoadingBill/"+loadingId;
+        $.get(url,function(data) {
+            var rObj = eval(data);
+            if(rObj.success){
+                $.messager.show({
+                    title : '提示',
+                    msg : '刷新状态成功!',
+                    timeout : 2000,
+                    height:120,
+                    showType : 'show'
+                });
+                $('#tt').datagrid('reload');
+            }else{
+                $.messager.alert({
+                    title: '提示',
+                    msg: rObj.failure,
+                    type: 'warning',
+                    width:388
+                });
+            }
+        });
+    }
+
+    //查看附件
+    function showFile(contractId) {
+        $.post(_ctx + "/ctr/loading/getByFileId?fileId=" + contractId, function (result) {
+            window.open(result, "_blank")
+        });
+    }
+</script>
+</body>
+</html>

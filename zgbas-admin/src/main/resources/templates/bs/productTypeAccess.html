@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>商品权限</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+
+<body class="easyui-layout">
+	<div region="center" border="false" class="panel_padding pr18">
+		<ul id="tree"></ul>
+	</div>
+	
+	<div region="south" border="false" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+			<a href="#" class="easyui-linkbutton btn64 btn-info-empty" onclick="doSave();">保存</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64" th:onclick="'doRefresh();'">刷新</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 btn-info-empty" onclick="doAllRefresh();">清除缓存</a>
+			<a href="#" class="easyui-linkbutton btn64 btn-info-empty" onclick="push2Hq();">推送至花旗</a>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	var productTypeJson=eval('[(${productTypeJson})]');
+	$(function(){
+		$("#tree").tree({
+			data:productTypeJson,
+			checkbox:true,
+			onSelect:function(node){
+				
+			},
+			onLoadSuccess:function(node,data){
+				
+			}
+		});
+	});
+	
+	function doSave(){
+		var productCds = Convert.getCheckedIds('tree','');
+		productCds =productCds.replace(/,/gi,'|');
+		console.log(productCds);
+		$.post(_ctx+"/bs/productTypeAccess/save",{productCds:productCds} , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				 $.messager.show({
+        			 height:150,
+                     title:'提示',
+                     msg:'保存成功',
+                     timeout:2000,
+                     showType:'show'
+                 });
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+	function push2Hq(){
+		var productCds = Convert.getCheckedIds('tree','');
+		productCds =productCds.replace(/,/gi,'|');
+		console.log(productCds);
+		$.post(_ctx+"/bs/productTypeAccess/push2Hq",{productCds:productCds} , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				 $.messager.show({
+        			 height:150,
+                     title:'提示',
+                     msg:'推送成功',
+                     timeout:2000,
+                     showType:'show'
+                 });
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+	function doRefresh(){
+		parent.refreshCurrentTab();
+	}
+	function doAllRefresh(){
+		$.get(_ctx+"/bs/productTypeAccess/reFresh",function (result) {
+			debugger
+			var rObj = eval(result);
+			if(rObj.success){
+				$.messager.show({
+					height:150,
+					title:'提示',
+					msg:'刷新成功',
+					timeout:2000,
+					showType:'show'
+				});
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+</script>
+</body>
+</html>

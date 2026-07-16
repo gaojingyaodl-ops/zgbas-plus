@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>库存查询</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 105px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">库存类型:</label>
+				<input   type="text" id="srh_inventoryType" name="search_inventoryType"/>
+			</span>
+			<span class="input-colspan">
+				<label>企业名称:</label>
+				<input   type="text" name="search_LIKES_oppCompanyName"/>
+			</span>
+			<span class="input-colspan">
+				<label>商品名称:</label>
+				<input  type="text" name="search_LIKES_productName"/>
+			</span>						
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">合同编号:</label>
+				<input  type="text" name="search_EQS_contractNo"/>
+			</span>
+			<span class="input-colspan">
+					<label>合同日期:</label>
+					<input id="srh_contractTime_from" name="search_EQD_contractTime" class="easyui-datebox"/>				
+			</span>	
+			<span class="input-colspan">
+				<label>业务员:</label>
+				<input  name="search_LIKES_matchUserName" type="text"/>
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w" class="easyui-window" style="width:800px;height:590px;"></div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var companyJson =eval('[(${companyJson})]');
+	var inventoryTypeJson =eval('[(${inventoryTypeJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	$(function(){
+		$("#srh_inventoryType").combobox({
+			data:inventoryTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:true
+		});
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/inventory/findInventoryList",
+			columns:[ [
+				{field:'contractType',title:'库存类型', width:70,formatter:function(value,row,index){
+					var text ='未销售';
+					
+					if (row.remainNumber==0){
+						text ='已销售';
+					}
+					return text;
+				}},
+				{field:'contractStatus', title: '合同状态', width: 80,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+				}},
+				/* {field:'businessNo', title:'业务编号', width:128}, */
+				{field:'contractNo',title:'合同编号', width:120},
+				{field:'contractTime',title:'合同日期', width:85},
+				{field:'oppCompanyName',title:'企业名称', width:140},
+				{field:'productName',title:'商品名称', width:80},
+				{field:'dealPrice',title:'单价', width:60},
+				{field:'dealNumber',title:'数量', width:50},
+				{field:'dealAmount',title:'合同总价', width:70},
+				{field:'matchUserName',title:'业务员',width:120}
+			]]
+			//toolbar:toolbar,
+			/* onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			} */
+		});
+		
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		
+	});
+	function editrow(id){
+		var url=_ctx+"/bas/contract/detail/"+id;
+		var title="合同详情";
+		var iconCls ="icon-edit";
+		if (id ==0){
+			title="新增合同";
+			iconCls ="icon-add";
+		}
+		var headerCls = 'myPanelHead';
+		$('#w').window({href:url,title:title,headerCls:headerCls});
+		$('#w').window("open");
+	}
+	
+</script>
+</body>
+</html>

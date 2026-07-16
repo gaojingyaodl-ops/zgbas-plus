@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>库存盘点</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post" >
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>调整单号:</label>
+				<input type="text" name="search_LIKES_businessNo"/>
+			</p>
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','stockAdjust');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		  <a  href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="adjustDetail(0)">盘点</a>
+	</div>		
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="stockAdjust" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+</div>
+<div id="w_stock_adjust" class="easyui-window" title="库存盘点" data-options="width:900,height:540"></div>
+</body> 
+<script type="text/javascript">
+
+var _adjustStatus = eval('[(${adjustStatusJson})]');
+$(function(){
+	
+	$('#stockAdjust').datagrid({
+		pagination:true,
+		pageSize:20,
+		rownumbers:true,
+		pageList:[50,40,30,20,10],
+		url:_ctx+"/stock/adjust/list",
+		columns:[ [
+			{field:'businessNo',title:'调整单号',align:'center', width:150},
+			{field:'adjustDate',title:'调整日期',align:'center', width:150},
+			{field:'createUserName',title:'创建人',align:'center', width:150},
+			{field:'adjustStatus',title:'调整状态',align:'center', width:100,formatter:function(value,row,index){
+				var status = Convert.findValueByKey(_adjustStatus,"dictCd",value,"dictName");
+				return status;
+			}},
+			{field:'option',title:'操作', width:50,align:'center',formatter:function(value, row, index){
+				var str = '';
+				if(row.adjustStatus == 'N'){
+					var str = '<img onclick="removeAdjust(\''+row.id+'\',event)" style="cursor:pointer;width:16px;hight:18px" src="/static/images/icon_delete.png"/>';  
+				}
+		        return str; 
+			}}
+		]],
+		onDblClickRow:function(index,row){
+			adjustDetail(row.id);
+		}
+		
+	});
+	
+	$('#w_stock_adjust').window({
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		maximizable : false,
+		cache:false,
+		title:"库存盘点"
+	});
+	
+});
+
+function adjustDetail(id){
+	var url=_ctx+"/stock/adjust/detail/"+id;
+	$('#w_stock_adjust').window({href:url});
+	$('#w_stock_adjust').window("open");
+}
+
+function removeAdjust(id){
+	var row = $('#stockAdjust').datagrid('selectRecord',id);
+	index = $('#stockAdjust').datagrid('getRowIndex', row);
+	$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+		if(t){
+			$.post(_ctx+"/stock/adjust/delete/"+id,function(result) {
+				var rObj = eval(result);
+				if(rObj.success){
+					$('#stockAdjust').datagrid("reload");
+				}else{
+					$.messager.alert('error',rObj.failure,'warning');
+				}
+			});
+			/* $('#stockAdjust').datagrid('deleteRow', index);
+			var nextSelect=index>0?index-1:0;
+			$('#stockAdjust').datagrid('selectRow', nextSelect); */
+		}
+	});
+}
+</script>

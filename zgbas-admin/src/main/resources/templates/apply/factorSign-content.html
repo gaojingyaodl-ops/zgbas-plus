@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<div region="center" border="false">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label>合同编号</label>
+					<input name="contractNo" readonly type="text" th:value="${entity.contractNo}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>货名</label>
+					<input name="productNames" readonly type="text" th:value="${entity.productNames}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>合同日期</label>
+					<input name="contractTime" readonly type="text" th:value="${#dates.format(entity.contractTime,'yyyy-MM-dd')}"/>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter w2">
+					<label>客户</label>
+					<input name="companyName" readonly type="text" th:value="${entity.companyName}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>数量（吨）</label>
+					<input name="dealNumber" readonly type="text" th:value="${entity.dealNumber}"/>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter w2">
+					<label>我方</label>
+					<input name="ourCompanyName" readonly type="text" th:value="${entity.ourCompanyName}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>销售单价（元）</label>
+					<input name="dealPrice" readonly type="text" th:value="${#numbers.formatDecimal(entity.dealPrice,1,'COMMA',2,'POINT')}"/>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label>约定付全款日期</label>
+					<input name="payFullDate" readonly type="text" th:value="${#dates.format(entity.payFullDate,'yyyy-MM-dd')}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>交货日期</label>
+					<input name="deliveryDate" readonly type="text" th:value="${#dates.format(entity.deliveryDate,'yyyy-MM-dd')}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>销售合同金额（元）</label>
+					<input name="totalAmount" readonly type="text" th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}"/>
+				</p>
+			</div>
+			<div class="mb6">
+				<div class="editForm">
+					<p style="width:240px">
+							<span class="upload-btn" id="btn_fileId">
+								 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+							</span>
+						<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+					</p>
+					<p class="controls showImg fileId" id="span_fileId"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script th:src="@{/static/ruoyi/js/common.js?v=4.7.2}"></script>
+<script type="text/javascript">
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/sealUsage/updateFileId',[[${param.hasEditFile}]]);
+	var _curStatus = '[[${status}]]';
+	var canApproveEdit = '[[${psv.canApproveEdit}]]' === 'true';
+	var hasApprove =  '[[${psv.hasApprove}]]' === 'true';
+	$(function(){
+		$('.easyui-linkbutton').linkbutton();
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+
+		// 状态不是完成 且 是当前审批人时 文件可以上传
+		if (("D" != _curStatus && hasApprove) || _curStatus == "N") {
+			if ($('#btn_fileId').length>0){
+				fileUpload("btn_fileId", "fileId");
+			}
+		}
+	});
+</script>

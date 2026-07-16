@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>提货单管理</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input type="hidden" name="search_EQB_enableFlg" value="true">
+		<input type="hidden" name="search_EQS_billType" value="T">
+		<div class="mb6">
+			<span class="yw-table-filter">
+				<label style="width: 60px;">合同编号:</label>
+				<input  class="control" type="text" name="search_LIKES_contractNo"/>
+			</span>
+			<span class="yw-table-filter">
+				<label style="width: 60px;">我方抬头:</label>
+				<input  class="control" type="text" name="search_LIKES_ourCompanyName"/>
+			</span>
+			<p class="yw-table-filter">
+				<label>签署日期:</label>
+				<input  id="srh_signDate_from" name="search_GTED_signDate" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;">
+							<label>~</label>
+						</span>
+			<p class="yw-table-filter">
+				<input  id="srh_signDate_to"  name="search_LTD_signDate" class="easyui-datebox" />
+			</p>
+			<span class="btn-group">
+				<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" class="easyui-linkbutton btn-empty btn64" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</div>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		<a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="createContractLoading()">新增</a>
+	</div>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w_loading"  title="生成提货单" data-options="width:1045,height:420"></div>
+<script type="text/javascript">
+
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/ctr/loading/findAllContractLoading",
+			columns:[ [
+				{field:'companyName',title:'客户名称',align:'left',width:250},
+				{field:'ourCompanyName', title:'我方抬头',align:'left',width:250},
+				{field:'contractNo',title:'合同编号',align:'left',width:130},
+				{field:'productName',title:'货名',align:'left',width:65},
+				{field:'dealNumber',title:'数量',align:'right',width:65},
+				{field:'plateNumber',title:'提货车号',align:'left',width:100},
+				{field:'driverName',title:'司机姓名',align:'left',width:80},
+				// {field:'driverPhone',title:'司机手机号',align:'left',width:90},
+				{field:'driverCardNo',title:'司机身份证',align:'left',width:150},
+				{field:'createdDate',title:'创建日期',align:'center', width:130},
+				{field:'loadingDate',title:'提货日期',align:'center', width:110},
+				{field:'signDate',title:'签署日期',align:'center', width:120},
+				{
+					field: 'option', title: '操作', align: 'left', width: 310, formatter: function (value, row, index) {
+						var str = "";
+						if (row.id) {
+							if (row.shortUrl == "" || row.shortUrl == null){
+								str += '<span onclick="editData(' + row.id + ')" class="contract-btn contract-btn-1"">编辑</span>';
+								str += '<span onclick="axqLoadingBill(' + row.id + ')" class="contract-btn contract-btn-7"">生成电子签合同</span>';
+							}
+							if (row.shortUrl != "" && row.shortUrl != null && (row.fileId == "" || row.fileId == null)){
+								str += '<span onclick="showShortUrl(\''+row.shortUrl+'\',\''+row.ourCompanyName+'\')" class="contract-btn contract-btn-3"">查看链接</span>';
+								str += '<span onclick="refreshStatus(' + row.id + ')" class="contract-btn contract-btn-10"">刷新状态</span>';
+							}
+							if (row.fileId != "" && row.fileId != null) {
+								str += '<span onclick="showFile(' + row.fileId + ')" class="contract-btn contract-btn-5">查看附件</span>';
+							}
+							str += '<span onclick="exportExcel(' + row.id + ')" class="contract-btn contract-btn-1"">导出提单</span>';
+							str += '<span onclick="exportReceiptExcel(' + row.id + ')" class="contract-btn contract-btn-2"">导出签单</span>';
+							str += '<span onclick="copyBill(' + row.id + ')" class="contract-btn contract-btn-9">克隆提单</span>';
+							return str;
+						}
+					}
+				},
+			]],
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+
+			}
+		});
+
+		$('#w_loading').window({
+			title: '生成提货单',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+	});
+
+	//刷新状态
+	function refreshStatus(loadingId){
+		var url = _ctx+"/ctr/loading/refreshLoadingBillStatus/"+loadingId;
+		$.get(url,function(data) {
+			var rObj = eval(data);
+			if(rObj.success){
+				$.messager.show({
+					title : 'Tip',
+					msg : '刷新状态成功!',
+					timeout : 2000,
+					height:120,
+					showType : 'show'
+				});
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+
+	// 查看签署链接
+	function showShortUrl(shortUrl,ourCompanyName) {
+		$.messager.alert({
+			title: '签署短链接',
+			msg: ourCompanyName + "：" + shortUrl,
+			type: 'info',
+			width:388
+		});
+	}
+
+	// 导出功能
+	function exportExcel(loadingId) {
+		$('#searchForm').form('submit', {url:_ctx+"/ctr/loading/exportExcel?loadingId="+loadingId});
+	}
+
+	function exportReceiptExcel(loadingId) {
+		$('#searchForm').form('submit', {url:_ctx+"/ctr/loading/exportReceiptExcel?loadingId="+loadingId});
+	}
+
+	// 生成电子签合同
+	function axqLoadingBill(loadingId) {
+		var url = _ctx+"/ctr/loading/axqLoadingBill/"+loadingId;
+		$.get(url,function(data) {
+			var rObj = eval(data);
+			if(rObj.success){
+				$.messager.show({
+					title : '提示',
+					msg : '刷新状态成功!',
+					timeout : 2000,
+					height:120,
+					showType : 'show'
+				});
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert({
+					title: '提示',
+					msg: rObj.failure,
+					type: 'warning',
+					width:388
+				});
+			}
+		});
+	}
+
+	//查看附件
+	function showFile(contractId) {
+		$.post(_ctx + "/ctr/loading/getByFileId?fileId=" + contractId, function (result) {
+			window.open(result, "_blank")
+		});
+	}
+
+	// 发起提货单/配送单
+	function createContractLoading() {
+		var url = _ctx + "/ctr/contract/getContractLoading/0/B";
+		$('#w_loading').window({href: url});
+		$('#w_loading').window("open");
+	}
+
+	function editData(id){
+		var url = _ctx + "/ctr/contract/getContractLoading/"+id+"/edit";
+		$('#w_loading').window({href: url});
+		$('#w_loading').window("open");
+	}
+
+	// 克隆单据
+	function copyBill(id){
+		if (id){
+			var url = _ctx + "/ctr/contract/getContractLoading/"+id+"/copy";
+			$('#w_loading').window({href: url});
+			$('#w_loading').window("open");
+		}
+	}
+</script>
+</body>
+</html>

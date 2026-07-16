@@ -1,0 +1,339 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>财务合同明细</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input class="control" id="invoiceBillIds" type="hidden" name="invoiceBillIds"/>
+		<div class="mb6">
+			<p class="yw-table-filter mobile-display-none">
+				<label>合同编号</label>
+				<input class="control" id="contractNo" type="text" name="contractNo"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>供方</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>需方</label>
+				<input  class="control" id="companyName" type="text" name="companyName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>审批状态</label>
+				<input type="text" id="approveStatus" class="control text_padding" name="approveStatus"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>当前审批人</label>
+				<input type="text" id="currApproveUserName" class="control text_padding" name="currApproveUserId"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter mobile-display-none">
+				<label>签约日期:</label>
+				<input id="contractTimeBegin" name="contractTimeBegin" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+						<label>~</label>
+					</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input  id="contractTimeEnd"  name="contractTimeEnd" class="easyui-datebox" />
+			</p>
+			<p class="yw-table-filter">
+				<label>中游开票状态</label>
+				<input type="text" id="dcsxInvoiceStatus" class="control text_padding" name="dcsxInvoiceStatus"/>
+			</p>
+
+			<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none"  onclick="exportExcel()">导出</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn110 ml6 mobile-display-none"  onclick="exportContractPdf()">导出销售合同</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn110 ml6 mobile-display-none"  onclick="exportDcsxContractPdf()">导出中游合同</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn110 ml6 mobile-display-none"  onclick="exportTaxation()">导出税务</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var ourCompanyJson =eval('[(${ourCompanyJson})]');
+	var currApproveUserNameTreeJson = eval('[(${userNameTree})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	approveStatusJson = approveStatusJson.filter(function (a) {
+		return a.dictCd === 'A' || a.dictCd === 'D' ;
+	});
+
+
+	$(function(){
+		$("#dcsxInvoiceStatus").combobox({
+			data:[{id:'',text:'--全部--'},{id:'Y',text:'已开票'},{id:'N',text:'未开票'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+		});
+
+		$('#currApproveUserName').combotree({
+			data : currApproveUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#currApproveUserName').combotree('clear');
+				}
+			}
+		})
+		
+		$("#approveStatus").combobox({
+			data:approveStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable: false
+		});
+
+
+		//我方抬头
+		$('#ourCompanyName').combobox({
+			data:ourCompanyJson,
+			textField:'dictName',
+			valueField:'dictName',
+			panelWidth:'auto',
+			panelHeight:"auto"
+		});
+
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			singleSelect:false,
+			selectOnCheck:true,
+			checkOnSelect:false,
+			pageList:[500,200,100,50,30,20],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/rpt/invoiceBill/findRptInvoiceBillPage",
+			frozenColumns:[ [
+				{title: '全选', field: 'ck',checkbox : true, sortable: false},
+			] ],
+			columns:[ [
+				{field:'ourCompanyName',title:'供方', align:'left', width:190},
+				{field:'companyName', title: '需方',align:'left', width:190},
+				{field:'contractNo',title:'合同编号', align:'center', width:100},
+				{field:'contractTime',title:'签约日期',align:'center',width:80},
+				{field:'productName',title:'品种',align:'left',width:100},
+				{field:'brandNumber',title:'牌号',align:'left',width:100},
+				{field:'dealNumber',title:'数量(吨)',align:'right', width:80},
+				{field:'dealPrice',title:'单价(元)',align:'right', width:100,formatter:formatNum},
+				{field:'totalAmount',title:'合同总价(元)',align:'right', width:120,formatter:formatNum},
+				{field:'applyDate',title:'申请日期',align:'center',width:80},
+				{field:'invoiceDate',title:'开票日期',align:'center',width:80},
+				{field:'invoiceAmount',title:'开票金额',align:'center',width:80,formatter:formatNum},
+				{field:'remark',title:'备注',align:'center',width:80},
+				{field:'invoiceNo',title:'发票号码',align:'left',width:130},
+				{field:'address',title:'公司地址',align:'left',width:190},
+				{field:'companyPhone',title:'公司电话',align:'left',width:130},
+				{field:'taxNo',title:'税号',align:'left',width:150},
+				{field:'bankName',title:'开户银行',align:'left',width:190},
+				{field:'bankAccount',title:'银行账号',align:'left',width:150},
+				{field:'approveNo',title:'开票申请编号',align:'left',width:130},
+				{field:'approveStatus',title:'审批状态',align:'center',width:130,formatter:function(value,row,index){
+						var status = Convert.findValueByKey(approveStatusJson,"dictCd",value,"dictName");
+						var a = '';
+						if(value=="A"){
+							a="<span style='color:#ff8153'>"+status+"</span>";
+						}else if(value=="D"){
+							a = status;
+						}else if(value=="B"){
+							a="<span style='color:red'>"+status+"</span>";
+						}else if(value=="N"){
+							a="<span style='color:#4a9bff'>"+status+"</span>";
+						}else if(value=="C"){
+							a="<span style='color:#ccc'>"+status+"</span>";
+						}else if(value=="E"){
+							a="<span style='color:#b266ff'>"+status+"</span>";
+						}
+						if (row.enableFlg === 'false'){
+							a="<span style='color:#CCCCCC'>"+status+"</span>";
+						}
+						return a;
+					}},
+				{field:'currApproveUserName',title:'当前审批人',align:'left',width:100},
+				{field:'dcsxContractNo',title:'中游合同号',align:'left',width:100},
+				{field:'dcsxInvoiceStatus',title:'中游开票状态',align:'center',width:100},
+
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+
+
+	});
+	function exportExcel(){
+		var checkedItems = $('#tt').datagrid('getChecked');
+		var invoiceBillIds = [];
+		$.each(checkedItems, function(index, item){
+			invoiceBillIds.push(item.id);
+		});
+		var _invoiceBillIds = invoiceBillIds.join(",");
+		console.log(_invoiceBillIds)
+
+		if (_invoiceBillIds) {
+			// $('#invoiceBillIds').textbox('setValue',invoiceBillIds);
+			$('#invoiceBillIds').val(invoiceBillIds);
+			$('#searchForm').form('submit', {url:_ctx+"/rpt/invoiceBill/exportExcel"});
+			$('#invoiceBillIds').val(null);
+		} else {
+			$.messager.alert("提示","请勾选要导出的数据");
+		}
+	}
+	function exportContractPdf(){
+		$.modal.loading("正在发送请求中，请稍候...");
+		var checkedItems = $('#tt').datagrid('getChecked');
+		var invoiceBillIds = [];
+		$.each(checkedItems, function(index, item){
+			invoiceBillIds.push(item.id);
+		});
+		var _invoiceBillIds = invoiceBillIds.join(",");
+		console.log(_invoiceBillIds)
+
+		if (_invoiceBillIds) {
+			$('#invoiceBillIds').val(invoiceBillIds);
+			$('#searchForm').form('submit', {
+				url: _ctx + "/rpt/invoiceBill/exportContractPdf",
+				success: function(result) {
+					$.modal.closeLoading();
+					$.messager.alert('成功', '请求发送成功，请稍后在【待办事项】获取下载链接！', 'error');
+				},
+				error: function() {
+					// 隐藏等待提示
+					$.modal.closeLoading();
+					// 显示错误提示
+					$.messager.alert('错误', '请求发送失败，请重试！', 'error');
+				}
+			});
+			$('#invoiceBillIds').val(null);
+
+		} else {
+			$.modal.closeLoading();
+			$.messager.alert("错误","请勾选要导出的数据", 'error');
+		}
+	}
+
+	function exportDcsxContractPdf(){
+		$.modal.loading("正在发送请求中，请稍候...");
+		var checkedItems = $('#tt').datagrid('getChecked');
+		var invoiceBillIds = [];
+		$.each(checkedItems, function(index, item){
+			invoiceBillIds.push(item.id);
+		});
+		var _invoiceBillIds = invoiceBillIds.join(",");
+		console.log(_invoiceBillIds)
+
+		if (_invoiceBillIds) {
+			$('#invoiceBillIds').val(invoiceBillIds);
+			$('#searchForm').form('submit', {
+				url: _ctx + "/rpt/invoiceBill/exportDcsxContractPdf",
+				success: function(result) {
+					$.modal.closeLoading();
+					$.messager.alert('成功', '请求发送成功，请稍后在【待办事项】获取下载链接！', 'error');
+				},
+				error: function() {
+					// 隐藏等待提示
+					$.modal.closeLoading();
+					// 显示错误提示
+					$.messager.alert('错误', '请求发送失败，请重试！', 'error');
+				}
+			});
+			$('#invoiceBillIds').val(null);
+
+		} else {
+			$.modal.closeLoading();
+			$.messager.alert("错误","请勾选要导出的数据", 'error');
+		}
+	}
+
+	function approveDetail(row){
+		var  approveId=row.approveId;
+		var  matchCreditFlg=row.matchCreditFlg;
+		var title = "预算详情" + ':' +approveId;
+		if (matchCreditFlg== true) {
+			// 赊销
+			window.parent.addTab(title,_ctx+'/bs/matchDetail/content2/'+approveId);
+			// }
+		}else {
+			// 代采
+			window.parent.addTab(title,_ctx+'/bs/matchDetail/content/'+approveId);
+		}
+
+
+	}
+	function formatNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+	// 导出税务
+	function exportTaxation(){
+		var checkedItems = $('#tt').datagrid('getChecked');
+		if(checkedItems.length<=0){
+			$.messager.alert('错误', '请先选择需要导出税务的开票信息', 'error');
+			return;
+		}
+		$.modal.loading("正在发送请求中，请稍候...");
+		var invoiceBillIds = [];
+		$.each(checkedItems, function(index, item){
+			invoiceBillIds.push(item.id);
+		});
+		var _invoiceBillIds = invoiceBillIds.join(",");
+		if (_invoiceBillIds) {
+			$('#invoiceBillIds').val(invoiceBillIds);
+			$('#searchForm').form('submit', {
+				url: _ctx + "/rpt/invoiceBill/exportTaxation",
+				success: function(result) {
+					$.modal.closeLoading();
+				},
+				error: function() {
+					// 隐藏等待提示
+					$.modal.closeLoading();
+					// 显示错误提示
+					$.messager.alert('错误', '请求发送失败，请重试！', 'error');
+				}
+			});
+			$('#invoiceBillIds').val(null);
+			$.modal.closeLoading();
+		} else {
+			$.modal.closeLoading();
+			$.messager.alert("错误","请勾选要导出的数据", 'error');
+		}
+	}
+</script>
+</body>
+</html>

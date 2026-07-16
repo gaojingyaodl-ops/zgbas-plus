@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>车辆使用查询</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<form id="searchForm" class="form-search from-input-layout" method="post" >
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>车牌号:</label>
+				<input id="plateNumber" type="text" name="search_EQS_plateNumber"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>申请人:</label>
+				<input id="applyUserName" type="text" name="search_EQS_applyUserName"/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+
+<script type="text/javascript">
+	 var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	 var plateNumberJson = eval('[(${plateNumberJson})]');
+	 var vehicleLotionsJson = eval('[(${vehicleLocations})]')
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[30,40,50,100,200],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/apply/vehicleUse/findVehiclePage",
+			columns:[ [
+				{field:'applyDeptName',title:'部门名称', width:90,align:'left'},
+				{field:'applyUserName',title:'申请人', width:100,align:'center'},
+				{field:'destination',title:'目的地',width:120,align:'center'},
+				{field:'plateNumber',title:'车牌号',width:230,align:'center'},
+				{field:'applyDate',title:'申请时间', width:110,align:'center'},
+				{field:'locations',title:'所在地点', width:110,align:'center',formatter:function (value,row,index){
+						return Convert.findValueByKey(vehicleLotionsJson,"dictCd",value,"dictName")
+					}},
+				{field:'departDate',title:'出发时间', width:110,align:'center'},
+				{field:'ridingNumber',title:'乘车人数', width:80,align:'center'},
+				{field:'useReason',title:'用车是由', width:80,align:'center'},
+				{field:'startRevenue',title:'起始公里数', width:100,align:'center'},
+				{field:'stopRevenue',title:'终止公里数', width:100,align:'center'},
+				{field:'actualMileage',title: '实际里程数',width: 100,align: 'center'}
+			]],
+		});
+		//
+		/* 车牌号 */
+		$("#plateNumber").combobox({
+			data:plateNumberJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			panelWidth:'auto',
+			editable:false
+		});
+		/* 申请人 */
+		$('#applyUserName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#applyUserName').combotree('clear');
+				}else{
+
+					$('#applyUserName').combotree('setValue',node.text);
+				}
+			}
+		});
+
+	});
+	
+</script>
+</body>
+</html>

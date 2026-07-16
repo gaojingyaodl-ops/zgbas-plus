@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>采购合同库存日明细表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div" border="false"  style="height: 105px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 80px;">合同属性:</label>
+				<input type="text" id="contractAttr" name="contractAttr"/>
+			</span>
+			 <span class="input-colspan">
+				<label style="width: 80px;">事业部:</label>
+				<input  type="text" id="deptId" class="control text_padding" name="deptId"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 80px;">采购业务员:</label>
+				<input type="text" id="matchName" class="control text_padding" name="matchName"></input>
+			</span>
+			<span class="input-colspan">
+					<label style="width: 80px;">采购日期:</label>
+					<input name="searchTime" id="searchTime" class="easyui-datebox" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#searchForm').form('reset');">清空</a>
+				<!-- <a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcel()">导出</a> -->
+			</span>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;" >
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var deptJson =eval('[(${deptJson})]');
+	var contractAttrJson =eval('[(${contractAttrJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	$(function(){
+		$('#matchName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			height:30,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#matchName').combotree('clear');
+				}else{
+
+					$('#matchName').combotree('setValue',node.text);
+				}
+			}
+		});
+		$('#deptId').combobox({
+			data : deptJson,
+			textField:'deptName',
+			valueField:'deptId',
+			panelHeight:"auto",
+		});
+		$('#contractAttr').combobox({
+			data : contractAttrJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:20,
+			rownumbers:true,
+			showFooter :true,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/ctrDailyStock/findDailyStock",
+			columns:[ [
+				{field:'buyContractTime',title:'采购日期', width:130,align:'center'},
+				{field:'contractAttr',title:'合同属性',widht:120,align:'center',
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(contractAttrJson,"dictCd",value,"dictName");
+				}},
+				{field:'buyBusinessNo',title:'采购合同号', width:130,align:'center'},
+				{field:'productName',title:'货名',width:100,align:'center'},
+				{field:'buyNumber',title:'采购数量(吨)', width:100,align:'right'},
+				{field:'buyPrice',title:'采购单价(元)', width:100,align:'right'},
+				{field:'dealNumber',title:'销售数量(吨)',width:100,align:'right'},
+				{field:'sellBusinessNo',title:'销售合同号',width:130,align:'center'},
+				{field:'sellContractTime',title:'销售日期',width:130,align:'center'},
+				{field:'remainNumber',title:'剩余数量(吨)',width:100,align:'right'},
+				{field:'inWarehouseHours',title:'在库时长(时)',width:100,align:'right'},
+				{field:'matchName', title:'采购业务员', width:80,align:'center'},
+				{field:'team', title:'小组', width:80,align:'center'},
+				{field:'deptId', title:'事业部', width:80,align:'center',
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+				}}
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+			}
+		});
+
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:"",
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+	});
+	/* function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/statistics/exportExcel"});
+	} */
+</script>
+</body>
+</html>

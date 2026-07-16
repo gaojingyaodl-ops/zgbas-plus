@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>提成汇总表</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/ruoyi/css/ry-ui.css?v=4.7.3}" rel="stylesheet"/>
+</head>
+
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+
+
+        <div class="mb6">
+                <p class="yw-table-filter">
+                    <label style="width: 80px;">月份:</label>
+                    <input name="search_budgetSettlementId" id="createdDate" class="easyui-datebox" th:value="${createDate}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label style="width: 80px;">劳务关系:</label>
+                    <input name="search_LIKES_settleStatus" type="text" />
+                </p>
+                <p class="yw-table-filter" >
+                    <label style="width: 80px;">业务员:</label>
+                    <input id="matchUserId" name="search_EQS_matchUserId" type="text" value=""/>
+                </p>
+            <a href="#" class="easyui-linkbutton btn64 ml10" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+            <a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="exportExcel()">导出</a>
+            <a href="#"   class="easyui-linkbutton btn64 ml10" onclick="createSettleTotal()">生成汇总</a>
+
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:20px;padding-left:20px;">
+    <table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id">
+
+    </table>
+</div>
+</div>
+<script th:src="@{/static/ajax/libs/blockUI/jquery.blockUI.js}"></script>
+<script th:src="@{/static/ajax/libs/layer/layer.min.js}"></script>
+<script th:src="@{/static/ruoyi/js/ry-ui.js?v=4.7.2}"></script>
+<script type="text/javascript">
+    var userJson = eval('[(${userJson})]');
+    var matchUserNameTreeJson=eval('[(${matchUserNameTree})]');
+    $(function(){
+        $('#matchUserId').combotree({
+            data : matchUserNameTreeJson,
+            multiple : false,
+            editable : true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#matchUserId').combotree('clear');
+                }
+            }
+        })
+        //只显示年月
+        intiMonthBox('createdDate');
+
+        $('#tt').datagrid({
+            pagination:true,
+            pageSize:25,
+            rownumbers:true,
+            showFooter:true,
+            singleSelect:false,
+            selectOnCheck:true,
+            pageList:[100,50,45,40,35,30,25],
+            url:_ctx+"/budget/settlementTotal/findSettleTotalPage",
+            queryParams:Convert.getJson4Form('searchForm'),
+            frozenColumns: [
+                [
+                {field:'settleStatus',title:'劳务关系', width:120, align: "left"},
+                {field:'matchUserId',title:'业务员',align: "left", width:120,formatter:function (value,row,index) {
+                      return Convert.findValueByKey(userJson,"userId",value,"nickName");
+                 }  },
+
+            ]],
+            columns:[
+                [{title:'赊销', width:400,colspan: 4},
+                {title:'代采', width:400,colspan: 4},
+                {field:'totalAmount',title:'<span style="margin-right: 20px">合计</span>',align:"right", width:120,rowspan: 2,formatter:formateNumTon}],
+
+                [{field:'sellCommissionAmount1',title:'销售提成', align:"right", width:120,formatter:formateNumTon,rowspan: 1},
+                {field:'buyCommissionAmount1',title:'采购提成', align:"right", width:120,formatter:formateNumTon,rowspan: 1},
+                {field:'sellDirectorCommissionAmount1',title:'销售负责人提成',  align:"right", width:150,formatter:formateNumTon,rowspan: 1},
+                {field:'buyDirectorCommissionAmount1',title:'采购负责人提成',  align:"right", width:150,formatter:formateNumTon,rowspan: 1},
+                {field:'sellCommissionAmount2',title:'销售提成',align:"right", width:120,formatter:formateNumTon,rowspan: 1},
+                {field:'buyCommissionAmount2',title:'采购提成',align:"right",  width:120,formatter:formateNumTon,rowspan: 1},
+                {field:'sellDirectorCommissionAmount2',title:'销售负责人提成',  align:"right", width:150,formatter:formateNumTon,rowspan: 1},
+                {field:'buyDirectorCommissionAmount2',title:'采购负责人提成', align:"right", width:150,formatter:formateNumTon,rowspan: 1}]
+
+            ],
+
+        });
+
+    });
+
+    function createSettleTotal() {
+        let summaryDate = $("#createdDate").datebox("getValue");
+        $.messager.confirm({
+            width: 388,
+            height: 170,
+            title: '提示',
+            msg: '确定要进行生成汇总操作吗？',
+            ok: "确定",
+            cancel: "取消",
+            cls: 'c9',
+            border: 'thin',
+            fn: function (r) {
+                if (r) {
+                    $.modal.loading("正在努力生成汇总中，请稍候...");
+                    var url = _ctx + "/budget/settlementTotal/createSettleTotal?summaryDate=" + summaryDate;
+                    $.post(url, function (data) {
+                        var rObj = eval(data);
+                        if (rObj.success) {
+                            $.modal.closeLoading();
+                            $.messager.show({
+                                title: 'Tip',
+                                msg: '生成汇总成功!',
+                                timeout: 2000,
+                                height: 120,
+                                showType: 'show'
+                            });
+                            $('#tt').datagrid('reload');
+                        } else {
+                            $.messager.alert('提示', rObj.failure, 'warning');
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+
+
+    /*  导出Excel表格 */
+    function exportExcel(){
+        $('#searchForm').form('submit', {url:_ctx+"/budget/settlementTotal/exportExcel"});
+    }
+
+    //格式化时间
+    function forMateDate(date){
+        let newDate=/\d{4}-\d{1,2}-\d{1,2}/g.exec(date)
+        return newDate;
+    }
+    //保留两位小数
+    function formateNumTon(num, row, index) {
+        if (num) {
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return num.join(".");
+        } else {
+            return num;
+        }
+    }
+    //保留三位小数
+    function formateNumTom(num, row, index) {
+        if (num) {
+            num = parseFloat(num).toFixed(3).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return num.join(".");
+        } else {
+            return num;
+        }
+    }
+
+    // 只显示年月，不显示日
+    var intiMonthBox = function(id){
+        var db = $('#'+id);
+        db.datebox({
+            onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                span.trigger('click'); //触发click事件弹出月份层
+                if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                    debugger
+                    tds = p.find('div.calendar-menu-month-inner td');
+                    tds.click(function (e) {
+                        e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                        var year = /\d{4}/.exec(span.html())[0]//得到年份
+                            , month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+                        db.datebox('hidePanel')//隐藏日期对象
+                            .datebox('setValue', year + '-' + month); //设置日期的值
+                    });
+                }, 0);
+                yearIpt.unbind();//解绑年份输入框中任何事件
+            },
+            parser: function (s) {
+                if (!s) return new Date();
+                var arr = s.split('-');
+                return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+            },
+            formatter: function (d) {
+                var currentMonth = (d.getMonth()+1);
+                var currentMonthStr = currentMonth < 10 ? ('0' + currentMonth) : (currentMonth + '');
+                return d.getFullYear() + '-' + currentMonthStr;
+            }
+        });
+        var p = db.datebox('panel'), //日期选择对象
+            tds = false, //日期选择对象中月份
+            yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+            span = p.find('span.calendar-text'); //显示月份层的触发控件
+    }
+
+</script>
+</body>
+</html>

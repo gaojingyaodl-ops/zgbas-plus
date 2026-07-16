@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>收款信息</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 140px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>合同编号:</label>
+				<input type="text" name="search_EQS_contractNo"/>
+			</span>
+			<span class="input-colspan">
+				<label>商品名称:</label>
+				<input type="text" name="search_LIKES_productName"/>
+			</span>					
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>企业名称:</label>
+				<input type="text" name="search_LIKES_companyName"/>
+			</span>
+			<span class="input-colspan">
+					<label>收款日期:</label>
+					<input id="receiveDate"   name="search_GTED_receiveDate" class="easyui-datebox"  />					
+			</span>	
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</p>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 8px">
+		 <a  href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'"  onclick="insertReceive()">新增</a>
+		 <a  href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveEdit()" style="margin-left: 10px">保存</a>
+	</div>
+</div>
+
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w_receive_choose" title="合同详情" data-options="width:820,height:540">		
+</div>
+<script type="text/javascript">
+	var lastIndex;
+	var clickIndex;
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var receiveTypeJson = eval('[(${receiveTypeJson})]');
+	var receiveStatusJson = eval('[(${receiveStatusJson})]');
+	var _companyJson = eval('[(${companyJson})]');
+	$(function(){
+		$('#addBtn').linkbutton();
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/bas/receive/list",
+			columns:[ [
+				{field:'businessNo',title:'业务编号', width:125,editor:{type:'validatebox',options:{required:'true',validType:'length[1,50]'}}},
+				{field:'contractNo',title:'合同编号', width:125,editor:{type:'validatebox',options:{required:'true',validType:'length[1,50]'}}},
+				{field:'receiveDate',title:'应收日期', width:110,editor:{type:'datebox',options:{required:'true'}},
+					formatter:function(value,row,index){
+						if(row.status =="N" && value!=undefined && new Date().getTime() >= new Date(value).getTime()){
+							var a="<span style='color:red'>"+value+"</span>";
+							return a;
+						}else{
+							return value;
+						}
+				}},
+				{field:'companyName',title:'企业名称', width:110,editor:{type:'combobox',options:{required:'true',data:_companyJson,textField:'companyName',valueField:'id'}}},
+				{field:'productName',title:'商品名称', width:80,editor:{type:'text',options:{required:'true'}}},
+				{field:'receiveAmount',title:'收款金额', width:70,editor:{ type: 'numberbox', options: { required: true}}},
+				{field:'inInvoiceNo',title:'发票号码', width:80,editor:{type:'validatebox',options:{required:'true',validType:'length[1,50]'}}},
+				{field:'inInvoiceDate',title:'开票日期', width:110,editor:{type:'datebox',options:{required:'true'}}},
+				{field:'inBillNo',title:'记账凭证号', width:100,editor:{type:'validatebox',options:{required:'true',validType:'length[1,50]'}}},
+				{field:'status',title:'状态', width:70,
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(receiveStatusJson,"dictCd",value,"dictName");}
+				},
+				{field:'receiveType',title:'收款类型', width:70,
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(receiveTypeJson,"dictCd",value,"dictName");}
+				},
+				{field:'remark',title:'备注', width:70,editor:{type:'text'}},
+				{field:'option',title:'操作', width:70,align:'center',
+					formatter:function(value,row,index){
+						var control ="";
+						if(row.status =="N" && row.receiveAmount>0){
+							control +="<div class='btnSpan' onclick='receive(\""+row.id+"\")' class='l-btn'><span>收款</span></div>";
+						}else if(row.status == undefined){
+							control +='<img onclick="remove()" style="cursor:pointer;width:16px;hight:18px" src="/static/images/icon_delete.png"/>'; 
+						}
+						return control;
+				}}
+			]],
+			toolbar:'#toolbar',
+			onDblClickCell: function(index,field,value){
+				$(this).datagrid('beginEdit', index);
+			}
+
+		});
+		
+		$('#w_receive_choose').window({
+			title: '请选择合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:""
+		});
+
+	});
+	
+	function insertReceive(){
+		if(!lastIndex){
+			lastIndex =1;
+		}
+		$('#tt').datagrid('endEdit', lastIndex);
+		var field={};
+		$('#tt').datagrid('appendRow',field);
+		lastIndex = $('#tt').datagrid('getRows').length-1;
+		$('#tt').datagrid('selectRow', lastIndex);
+		$('#tt').datagrid('beginEdit', lastIndex);
+		Convert.focusEditor("tt",field,lastIndex);
+		//选择相应的收款信息
+		var ed=$("#tt").datagrid("getEditor",{index:lastIndex,field:'businessNo'});
+		ed.target.prop('readonly', true);
+		$(ed.target).bind("click",function(){
+			var tr = $(this).closest("tr.datagrid-row");
+			clickIndex=parseInt(tr.attr("datagrid-row-index"));
+			var url=_ctx+"/bas/receive/choose";
+			$('#w_receive_choose').attr('callbackExec', 'setContractVal');
+			$('#w_receive_choose').window({href:url});
+			$('#w_receive_choose').window("open");
+		});
+	}
+	
+	function setContractVal(val){
+		var businessNo=$("#tt").datagrid("getEditor",{index:clickIndex,field:'businessNo'});
+		$(businessNo.target).val(val[0].businessNo); 
+		var contractNo=$("#tt").datagrid("getEditor",{index:clickIndex,field:'contractNo'});
+		$(contractNo.target).val(val[0].contractNo); 
+		var companyName=$("#tt").datagrid("getEditor",{index:clickIndex,field:'companyName'});
+		$(companyName.target).combobox("setValue",val[0].companyName);
+		var productName=$("#tt").datagrid("getEditor",{index:clickIndex,field:'productName'});
+		$(productName.target).val(val[0].productName);
+		var inInvoiceNo=$("#tt").datagrid("getEditor",{index:clickIndex,field:'inInvoiceNo'});
+		$(inInvoiceNo.target).val(val[0].inInvoiceNo);
+		var inInvoiceDate=$("#tt").datagrid("getEditor",{index:clickIndex,field:'inInvoiceDate'});
+		$(inInvoiceDate.target).datebox("setValue",val[0].inInvoiceDate);
+		var inBillNo=$("#tt").datagrid("getEditor",{index:clickIndex,field:'inBillNo'});
+		$(inBillNo.target).val(val[0].inBillNo);
+	}
+	
+	function remove(){
+		var row = $('#tt').datagrid('getSelected');
+		var index = $('#tt').datagrid('getRowIndex', row);
+		$('#tt').datagrid('deleteRow',index);
+	}
+	
+	function saveEdit(){
+		endEdit();
+		var val=$("#tt").datagrid("getChanges");
+		for(i=0;i<val.length;i++){
+			var index=$('#tt').datagrid("getRowIndex",val[i]);
+			if(!$("#tt").datagrid("validateRow",index)){
+				$.messager.alert("提示","请填写完整!","error");
+				return ;
+			}
+		}
+		if($.isEmptyObject(val)){return false}
+		var param=JSON.stringify(val);
+		ajaxPost(param);
+	}
+	
+	function endEdit(){
+		var rows=$("#tt").datagrid('getRows');
+		for(var i=0;i<rows.length;i++){
+			//验证没通过 不关闭编辑器
+			if($("#tt").datagrid("validateRow",i)){							
+				$("#tt").datagrid("endEdit",i);	
+			}
+		}
+	}
+	
+	function ajaxPost(param){
+		$.post(_ctx+"/bas/receive/saveEdit",{param:param},function(data){
+			var rObj = eval(data);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				 $.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+	
+	//收款
+	function receive(id){
+		var url = _ctx+"/bas/receive/haveReceived/"+id;
+		$.post( url , function(data){
+			var rObj = eval(data);
+	        if(rObj.success){
+	        	$('#tt').datagrid('reload');
+	        	$.messager.alert({
+					width:388,
+					height:170,
+					title: '提示',
+					msg: '已收款成功！',
+					icon:'info',
+					ok: "确定",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+		               
+		            }
+		        });
+	        	
+	        	//$.messager.alert('消息','已收款成功！','info');
+	        }else{
+	        	$.messager.alert('error',rObj.failure,'warning');
+	        }
+	    });
+	}
+	
+	
+</script>
+</body>
+</html>

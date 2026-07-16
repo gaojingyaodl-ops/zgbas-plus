@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>业务限制解除申请</title>
+    <script th:src="@{/static/js/bootstrap.min.js?v=3.3.7}"></script>
+</head>
+
+<div class="easyui-layout" id="inputForm" border="false" fit="true">
+    <input type="hidden" name="id" id="entityId" th:value="${entity.id}"/>
+    <input type="hidden" id="entityStatus" th:value="${entity.status}"/>
+    <p class="form-section-self-title newItem"><span class="approve_text">一、客户基本情况</span><i></i></p>
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>客户名称:</label>
+            <input name="companyName" id="companyName" th:value="${entity.companyName}" type="text"></input>
+            <input name="companyId" id="companyId" th:value="${entity.companyId}" type="hidden"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>人保可用额度:</label>
+            <input name="piccAmount" id="piccAmount" readonly th:value="${entity.piccAmount}"
+                   type="text"></input>
+            <input name="piccRiskAmount" id="piccRiskAmount" th:value="${entity.piccRiskAmount}" type="hidden"></input>
+            <input name="piccTemporaryAmount" id="piccTemporaryAmount" th:value="${entity.piccTemporaryAmount}" type="hidden"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>中银可用额度:</label>
+            <input name="zhongYinAmount" id="zhongYinAmount" readonly th:value="${entity.zhongYinAmount}"
+                   type="text"></input>
+            <input name="zhongYinRiskAmount" id="zhongYinRiskAmount" th:value="${entity.zhongYinRiskAmount}" type="hidden"></input>
+            <input name="zhongYinTemporaryAmount" id="zhongYinTemporaryAmount" th:value="${entity.zhongYinTemporaryAmount}" type="hidden"></input>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>是否访厂:</label>
+            <input name="accessReportFlg" id="accessReportFlg" readonly th:value="${entity.accessReportFlg}"
+                   type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>是否签署实控人连带:</label>
+            <input name="actualGuaranteeFlg" id="actualGuaranteeFlg" readonly th:value="${entity.actualGuaranteeFlg}"
+                   type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>所属区域:</label>
+            <input name="ownRegion" id="ownRegion" th:value="${entity.ownRegion}" type="text"></input>
+        </p>
+    </div>
+    <p class="form-section-self-title newItem"><span class="approve_text">二、新单情况</span><i></i></p>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>新单金额:</label>
+            <input name="newCreditAmount" id="newCreditAmount" th:value="${entity.newCreditAmount}" type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>新单账期天数:</label>
+            <input name="newCreditDays" id="newCreditDays" th:value="${entity.newCreditDays}" type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>新单上游付款日期:</label>
+            <input name="newBuyPayDate" id="newBuyPayDate" th:value="${entity.newBuyPayDate}" type="text"></input>
+        </p>
+    </div>
+    <p class="form-section-self-title newItem"><span class="approve_text">三、不符合现有制度，需要报备的情况</span><i></i>
+    </p>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>客户是否存在逾期:</label>
+            <input name="overdueFlg" id="overdueFlg" readonly th:value="${entity.overdueFlg}" type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>逾期本金合计:</label>
+            <input name="overduePrincipal" id="overduePrincipal" readonly th:value="${entity.overduePrincipal}"
+                   type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>逾期单数:</label>
+            <input name="overdueCount" id="overdueCount" readonly th:value="${entity.overdueCount}" type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>预计逾期回款日:</label>
+            <input name="expectOverduePayDate" id="expectOverduePayDate" th:value="${entity.expectOverduePayDate}"
+                   type="text"></input>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>
+                <input name="relieveOverdue" id="relieveOverdue" th:value="${entity.relieveOverdue}" type="hidden"></input>
+                <input id="relieveOverdueCheckbox" type="checkbox" name="relieveOverdueCheckbox" disabled >  <span style="position:relative;top: 2px;">解除逾期订单限制</span>
+            </label>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>
+                <input name="relieveNotDeliver" id="relieveNotDeliver" th:value="${entity.relieveNotDeliver}" type="hidden"></input>
+                <input id="relieveNotDeliverCheckbox" type="checkbox" name="relieveNotDeliverCheckbox" disabled >  <span style="position:relative;top: 2px;">解除有超过3天未发货订单限制</span>
+            </label>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter w4">
+            <label>逾期原因:</label>
+            <input name="overdueReason" id="overdueReason" th:value="${entity.overdueReason}" type="text"></input>
+        </p>
+
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>新单是否超额:</label>
+            <input name="newExcessFlg" id="newExcessFlg" th:value="${entity.newExcessFlg}" type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <lable>授信类别</lable>
+            <input name="creditType" type="text" id="creditType"  th:value="${entity.creditType}"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>新单超额金额:</label>
+            <input name="newExcessAmount" id="newExcessAmount" th:value="${entity.newExcessAmount}" type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>新单超额比例:</label>
+            <input name="newExcessRate" id="newExcessRate" th:value="${entity.newExcessRate}" readonly type="text"></input>
+            <input name="excessRate" id="excessRate" th:value="${entity.excessRate}" type="hidden"></input>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>新单是否毛利率不达万七:</label>
+            <input name="newProfitRateLack" id="newProfitRateLack" th:value="${entity.newProfitRateLack}"
+                   type="text"></input>
+        </p>
+        <p class="yw-table-filter">
+            <label>本单实际毛利率:</label>
+            <input name="newRealProfitRate" id="newRealProfitRate" th:value="${entity.newRealProfitRate}"
+                   type="text"></input>
+        </p>
+    </div>
+
+    <p class="form-section-self-title newItem"><span class="approve_text">四、申请理由</span><i></i></p>
+
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label for="applyReason">简述理由:</label>
+            <textarea name="applyReason" id="applyReason" th:text="${entity.applyReason}"
+                      style="resize:none;vertical-align: middle;height:60px;width: 600px;"></textarea>
+        </p>
+    </div>
+
+    <div class="editForm">
+        <p style="width:240px">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+            <input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}"/>
+        </p>
+        <p class="controls showImg fileId" id="span_fileId"></p>
+    </div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js?v=1}" type="text/javascript"></script>
+<script type="text/javascript">
+    var filePlugin = new FilePlugin('#fileId', $('#entityId').val(), '/apply/matters/updateFileId', [[${param.hasEditFile}]]);
+    var _curStatus = '[[${status}]]';
+    var _mattersTypeTree = eval('[(${mattersTypeTree})]');
+    var _ownRegionType = eval('[(${ownRegionType})]');
+    var _fileShowUrl = '[[${fileShowUrl}]]';
+    var defaultFlg = eval('[(${defaultFlg})]');
+    var creditTypeJson = eval('[(${creditTypeJson})]');
+
+    $(function () {
+
+        //加载附件列表
+        $('.easyui-linkbutton').linkbutton();
+        filePlugin.load($('#fileId').val(), '#span_fileId');
+        if ($('#btn_fileId').length > 0) {
+            fileUpload("btn_fileId", "fileId");
+        }
+        var _curStatus = $("#entityStatus").val();
+
+        $("#applyReason").validatebox({
+            required: true,
+        })
+        $("#accessReportFlg").combobox({
+            data: defaultFlg,
+            textField: 'dictName',
+            valueField: 'dictCd',
+            panelHeight: "auto"
+        });
+        $("#actualGuaranteeFlg").combobox({
+            data: defaultFlg,
+            textField: 'dictName',
+            valueField: 'dictCd',
+            panelHeight: "auto"
+        });
+        $("#overdueFlg").combobox({
+            data: defaultFlg,
+            required: true,
+            textField: 'dictName',
+            valueField: 'dictCd',
+            panelHeight: "auto",
+            onSelect: function (data) {
+                if (data.dictCd === 'true') {
+                    $('#expectOverduePayDate').datebox({
+                        required: true,
+                        editable: false
+                    });
+                    $('#overdueReason').textbox({
+                        required: true
+                    });
+                } else {
+                    $('#expectOverduePayDate').datebox({
+                        required: false,
+                        editable: false
+                    });
+                    $('#overdueReason').textbox({
+                        required: false
+                    });
+                }
+            }
+        });
+        $('#newExcessRate').textbox({
+            required: false
+        });
+        
+        
+        
+        $('#newRealProfitRate').textbox({
+            required: false
+        });
+        $("#newProfitRateLack").combobox({
+            data: defaultFlg,
+            required: true,
+            textField: 'dictName',
+            valueField: 'dictCd',
+            panelHeight: "auto",
+            onSelect: function (data) {
+                if (data.dictCd === 'true') {
+                    $('#newRealProfitRate').textbox({
+                        required: true
+                    });
+                } else {
+                    $('#newRealProfitRate').textbox({
+                        required: false
+                    });
+                }
+            }
+        });
+        $('#piccAmount,#zhongYinAmount,#overduePrincipal').numberbox({
+            min: 0,
+            precision: 2,
+            parser: function (val) {
+                // 解析时去除千分位分隔符
+                if (val) {
+                    return parseFloat(String(val).replace(/,/g, ''));
+                } else {
+                    if (isNaN(val)) {
+                        return '';
+                    } else {
+                        return val;
+                    }
+                }
+            },
+            formatter: function (val) {
+                if (val || val === 0) {
+                    val = parseFloat(val).toFixed(2).toString().split(".");
+                    val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                    return val.join(".");
+                } else {
+                    if (isNaN(val)) {
+                        return ""
+                    } else {
+                        return val;
+                    }
+                }
+            }
+        });
+        
+
+        $('#newCreditDays').numberbox({
+            min: 0,
+            precision: 0,
+            required: true
+        });
+
+        $('#overdueCount').numberbox({
+            min: 0,
+            precision: 0
+        });
+
+        $('#newBuyPayDate').datebox({
+            required: true,
+            editable: false
+        });
+        $('#expectOverduePayDate').datebox({
+            required: false,
+            editable: false
+        });
+        $('#overdueReason').textbox({
+            required: false
+        });
+
+        $('#ownRegion').combobox({
+            data: _ownRegionType,
+            valueField: 'dictCd',
+            textField: 'dictName',
+            panelHeight: 'auto',
+            editable: false,
+            required: true
+        });
+
+        if (_curStatus == "A" || _curStatus == "D") {
+        }
+        if (_curStatus && (_curStatus == 'N' || _curStatus == 'B' || _curStatus == 'C')) {
+            
+            $('#newExcessAmount').numberbox({
+                min: 0,
+                precision: 2,
+                required: false,
+                onChange : function (value){
+                    let creditType = $('#creditType').val();
+                    if (creditType === '0') {
+                        let piccRiskAmount = $('#piccRiskAmount').val();
+                        if (Number(piccRiskAmount) > 0) {
+                            let excessRate = (Number(value) / Number(piccRiskAmount)).toFixed(4);
+                            $('#excessRate').val(excessRate);
+                            let newExcessRate = (Number(excessRate) * Number(100)).toFixed(2) + '%';
+                            $('#newExcessRate').textbox('setValue', newExcessRate);
+                        } else {
+                            $('#excessRate').val(1);
+                            $('#newExcessRate').textbox('setValue', '100%');
+                        }
+                    } else if (creditType === '1') {
+                        let zhongYinRiskAmount = $('#zhongYinRiskAmount').val();
+                        if (Number(zhongYinRiskAmount) > 0) {
+                            let excessRate = (Number(value) / Number(zhongYinRiskAmount)).toFixed(4);
+                            $('#excessRate').val(excessRate);
+                            let newExcessRate = (Number(excessRate) * Number(100)).toFixed(2) + '%';
+                            $('#newExcessRate').textbox('setValue', newExcessRate);
+                        } else {
+                            $('#excessRate').val(1);
+                            $('#newExcessRate').textbox('setValue', '100%');
+                        }
+                    }
+                },
+                parser: function (val) {
+                    // 解析时去除千分位分隔符
+                    if (val) {
+                        return parseFloat(String(val).replace(/,/g, ''));
+                    } else {
+                        if (isNaN(val)) {
+                            return '';
+                        } else {
+                            return val;
+                        }
+                    }
+                },
+                formatter: function (val) {
+                    if (val || val === 0) {
+                        val = parseFloat(val).toFixed(2).toString().split(".");
+                        val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                        return val.join(".");
+                    } else {
+                        if (isNaN(val)) {
+                            return ""
+                        } else {
+                            return val;
+                        }
+                    }
+                }
+            });
+            $("#newExcessFlg").combobox({
+                data: defaultFlg,
+                required: true,
+                textField: 'dictName',
+                valueField: 'dictCd',
+                panelHeight: "auto",
+                onSelect: function (data) {
+                    if (data.dictCd === 'true') {
+                        $('#newExcessRate').textbox({
+                            required: true
+                        });
+                        $('#newExcessAmount').numberbox({
+                            required: true
+                        });
+                        $('#creditType').combobox({
+                            required: true
+                        });
+                    } else {
+                        $('#newExcessRate').textbox({
+                            required: false
+                        });
+                        $('#newExcessAmount').numberbox({
+                            required: false
+                        });
+                        $('#creditType').combobox({
+                            required: false
+                        });
+                    }
+                }
+            });
+            // 授信类别
+            $("#creditType").combobox({
+                data:[{dictCd:'0',dictName:"人保"},{dictCd:'1',dictName:"大地"}],
+                textField:'dictName',
+                valueField:'dictCd',
+                panelHeight:"auto",
+                editable:false,
+                onSelect: function (node) {
+                    debugger
+                    var companyId = $('#companyId').val();
+                    let newCreditAmount = $('#newCreditAmount').val();
+                    if (node.dictCd === '0') {
+                        let piccAmount = $('#piccAmount').val();
+                        let piccRiskAmount = $('#piccRiskAmount').val();
+                        let piccTemporaryAmount = $('#piccTemporaryAmount').val();
+                        let newExcessAmount = Number(newCreditAmount) - Number(piccAmount)
+                        if (newExcessAmount > 0) {
+                            $('#newExcessAmount').numberbox('setValue', newExcessAmount);
+                            if (Number(piccRiskAmount) > 0) {
+                                let excessRate = (Number(newExcessAmount) / Number(piccRiskAmount)).toFixed(4);
+                                $('#excessRate').val(excessRate);
+                                let newExcessRate = (Number(excessRate) * Number(100)).toFixed(2) + '%';
+                                $('#newExcessRate').textbox('setValue', newExcessRate);
+                            } else {
+                                $('#excessRate').val(1);
+                                $('#newExcessRate').textbox('setValue', '100%');
+                            }
+                        } else {
+                            $('#newExcessAmount').numberbox('setValue', '');
+                            $('#excessRate').val(0);
+                            $('#newExcessRate').textbox('setValue', '');
+                        }
+                    } else if (node.dictCd === '1') {
+                        let zhongYinAmount = $('#zhongYinAmount').val();
+                        let zhongYinRiskAmount = $('#zhongYinRiskAmount').val();
+                        let zhongYinTemporaryAmount = $('#zhongYinTemporaryAmount').val();
+                        let newExcessAmount = Number(newCreditAmount) - Number(zhongYinAmount)
+                        if (newExcessAmount > 0) {
+                            $('#newExcessAmount').numberbox('setValue', newExcessAmount);
+                            if (Number(zhongYinRiskAmount) > 0) {
+                                let excessRate = (Number(newExcessAmount) / Number(zhongYinRiskAmount)).toFixed(4);
+                                $('#excessRate').val(excessRate);
+                                let newExcessRate = (Number(excessRate) * Number(100)).toFixed(2) + '%';
+                                $('#newExcessRate').textbox('setValue', newExcessRate);
+                            } else {
+                                $('#excessRate').val(0);
+                                $('#newExcessRate').textbox('setValue', '100%');
+                            }
+                        } else {
+                            $('#newExcessAmount').numberbox('setValue', '');
+                            $('#excessRate').val(0);
+                            $('#newExcessRate').textbox('setValue', '');
+                        }
+
+                    }
+
+                }
+            });
+            $('#newCreditAmount').numberbox({
+                min: 0,
+                precision: 2,
+                required: true,
+                onChange : function (value){
+                    $('#creditType').combobox('setValue', '');
+                    $('#excessRate').val(0);
+                    $('#newExcessRate').textbox('setValue', '');
+                    $('#newExcessAmount').numberbox('setValue', '');
+                },
+                parser: function (val) {
+                    // 解析时去除千分位分隔符
+                    if (val) {
+                        return parseFloat(String(val).replace(/,/g, ''));
+                    } else {
+                        if (isNaN(val)) {
+                            return '';
+                        } else {
+                            return val;
+                        }
+                    }
+                },
+                formatter: function (val) {
+                    if (val || val === 0) {
+                        val = parseFloat(val).toFixed(2).toString().split(".");
+                        val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                        return val.join(".");
+                    } else {
+                        if (isNaN(val)) {
+                            return ""
+                        } else {
+                            return val;
+                        }
+                    }
+                }
+            });
+            $('#companyName').combobox({
+                url: _ctx + "/bs/company/listMyCompany/" + 0 + "/" + 2,
+                mode: 'remote',
+                limitToList: true,
+                valueField: 'companyName',
+                textField: 'text',
+                panelHeight: 300,
+                required: true,
+                formatter: function (row) {
+                    var text = row.text;
+                    return text;
+
+                },
+                onSelect: function (node) {
+                    $('#companyId').val(node.id);
+                    $('#piccAmount').numberbox('setValue', node.piccAmount);
+                    $('#zhongYinAmount').numberbox('setValue', node.zyAmount);
+                    $('#piccRiskAmount').val(node.piccRiskAmount);
+                    $('#zhongYinRiskAmount').val(node.zhongYinRiskAmount);
+                    $('#piccTemporaryAmount').val(node.piccTemporaryAmount);
+                    $('#zhongYinTemporaryAmount').val(node.zhongYinTemporaryAmount);
+                    $('#accessReportFlg').combobox('setValue', node.accessReportFlg + '');
+                    $('#actualGuaranteeFlg').combobox('setValue', node.actualGuaranteeFlg + '');
+                    $('#creditType').combobox('setValue', '');
+                    $('#excessRate').val(0);
+                    $('#newExcessRate').textbox('setValue', '');
+                    $('#newExcessAmount').numberbox('setValue', '');
+
+                    $.ajax({
+                        url: _ctx + "/apply/businessRestrictRelieve/getOverdueInfo?companyId=" + node.id,
+                        type: "post",
+                        async: true,
+                        success: function (data) {
+                            $('#overdueFlg').combobox('setValue', data.overdueFlg + '');
+                            $('#overduePrincipal').numberbox('setValue', data.overduePrincipal);
+                            $('#overdueCount').numberbox('setValue', data.overdueCount);
+                            // 显示
+                            if (data.overduePrincipal > 0) {
+                                $('#relieveOverdueCheckbox').prop('checked', true);
+                                $('#relieveOverdue').val(true);
+                            } else {
+                                $('#relieveOverdueCheckbox').prop('checked', false);
+                                $('#relieveOverdue').val(false);
+                            }
+                        }
+                    });
+                    
+                    $.ajax({
+                        url: _ctx + "/apply/businessRestrictRelieve/findUnDelivery3Day?companyId=" + node.id,
+                        type: "post",
+                        async: true,
+                        success: function (data) {
+                            if (data.relieveNotDeliver === true) {
+                                $('#relieveNotDeliverCheckbox').prop('checked', true);
+                                $('#relieveNotDeliver').val(true);
+                            } else {
+                                $('#relieveNotDeliverCheckbox').prop('checked', false);
+                                $('#relieveNotDeliver').val(false);
+                            }
+                            
+                        }
+                    });
+                }
+            });
+
+        } else {
+            $('#newExcessAmount').numberbox({
+                min: 0,
+                precision: 2,
+                required: false,
+                parser: function (val) {
+                    // 解析时去除千分位分隔符
+                    if (val) {
+                        return parseFloat(String(val).replace(/,/g, ''));
+                    } else {
+                        if (isNaN(val)) {
+                            return '';
+                        } else {
+                            return val;
+                        }
+                    }
+                },
+                formatter: function (val) {
+                    if (val || val === 0) {
+                        val = parseFloat(val).toFixed(2).toString().split(".");
+                        val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                        return val.join(".");
+                    } else {
+                        if (isNaN(val)) {
+                            return ""
+                        } else {
+                            return val;
+                        }
+                    }
+                }
+            });
+            $("#newExcessFlg").combobox({
+                data: defaultFlg,
+                required: true,
+                textField: 'dictName',
+                valueField: 'dictCd',
+                panelHeight: "auto"
+            });
+            // 授信类别
+            $("#creditType").combobox({
+                data:[{dictCd:'0',dictName:"人保"},{dictCd:'1',dictName:"大地"}],
+                textField:'dictName',
+                valueField:'dictCd',
+                panelHeight:"auto",
+                editable:false
+            });
+            $('#newCreditAmount').numberbox({
+                min: 0,
+                precision: 2,
+                required: true,
+                parser: function (val) {
+                    // 解析时去除千分位分隔符
+                    if (val) {
+                        return parseFloat(String(val).replace(/,/g, ''));
+                    } else {
+                        if (isNaN(val)) {
+                            return '';
+                        } else {
+                            return val;
+                        }
+                    }
+                },
+                formatter: function (val) {
+                    if (val || val === 0) {
+                        val = parseFloat(val).toFixed(2).toString().split(".");
+                        val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                        return val.join(".");
+                    } else {
+                        if (isNaN(val)) {
+                            return ""
+                        } else {
+                            return val;
+                        }
+                    }
+                }
+            });
+            let relieveOverdue = $('#relieveOverdue').val();
+            let relieveNotDeliver = $('#relieveNotDeliver').val();
+            if (relieveOverdue === 'true') {
+                $('#relieveOverdueCheckbox').prop('checked', true);
+            }
+            if (relieveNotDeliver === 'true') {
+                $('#relieveNotDeliverCheckbox').prop('checked', true);
+            }
+            
+            $("#inputForm").find("input").not('.tags input').not("[type='button']").attr("readonly", true);
+            setTimeout(function () {
+                $('#ownRegion').combobox('readonly', true);
+                $('#newBuyPayDate').datebox('readonly', true);
+                $('#expectOverduePayDate').datebox('readonly', true);
+                $('#newExcessFlg').combobox('readonly', true);
+                $('#creditType').combobox('readonly', true);
+                $('#newProfitRateLack').combobox('readonly', true);
+                $("#applyReason").validatebox('readonly', true);
+            }, 500);
+        }
+        applyLoadSucess();
+        _beforSaveOper = true;
+    });
+
+    //发起申请前操作
+    function beforSaveOper() {
+        //点击申请前，先检查是否有改库存数据
+        return true;
+    }
+
+</script>
+<style>
+    .modal-backdrop {
+        z-index: -1 !important
+    }
+
+    #contentHtml {
+        border: 1px solid #c2c0c0;
+    }
+
+    .form-section-self-title {
+        font-size: 14px;
+        font-weight: bold;
+    }
+</style>

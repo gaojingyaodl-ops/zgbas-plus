@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<div class="from-input-layout">
+	<form id="inputForm" method="post" class="editForm">
+		<input type="hidden" name="id" th:value="${dept.id}" id="deptId"/>
+		<input type="hidden" name="appId" id="appId" th:value="${dept.appId}"/>
+		<input type="hidden" name="enterpriseId" id="enterpriseId" th:value="${dept.enterpriseId}"/>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="deptId" class="control-label">上级机构：</label>
+				<input type="text" id="parentId" name="parentId" th:value="${dept.parent.id}" class="easyui-combotree control large"/> 
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="deptId" class="control-label">机构类型：</label>
+				<input type="text" id="deptType" name="deptType" th:value="${dept.deptType}" class="easyui-combotree control large"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="deptName" class="control-label">机构名称:</label>
+				<input type="text" id="deptName" name="deptName" required="true" th:value="${dept.deptName}" class="control large"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="deptName" class="control-label">简码:</label>
+				<input type="text" id="deptAbbr" name="deptAbbr" required="true" th:value="${dept.deptAbbr}" class="control large"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="leaderUserId" class="control-label">机构负责人:</label>
+				<input type="hidden" name="leaderUserId" id="leaderUserId" th:value="${dept.leaderUserId}"/>
+				<input type="text" id="leaderUserId_tree" th:attr="value=${dept.leaderUserId==null}?'':'user'+${dept.leaderUserId}" class="control large"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="dispOrderNo" class="control-label">显示序号:</label>
+				<input type="text" id="dispOrderNo" name="dispOrderNo" number="true" max="10000" th:value="${dept.dispOrderNo}" class="control large"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="remark" style='vertical-align: top;position: relative;top:-1px;'>备注:</label>
+				<textarea id="remark" name="remark" th:text="${dept.remark}"></textarea>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label></label>
+				<span onchange="$(this).toggleClass('on')" th:class="${dept.enableFlg} ? 'ckbox on' : 'ckbox'">
+		            <input type="checkbox" th:checked="${dept.enableFlg}" onchange="$('#enableFlg').val($(this).attr('checked')=='checked');" />
+		            <span>是否有效</span>
+		           	<input type="hidden" name="enableFlg" th:value="${dept.enableFlg}" id="enableFlg" />
+	        	</span>
+			</p>
+		</div>
+	</form>
+</div>
+<script>
+		$(document).ready(function() {
+			
+			$("#deptType").combobox({
+				data:allDeptJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				panelHeight:"auto",
+				required:true,
+				editable:false
+				
+		 	});
+				
+			 $('#parentId').combotree({
+				 url:_ctx+'/bas/dept/allEable',
+				 editable:false,
+				 panelHeight:"auto"
+			 });
+			 $('#leaderUserId_tree').combotree({
+				 url:_ctx+"/bas/user/initTree?appId="+'[[${dept.appId}]]',
+				 editable:false,
+				 panelHeight:"auto",
+				 onSelect:function(node){
+					if (node.attributes.type =='user'){
+						var userId=node.id.substr(4);
+						$('#leaderUserId').val(userId);
+					}else{
+						$('#leaderUserId_tree').combotree('clear');
+						$('#leaderUserId').val('');
+					}
+				}
+			 });
+			 
+			 $("#leaderUserId_btn").click(function(){
+				 $('#leaderUserId_tree').combotree('setValue','');
+				 $('#leaderUserId').val('');
+			 })
+			 
+			 
+			 $("#deptName").validatebox({
+					required: true,
+					validType:{length:[1,20]}
+			});
+			 $("#dispOrderNo").numberbox({
+		 		    min:0,
+		 		    precision:0
+		 		});
+		});
+			
+	</script>
+</html>

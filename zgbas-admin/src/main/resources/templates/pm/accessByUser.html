@@ -1,0 +1,65 @@
+	<div data-options="region:'west'" title="业务员" style="width:200px;float: left;overflow:auto;height: 100%;">
+		<ul id="tUser"></ul>
+	</div>
+	<div data-options="region:'center'" title="流程名称" style="float: left;overflow:auto;height: 100%; width: 83%;" >
+		<ul id="tProcess"></ul>
+	</div>
+<script type="text/javascript">
+	$(function(){
+		$("#tUser").tree({
+			animate : true,
+			dnd : true,
+			url : _ctx+'/pm/processAccess/initUserTree/',
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				getProcessTree(node);
+			}
+		});
+		
+		$("#tProcess").tree({
+			checkbox:true
+		});
+		
+	})
+	
+	function getProcessTree(node){
+		var isLeaf = $('#tUser').tree('isLeaf',node.target);
+		if (node.attributes.type=="user" && isLeaf ){
+			var userId = node.id.substr(4);
+			$.post(_ctx+'/pm/processAccess/initProcessTree?userId='+userId,function(result) {
+				$("#tProcess").tree('loadData',result);
+			});
+		}
+	}
+	
+	function save(){
+		var userId = 0;
+		var userName = "";
+		var processIds = "";
+		var user = $('#tUser').tree('getSelected');
+		var process = $('#tProcess').tree('getChecked','checked');
+		var isLeaf = $('#tUser').tree('isLeaf',user.target);
+		if (user.attributes.type=="user" && isLeaf ){
+			userId = user.id.substr(4);
+			userName = user.text;
+		}else{
+			$.messager.alert('Tips','请选择业务员！','info');
+			return;
+		}
+		for(var i=0; i<process.length;i++){
+			var node = process[i];
+			processIds += node.id +"|";
+		}
+		$.post(_ctx+'/pm/processAccess/saveByUser',{userId:userId,userName:userName,processIds:processIds},function(result) {
+			if(result.success){
+				 $.messager.show({title:'Tip',msg:'保存成功',timeout:2000,showType:'show'});
+			}
+		});
+	}
+</script>

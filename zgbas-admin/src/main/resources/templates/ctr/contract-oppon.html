@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<div style="height:150px;" class="tbw down-mb15">
+   <input type="hidden" id="contract_id" th:value="${contract_id}" />
+	<table id="opponentTable" style="height:300px;" border="0"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+	</table>		 
+  </div>
+<div id="his_contract" title="合同详情" data-options="width:950,height:400"></div>
+<script type="text/javascript">
+$(function(){
+	var contractId = $("#contract_id").val();
+	var _url = _ctx+"/ctr/contract/detailHisPage/"+contractId;
+	var _applyTypeJson = eval('[(${applyTypeJson})]'); 
+	var _businessTypeJson = eval('[(${businessTypeJson})]'); 
+	var _contractStatusJson=eval('[(${contractStatusJson})]');
+	$('#opponentTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:[ [
+			{field:'businessType',title:'业务类型',align:'center',width:80,formatter:function(value,row,index){
+				return Convert.findValueByKey(_businessTypeJson,"dictCd",value,"dictName");
+			}},
+			{field:'contractNo',title:'合同编号',align:'center',width:130},
+			{field:'productsName',title:'货品',align:'center',width:150},
+			{field:'companyName',title:'对方企业名称', align:'left', width:180},
+			{field:'totalNumber',title:'合同数量(吨)', align:'right', width:100},
+			{field:'contractStatus',title:'合同状态', align:'center', width:80,formatter:function(value,row,index){
+				return Convert.findValueByKey(_contractStatusJson,"dictCd",value,"dictName");
+			}},
+			{field:'matchUserName',title:'业务员', align:'center', width:80},
+			{field:'action',title:'操作', width:100,align:'center',formatter:function(value, row, index){
+				if (row.id){
+				var str = "";
+		        str = "<div class='contract-btn contract-btn-1' onclick='OpponentEditrow(\""+row.id+"\",\""+row.contractNo+"\",\""+row.contractType+"\")'><span>查看详情</span></div>"; 
+		        return str; 
+				}
+			}}
+		]],
+		onLoadSuccess:function(data){
+			
+		}
+	});
+	
+	$('#his_contract').window({
+		title:'合同详情',
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		onClose:function(){
+			$('#tt').datagrid('reload');
+		}
+	});
+})
+function OpponentEditrow(id,contractNo,contractType){
+		var url=_ctx+"/ctr/contract/detail/"+id;
+		var title=contractNo;
+		window.parent.addTab(title,url);
+}
+</script>

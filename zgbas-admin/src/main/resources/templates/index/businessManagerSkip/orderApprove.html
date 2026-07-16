@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>库存查询</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="center" border="false" class="panel_padding pl20 pr20" style="display: flex;justify-content: space-between;flex-direction: column">
+    <div style="height: 90%;width: 100%;overflow: auto" id="show-apply-view">
+    </div>
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+    <div id="pagination" class="mypagination">
+        <button id="firstPage" disabled>首页</button>
+        <button id="prevPage" disabled>上一页</button>
+        <span id="pageInfo" style="color: black">第 1 页</span>
+        <button id="nextPage">下一页</button>
+        <button id="lastPage">尾页</button>
+        <span id="totalNumbers" style="color: black"></span>
+    </div>
+
+</div>
+<script type="text/javascript">
+    let currentPage = 1; // 当前页
+    let totalCount = 0;  // 后端返回的总记录数
+    let pageSize = 10;    // 每页显示的记录数
+    let totalPages = 0;  // 总页数
+    $(function(){
+        fetchData()
+        // 首页按钮点击事件
+        $('#firstPage').click(function () {
+            if (currentPage > 1) {
+                currentPage = 1;
+                updatePagination();
+                fetchData(currentPage);
+            }
+        });
+
+        // 上一页按钮点击事件
+        $('#prevPage').click(function () {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
+                fetchData(currentPage);
+            }
+        });
+
+        // 下一页按钮点击事件
+        $('#nextPage').click(function () {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePagination();
+                fetchData(currentPage);
+            }
+        });
+
+        // 尾页按钮点击事件
+        $('#lastPage').click(function () {
+            if (currentPage < totalPages) {
+                currentPage = totalPages;
+                updatePagination();
+                fetchData(currentPage);
+            }
+        });
+
+        // 初始化分页显示
+        updatePagination();
+    });
+    // 更新分页控件
+    function updatePagination() {
+        $('#pageInfo').text(`第 ${currentPage} 页`);
+        $('#prevPage').prop('disabled', currentPage === 1);
+        $('#nextPage').prop('disabled', currentPage === totalPages);
+        $('#firstPage').prop('disabled', currentPage === 1);
+        $('#lastPage').prop('disabled', currentPage === totalPages);
+    }
+    function fetchData(page) {
+        $('#loading').css('display','block');
+        let param = {
+            page: page?page:1,
+            rows: 10
+        }
+        $.ajax({
+            type:"post",
+            url:_ctx+"/business/manager/workbench/findContractApprovePage",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+                $('#loading').css('display','none');
+                var showAppyView =$("#show-apply-view")
+                showAppyView.empty()
+                if(data){
+                    totalCount = data.totalElements;
+                    totalPages = Math.ceil(totalCount / pageSize);
+                    $("#totalNumbers").text('总数 '+(totalCount?totalCount:''))
+                    updatePagination()
+                    //展示审批详情
+                    let dataArr = data.content
+                    if(dataArr&&dataArr.length>0){
+                        dataArr.forEach(it=>{
+                            let content=`<div class="show-apply">
+                                             <hr>
+                                            <div class="show-subjet-title">${it.budgetName|| ''}  ${it.subject}</div>
+                                            <div class="show-content-div">
+                                                <div class="show-content" onclick="skipApprove('${it.budgetName}', ${it.approveId})">
+                                                    <div class="show-content-title ${getApplyStatusClass(it.budgetStatus)}" >
+                                                        预算申请
+                                                    </div>
+                                                    <div class="show-content-content">
+                                                        <div>${it.budgetApproveUserName||''}</div>
+                                                        <div class="show-apply-date">${it.budgetApproveLastTime||''}</div>
+                                                    </div>
+                                                </div>
+                                               <img src="/static/images/arrow.png" alt="logoImg" style="width: 40px;height: 30px"/>
+                                                <div class="show-content" onclick="skipApprove('${it.buySealBudgetName}', ${it.buySealApproveId})">
+                                                    <div class="show-content-title ${getApplyStatusClass(it.buySealStatus)}">
+                                                        供应商双签
+                                                    </div>
+                                                    <div class="show-content-content">
+                                                        <div>${it.buySealApproveUserName||''}</div>
+                                                        <div class="show-apply-date"> ${it.buySealApproveLastTime||''}</div>
+                                                    </div>
+                                                </div>
+                                                <div class="show-content" style="margin-left: 40px" onclick="skipApprove('${it.sellSealBudgetName}', ${it.sellSealApproveId})">
+                                                    <div class="show-content-title ${getApplyStatusClass(it.sellSealStatus)}">
+                                                        用户双签
+                                                    </div>
+                                                    <div class="show-content-content">
+                                                        <div>${it.sellSealApproveUserName||''}</div>
+                                                        <div class="show-apply-date">${it.sellSealApproveLastTime||''}</div>
+                                                    </div>
+                                                </div>
+                                                <img src="/static/images/arrow.png" alt="logoImg" style="width: 40px;height: 30px"/>
+                                                <div class="show-content" onclick="skipApprove('${it.buyPayBudgetName}', ${it.buyPayApproveId})">
+                                                    <div class="show-content-title ${getApplyStatusClass(it.buyPayStatus)}">
+                                                        供应商付款
+                                                    </div>
+                                                    <div class="show-content-content">
+                                                        <div style="display: ${it.buyPayStatus&&it.buyPayApproveUserName ? 'none' : 'block'}">未发起申请</div>
+                                                        <div>${it.buyPayApproveUserName||''}</div>
+                                                        <div class="show-apply-date"> ${it.buyPayApproveLastTime||''}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    </div>`
+                            showAppyView.append(content)
+                        })
+                    }
+                }
+            }
+        })
+    }
+    function skipApprove(processName,approveId){
+        if(processName&&approveId){
+            window.parent.addTab(processName, _ctx + '/pm/approve/detail/' + approveId);
+        }
+    }
+    function getApplyStatusClass(val){
+        if(val==='D'){
+            return '';
+        } else if (val==='A'){
+            return 'apply-status-A'
+        } else {
+            return 'apply-status-empty'
+        }
+    }
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+</script>
+</body>
+<style>
+    .mypagination {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        height: 10%;
+        color: #D4EFE2;
+    }
+    .mypagination button {
+        padding: 5px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        background-color: var(--skin-color);
+        color: white;
+        width: 60px;
+    }
+    .mypagination button:disabled {
+        background-color: var(--skin-over-color);
+        cursor: not-allowed;
+    }
+    .show-apply{
+        width: 100%;
+        height: 130px;
+        margin-bottom: 30px
+    }
+    .show-subjet-title{
+        font-size: 14px;
+        color: black;
+        padding: 5px 0px;
+        height: 18%
+    }
+    .show-content-div{
+        display: flex;
+        align-items: center;
+        height: 80%;
+    }
+    .show-content{
+        border: 1px solid #E4E4E4;
+        border-radius: 3px;
+        width: 16%;
+        height: 100%;
+        cursor: pointer;
+    }
+    .show-content-title{
+        padding: 10px;
+        background-color: #2A4A7B;
+        color: white;
+        font-size: 14px;
+        height: 20%;
+        border: 1px solid #E4E4E4
+    }
+    .show-content-content{
+        padding: 10px;
+        font-size: 12px;
+        height: 80%;
+    }
+    .show-apply-date {
+        margin-top: 5px;
+    }
+    .icon {
+        width: 40px;
+        height: 40px;
+    }
+    .apply-status-A{
+        background-color: #E0AC57;
+    }
+    .apply-status-empty{
+        color: black;
+        background-color: #FFFFFF;
+    }
+    /* 加载动画样式 */
+    .loading {
+        position: fixed;  /* 固定在页面中央 */
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 9999;    /* 确保加载动画在所有元素之上 */
+    }
+
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+</style>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+ <div class="yw-menu-section tbw">
+   <input type="hidden" id="sealBorrowId" th:value="${sealBorrowId}">
+   <table id="sealBorrowOphis" 
+		title="" iconCls="icon-edit" singleSelect="true"
+		idField="id" style="height:320px;">
+	</table>
+</div>
+<script type="text/javascript">
+var lastIndex;
+$(function(){
+	var itemTypeJson = eval('[(${itemTypeJson})]');
+	var sealStatusJson = eval('[(${sealStatusJson})]');
+	var sealBorrowId = $("#sealBorrowId").val();
+	var _url = _ctx+"/apply/sealBorrowOphis/findBorrowOphisPage?search_EQL_sealBorrowId="+sealBorrowId;
+	$('#sealBorrowOphis').datagrid({
+		pagination:true,
+		pageSize:10,
+		rownumbers:true,
+		pageList:[50,40,30,20,10], 
+		url:_url,
+		columns:[ [
+			{field:'itemType',title:'印章类型',width:160,align:'left',formatter:function(value,row,index){
+				if (value){
+					var text_array=[];
+					if(value && value.length > 0){
+						var itemTypes = value.split(",");
+						for(var i in itemTypes){
+							if (itemTypes[i]==''){
+								continue;
+							}
+							var item_type  = itemTypes[i];
+							var itemTypeStr = Convert.findValueByKey(itemTypeJson,"dictCd",item_type,"dictName");
+							text_array.push(itemTypeStr);
+						}
+					}
+					return text_array.join(' ');
+				}
+			}},
+			{field:'opType',title:'印章状态', width:80,align:'center',formatter:function(value,row,index){
+				return Convert.findValueByKey(sealStatusJson,"dictCd",value,"dictName");
+			}},
+			{field:'opUserName',title:'业务员',align:'center',width:100},
+			{field:'remark',title:'备注',width:180},
+			{field:'updatedDate',title:'日期',align:'center',width:140}
+		]]
+		});
+	});
+</script>

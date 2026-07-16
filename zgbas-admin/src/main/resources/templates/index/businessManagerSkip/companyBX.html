@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>库存查询</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/css/businessManageIndex.css}" rel="stylesheet"/>
+</head>
+<body class="easyui-layout">
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <div style="height: 450px">
+        <table id="list" fit="true"
+               title="" iconCls="icon-edit" singleSelect="true"
+               idField="id">
+        </table>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var companySourceJson = eval('[(${companySourceJson})]');
+    var columns =[
+        {field:'companyName',title:'用户名称',align:'left', width:200,formatter:function(value,row){
+                if (value){
+                    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                    return content;
+                }
+            }},
+        {field:'piccEntryDate',title:'人保录入日期', width:120,align:'center'},
+        {field:'applyPiccDate',title:'申请人保日期', width:120,align:'center'},
+        {field:'piccApplyCreditAmount',title:'申请赊销额度', width:120,align:'center'},
+        {field:'piccApplyStatus',title:'人保申请状态', width:120,align:'center',formatter:function(value,row){
+             return '申请中'
+            }},
+        {field:'companyType',title:'企业类型', width:120,align:'center',formatter:function(value,row){
+                if (value==='I'){
+                   return '工业客户'
+                } else if (value==='T'){
+                    return '贸易商'
+                } else {
+                    return ""
+                }
+            }},
+    ]
+    $(function(){
+        getDataShow(columns)
+    });
+    function getDataShow(columns){
+        $('#list').datagrid({
+            pagination:true,
+            pageSize:10,
+            height: 550,
+            rownumbers:true,
+            pageList:[10,20,30,40,50],
+            method: 'post',
+            url:_ctx+"/business/manager/workbench/findPiccCompanyPage",
+            columns:[columns],
+        });
+    }
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+</script>
+</body>
+<style>
+    .active {
+        background-color: #FFFFFF; /* 点击时的背景颜色 */
+    }
+</style>
+</html>

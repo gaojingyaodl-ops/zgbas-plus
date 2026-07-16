@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>资金方管理</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>业务员:</label>
+				<input  name="search_EQL_userId" type="text"  id="userName" />
+			</p>
+			<p class="yw-table-filter w2">
+				<label>企业名称:</label>
+				<input  name="search_LIKES_companyNames" type="text" id="companyName"/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		<a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="editrow(0)">新增</a>
+	</div>
+</div>
+
+
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<table id="tt" fit="true"
+		   title="" iconCls="icon-edit" singleSelect="true"
+		   idField="id">
+	</table>
+</div>
+<div id="funder_detail" title="资金方明细配置" data-options="width:650,height:340">
+</div>
+<script type="text/javascript">
+	 var companyNameJson = eval('[(${companyNameJson})]');//我方抬头
+	 var userNameTreeJson = eval('[(${userNameTree})]');
+	$(function(){
+		/* 业务员 */
+		$('#userName').combotree({
+			data : userNameTreeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#userName').combotree('clear');
+				}
+			}
+		})
+		/* 资金方 */
+		$("#companyName").combobox({
+			data : companyNameJson,
+			textField : 'companyName',
+			valueField : 'companyName',
+			width : 300,
+			height : 30,
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			width:400,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[50,40,30,20,10],
+			url:_ctx+"/bs/funder/findFunder",
+			columns:[ [
+				{field:'userName',title:'用户姓名',align:'left', width:100},
+				{field:'companyNames',title:'企业名称',align:'left', width:550},
+				{field:'remark',title:'备注',align:'center', align:'left', width:300},
+				{field:'updatedDate',title:'更新时间',align:'center', width:150},
+				{field:'operate',title:'操作', width:80,align:'center',formatter:function(value, row, index){
+						var id =row.id;
+						var str = '<img onclick="removeFunder('+id+')" style="cursor:pointer;width:16px;hight:18px;float:left;margin-left:24px" src="../static/new-version/images/icon_delete.png"/>';
+						return str;
+					}}
+			]],
+			toolbar:'#toolbar',
+			onDblClickCell:function(index,field){
+				var row = $('#tt').datagrid('getSelected');
+				editrow(row.id);
+			}
+		});
+
+		$('#funder_detail').window({
+			title : '资金方明细配置',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			}
+		});
+	});
+
+	/* 弹出新增框 */
+	function editrow(id) {
+			 var url = _ctx + "/bs/funder/detail/" + id;
+			 $('#funder_detail').window({href:url});
+			 $('#funder_detail').window("open");
+
+	 }
+	/*  删除方法 */
+	function removeFunder(id){
+		$('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		var index = $('#tt').datagrid('getRowIndex', row);
+		if (id=='0'){
+			$('#tt').datagrid('deleteRow',index);
+			var nextSelect=index>0?index-1:0;
+			$('#tt').datagrid('selectRow', nextSelect);
+		}else{
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '删除提示',
+				msg: '确定要删除该信息吗？',
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				fn: function(r){
+					if (r){
+						//TODO:如果该记录被引用,是否强制不允许删除?
+						$.post(_ctx+"/bs/funder/delete/"+id,function(result) {
+							var rObj = eval(result);
+							if(rObj.success){
+								$('#tt').datagrid('reload');
+								$('#tt').datagrid('clearSelections');
+							}else{
+								$.messager.alert('error',rObj.failure,'warning');
+							}
+						});
+					}
+				}
+			});
+		}
+	}
+
+</script>
+</body>
+</html>

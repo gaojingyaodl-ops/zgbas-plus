@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>采购/销售统计</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false" style="height: 105px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input type="hidden" id="contractType" name="contractType" th:value="${contractType}" />
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>品名:</label>
+				<input class="control" type="text" name="productName" id="productName" />
+			</span> 
+			<span class="input-colspan"> 
+				<label>牌号:</label>
+				<input class="control" type="text" name="brandNumber" />
+			</span>
+			<span class="input-colspan">
+				<label>客户:</label>
+				<input class="control" type="text" name="companyName" />
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>统计类型:</label>
+				<input class="control" type="text" name="statisticsType" id="statisticsType" />
+			</span>
+			<span class="input-colspan">
+				<label>合同日期:</label>
+				<input name="contractTimeGTED" id="contractTimeGTED" class="easyui-datebox" />
+			</span> 
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+			<span class="input-colspan">
+				<input name="contractTimeLTD"  id="contractTimeLTD" class="easyui-datebox" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton"
+					onclick="Convert.search('searchForm','tt');">查询</a> 
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton"
+					onclick="cleanSearch()">清空</a>
+				<a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcel()">导出</a>					
+			</span>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right: 30px;">
+	<table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+</div>
+<script type="text/javascript">
+var productTypeJson = eval('[(${productTypeJson})]');
+var now = new Date(); //当前日期
+var nowMonth = now.getMonth(); //当前月
+var nowYear = now.getYear(); //当前年
+nowYear += (nowYear < 2000) ? 1900 : 0;
+var lastIndex = 0;
+var statisticsTypeJson = [{type:'productName',string:'品名'},{type:'companyName',string:'客户'}];// 统计类型
+var _contractType = $('#contractType').val();
+var _url = '';
+if('B'==_contractType) {
+	_url = _ctx + "/rpt/buystatistics/showStatistics"
+}
+if('S'==_contractType) {
+	_url = _ctx + "/rpt/sellstatistics/showStatistics"
+}
+$(function() {
+	//品名下拉
+    $('#productName').combotree({
+		data:productTypeJson, 
+		multiple : false,
+		editable : true,
+		onSelect:function(data){
+			$('#productName').val(data.typeName);
+		}
+	});
+	// 加载统计类型
+	$('#statisticsType').combobox({
+		data : statisticsTypeJson,
+		textField:'string',
+		valueField:'type',
+		panelHeight:"auto"
+	});
+	initSearch();
+	$('#tt').datagrid({// 加载采购存统计
+		rownumbers : true,
+		pagination : true,
+		showFooter : true,
+		queryParams: Convert.getJson4Form('searchForm'),
+		pageSize : 30,
+		pageList : [ 500, 200, 100, 50, 30, 20 ],
+		url : _url,
+		columns : [ [
+			{field:'statisticsType', title:'统计项', width:200},
+			{field:'dealNumber', title:'总数量(吨)', sortable : true, width:150, align:'right'},
+			{field:'totalPrice', title:'总金额(元)', width:200, align:'right',
+				formatter:function(value, row, index){
+					if(row.totalPrice){
+						return row.totalPrice.toFixed(2);
+					}
+			}}
+		] ],
+		onLoadSuccess : function(data) {
+			var total = $('#tt').datagrid('getData').total;
+			if (lastIndex > total - 1) {
+				lastIndex = total - 1;
+			}
+			if (lastIndex) {
+				$('#tt').datagrid('selectRow', lastIndex);
+			}
+		}
+	});
+});
+// 清空搜索条件
+function cleanSearch(){
+	$('#searchForm').form('reset');
+	initSearch();
+}
+// 初始化搜索条件
+function initSearch() {
+	$('#statisticsType').combobox('select','productName');
+	var start = getMonthStartDate();
+	var end = getMonthEndDate();
+	$('#contractTimeGTED').datebox('setValue',start);
+	$('#contractTimeLTD').datebox('setValue',end);
+	console.log(start+'-->'+end);
+}
+//格式化日期：yyyy-MM-dd
+function formatDate(date) {
+	var myyear = date.getFullYear();
+	var mymonth = date.getMonth()+1;
+	var myweekday = date.getDate();
+	if(mymonth < 10){
+		mymonth = "0" + mymonth;
+	}
+	if(myweekday < 10){
+		myweekday = "0" + myweekday;
+	}
+	return (myyear+"-"+mymonth + "-" + myweekday);
+}
+//获得某月的天数
+function getMonthDays(myMonth){
+	var monthStartDate = new Date(nowYear, myMonth, 1);
+	var monthEndDate = new Date(nowYear, myMonth+1, 1);
+	var days = (monthEndDate-monthStartDate)/(1000*60*60*24);
+	return days;
+}
+//获得本月的开始日期
+function getMonthStartDate(){
+	var monthStartDate = new Date(nowYear, nowMonth, 1);
+	return formatDate(monthStartDate);
+}
+//获得本月的结束日期
+function getMonthEndDate(){
+	var monthEndDate = new Date(nowYear, nowMonth, getMonthDays(nowMonth));
+	return formatDate(monthEndDate);
+}
+function exportExcel(){
+	$('#searchForm').form('submit', {url:_ctx+"/rpt/buystatistics/exportExcel"});
+}
+</script>
+</body>
+</html>

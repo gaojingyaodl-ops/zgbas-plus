@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<meta charset="UTF-8">
+	<link th:href="@{${g_logoIconUrl}}" rel="shortcut icon" type="image/png" />
+	<link th:href="@{${g_logoIconUrl}}" rel="icon" type="image/png" />
+	<title>供应链核心管理平台</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+	<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css?v=5565}" type="text/css" rel="stylesheet" />
+	<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+	<script th:src="@{/static/js/admin/index.js?v=2212}" type="text/javascript"></script>
+</head>
+<body class="home-body">
+<style>
+	.redPoint{
+		width:5px;
+		height:5px;
+		border-radius:50%;
+		background-color:red;
+	}
+	.redPoint2{
+		width:5px;
+		height:5px;
+		border-radius:50%;
+		background-color:blue;
+	}
+</style>
+	<div class="easyui-layout" style="width:100%;height:100%; border: none;">
+		<!--观察员-->
+		<input id="isGcy" type="hidden" th:value="${isGcy}"/>
+        <div style="height:50px;box-shadow: 0 1px 8px 0 rgba(104, 104, 104, 0.5);"></div>
+        <div data-options="region:'north'" style="height:50px;line-height: 35px;border: none;" class="trade-header">
+        	<div class="header-left">
+	            <img th:src="@{/static/new-version/images/logo.png}" alt="logo" class="logo">
+	            <span class="header-tips">[[${g_enterpriseName}]]</span>
+	            <img th:src="@{static/new-version/images/menu_close.png}" alt="img" class="left-menu">
+	        </div>
+        	<div class="opt-tips" style="cursor: pointer;">
+				<span class="pl20" th:if="${businessOverviewPerm == true}">
+        			<img th:src="@{/static/new-version/images/user-manual.png}" alt="img" class="min-img">
+        			<span onclick="openBusinessOverview();">业务总览</span>
+        		</span>
+				<span class="pl20">
+					<img style="height:16px;" th:src="@{/static/new-version/images/icon_daiban.png}" alt="img" class="min-img">
+        			<span id="dealSpan" onclick="openWaitDeal(0)">待办事项</span>
+					<i class="" id="redPoint" ></i>
+					<i class="" id="redPoint2" ></i>
+				<span class="pl20" th:if="${configViewPerm == true}">
+        			<img th:src="@{/static/new-version/images/icon_search.png}" alt="img" class="min-img">
+        			<span onclick="openConfigMessage();">业务查询</span>
+        		</span>
+<!--				<span class="pl20">-->
+<!--        			<img th:src="@{/static/new-version/images/user-manual.png}" alt="img" class="min-img">-->
+<!--        			<span onclick="openManual();">用户手册</span>-->
+<!--        		</span>-->
+        		<span class="pl20">
+        			<img th:src="@{/static/new-version/images/lock.png}" alt="img" class="min-img">
+        			<span onclick="changePwd();">修改密码</span>
+        		</span>
+        	</div>
+        </div>
+       	<div data-options="region:'west'" class="bg_g_primary yw-page-left" style="min-height: 550px;">
+        <div class="yw-user-info">
+			<div id="btn_fileId" class="mb10">
+           		<img th:src="${user?.imgFileId ne null} ? @{${g_filePath}+'/view/show/'+${user.imgFileId}} : @{/static/new-version/images/head-portrait.png}" id="img" class="img-upload-img">
+           	</div>
+			<input id="fileId" name="fileId" type="hidden" th:value="${user?.imgFileId}" />
+       		<input type="hidden" id="currentUserId" th:value = "${@shiroUtil.getCurrentUserId()}">
+       		<p class="yw-user-info-name" th:text="${@shiroUtil.getCurrentUserName()}"></p>
+       		<p class="yw-user-info-power" th:text="${roleName}"></p>
+       		<p th:text="${g_enterpriseName}"></p>
+        </div>
+      	<div class="yw-menu" data-options="">
+             <div class="yw-menu-section" th:each="m:${menus}">
+             	<div class="yw-menu-label" >
+              	<i class='icon-basics-m' th:class="${m.iconCls}"></i>
+              	<label th:text="${m.text}"></label>
+              	<i class='yw-menu-label-arrow accordion-collapse'></i>
+             	</div>
+             	   <ul class="ul-list" th:if="${m.text=='业务流程'}">
+             	   		<li class="li-process" th:each="process:${approveList}" th:text="${process.processName}" th:id="${process.id}" th:processCode="${process.processCode}"></li>
+             	   </ul>
+             	   <ul class="ul-list" th:if="${m.text=='企管流程'}">
+             	   		<li class="li-process" th:each="process:${sealList}" th:text="${process.processName}" th:id="${process.id}" th:processCode="${process.processCode}"></li>
+             	   </ul>
+                 <ul class="ul-list" th:if="${m.text!='业务流程'}">
+                    <li value="AL" th:if="${m.children.size()>0 }" th:each="c:${m.children}">
+                    <i class="yw-menu-arr-r"></i>
+                    <a th:href="'javascript:addTab(\''+${c.text}+'\',\''+${ctx}+${c.attributes.url}+'\')'" style="color: #fff;cursor: pointer;text-decoration : none">
+                        <span th:text="${c.text}"></span>
+                    </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+           <button class="login-out" onclick="logout();" style="cursor: pointer;">退出登录</button>
+        </div>
+        <div data-options="region:'center',iconCls:'icon-ok'" style="padding: 15px 20px;background: #f5f6f8;">
+       		<div class="easyui-tabs" fit="true" border="false" id="tabs">
+
+            </div>
+        </div>
+    </div>
+    <div id="changePwdDiv" title="密码修改" data-options="width:350,height: 240,border:'thin',collapsible: false,minimizable: false,cls:'c9'">
+    	<form id="changePwdForm" method="post" class="from-input-layout" style="padding-left:40px;">
+			<input type="hidden" name="id"  th:value="${@shiroUtil.getCurrentUserId()}"/>
+			<div class="ml20 mt15">
+				<p class="yw-table-filter.w2" style="margin-left:13px;">
+					<label>原密码:</label>
+					<input type="password" id="oldPwd" required="required" name="oldPwd" onchange="$('#oldPwdWrong').hide();"  class="easyui-validatebox" style="box-shadow: none;"/>
+					<span class="err-tips" style="display: none;color:#d52525;" id="oldPwdWrong" >原密码错误</span>
+				</p>
+			</div>
+			<div class="ml20 mt15">
+				<p class="yw-table-filter.w2" style="margin-left: 13px;">
+					<label>新密码:</label>
+					<input type="password" id="newPwd" required="required" name="newPwd" class="easyui-validatebox" style="box-shadow: none;"/>
+				</p>
+			</div>
+			<div class="ml20 mt15">
+				<p class="yw-table-filter.w2">
+					<label>确认密码:</label>
+					<input type="password" validType="equalTo['newPwd']" required="required" id="newPwdRepeat"  class="easyui-validatebox" style="box-shadow: none;"/>
+				</p>
+			</div>
+		</form>
+	</div>
+
+	<div id="configDiv" title="业务查询" data-options="width:700,height: 640,border:'thin',collapsible: false,minimizable: false,cls:'c9'">
+		<div class="ml20 mt15" id="configHtml"></div>
+<!--		<div class="ml20 mt15" th:each="config:${bsConfigJson}" id="configHtml">-->
+<!--			<p class="mt10" th:text="${config}"></p>-->
+<!--		</div>-->
+<!--		<div class="ml20 mt15" th:if="${bsConfigJson.size() == 0}">-->
+<!--			<p style="margin-left: 180px;font-size: 15px;">暂无可申请的赊销预算!</p>-->
+<!--		</div>-->
+	</div>
+	<div id="mm" class="easyui-menu" style="width: 150px;">
+		<div id="mm-tabupdate">刷新</div>
+		<div class="menu-sep"></div>
+		<div id="mm-tabclose">关闭</div>
+		<div id="mm-tabcloseall">关闭全部</div>
+		<div id="mm-tabcloseother">关闭其他</div>
+		<div class="menu-sep"></div>
+		<div id="mm-tabcloseright">关闭后面</div>
+		<div id="mm-tabcloseleft">关闭前面</div>
+	</div>
+	<div id="w_contract_choose" class="easyui-window" title="合同选择" data-options="width:730,height:640"></div>
+	<div id="tth" title="群发待办" class="easyui-window" data-options="width:830,height:580"></div>
+	<script th:src="@{/static/js/admin/ws.js}"></script>
+	<script type="text/javascript">
+			var _userId = $('#currentUserId').val();
+			var _processTree = eval('[(${processTree})]');
+			var approvalSys = {
+				index: 0,
+				init: function() {
+					approvalSys.handlerMenu();
+					approvalSys.tabTriggerEvent();
+					approvalSys.removeEvent();
+				},
+				handlerMenu: function() {
+					$('.yw-menu-label').on('click', function(e) {
+						var SelfMenuOpen = $(this).hasClass('yw-menu-open');
+						if(SelfMenuOpen){
+							$(this).toggleClass('yw-menu-open');
+							if($(this).children('.yw-menu-label-arrow').hasClass('accordion-expand')){
+								$(this).children('.yw-menu-label-arrow').removeClass('accordion-expand').addClass('accordion-collapse');
+							}else{
+								$(this).children('.yw-menu-label-arrow').addClass('accordion-expand').removeClass('accordion-collapse');
+							}
+						}else{
+							var menu = $('.yw-menu-label');
+							for(var i= 0;i<menu.length;i++){
+								var flagOpen = $(menu[i]).hasClass('yw-menu-open');
+								if(flagOpen) $(menu[i]).removeClass('yw-menu-open')
+								var flagCol = $(menu[i]).children('.yw-menu-label-arrow').hasClass('accordion-expand');
+								if(flagCol) $(menu[i]).children('.yw-menu-label-arrow').removeClass('accordion-expand').addClass('accordion-collapse');
+							}
+							$(this).addClass('yw-menu-open');
+							$(this).children('.yw-menu-label-arrow').removeClass('accordion-collapse').addClass('accordion-expand')
+						}
+					})
+				},
+				tabTriggerEvent: function() {
+					$('.ul-list li').on('click', function() {
+						var ulList = $(this).parent().children()
+						var len = ulList.length
+						for(var i = 0; i < len; i++) {
+							$(ulList[i]).hasClass("selected") ? $(ulList[i]).removeClass("selected") : ''
+						}
+						$(this).addClass("selected");
+					})
+					$('.ul-list2 li').on('click', function() {
+						var ulList = $(this).parent().children()
+						var len = ulList.length
+						for(var i = 0; i < len; i++) {
+							$(ulList[i]).hasClass("selected") ? $(ulList[i]).removeClass("selected") : ''
+						}
+						$(this).addClass("selected");
+					})
+				},
+				addTabEvent: function(val) {
+					var _index = approvalSys.index++;
+					$('#tabs').tabs('add',{
+						title: val,
+						content: '<div style="padding:10px">Content'+_index+'</div>',
+						closable: true
+					});
+				},
+				removeEvent:function() {
+					var tab = $('#tabs').tabs('getSelected');
+					if (tab){
+						var index = $('#tabs').tabs('getTabIndex', tab);
+						$('#tabs').tabs('close', index);
+					}
+				},
+				removeRowData: function() {
+					alert("删除成功");
+				},
+				sta: function(value,row) {
+					switch(value){
+						case "b": return '<span style="color:red;">驳回</span>';break;
+						case "s": return '<span style="color:#bd10e0;">审批中</span>';break;
+						case "x": return '<span style="color:#4a9bff;">新增</span>';break;
+						case "w": return '<span style="color:#8bd898;">完成</span>';break;
+						case "q": return '<span style="color:#ccc;">取消</span>';break;
+					}
+				},
+				opt: function(value,row) {
+					if (value === "del"){
+						return '<img onclick="approvalSys.removeRowData()" style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png">';
+					} else {
+						return "";
+					}
+				},
+				changeP: function() {
+					var dg = $('#tbData');
+					dg.datagrid('loadData',[]);
+					dg.datagrid({pagePosition:$('#p-pos').val()});
+					dg.datagrid('getPager').pagination({
+						layout:['list','sep','first','prev','sep',$('#p-style').val(),'sep','next','last','sep','refresh','info']
+					});
+				}
+			}
+			$(function () {
+				approvalSys.init() ;
+				var isGcy = $("#isGcy").val();
+				if(isGcy !== true && isGcy !== 'true'){
+					addTab('审批流程',_ctx+'/pm/approve');
+				}
+				// addTab('企业管理',_ctx + "/bs/company");
+				// addTab('企业信息',_ctx + "/bs/company/detail/5650");
+				// addTab('准入管理',_ctx+'/bs/company/allowedList');
+				// addTab('额度管理',_ctx+'/bs/company/quotaList');
+				// addTab('逾期管理',_ctx+'/ctr/contract/findOverdue');
+
+				$("#tabs").tabs({
+					onSelect:function(title,index){
+						if(title == "审批流程"){
+// 						window.parent.refreshTab({tabTitle:'审批流程',url:''});
+							refreshTabContent(title);
+						}
+					}
+				});
+				//加载附件列表
+				fileUpload("btn_fileId", "fileId");
+
+
+				$("#tree_process").tree({
+					checkbox:false,
+					animate:true,
+					data:_processTree,
+					onClick:function(node){
+						var processCode = node.attributes.processCode;
+						if (processCode!=undefined && processCode !=''){
+							addFlowTab(node.id,processCode,node.text);
+						}
+					}
+				});
+
+				$('.ul-list > .li-process').on('click', function() {
+					var ulList = $(this).parent().children()
+					var len = ulList.length;
+					for(var i = 0; i < len; i++) {
+						$(ulList[i]).hasClass("selected") ? $(ulList[i]).removeClass("selected") : ''
+					}
+					$(this).addClass("selected");
+				});
+
+				$(".ul-list > .li-process").click(function(){
+					var _this = $(this);
+					addFlowTab(_this.attr("id"),_this.attr("processCode"),_this.text());
+				});
+
+				$('#w_contract_choose').window({
+					title: '请选择合同',
+					modal:true,
+					closed: true,
+					collapsible : false,
+					minimizable : false,
+					maximizable : false,
+					cache:false
+				});
+
+				$('#tth').window({
+					title: '待办事项',
+					modal:true,
+					closed: true,
+					collapsible : false,
+					minimizable : false,
+					maximizable : false,
+					cache:false
+				});
+
+				//默认隐藏'审批流程'菜单
+				$(".parentHide").parent().addClass("hide");
+				//若业务流程下无审批流程则隐藏'业务流程'父菜单
+				if (_processTree.length==0){
+					$(".bizProcess").parent().addClass("hide");
+				}
+			});
+
+			function addFlowTab(id,code,name){
+				var _processName = name;//_li.text();
+				var _processId = id;//_li.attr("id");
+				var _processCode = code;//_li.attr("processCode");
+				var title ='新建:' + _processName;
+				var productStatus;
+				if(_processCode == 'APPLY_PAY'){
+					title = 'pay';
+					url=_ctx+"/ctr/contract/choose2?contractType=B&contractStatus=C&type=R&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else if(_processCode == 'APPLY_RECEIVE'){
+					title = 'receive'
+					url=_ctx+"/ctr/contract/choose2?contractType=S&contractStatus=C&type=R&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else if(_processCode == 'APPLY_DELIVERYIN'){
+					title = 'deliveryIn';
+					productStatus = ["P","PI"];
+					url=_ctx+"/ctr/contract/choose2?contractType=B&contractStatus=C&type=DI&productStatus="+productStatus+"&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else if(_processCode == 'APPLY_DELIVERYOUT'){
+					title = 'deliveryOut';
+					productStatus = ["P","PO"];
+					url=_ctx+"/ctr/contract/choose2?contractType=S&contractStatus=C&type=DO&productStatus="+productStatus+"&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else if(_processCode == 'CTR_INVOICE'){
+					title = 'invoice';
+					url=_ctx+"/ctr/contract/choose2?contractType=S&contractStatus=C&type=I&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else if(_processCode == 'APPLY_INRECEIVED'){
+					title = 'invoiceReceived';
+					url=_ctx+"/ctr/contract/choose2?contractType=B&type=I&contractStatus=C&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else if(_processCode == 'APPLY_CANCEL'){
+					title = 'cancel';
+					url=_ctx+"/ctr/contract/choose2?contractStatus=C&cancelFlg=true&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else if(_processCode == 'APPLY_PAY_REFUND'){
+					title = 'payRefund';
+					url=_ctx+"/ctr/contract/choose2?contractType=B&contractStatus=C&type=B&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else if(_processCode == 'APPLY_RECEIVE_REFUND'){
+					title = 'receiveRefund';
+					url=_ctx+"/ctr/contract/choose2?contractType=S&contractStatus=C&type=B&title="+title+"&processId="+_processId;
+					openWindow(title,url);
+				}else{
+					window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+_processId);
+				}
+			}
+			//打开合同选择列表
+			function openWindow(title,url){
+				//parent.openWindowChoose(title,url);
+				openChoose(url);
+			}
+
+			var _callbackMethod={};
+
+			function refreshTabContent(title){
+				var callback=_callbackMethod[title]
+				if (callback){
+					callback();
+				}
+			}
+			//选择合同
+			function openChoose(url){
+				$('#w_contract_choose').window({href:url});
+				$('#w_contract_choose').window("open");
+			}
+
+			function fileUpload(fileUploadId, fuSaveId) {
+				var $this = $('#' + fuSaveId);
+				// fileUploadId:点击弹出选择文件事件的dom对象
+				// fusaveId:文件上传成功后，保存的服务文件Id
+				// --start-文件上传---
+				var uploader = WebUploader.create({
+					auto : true,
+					// swf文件路径
+					swf : _ctx + '/static/webuploader-0.1.5/Uploader.swf',
+					// 文件接收服务端。
+					server : _ctx + '/file/uploadFile',
+					// 选择文件的按钮。可选。
+					// 内部根据当前运行是创建，可能是input元素，也可能是flash.
+					pick : '#' + fileUploadId,
+					// 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
+					resize : false,
+					duplicate :true ,//true可重复上传，默认不可多次重复上传
+					// 只允许选择图片文件。
+					accept : {
+						title : 'file',
+						extensions : 'gif,jpg,jpeg,bmp,png,pdf,rar,zip,doc,docx,xlsx,xls',
+//	    				mimeTypes :	"image/*"
+// 	    			mimeTypes :	"image/jpg,image/jpeg,image/gif,image/bmp,image/png,application/pdf,application/rar,application/zip,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+						mimeTypes: "*"
+					}
+				});
+				// 去掉文件上传组件样式，使用上传dom 自己样式
+				$(".webuploader-pick").removeClass();
+
+				uploader.on('beforeFileQueued', function(file) {
+					$.messager.progress('close');
+					if(file &&file.size > 10485760){
+						$.messager.alert('tip',"上传文件不能超过10M!",'info');
+						return false;
+					}
+				})
+
+				// 文件上传成功，给item添加成功class, 用样式标记上传成功。
+				uploader.on('uploadSuccess', function(file, response) {
+					$.messager.progress('close');
+					if(file &&file.size > 10485760){
+						$.messager.alert('tip',"上传文件不能超过10M!",'info');
+						return;
+					}
+					if(response && response.result){//上传成功
+						var fileId = response.fileId;
+						fileId = fileId.substr(0,fileId.length-1);
+						//filePlugin.uploadSuccess(fileId);
+						$('#fileId').val(fileId);
+						$.post(_ctx+'/index/updateFileId',{id:_userId,fileId:fileId},function(d){})
+						//加载附件列表
+						//filePlugin.load($this.val(),'#span_'+fuSaveId);
+						$('#img').attr('src','[[${g_filePath}]]'+'/view/show/'+fileId);
+					}else{
+						$.messager.alert('tip',"上传文件失败，失败信息："+ response._raw,'info');
+					}
+
+				});
+				uploader.on('error',function(file){
+					$.messager.progress('close');
+					$.messager.alert('tip','请选择图片','info');
+				})
+				// 文件上传失败，显示上传出错。
+				uploader.on('file', function(file) {
+					$.messager.progress('close');
+					$.messager.alert('tip','文件上传失败,请重试!','info');
+				});
+				// --end-文件上传---
+			}
+			/* 弹出新增框 */
+			function openWaitDeal(id) {
+				var url = _ctx + "/approve/waitDeal/index/" + id;
+				$('#tth').window({href:url});
+				$('#tth').window("open");
+			}
+	</script>
+</body>
+</html>

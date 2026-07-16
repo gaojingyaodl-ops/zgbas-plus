@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="detail-content">
+
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>供方:</label>
+            <input name="targetCompanyName" id="targetCompanyName" th:value="${content.targetCompanyName}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>需方:</label>
+            <input name="ourCompanyName" id="our_company_name" th:value="${content.ourCompanyName}" type="text"/>
+        </p>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>协议编号:</label>
+            <input name="protocolNo" id="protocolNo" th:value="${content.protocolNo}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>协议日期:</label>
+            <input name="protocolDate" id="protocolDate" th:value="${#dates.format(content.protocolDate, 'yyyy-MM-dd')}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>签订日期:</label>
+            <input name="contractDate" id="contractDate" th:value="${#dates.format(content.contractDate, 'yyyy-MM-dd')}"  type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>合同编号:</label>
+            <input name="contractNo" id="contractNo" th:value="${content.contractNo}" type="text"/>
+        </p>
+        <span class="syncClass" style="line-height: 28px;">
+        <a href="#" class="easyui-linkbutton btn-empty" onclick="applyProtocolDocRescission.syncContractDetail('CP')">同步合同信息</a>
+    </span>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>规格型号:</label>
+            <input name="productName" id="productName" th:value="${content.productName}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>厂商:</label>
+            <input name="factoryName" id="factoryName" th:value="${content.factoryName}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>数量（吨）:</label>
+            <input name="totalNumber" id="totalNumber" th:value="${content.totalNumber}" type="text"/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>单价（元/吨）:</label>
+            <input name="dealPrice" id="dealPrice" th:value="${content.dealPrice}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>总价（元）:</label>
+            <input name="totalAmount" id="totalAmount" th:value="${content.totalAmount}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>退款金额（元）:</label>
+            <input name="refundAmount" id="refundAmount" th:value="${content.refundAmount}" type="text"/>
+        </p>
+    </div>
+</div>
+</body>
+</html>

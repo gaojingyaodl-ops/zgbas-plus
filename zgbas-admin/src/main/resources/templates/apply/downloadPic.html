@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        .file-item {
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 5px;
+            border: 1px solid #cccfd8;
+            color: #438ef7;
+        }
+
+        .file-item:hover {
+            background: #f6f7fa;
+        }
+    </style>
+</head>
+<div class="easyui-layout" fit="true">
+    <div region="center" class="pt20 pl20 pr20 pb15 ofh" border="false">
+        <div th:if="${not #lists.isEmpty(licenseList)}" th:each="item : ${licenseList}">
+            <div th:text="${item.fileName}" th:onclick="viewFile([[${item.url}]])" class="file-item"></div>
+        </div>
+        <div th:if="${#lists.isEmpty(licenseList)}">暂无文件，请联系管理员上传！</div>
+    </div>
+
+</div>
+</html>
+<script type="text/javascript">
+
+    $(function () {
+
+
+    });
+
+    function viewFile(url) {
+        window.open(url, "_blank")
+    }
+
+</script>

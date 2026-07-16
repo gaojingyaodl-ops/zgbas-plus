@@ -1,0 +1,135 @@
+<fieldset class="form-section" style="padding: 0px 30px 10px 20px;">
+<legend class="form-section-title" style="margin-bottom:25px;"><span class="approve_text">采购</span><i></i></legend>
+<div region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+<form th:id="form+${randomNumber}">
+		<input type="hidden" th:value="${randomNumber}" name="randomNumber" id="randomNumber" />
+		<p class="p_text">
+		
+		<span class="input-colspan">
+		<label>合同编号:</label>
+		<input th:id="contractNo+${randomNumber}" name="contractNo" readonly="readonly"  class="control contractType text_padding" type="text"></input>
+		</span>
+		
+		<span class="input-colspan">
+		<label>合同类型:</label>
+		<input th:id="contractType+${randomNumber}" name="contractType" readonly="readonly"  class="control contractType text_padding" value="B" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>合同总价:</label>
+		<input th:id="totalAmount+${randomNumber}" name="totalAmount" readonly="readonly"  class="control b_totalAmount contractType text_padding" type="text"></input>
+		</span>
+		</p>
+		
+		<p class="p_text">
+		<span class="input-colspan2">
+		<label>供方:</label>
+		<input th:id="buyCompanyId+${randomNumber}" name="companyId" type="hidden">
+		<input th:id="buyCompanyName+${randomNumber}" data-options="required:true" name="companyName" class="control companyId companyId text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>交货方式:</label>
+		<input th:id="deliveryTypeAdd+${randomNumber}" data-options="required:true"  name="deliveryType" class="control text_padding" type="text"></input>
+		</span>
+		<!-- <span class="input-colspan">
+		<label>开票日期:</label>
+		<input th:id="invoiceDate+${randomNumber}" name="invoiceDate" type="text"></input>
+		</span> -->
+		</p>
+		
+		<p class="p_text">
+		<span class="input-colspan">
+		<label>仓储费(元):</label>
+		<input th:id="warehouseCost+${randomNumber}" name="warehouseCost" value="0.00" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>不含税仓储费:</label>
+		<input th:id="tax_warehouseCost+${randomNumber}" value="0.00" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>运输费(元):</label>
+		<input th:id="transportCost+${randomNumber}" name="transportCost" value="0.00" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>不含税运输费:</label>
+		<input th:id="tax_transportCost+${randomNumber}" value="0.00" class="control text_padding" type="text"></input>
+		</span>
+		</p>
+		<p class="p_text">
+		<span class="input-colspan">
+		<label>结算方式:</label>
+		<input th:id="deliveryModeAdd+${randomNumber}" name="deliveryMode" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>支付方式:</label>
+		<input th:id="payTypeAdd+${randomNumber}" data-options="required:true"  name="payType" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>到货日期:</label>
+		<input th:id="arrivalTimeB+${randomNumber}" name="deliveryTime" class="control text_padding" type="text" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+		<input th:id="arrivalTimeExtB+${randomNumber}" name="arrivalTimeExt" type="text"/>
+		</span>
+		</p>
+		<p class="p_text">
+		<span class="input-colspan">
+		<label>定金比例:</label>
+		<input th:id="payRate+${randomNumber}" data-options="required:true"  name="payRate" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>定金(元):</label>
+		<input th:id="payBondAmount+${randomNumber}" data-options="required:true"  name="payBondAmount" value="0" class="control text_padding" type="text"></input>
+		</span>
+		<span class="input-colspan">
+		<label>付定金日期:</label>
+		<input th:id="payBondTime+${randomNumber}"  name="payBondTime" class="control text_padding" type="text" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+		</span>
+		<span class="input-colspan">
+		<label>付全款日期:</label>
+		<input th:id="payFullTime+${randomNumber}"  name="payFullTime" class="control text_padding" type="text" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+		</span>
+		</p>
+		
+		<!-- <p class="p_text">
+		<span class="input-colspan">
+		<label>联系电话:</label>
+		<input th:id="contactPhone+${randomNumber}" name="contactPhone" class="control contactPhone text_padding" type="text"></input>
+		</span>
+		</p> -->
+		<p class="p_text">
+		<span class="input-colspan2">
+		<label>联系地址:</label>
+		<input th:id="contactAddr+${randomNumber}" name="contactAddr" class="control contactAddr text_padding" type="text"></input>
+		</span>	
+		<span class="input-colspan2">
+		<label>交货地点:</label>
+		<input th:id="deliveryAddr+${randomNumber}" name="deliveryAddr" class="control payRemark text_padding large" type="text"></input>
+		</span>	
+		</p>
+		<p class="p_text">
+		<span class="input-colspan2">
+		<label>补充条款:</label>
+		<input th:id="extraTerm+${randomNumber}" name="extraTerm" class="control payRemark text_padding large" type="text"></input>
+		</span>	
+		<span class="input-colspan2">
+		<label>备注:</label>
+		<input th:id="remark+${randomNumber}" name="payRemark" class="control payRemark text_padding large" type="text"></input>
+		</span>	
+		</p>
+		</p>
+	  </form>
+	  </div>
+	  
+	<div style="margin-bottom:20px;">
+		<div id="btn" class="add-btn">
+			<a href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="applyMatch.insert(this)" th:attr="table=relaTable+${randomNumber}">新增</a>
+			<a href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="applyMatch.batchInsertSell(this)" th:attr="table=relaTable+${randomNumber}">同步销售</a>
+		</div>	
+		<table th:id="relaTable+${randomNumber}"  th:attr="pointer=${randomNumber}" atr="B" class="relaTable"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id"> 
+		</table>
+	</div>
+	<div region="south" border="true" style="float: right;">
+		<input type="hidden" th:value="${randomNumber}"></input>	
+        <a href="#" class="easyui-linkbutton btn-danger" data-options="iconCls:'icon-clear'" id="removeBuy" th:attr="detailId=${randomNumber}" onclick="applyMatch.removeNode(this)">删除</a>
+	</div>
+	</fieldset>

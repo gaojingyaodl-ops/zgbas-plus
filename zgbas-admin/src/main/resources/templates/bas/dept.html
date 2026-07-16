@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>机构管理</title>
+<th:bock th:replace="~{layouts/include :: include}"></th:bock>
+</head>
+<body class="easyui-layout" >
+
+	<div data-options="region:'west'" title="机构管理" style="width:380px;">
+	  	<ul id="tt">
+	  	</ul>
+	</div>
+	<div data-options="region:'center'" title="详细信息"  style="">
+		<div class="easyui-layout" style="width:100%;height:100%;">
+	       	<div region="center" border="false" id="divRightContent">
+	       	
+	       	</div>
+	    </div>
+	</div>
+	<div region="south" border="true" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+			<a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveDept();">保存</a>
+		</div>
+	</div>
+	<div id="mm" class="easyui-menu" style="width:120px;">  
+        <div onclick="append()" data-options="iconCls:'icon-add'">新建</div>  
+<!--         <div id="mm_remove" onclick="removeDept()" data-options="iconCls:'icon-remove'">删除</div>   -->
+<!--         <div class="menu-sep"></div>   -->
+<!--         <div onclick="expand()">Expand</div>   -->
+<!--         <div onclick="collapse()">Collapse</div>   -->
+    </div>
+<script type="text/javascript">
+var lastSelectNodeId;
+var appJson =eval('[(${appJson})]');
+var enterpriseJson =eval('[(${enterpriseJson})]');
+var allDeptJson =eval('[(${allDeptJson})]');
+$(function(){
+	$("#tt").tree({
+		checkbox:false,
+		animate:true,dnd:false,
+		url:_ctx+"/bas/dept/initTree",
+		onSelect:function(node){
+			lastSelectNodeId=node.id;
+			var isLeaf=$(this).tree('isLeaf',node.target);
+			var itemRemove = $('#mm').menu('findItem', '删除');
+			var itemAdd = $('#mm').menu('findItem', '新建');
+			/* if (!isLeaf){
+				$('#mm').menu('disableItem', itemRemove.target);
+			}else{
+				$('#mm').menu('enableItem', itemRemove.target);
+			} */
+			if (node.attributes.type =='dept'){
+				$('#mm').menu('enableItem', itemAdd.target);
+			}else{
+				$('#mm').menu('disableItem', itemAdd.target);
+			}
+			if (node.id !='0'){
+				loadEntity(node.id);
+			}
+		},
+		onLoadSuccess:function(node,data){
+			if (data!=''){
+				if(typeof (lastSelectNodeId) != "undefined" && lastSelectNodeId!=''){
+					var lastNode=$("#tt").tree('find',lastSelectNodeId);
+					if (lastNode!=undefined){
+						var parentNode=$("#tt").tree('getParent',lastNode.target)
+						$("#tt").tree('expand',parentNode.target);
+						$("#tt").tree('select',lastNode.target);
+					}
+				}
+			}
+		},
+		onDrop:function(target, source, point){
+// 			var tarNode =$("#tt").tree('getNode',target);
+// 			console.log(tarNode,source,point)
+			
+// 			$.get('${ctx}/admin/dept/drag',{id:source.id,parentId:tarNode.id},function(result){
+// 				$("#divRightContent").html(result);
+// 			});
+		},
+		onContextMenu: function(e,node){  
+            e.preventDefault();  
+            $(this).tree('select',node.target);  
+            $('#mm').menu('show',{  
+                left: e.pageX,  
+                top: e.pageY  
+            });  
+        }
+	});
+});
+function loadEntity(id){
+	$.get(_ctx+'/bas/dept/detail/'+id,function(result){
+		$("#divRightContent").html(result);
+	});
+}
+function append(){
+    var t = $('#tt');
+    var node = t.tree('getSelected');
+    //var nodes = t.tree('getParent',node.target);
+//     t.tree('append', {
+//         parent: (node?node.target:null),  
+//         data: [{
+//             text: '鏂拌彍鍗�'
+//         }]  
+//     });
+    $.get(_ctx+'/bas/dept/create/'+node.id,function(result){
+		$("#divRightContent").html(result);
+	});
+}  
+
+function saveDept(){
+	$('#inputForm').form('submit', {
+		url: _ctx+'/bas/dept/save',
+		onSubmit: function(){
+			var isValid = $(this).form('validate');
+			if (isValid){
+				var parentId = $('#parentId').combotree('getValue');
+				var deptId =$('#deptId').val();
+				if(parentId == deptId ){
+					$.messager.alert('警告','上级机构不能是自己');
+					isValid=false;
+				}
+			}
+			return isValid;	// 返回false终止表单提交
+		},
+		success: function(result){
+			if(result.indexOf('success')!=-1){
+				var id=result.substr(result.indexOf(":")+1);
+				lastSelectNodeId=id;
+				$("#tt").tree('reload');
+			}else{
+				alert(result);
+			}
+		}
+	});
+}
+// function removeDept(){  
+//     var node = $('#tt').tree('getSelected');
+//     $('#tt').tree('remove', node.target);
+//     lastSelectNodeId='';
+//     $.get(_ctx+'/bas/dept/delete/'+node.id,function(result){
+//     	$("#divRightContent").html('');
+// 	});
+// }
+// function collapse(){
+//     var node = $('#tt').tree('getSelected');
+//     $('#tt').tree('collapse',node.target);
+// }
+// function expand(){
+//     var node = $('#tt').tree('getSelected');
+//     $('#tt').tree('expand',node.target);
+// }
+
+</script>
+</body>
+</html>

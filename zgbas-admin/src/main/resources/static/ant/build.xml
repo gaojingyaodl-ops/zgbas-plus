@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+
+<project default="zip-static" basedir=".">
+	<property environment="osenv" />
+	<property file="build.properties" />
+	<tstamp>
+			<format property="TODAY_CN" pattern="yy-MM-dd" locale="zh" />
+	</tstamp>
+
+	<target name="zip-static" description="create static zip files">
+		<echo>创建static.zip</echo>
+		<zip destfile="${output.path}/topup-static${TODAY_CN}.zip">
+			<fileset dir="${webapp.static}">
+				<exclude name="ant/" />
+				<exclude name="**/.svn/" />
+			</fileset>
+		</zip>
+	</target>
+
+</project>

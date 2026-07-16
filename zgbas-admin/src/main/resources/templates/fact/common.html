@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>跳转中转页</title>
+    <head>
+        <th:block th:replace="~{layouts/include :: include}"></th:block>
+        <style>
+            .containerMenu{
+                padding: 20px 40px;
+                font-size: 13px;
+            }
+            ul > li {
+                margin-top: 10px;
+            }
+
+        </style>
+    </head>
+</head>
+<body>
+<div class="containerMenu">
+
+    <ul>
+        <li th:each="item : ${menuList}">
+            <img th:class="${item.icon}"/>
+            <a th:utext="${item.name}" th:href="@{${item.url}}" target="_blank">二级菜单</a>
+        </li>
+    </ul>
+</div>
+
+<script type="text/javascript">
+</script>
+</body>
+</html>

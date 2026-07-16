@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20 pr20 pl20 pb15 ofh" border="false">
+        <form id="inputForms" method="post"  class="from-input-layout" >
+            <input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="sxCompanyx"  class="control-label">代采赊销单位:</label>
+                    <input name="sxCompany" id="sxCompanyx" type="text" th:value="${entity.sxCompany}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="ourCompanyNamex"  class="control-label">我方抬头:</label>
+                    <input name="ourCompanyName" id="ourCompanyNamex"  type="text" th:value="${entity.ourCompanyName}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="fundSourcex"  class="control-label">资金来源:</label>
+                    <input type="text" name="fundSource" id="fundSourcex" th:value="${entity.fundSource}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="contractModelx"  class="control-label">赊销模式:</label>
+                    <input type="text" name="contractModel" id="contractModelx"  th:value="${entity.contractModel}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="balance"  class="control-label">可用额度(元):</label>
+                    <input name="balance" id="balance" th:value="${entity.balance}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="enableFlgx"  class="control-label">是否有效:</label>
+                    <input type="text" name="enableFlg" required="required" id="enableFlgx" th:value="${entity.enableFlg}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="creditType"  class="control-label">授信类型:</label>
+                    <input type="text" name="creditType" required="required" id="creditType" th:value="${entity.creditType}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="remark"  class="control-label">备注:</label>
+                    <input name="remark" id="remark" type="text" th:value="${entity.remark}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <div region="south" border="false" style="overflow: hidden;height: 50px;margin-left:  130px;">
+                    <div class="actions_bar">
+                        <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="submit();">保存</span>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var enableFlgs = eval('[(${enableFlgs})]');//是否有效
+    var contractModel = eval('[(${contractModel})]');//赊销模式
+    var fundSource = eval('[(${fundSource})]');//资金来源
+    var ourCompanyName = eval('[(${ourCompanyName})]');//我方抬头
+    var sxCompany = eval('[(${sxCompany})]');//代采赊销单位
+    $(function(){
+        /* 是否有效 */
+        $("#enableFlgx").combobox({
+            data : enableFlgs,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            panelHeight:"auto",
+            editable : false
+        });
+        /* 赊销模式 */
+        $("#contractModelx").combobox({
+            data : contractModel,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            panelHeight:"auto",
+            editable : false,
+            required: true,
+        });
+        $("#creditType").combobox({
+            data : creditTypeJson,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            panelHeight:"auto",
+            editable : false,
+            required: true,
+        });
+        /* 我方抬头 */
+        $("#ourCompanyNamex").combobox({
+            data: ourCompanyName,
+            textField: 'dictName',
+            valueField: 'dictCd',
+            panelHeight: "auto",
+            editable: false,
+            required: true,
+            multiple: true,
+            formatter: function (row) {
+                var opts = $(this).combobox('options');
+                return '<input style="margin-right:10px;" type="checkbox" class="combobox-checkbox ckbox">' + row[opts.textField]
+            },
+            onShowPanel: function () {
+                var opts = $(this).combobox('options');
+                var target = this;
+                var values = $(target).combobox('getValues');
+                $.map(values, function (value) {
+                    var el = opts.finder.getEl(target, value);
+                    el.find('input.combobox-checkbox')._propAttr('checked', true);
+                })
+            },
+            onLoadSuccess: function () {
+                var opts = $(this).combobox('options');
+                var target = this;
+                var values = $(target).combobox('getValues');
+                $.map(values, function (value) {
+                    var el = opts.finder.getEl(target, value);
+                    el.find('input.combobox-checkbox')._propAttr('checked', true);
+                })
+            },
+            onSelect: function (row) {
+                var opts = $(this).combobox('options');
+                var el = opts.finder.getEl(this, row[opts.valueField]);
+                el.find('input.combobox-checkbox')._propAttr('checked', true);
+            },
+            onUnselect: function (row) {
+                var opts = $(this).combobox('options');
+                var el = opts.finder.getEl(this, row[opts.valueField]);
+                el.find('input.combobox-checkbox')._propAttr('checked', false);
+            }
+        });
+        /* 代采赊销单位 */
+        $("#sxCompanyx").combobox({
+            data : sxCompany,
+            textField : 'companyName',
+            valueField : 'companyCd',
+            panelHeight:"auto",
+            editable: false,
+            multiple: true,
+            formatter: function (row) {
+                var opts = $(this).combobox('options');
+                return '<input style="margin-right:10px;" type="checkbox" class="combobox-checkbox ckbox">' + row[opts.textField]
+            },
+            onShowPanel: function () {
+                var opts = $(this).combobox('options');
+                var target = this;
+                var values = $(target).combobox('getValues');
+                $.map(values, function (value) {
+                    var el = opts.finder.getEl(target, value);
+                    el.find('input.combobox-checkbox')._propAttr('checked', true);
+                })
+            },
+            onLoadSuccess: function () {
+                var opts = $(this).combobox('options');
+                var target = this;
+                var values = $(target).combobox('getValues');
+                $.map(values, function (value) {
+                    var el = opts.finder.getEl(target, value);
+                    el.find('input.combobox-checkbox')._propAttr('checked', true);
+                })
+            },
+            onSelect: function (row) {
+                var opts = $(this).combobox('options');
+                var el = opts.finder.getEl(this, row[opts.valueField]);
+                el.find('input.combobox-checkbox')._propAttr('checked', true);
+            },
+            onUnselect: function (row) {
+                var opts = $(this).combobox('options');
+                var el = opts.finder.getEl(this, row[opts.valueField]);
+                el.find('input.combobox-checkbox')._propAttr('checked', false);
+            }
+        });
+        /* 资金来源 */
+        $("#fundSourcex").combobox({
+            data : fundSource,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            panelHeight:"auto",
+            editable : false,
+            required: true,
+        });
+        /* 可用额度 */
+        $('#balance').numberbox({
+            min: 0,
+            precision: 2,
+            required: true
+        });
+    });
+
+    //保存
+    function submit(){
+        var entityId = $("#id").val();
+        if (entityId != null  && entityId !=0 && entityId != ""){//判断是否有id值，有则修改，无则添加
+            Edit();//修改方法
+        }else{
+            save();//添加方法
+        }
+    }
+    /* 修改方法 */
+    function Edit(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: 'config/updateConfig',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '修改业务配置成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#config_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+    /* 添加方法 */
+    function save(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: 'config/save',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '添加成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#config_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+</script>

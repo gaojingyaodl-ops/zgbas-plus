@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <th:block th:include="include :: header('我的首页')" />
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <script th:src="@{/static/ruoyi/js/common.js?v=4.7.2}"></script>
+    <script type="text/javascript">	_ctx='[[${#request.getContextPath()}]]';</script>
+</head>
+<style>
+    body{
+        font-size: 13px;
+    }
+</style>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+        <div class="dev-cards">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>待办</h5>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row  m-t-sm idx-row" onclick="buyNoBill()">
+                        <span class="col-xs-4 text-left  mpl" >进项未收发票</span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal((statisticsVo.buyNoBill.money == null ? 0 : statisticsVo.buyNoBill.money),1,'COMMA',2,'POINT')} + '万'" ></span>
+                        <span class="col-xs-4 text-right  mpr" th:text="${statisticsVo.buyNoBill.num} + '单'" ></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="sellNoBill()">
+                        <span class="col-xs-4 text-left  mpl" >销项未开发票</span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal((statisticsVo.sellNoBill.money == null ? 0 : statisticsVo.sellNoBill.money),1,'COMMA',2,'POINT')} + '万'" ></span>
+                        <span class="col-xs-4 text-right  mpr" th:text="${statisticsVo.sellNoBill.num} + '单'" ></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="approval()">
+                        <span class="col-xs-4 text-left  mpl" >待审批事项</span>
+                        <span class="col-xs-4 text-right  mpc"></span>
+                        <span class="col-xs-4 text-right  mpr" th:text="${approvalCount} + '单'"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dev-cards">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>业务统计</h5>
+                    <span  class="text-right" style="position: absolute;margin-top: -12px;margin-left: 167px;">
+                        <button type="button" class="idx-btn-h18" onclick="changeTjQy()" id="tj_qy" th:value="true">签约</button>
+                        <button type="button" class="idx-btn-h18" onclick="changeTjJh()" id="tj_jh" th:value="false">交货</button>
+                    </span>
+                    <span  class="text-right" style="position: absolute;margin-top: 7px;margin-left: 60px;">
+                        <button type="button" class="idx-btn-h18" onclick="changeMonth3()" id="month_3" th:value="false" th:text="${month_3}"></button>
+                        <button type="button" class="idx-btn-h18" onclick="changeMonth2()" id="month_2" th:value="false" th:text="${month_2}"></button>
+                        <button type="button" class="idx-btn-h18" onclick="changeMonth1()" id="month_1" th:value="false" th:text="${month_1}"></button>
+                        <button type="button" class="idx-btn-h18" onclick="changeMonth0()" id="month" th:value="true" th:text="${month}"></button>
+                    </span>
+                </div>
+                <div class="imbox-content hgt265" >
+                    <div class="row  m-t-sm businessJhList idx-row" th:each="list,state:${businessJhList}" th:onclick="businessClick([[${state.index}]], [[${list.typeName}]])">
+                        <span class="col-xs-2 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm businessQyList idx-row" th:hidden="true" th:each="list,state:${businessQyList}" th:onclick="businessClick([[${state.index}]], [[${list.typeName}]])">
+                        <span class="col-xs-2 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm businessMonth1JhList idx-row" th:hidden="true" th:each="list,state:${businessMonth1JhList}" th:onclick="businessClick([[${state.index}]], [[${list.typeName}]])">
+                        <span class="col-xs-2 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm businessMonth1QyList idx-row" th:hidden="true" th:each="list,state:${businessMonth1QyList}" th:onclick="businessClick([[${state.index}]], [[${list.typeName}]])">
+                        <span class="col-xs-2 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm businessMonth2JhList idx-row" th:hidden="true" th:each="list,state:${businessMonth2JhList}" th:onclick="businessClick([[${state.index}]], [[${list.typeName}]])">
+                        <span class="col-xs-2 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm businessMonth2QyList idx-row" th:hidden="true" th:each="list,state:${businessMonth2QyList}" th:onclick="businessClick([[${state.index}]], [[${list.typeName}]])">
+                        <span class="col-xs-2 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm businessMonth3JhList idx-row" th:hidden="true" th:each="list,state:${businessMonth3JhList}" th:onclick="businessClick([[${state.index}]], [[${list.typeName}]])">
+                        <span class="col-xs-2 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm businessMonth3QyList idx-row" th:hidden="true" th:each="list,state:${businessMonth3QyList}" th:onclick="businessClick([[${state.index}]], [[${list.typeName}]])">
+                        <span class="col-xs-2 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dev-cards">
+            <div class="ibox">
+                <div class="ibox-title" style="position: relative;">
+                    <h5 >业绩排名（本月）</h5>
+                    <span  class="text-right" style="position: absolute;margin-top: -12px;margin-left: 110px;">
+                        <button type="button" class="idx-btn-h18" onclick="changePmQy()" id="pm_qy" th:value="true">签约</button>
+                        <button type="button" class="idx-btn-h18" onclick="changePmJh()" id="pm_jh" th:value="false">交货</button>
+                    </span>
+                    <span  class="text-right" style="position: absolute;margin-top: 7px;margin-left: 110px;">
+                        <button type="button" class="idx-btn-h18" onclick="changeSell()" id="sell" th:value="true">赊销</button>
+                        <button type="button" class="idx-btn-h18" onclick="changeBuy()" id="buy" th:value="false">代采</button>
+                    </span>
+                </div>
+
+                <div class="imbox-content hgt265">
+                    <div class="row  m-t-sm sellJhList idx-row" th:each="list,data:${sellJhList}" th:onclick="'sellClick('+${list.userId}+')'">
+                        <span class="col-xs-3 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-3 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm buyJhList idx-row" th:hidden="true" th:each="list,data:${buyJhList}" th:onclick="'buyClick('+${list.userId}+')'">
+                        <span class="col-xs-3 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-3 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm sellQyList idx-row" th:hidden="true" th:each="list,data:${sellQyList}" th:onclick="'sellClick('+${list.userId}+')'">
+                        <span class="col-xs-3 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-3 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                    <div class="row  m-t-sm buyQyList idx-row" th:hidden="true" th:each="list,data:${buyQyList}" th:onclick="'buyClick('+${list.userId}+')'">
+                        <span class="col-xs-3 text-left  mpl" th:text="${list.typeName}" ></span>
+                        <span class="col-xs-3 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(list.money,1,'COMMA',2,'POINT')}  + '万'" ></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(list.tonnes,1,'COMMA',2,'POINT')} + '吨'" >125单</span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${list.num}  + '单'" >125单</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dev-cards">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>业绩提成（本月）</h5>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row  m-t-sm idx-row" onclick="noSettlement()">
+                        <span class="col-xs-4 text-left  mpl" >累计未结算提成</span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(performanceCommission.noSettlementCommissionSum.money,1,'COMMA',2,'POINT')}+'元'" ></span>
+                        <span class="col-xs-4 text-right  mpr" th:text="${performanceCommission.noSettlementCommissionSum.num} + '单'" ></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="planCommission()">
+                        <span class="col-xs-4 text-left  mpl" >预计提成</span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(performanceCommission.planCommission.money,1,'COMMA',2,'POINT')}+'元'"></span>
+                        <span class="col-xs-4 text-right  mpr" th:text="${performanceCommission.planCommission.num} + '单'" ></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="lastMonthCommission()">
+                        <span class="col-xs-4 text-left  mpl" >上月结算提成</span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(performanceCommission.lastMonthCommission.money,1,'COMMA',2,'POINT')}+'元'" ></span>
+                        <span class="col-xs-4 text-right  mpr" th:text="${performanceCommission.lastMonthCommission.num} + '单'" ></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dev-cards" th:if="${riskStatisticsViewPerm == true}">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>风控统计</h5>
+                </div>
+                <div class="imbox-content hgt265" >
+                    <div class="row idx-row m-t-sm" th:each="riskStatistics:${riskStatisticsList}"
+                         th:onclick="riskStatisticsDetail([[${riskStatistics.statisticsTypeName}]],[[${riskStatistics.statisticsType}]])">
+
+                        <span class="col-xs-2 text-left  mpl" th:text="${riskStatistics.statisticsTypeName}"></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(riskStatistics.totalAmount,1,'COMMA',2,'POINT')}+'万'"></span>
+                        <span class="col-xs-3 text-right  mpc" th:text="${#numbers.formatDecimal(riskStatistics.totalNumber,1,'COMMA',2,'POINT')}+'吨'"></span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${riskStatistics.totalCount}+'单'"></span>
+
+                        <span class="col-xs-2 text-right  mpl"></span>
+                        <span class="col-xs-4 text-right  mpc" style="color: red;height: 10px;" th:text="'￥'+${#numbers.formatDecimal(riskStatistics.totalBreachAmount,1,'COMMA',2,'POINT')}" th:if="${riskStatistics.statisticsType != 'F'}"></span>
+                        <span class="col-xs-3 text-right  mpc"></span>
+                        <span class="col-xs-3 text-right  mpr"></span>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dev-cards" th:if="${financeStatisticsViewPerm == true}">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5 style="display: inline;float: left;">财务统计</h5>
+                    <span  class="text-right" style="position: absolute;margin-top: -9px;margin-left: 45px;width: 120px;">
+                        <select name="userSex" class="form-control margin-padding-0" id="optionId">
+                            <option style="margin-top: 0px;width: 150px;" th:text="--全部公司--" th:value="all"></option>
+                            <option style="margin-top: 0px;width: 150px;" th:each="dict : ${ourCompany}" th:text="${dict.remark}" th:value="${dict.dictName}"></option>
+                        </select>
+                    </span>
+
+                    <span  class="text-right" style="position: absolute;margin-top: -9px;margin-left: 170px;width: 100px;">
+                        <select name="userSex" class="form-control margin-padding-0" id="optionId2" >
+                            <option style="margin-top: 0px;width: 130px;" th:text="--全部业务--" th:value="all"></option>
+                            <option style="margin-top: 0px;width: 130px;" th:each="dict : ${businessTypeJson}" th:text="${dict.dictName}" th:value="${dict.dictCd}"></option>
+                        </select>
+                    </span>
+
+
+<!--                    <span  class="text-right" style="position: absolute;margin-top: -9px;margin-left: 110px;">-->
+<!--                        -->
+
+<!--                    </span>-->
+
+
+
+                </div>
+                <div class="imbox-content hgt265" id="financeStatisticsId">
+                    <div class="row idx-row m-t-sm" th:each="financeStatistics:${financeStatisticsList}"
+                         th:onclick="financeStatisticsDetail([[${financeStatistics.statisticsType}]],[[${financeStatistics.statisticsTypeName}]])">
+
+                        <span class="col-xs-5 text-left  mpl" th:text="${financeStatistics.statisticsTypeName}"></span>
+                        <span class="col-xs-4 text-right  mpr text-color-020085" th:id="'financeTotalAmount'+${financeStatistics.dispOrderNo}" th:text="'￥'+${#numbers.formatDecimal(financeStatistics.totalAmount,1,'COMMA',2,'POINT')}+'万'"></span>
+                        <span class="col-xs-3 text-right  mpr" th:id="'financeTotalCount'+${financeStatistics.dispOrderNo}" th:text="${financeStatistics.totalCount}+'单'"></span>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="dev-cards">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>到期应收</h5>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row idx-row m-t-sm" th:each="dueReceivable:${dueReceivableList}"
+                         th:onclick="dueReceivableDetail([[${#dates.format(dueReceivable.payFullTime,'yyyy-MM-dd')}]])">
+
+                        <span class="col-xs-4 text-left  mpl" th:text="${#dates.format(dueReceivable.payFullTime,'yyyy-MM-dd')}"></span>
+                        <span class="col-xs-5 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(dueReceivable.totalAmount,1,'COMMA',2,'POINT')}+'万'"></span>
+                        <span class="col-xs-3 text-right  mpr padding-right-15" th:text="${dueReceivable.totalCount}+'单'"></span>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dev-cards" th:if="${unPayStatisticsViewPerm == true}">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>未收款统计 <span style="color: red;">（赊销、上游付全款）</span></h5>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row idx-row m-t-sm" th:each="unPayStatistics:${unPayStatisticsList}"
+                         th:onclick="unPayStatisticsDetail([[${unPayStatistics.statisticsType}]],[[${unPayStatistics.statisticsTypeName}]])">
+
+                        <span class="col-xs-5 text-left  mpl" th:text="${unPayStatistics.statisticsTypeName}"></span>
+                        <span class="col-xs-4 text-right  mpc text-color-020085" th:text="'￥'+${#numbers.formatDecimal(unPayStatistics.totalAmount,1,'COMMA',2,'POINT')}+'万'"></span>
+                        <span class="col-xs-3 text-right  mpr" th:text="${unPayStatistics.totalCount}+'单'"></span>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12" th:if="${grossProfitMarginViewPerm == true}" id="grossProfitMarginDiv">
+            <div class="ibox" style="margin-left: -5px;">
+                <div class="ibox-title">
+                    <h5>净毛利（月）
+                        <a id="dd" href="javascript:void(0)" style="color: red;">？</a>
+                        
+                    </h5>
+                </div>
+                <div class="imbox-content hgt265 echarts" id="grossProfitMargin">
+                </div>
+            </div>
+        </div>
+        <div id="echarts_sales_week" class="col-xs-6">
+            <div class="ibox" style="margin-left: -5px;">
+                <div class="ibox-title">
+                    <h5>销售（周）</h5>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="echarts" id="echarts-bar-chart"></div>
+                </div>
+            </div>
+        </div>
+        <div id="echarts_sales_month" class="col-xs-6">
+            <div class="ibox" style="margin-left: -5px;">
+                <div class="ibox-title">
+                    <h5>销售（月）</h5>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="echarts" id="echarts-bar-chart-month"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="include :: echarts-js" />
+<script type="text/javascript" th:inline="javascript">
+    var businessTypeFlgJson = [{id:'SX',text:'赊销'},{id:'DC',text:'代采'}];// 发票状态
+
+    var businessMonth3List = [];
+
+    var _pcSide = true;
+    // function announceMent(){
+    //     $.modal.openTab('企业公告',_ctx+'/bs/bsNotice/bsNoticeIndex');
+    // }
+    // function showNoticeDetail(id){
+    //     $.post(_ctx+"/bs/bsNotice/detail/" + id,function(data){
+    //         var html = '<div style="padding:20px;">';
+    //         if (data != null){
+    //             html += data.content;
+    //         }
+    //         top.layer.open({
+    //             title: data.subjuect,
+    //             type: 1,
+    //             fix: false,
+    //             shadeClose:true,
+    //             area: _pcSide ? ['750px', '520px'] : ['380px','450px;'],
+    //             btn: ['确定'],
+    //             content: html + '</div>'
+    //         });
+    //     });
+    // }
+    // 按钮标记
+    var buttonFlag = true;
+    // ------------------jQuery初始化函数------------
+    $(function() {
+        $('#dd').tooltip({
+            position: 'right',
+            content: '<p style="font-weight: bold;font-size: 15px">计算公式：</p><br/>' +
+                '<p>保险费：销售总额*保险费率/1.06</p>' +
+                '<p>增值税：(销售总价-采购总价)/1.13*0.13 - 运费/1.09*0.09 - (仓储费+出库费+装卸费)/1.06*0.06 - 保险费</p>' +
+                '<p>附加税：增值税 * 0.12</p>' +
+                '<p>支付给资金方的逾期利息：逾期金额 * 逾期天数 * 0.1/365 - 已收客户逾期罚息</p>' +
+                '<p>金融服务费：：我司企业处于中游甲方：下游合同金额-中游合同金额； 我司企业处于中游乙方：中游合同金额-上游合同金额</p>' +
+                '<p>代采赊销资金成本：( 金融服务费 + 支付给资金方的逾期利息 ) / 1.13</p>' +
+                '<p>普通赊销资金成本：( 金融服务费（利润表结算表中获取） ) / 1.13</p>' +
+                '<p>毛利：销售总额-采购总额-仓储费-装卸费-出库费-运输费</p>' +
+                '<p>毛利率：毛利/采购总额</p>' +
+                '<p>净毛利：(销售总额-采购总额)/1.13-运费/1.09-(仓储费+出库费+装卸费)/1.06-保险费-附加税-资金成本</p>' +
+                '<p>净毛利率：净毛利/采购总额</p><br/>',
+            onShow: function () {
+                $(this).tooltip('tip').css({
+                    backgroundColor: '#666',
+                    borderColor: '#666'
+                });
+            }
+        });
+        // 识别手机与PC段
+        _pcSide = browserRedirect();
+        // console.log("-----"+_pcSide);
+        if (_pcSide) {
+            $("#echarts_sales_week").removeClass("col-xs-12").addClass("col-xs-6");
+            $("#echarts_sales_month").removeClass("col-xs-12").addClass("col-xs-6");
+        } else {
+            $("#echarts_sales_week").removeClass("col-xs-6").addClass("col-xs-12");
+            $("#echarts_sales_month").removeClass("col-xs-6").addClass("col-xs-12");
+        }
+        // 默认为赊销按钮
+        $('#sell').css('background-color','#fff');
+        $('#buy').css('background-color','rgba(243, 243, 244, 1)');
+        $('#pm_jh').css('background-color','rgba(243, 243, 244, 1)');
+        $('#pm_qy').css('background-color','#fff');
+        // 默认隐藏采购
+        $('.buyQyList').hide();
+        $('.buyJhList').hide();
+        $('.sellQyList').show();
+        $('.sellJhList').hide();
+        //业务统计
+        $('#tj_jh').css('background-color','rgba(243, 243, 244, 1)');
+        $('#tj_qy').css('background-color','#fff');
+        $('#month').css('background-color','#fff');
+        $('#month_1').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month_2').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month_3').css('background-color','rgba(243, 243, 244, 1)');
+        $('.businessMonth3JhList').hide();
+        $('.businessMonth3QyList').hide();
+        $('.businessMonth2JhList').hide();
+        $('.businessMonth2QyList').hide();
+        $('.businessMonth1JhList').hide();
+        $('.businessMonth1QyList').hide();
+        $('.businessJhList').hide();
+        $('.businessQyList').show();
+        //初始化销售周柱状折线图
+        initSalesWeek();
+        // 初始化毛利率折线图,有权限才加载
+        if($('#grossProfitMarginDiv').length > 0){
+            initGrossProfitMarginEchars();
+        }
+        //初始化销售月柱状折线图
+        initSalesMonth();
+    });
+    $("#optionId").bind("change", function () {
+        var ourCompanyName = $("#optionId option:selected").val();
+        var businessType = $("#optionId2 option:selected").val();
+        if('all' == ourCompanyName){
+            ourCompanyName=null;
+        }
+        if('all' == businessType){
+            businessType=null;
+        }
+        $.ajax({
+            type:"post",
+            url:_ctx+"/my/index/findIndexFinanceStatistics",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify({'ourCompanyName':ourCompanyName,'businessType':businessType}),
+            success:function(data){
+                console.log(data);
+                var divs = $("[name=financeTotalAmount]");
+                for(var i=0;i<data.length;i++){
+                    // $("#financeTotalAmount"+data[i].dispOrderNo).text(data[i].totalAmount+'万');
+                    $("#financeTotalAmount"+data[i].dispOrderNo).text('￥'+ Convert.numFormat(data[i].totalAmount)+'万');
+                    $("#financeTotalCount"+data[i].dispOrderNo).text(data[i].totalCount+'单');
+                }
+            }
+        });
+
+    });
+    $("#optionId2").bind("change", function () {
+        var ourCompanyName = $("#optionId option:selected").val();
+        var businessType = $("#optionId2 option:selected").val();
+        if('all' == ourCompanyName){
+            ourCompanyName=null;
+        }
+        if('all' == businessType){
+            businessType=null;
+        }
+        $.ajax({
+            type:"post",
+            url:_ctx+"/my/index/findIndexFinanceStatistics",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify({'ourCompanyName':ourCompanyName,'businessType':businessType}),
+            success:function(data){
+                console.log(data);
+                var divs = $("[name=financeTotalAmount]");
+                for(var i=0;i<data.length;i++){
+                    // $("#financeTotalAmount"+data[i].dispOrderNo).text(data[i].totalAmount+'万');
+                    $("#financeTotalAmount"+data[i].dispOrderNo).text('￥'+ Convert.numFormat(data[i].totalAmount)+'万');
+                    $("#financeTotalCount"+data[i].dispOrderNo).text(data[i].totalCount+'单');
+                }
+            }
+        });
+
+    });
+    function riskStatisticsDetail(statisticsTypeName,statisticsType){
+        if('未发货' == statisticsTypeName){
+            $.modal.openTab(statisticsTypeName,_ctx+'/ctr/unDelivery?payCondition=PY&warehouseOutCondition=WN&index=true' + '&productType=NHG');
+        } else if('诉讼' == statisticsTypeName) {
+            $.modal.openTab(statisticsTypeName,_ctx+'/order/litigation?performanceStatus='+statisticsType + '&productType=NHG');
+        } else{
+            $.modal.openTab(statisticsTypeName,_ctx+'/order/warn?statisticsType='+statisticsType + '&productType=NHG');
+        }
+    }
+    function financeStatisticsDetail(statisticsType,statisticsTypeName){
+        var ourCompanyCd = $("#optionId option:selected").val();
+        var businessType = $("#optionId2 option:selected").val();
+        if('all' == ourCompanyCd){
+            ourCompanyCd = "";
+        }
+        if('all' == businessType){
+            businessType = "";
+        }
+        if('E' == statisticsType){
+            $.modal.openTab(statisticsTypeName,_ctx+'/ctr/contract/findDCSXYS?payType=PN&sealFlg=true&ourCompanyName='+ourCompanyCd+'&allOurCompanyFlag=true' + '&productType=NHG');
+        } else {
+            $.modal.openTab(statisticsTypeName,_ctx+'/rpt/contractFinance?statisticsType='+statisticsType+'&ourCompanyCd='+ourCompanyCd+'&businessType='+businessType+'&allOurCompanyFlag=true' + '&productType=NHG');
+        }
+    }
+    function dueReceivableDetail(payFullTime){
+        $.modal.openTab('赊销预算',_ctx+'/ctr/contract/findDCSX?contractType=S&payType=PN&warehouseType=WY&payFullTime='+payFullTime);
+    }
+    function unPayStatisticsDetail(statisticsType,statisticsTypeName){
+        if('G'==statisticsType){
+            // $.modal.openTab('赊销预算',_ctx+'/ctr/contract/findDCSX?contractType=S&payType=PN&warehouseType=WN&unPayType=A');
+            $.modal.openTab(statisticsTypeName,_ctx+'/rpt/contractFinance?statisticsType='+statisticsType);
+        } else if('B'==statisticsType) {
+            $.modal.openTab(statisticsTypeName,_ctx+'/ctr/contract/findDCSX?contractType=S&payType=PN&warehouseType=WY&unPayType=B&toReportQueryFlg=true');
+        }else if('C'==statisticsType) {
+            $.modal.openTab(statisticsTypeName, _ctx + '/ctr/contract/findDCSX?contractType=S&payType=PN&warehouseType=WY&unPayType=C&toReportQueryFlg=true');
+        }else if('D'==statisticsType) {
+            $.modal.openTab(statisticsTypeName,_ctx+'/ctr/contract/findDCSX?contractType=S&payType=PN&warehouseType=WN&unPayType=D&toReportQueryFlg=true');
+        }else if('E'==statisticsType) {
+            $.modal.openTab(statisticsTypeName, _ctx + '/ctr/contract/findDCSX?contractType=S&payType=PN&warehouseType=WN&unPayType=E&toReportQueryFlg=true');
+        }else if('Sum'==statisticsType) {
+            $.modal.openTab("未收款统计合计", _ctx + '/ctr/contract/findDCSX?contractType=S&payType=PN&unPayType=Sum&toReportQueryFlg=true');
+        }
+    }
+    // 业绩排名赊销按钮
+    function changeSell(){
+        // 设置样式为白色
+        $('#sell').css('background-color','#fff');
+        $('#buy').css('background-color','rgba(243, 243, 244, 1)');
+        $("#sell").val('true');
+        $("#buy").val('false');
+        let pm_qy = $("#pm_qy").val();
+        let pm_jh = $("#pm_jh").val();
+        if(pm_qy === 'true'){
+            $('.sellQyList').show();
+        } else {
+            $('.sellQyList').hide();
+        }
+        if(pm_jh === 'true'){
+            $('.sellJhList').show();
+        } else {
+            $('.sellJhList').hide();
+        }
+        $('.buyQyList').hide();
+        $('.buyJhList').hide();
+
+    }
+    // 业绩排名采购按钮
+    function changeBuy(){
+        // 设置样式为白色
+        $('#sell').css('background-color','rgba(243, 243, 244, 1)');
+        $('#buy').css('background-color','#fff');
+        $("#sell").val('false')
+        $("#buy").val('true')
+        let pm_qy = $("#pm_qy").val();
+        let pm_jh = $("#pm_jh").val();
+        if(pm_qy === 'true'){
+            $('.buyQyList').show();
+        } else {
+            $('.buyQyList').hide();
+        }
+        if(pm_jh === 'true'){
+            $('.buyJhList').show();
+        } else {
+            $('.buyJhList').hide();
+        }
+        $('.sellQyList').hide();
+        $('.sellJhList').hide();
+
+    }
+    // 业绩排名签约按钮
+    function changePmQy(){
+        // 设置样式为白色
+        $('#pm_qy').css('background-color','#fff');
+        $('#pm_jh').css('background-color','rgba(243, 243, 244, 1)');
+        $("#pm_qy").val('true')
+        $("#pm_jh").val('false')
+        let sell = $("#sell").val();
+        let buy = $("#buy").val();
+        if(sell === 'true'){
+            $('.sellQyList').show();
+        } else {
+            $('.sellQyList').hide();
+        }
+        if(buy === 'true'){
+            $('.buyQyList').show();
+        } else {
+            $('.buyQyList').hide();
+        }
+        $('.sellJhList').hide();
+        $('.buyJhList').hide();
+    }
+    // 业绩排名交货按钮
+    function changePmJh(){
+        // 设置样式为白色
+        $('#pm_qy').css('background-color','rgba(243, 243, 244, 1)');
+        $('#pm_jh').css('background-color','#fff');
+        $("#pm_jh").val('true')
+        $("#pm_qy").val('false')
+        let sell = $("#sell").val();
+        let buy = $("#buy").val();
+        if(sell === 'true'){
+            $('.sellJhList').show();
+        } else {
+            $('.sellJhList').hide();
+        }
+        if(buy === 'true'){
+            $('.buyJhList').show();
+        } else {
+            $('.buyJhList').hide();
+        }
+        $('.sellQyList').hide();
+        $('.buyQyList').hide();
+    }
+    // 业务统计交货按钮
+    function changeTjJh(){
+        // 设置样式为白色
+        $('#tj_jh').css('background-color','#fff');
+        $('#tj_qy').css('background-color','rgba(243, 243, 244, 1)');
+        $("#tj_jh").val('true')
+        $("#tj_qy").val('false')
+        let month = $("#month").val();
+        let month_1 = $("#month_1").val();
+        let month_2 = $("#month_2").val();
+        let month_3 = $("#month_3").val();
+        if(month === 'true'){
+            $('.businessJhList').show();
+        } else{
+            $('.businessJhList').hide();
+        }
+        if(month_1 === 'true'){
+            $('.businessMonth1JhList').show();
+        }else{
+            $('.businessMonth1JhList').hide();
+        }
+        if(month_2 === 'true'){
+            $('.businessMonth2JhList').show();
+        }else{
+            $('.businessMonth2JhList').hide();
+        }
+        if(month_3 === 'true'){
+            $('.businessMonth3JhList').show();
+        }else{
+            $('.businessMonth3JhList').hide();
+        }
+        $('.businessMonth3QyList').hide();
+        $('.businessMonth2QyList').hide();
+        $('.businessMonth1QyList').hide();
+        $('.businessQyList').hide();
+    }
+    // 业务统计签约按钮
+    function changeTjQy(){
+        // 设置样式为白色
+        $('#tj_qy').css('background-color','#fff');
+        $('#tj_jh').css('background-color','rgba(243, 243, 244, 1)');
+        $("#tj_qy").val('true')
+        $("#tj_jh").val('false')
+        let month = $("#month").val();
+        let month_1 = $("#month_1").val();
+        let month_2 = $("#month_2").val();
+        let month_3 = $("#month_3").val();
+        if(month === 'true'){
+            $('.businessQyList').show();
+        } else{
+            $('.businessQyList').hide();
+        }
+        if(month_1 === 'true'){
+            $('.businessMonth1QyList').show();
+        }else{
+            $('.businessMonth1QyList').hide();
+        }
+        if(month_2 === 'true'){
+            $('.businessMonth2QyList').show();
+        }else{
+            $('.businessMonth2QyList').hide();
+        }
+        if(month_3 === 'true'){
+            $('.businessMonth3QyList').show();
+        }else{
+            $('.businessMonth3QyList').hide();
+        }
+        $('.businessMonth3JhList').hide();
+        $('.businessMonth2JhList').hide();
+        $('.businessMonth1JhList').hide();
+        $('.businessJhList').hide();
+    }
+    // 业务统计本月按钮
+    function changeMonth0(){
+        // 设置样式为白色
+        $('#month').css('background-color','#fff');
+        $('#month_1').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month_2').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month_3').css('background-color','rgba(243, 243, 244, 1)');
+        $("#month").val('true')
+        $("#month_1").val('false')
+        $("#month_2").val('false')
+        $("#month_3").val('false')
+        let tj_jh = $("#tj_jh").val();
+        let tj_qy = $("#tj_qy").val();
+        if(tj_jh === 'true'){
+            $('.businessJhList').show();
+        } else {
+            $('.businessJhList').hide();
+        }
+        if(tj_qy === 'true'){
+            $('.businessQyList').show();
+        } else {
+            $('.businessQyList').hide();
+        }
+        $('.businessMonth3JhList').hide();
+        $('.businessMonth3QyList').hide();
+        $('.businessMonth2JhList').hide();
+        $('.businessMonth2QyList').hide();
+        $('.businessMonth1JhList').hide();
+        $('.businessMonth1QyList').hide();
+    }
+    // 业务统计上月按钮
+    function changeMonth1(){
+        // 设置样式为白色
+        $('#month_1').css('background-color','#fff');
+        $('#month').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month_2').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month_3').css('background-color','rgba(243, 243, 244, 1)');
+        $("#month").val('false')
+        $("#month_1").val('true')
+        $("#month_2").val('false')
+        $("#month_3").val('false')
+        let tj_jh = $("#tj_jh").val();
+        let tj_qy = $("#tj_qy").val();
+        if(tj_jh === 'true'){
+            $('.businessMonth1JhList').show();
+        } else {
+            $('.businessMonth1JhList').hide();
+        }
+        if(tj_qy === 'true'){
+            $('.businessMonth1QyList').show();
+        } else {
+            $('.businessMonth1QyList').hide();
+        }
+        $('.businessMonth3JhList').hide();
+        $('.businessMonth3QyList').hide();
+        $('.businessMonth2JhList').hide();
+        $('.businessMonth2QyList').hide();
+        $('.businessJhList').hide();
+        $('.businessQyList').hide();
+    }
+    // 业务统计上上月按钮
+    function changeMonth2(){
+        // 设置样式为白色
+        $('#month_2').css('background-color','#fff');
+        $('#month_1').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month_3').css('background-color','rgba(243, 243, 244, 1)');
+        $("#month_2").val('true')
+        $("#month_1").val('false')
+        $("#month").val('false')
+        $("#month_3").val('false')
+        let tj_jh = $("#tj_jh").val();
+        let tj_qy = $("#tj_qy").val();
+        if(tj_jh === 'true'){
+            $('.businessMonth2JhList').show();
+        } else {
+            $('.businessMonth2JhList').hide();
+        }
+        if(tj_qy === 'true'){
+            $('.businessMonth2QyList').show();
+        } else {
+            $('.businessMonth2QyList').hide();
+        }
+        $('.businessMonth3JhList').hide();
+        $('.businessMonth3QyList').hide();
+        $('.businessMonth1JhList').hide();
+        $('.businessMonth1QyList').hide();
+        $('.businessJhList').hide();
+        $('.businessQyList').hide();
+    }
+    // 业务统计上3月按钮
+    function changeMonth3(){
+        // 设置样式为白色
+        $('#month_3').css('background-color','#fff');
+        $('#month_1').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month_2').css('background-color','rgba(243, 243, 244, 1)');
+        $('#month').css('background-color','rgba(243, 243, 244, 1)');
+        $("#month_3").val('true')
+        $("#month_1").val('false')
+        $("#month_2").val('false')
+        $("#month").val('false')
+        let tj_jh = $("#tj_jh").val();
+        let tj_qy = $("#tj_qy").val();
+        if(tj_jh === 'true'){
+            $('.businessMonth3JhList').show();
+        } else {
+            $('.businessMonth3JhList').hide();
+        }
+        if(tj_qy === 'true'){
+            $('.businessMonth3QyList').show();
+        } else {
+            $('.businessMonth3QyList').hide();
+        }
+        $('.businessMonth2JhList').hide();
+        $('.businessMonth2QyList').hide();
+        $('.businessMonth1JhList').hide();
+        $('.businessMonth1QyList').hide();
+        $('.businessJhList').hide();
+        $('.businessQyList').hide();
+
+    }
+    // 进项未收发票
+    function buyNoBill(){
+        $.modal.openTab('进项未收发票',_ctx+'/ctr/contract/findDCSX?contractType=B&billCondition=BN');
+    }
+    // 销项未售发票
+    function sellNoBill(){
+        $.modal.openTab('销项未售发票',_ctx+'/ctr/contract/findDCSX?contractType=S&billCondition=BN');
+    }
+    // 待审批数
+    function approval(){
+        $.modal.openTab('待审批事项',_ctx+'/pm/approve?status=A&ParamFlag=1');
+    }
+    // 业务统计添加点击事件
+    function businessClick(flag,typeName){
+        let tj_qy = $("#tj_qy").val();
+        let monthNum = 0;
+        let month = $("#month").val();
+        let month_1 = $("#month_1").val();
+        let month_2 = $("#month_2").val();
+        let month_3 = $("#month_3").val();
+        if(month === 'true'){
+            monthNum = 0;
+        }
+        if(month_1 === 'true'){
+            monthNum = 1;
+            flag = flag+3;
+        }
+        if(month_2 === 'true'){
+            monthNum = 2;
+            flag = flag+3;
+        }
+        if(month_3 === 'true'){
+            monthNum = 3;
+            flag = flag+3;
+        }
+        switch (flag) {
+            case 0:
+                // 今日代采
+                $.modal.openTab(typeName, _ctx + '/ctr/contract/findDC?indexFlag=1&contractType=S&monthNum=0&isQy='+tj_qy + "&productType=NHG");
+                break;
+            case 1:
+                // 今日赊销
+                $.modal.openTab(typeName, _ctx + '/ctr/contract/findDCSX?indexFlag=1&contractType=S&monthNum=0&isQy='+tj_qy + "&productType=NHG");
+                break;
+            case 2:
+                // 今日自营
+                $.modal.openTab(typeName, _ctx + '/ctr/contract/findZYXS?indexFlag=1&monthNum=0&isQy='+tj_qy + "&productType=NHG");
+                break;
+            case 3:
+                // 本月代采
+                $.modal.openTab(typeName, _ctx + '/ctr/contract/findDC?indexFlag=2&contractType=S&monthNum='+monthNum+'&isQy='+tj_qy + "&productType=NHG");
+                break;
+            case 4:
+                // 本月赊销
+                $.modal.openTab(typeName, _ctx + '/ctr/contract/findDCSX?indexFlag=2&contractType=S&monthNum='+monthNum+'&isQy='+tj_qy + "&productType=NHG");
+                break;
+            case 5:
+                // 本月自营
+                $.modal.openTab(typeName, _ctx + '/ctr/contract/findZYXS?indexFlag=2&monthNum='+monthNum+'&isQy='+tj_qy + "&productType=NHG");
+                break;
+        }
+    }
+
+    // 累计未结算提成
+    function noSettlement() {
+        $.modal.openTab('累计未结算提成',_ctx+'/ctr/settlement?indexFlag=1');
+    }
+    // 预计提成
+    function planCommission() {
+        $.modal.openTab('预计提成',_ctx+'/ctr/settlement?indexFlag=2');
+    }
+    // 上月结算提成
+    function lastMonthCommission() {
+        $.modal.openTab('上月结算提成',_ctx+'/ctr/settlement?indexFlag=3');
+    }
+    // 赊销业绩排行
+    function sellClick(userId) {
+        let pm_qy = $("#pm_qy").val();
+        $.modal.openTab('赊销业绩',_ctx+'/ctr/contract/findDCSX?indexFlag=2&contractType=S&userId='+userId+'&isQy='+pm_qy);
+    }
+    // 代采业绩排行
+    function buyClick(userId) {
+        let pm_qy = $("#pm_qy").val();
+        $.modal.openTab('代采业绩',_ctx+'/ctr/contract/findDC?indexFlag=2&contractType=S&userId='+userId+'&isQy='+pm_qy);
+    }
+
+    function initSalesWeek(){
+        // 赊销数据
+        let sxData = [];
+        let startDateData = [];
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/findSxSalesTenWeekData',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    sxData.push(response[i].totalAmount);
+                    startDateData.push(response[i].startDate);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+        // 代采数据
+        let dcData = [];
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/findDcSalesTenWeekData',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    dcData.push(response[i].totalAmount);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+        // 自营数据
+        let zyData = [];
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/findZySalesTenWeekData',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    zyData.push(response[i].totalAmount);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+        // 合计数据
+        let totalData = [];
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/findTotalSalesWeekData',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    totalData.push(response[i].totalAmount);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+
+        var barChart = echarts.init(document.getElementById("echarts-bar-chart"));
+        var baroption = {
+            title : {
+                text: ''
+            },
+            tooltip : {
+                trigger: 'axis'
+            },
+            legend: {
+                data:['赊销','代采','自营','合计']
+            },
+            grid:{
+                left: "45",
+                top: "18%",
+                right: "45",
+                bottom: "10%",
+                containLable: true
+            },
+            calculable : true,
+            xAxis : [
+                {
+                    type : 'category',
+                    data : startDateData
+                }
+            ],
+            yAxis : [
+                {
+                    splitLine: {　show: false},
+                    type : 'value',
+                    // axisLabel:{formatter:'{value}元'},
+                    name: "单位（万元）",
+                    nameTextStyle:{color: "#aaa", nameLocation: "start"},
+                    // interval: 50,
+                },
+                {
+                    splitLine: {　show: false},
+                    type : 'value',
+                    // axisLabel:{formatter:'{value}元'},
+                    name: "单位（万元）",
+                    nameTextStyle:{color: "#aaa", nameLocation: "start"},
+                    // interval: 100,
+                }
+            ],
+            series : [
+                {
+                    name:'赊销',
+                    type:'bar',
+                    color:'#4F81BD',
+                    barWidth:'15%',
+                    data:sxData
+                },
+                {
+                    name:'代采',
+                    type:'bar',
+                    color:'#C0504D',
+                    barWidth:'15%',
+                    data:dcData
+                },
+                {
+                    name:'自营',
+                    type:'bar',
+                    color:'#9BBB59',
+                    barWidth:'15%',
+                    data:zyData
+                },
+                {
+                    name:'合计',
+                    type:'line',
+                    smooth: true,
+                    yAxisIndex: 1,
+                    color:'#8064A2',
+                    barWidth:'15%',
+                    data:totalData
+                }
+            ]
+        };
+        barChart.setOption(baroption);
+        barChart.on('legendselectchanged', function (params) {
+            var _totalData = [];
+            var selected = [];
+            for (var key in params.selected) {
+                if (params.selected[key]) {
+                    selected.push(key);
+                    for (let i = 0; i < 10; i++) {
+                        if (key == "赊销"){
+                            _totalData[i] = Number(Convert.numFormatZero(_totalData[i]) + Number(sxData[i])).toFixed(2);
+                        }
+                        if (key == "代采"){
+                            _totalData[i] = Number(Convert.numFormatZero(_totalData[i]) + Number(dcData[i])).toFixed(2);
+                        }
+                        if (key == "自营"){
+                            _totalData[i] = Number(Convert.numFormatZero(_totalData[i]) + Number(zyData[i])).toFixed(2);
+                        }
+                    }
+                }
+            }
+            var option = barChart.getOption();
+            option.series[3].data = _totalData;
+            barChart.setOption(option);
+        });
+        window.addEventListener("resize",function(){
+            barChart.resize();
+        });
+        // window.onresize = barChart.resize;
+    }
+    function initSalesMonth(){
+        // 赊销数据
+        let sxData = [];
+        let monthData = [];
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/findSxSalesTenMonthData',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    sxData.push(response[i].totalAmount);
+                    monthData.push(response[i].month);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+        // 代采数据
+        let dcData = [];
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/findDcSalesTenMonthData',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    dcData.push(response[i].totalAmount);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+        // 自营数据
+        let zyData = [];
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/findZySalesTenMonthData',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    zyData.push(response[i].totalAmount);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+        // 合计数据
+        let totalData = [];
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/findTotalSalesMonthData',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    totalData.push(response[i].totalAmount);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+
+        var barChartMonth = echarts.init(document.getElementById("echarts-bar-chart-month"));
+        var baroptionMonth = {
+            title : {
+                text: ''
+            },
+            tooltip : {
+                trigger: 'axis'
+            },
+            legend: {
+                data:['赊销','代采','自营','合计']
+            },
+            grid:{
+                left: "45",
+                top: "18%",
+                right: "45",
+                bottom: "10%",
+                containLable: true
+            },
+            calculable : true,
+            xAxis : [
+                {
+                    type : 'category',
+                    data : monthData
+                }
+            ],
+            yAxis : [
+                {
+                    splitLine: {　show: false},
+                    type : 'value',
+                    // axisLabel:{formatter:'{value} 万元'},
+                    // interval: 100,
+                    name: "单位（万元）",
+                    nameTextStyle:{color: "#aaa", nameLocation: "start"},
+                    show : true
+                },
+                {
+                    splitLine: {　show: false},
+                    type : 'value',
+                    // axisLabel:{formatter:'{value} 万元'}
+                    // interval: 200,
+                    name: "单位（万元）",
+                    nameTextStyle:{color: "#aaa", nameLocation: "start"},
+                }
+            ],
+            series : [
+                {
+                    name:'赊销',
+                    type:'bar',
+                    color:'#4F81BD',
+                    barWidth:'15%',
+                    data:sxData
+                },
+                {
+                    name:'代采',
+                    type:'bar',
+                    color:'#C0504D',
+                    barWidth:'15%',
+                    data:dcData
+                },
+                {
+                    name:'自营',
+                    type:'bar',
+                    color:'#9BBB59',
+                    barWidth:'15%',
+                    data:zyData
+                },
+                {
+                    name:'合计',
+                    type:'line',
+                    smooth: true,
+                    yAxisIndex: 1,
+                    color:'#8064A2',
+                    barWidth:'15%',
+                    data:totalData
+                }
+            ]
+        };
+        barChartMonth.setOption(baroptionMonth);
+        barChartMonth.on('legendselectchanged', function (params) {
+            var _totalData = [];
+            var selected = [];
+            for (var key in params.selected) {
+                if (params.selected[key]) {
+                    selected.push(key);
+                    for (let i = 0; i < 10; i++) {
+                        if (key == "赊销"){
+                            _totalData[i] = Number(Convert.numFormatZero(_totalData[i]) + Number(sxData[i])).toFixed(2);
+                        }
+                        if (key == "代采"){
+                            _totalData[i] = Number(Convert.numFormatZero(_totalData[i]) + Number(dcData[i])).toFixed(2);
+                        }
+                        if (key == "自营"){
+                            _totalData[i] = NUmber(Convert.numFormatZero(_totalData[i]) + Number(zyData[i])).toFixed(2);
+                        }
+                    }
+                }
+            }
+            var option = barChartMonth.getOption();
+            option.series[3].data = _totalData;
+            barChartMonth.setOption(option);
+        });
+        // window.onresize = barChartMonth.resize;
+        window.addEventListener("resize",function(){
+            barChartMonth.resize();
+        });
+    }
+
+    // 毛利率折线图
+    function initGrossProfitMarginEchars() {
+        // 利率数据
+        let reteArray = [];
+        let netReteArray = [];
+        // 月份数据
+        let monthArray = [];
+        // 毛利数据
+        let grossProfitArray = [];
+        let netGrossProfitArray = [];
+        // 逾期罚息
+        let noReceiveBreachAmountArray = [];
+        // 资金成本（普通赊销+代采赊销）
+        let totalCapitalCostArray = [];
+        
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/my/index/grossProfitMargin',
+            contentType:'application/json',
+            success: function (response) {
+                let length = response.length;
+                for (let i = 0; i < length; i++) {
+                    reteArray.push(response[i].rate);
+                    netReteArray.push(response[i].netRate);
+                    monthArray.push(response[i].month);
+                    grossProfitArray.push(response[i].grossProfit);
+                    netGrossProfitArray.push(response[i].netGrossProfit);
+                    noReceiveBreachAmountArray.push(response[i].noReceiveBreachAmount);
+                    totalCapitalCostArray.push(response[i].totalCapitalCost);
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+        var $grossProfitMargin = document.getElementById('grossProfitMargin');
+        var grossProfitMarginEchars = echarts.init($grossProfitMargin);
+        var option;
+
+        option = {
+            title : {
+                text: ''
+            },
+            tooltip : {
+                trigger: 'axis',
+                formatter: function(params) {
+                    var tooltip = '';
+                    for (var i = 0; i < params.length; i++) {
+                        tooltip += params[i].seriesName + ': ' + params[i].data.formattedValue + '<br>';
+                    }
+                    return tooltip;
+                }
+            },
+            legend: {
+                data:['毛利额','毛利率','净毛利额','净毛利率','逾期罚息', '资金成本']
+            },
+            grid: {
+                left: "60",
+                top: "18%",
+                right: "60",
+                bottom: "10%",
+                containLable: true
+            },
+            color: ['#5fb333',
+                '#bcc676','#46a1ea','#C0514C',
+                '#4F81BD','#8064A2'
+                ],
+            xAxis: {
+                type: 'category',
+                data: monthArray,
+                axisLine: {
+                    lineStyle: {
+                        color: '#a09f9f',
+                        // width: 2
+                    }
+                },
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '单位（万元）',
+                    nameTextStyle:{color: "#aaa", nameLocation: "start"},
+                    position: 'left',
+                    axisLabel: {
+                        show: true,
+                        interval: 'auto',
+                        formatter: '{value}',//纵坐标百分比
+                    },
+                    splitLine: {
+                        lineStyle:{
+                            type:'dashed'
+                        }
+                    },
+                    axisLine: {
+                        show: false,
+                        lineStyle: {
+                            color: '#a09f9f',
+                            width: 3
+                        }
+                    }
+                },
+                {
+                    type: 'value',
+                    position: 'right',
+                    axisLabel: {
+                        show: true,
+                        interval: 'auto',
+                        formatter: '{value} %',//纵坐标百分比
+                    },
+                    axisLine: {
+                        show: false,
+                        lineStyle: {
+                            color: '#a09f9f',
+                            width: 3
+                        }
+                    }
+                },
+            ],
+            series: [
+                
+                {
+                    data: grossProfitArray.map(function(value) {
+                        return {
+                            value: value,
+                            formattedValue: value + ' 万元'  // 自定义格式
+                        };
+                    }),
+                    type: 'line',
+                    name: '毛利额',
+                    smooth: true,
+                    yAxisIndex: 0,  // 使用左侧 y 轴
+                    lineStyle: {
+                        normal: {
+                            width: 4
+                        }
+                    },
+                },
+                {
+                    data: netGrossProfitArray.map(function(value) {
+                        return {
+                            value: value,
+                            formattedValue: value + ' 万元'  // 自定义格式
+                        };
+                    }),
+                    type: 'line',
+                    name: '净毛利额',
+                    smooth: true,
+                    yAxisIndex: 0,  // 使用左侧 y 轴
+                    lineStyle: {
+                        normal: {
+                            width: 4
+                        }
+                    },
+                },
+                {
+                    data: totalCapitalCostArray.map(function(value) {
+                        return {
+                            value: value,
+                            formattedValue: value + ' 万元'  // 自定义格式
+                        };
+                    }),
+                    type: 'line',
+                    name: '资金成本',
+                    smooth: true,
+                    yAxisIndex: 0,  // 使用左侧 y 轴
+                    lineStyle: {
+                        normal: {
+                            width: 4
+                        }
+                    },
+                },
+                {
+                    data: noReceiveBreachAmountArray.map(function(value) {
+                        return {
+                            value: value,
+                            formattedValue: value + ' 万元'  // 自定义格式
+                        };
+                    }),
+                    type: 'line',
+                    name: '逾期罚息',
+                    smooth: true,
+                    yAxisIndex: 0,  // 使用左侧 y 轴
+                    lineStyle: {
+                        normal: {
+                            width: 4
+                        }
+                    },
+                },
+                {
+                    data: reteArray.map(function(value) {
+                        return {
+                            value: value,
+                            formattedValue: value + ' %'  // 自定义格式
+                        };
+                    }),
+                    type: 'line',
+                    name: '毛利率',
+                    smooth: true,
+                    yAxisIndex: 1,  // 使用右侧 y 轴
+                    lineStyle: {
+                        normal: {
+                            width: 4,
+                            formatter: '{value} %', 
+                        }
+                    },
+                },
+                {
+                    data: netReteArray.map(function(value) {
+                        return {
+                            value: value,
+                            formattedValue: value + ' %'  // 自定义格式
+                        };
+                    }),
+                    type: 'line',
+                    name: '净毛利率',
+                    smooth: true,
+                    yAxisIndex: 1,  // 使用右侧 y 轴
+                    lineStyle: {
+                        normal: {
+                            width: 4,
+                            formatter: '{value} %',
+                        }
+                    },
+                },
+            ]
+        };
+        grossProfitMarginEchars.setOption(option);
+        window.addEventListener("resize",function(){
+            grossProfitMarginEchars.resize();
+        });
+    }
+
+    function browserRedirect() {
+        var sUserAgent = navigator.userAgent.toLowerCase();
+        var bIsIpad = sUserAgent.match(/ipad/i) == "ipad";
+        var bIsIphoneOs = sUserAgent.match(/iphone os/i) == "iphone os";
+        var bIsMidp = sUserAgent.match(/midp/i) == "midp";
+        var bIsUc7 = sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4";
+        var bIsUc = sUserAgent.match(/ucweb/i) == "ucweb";
+        var bIsAndroid = sUserAgent.match(/android/i) == "android";
+        var bIsCE = sUserAgent.match(/windows ce/i) == "windows ce";
+        var bIsWM = sUserAgent.match(/windows mobile/i) == "windows mobile";
+        if (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM){
+            return false;
+        }
+        return true;
+    }
+    // 五分钟自动刷新数据
+    setInterval(function(){
+        location.reload();  // 刷新页面
+    }, 300000);
+</script>
+</body>
+</html>

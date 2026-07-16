@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true" style="width:1120px;height:500px;margin-left:20px;margin-right: 30px;">
+    <div region="north" class="search_div" border="false" style="overflow: hidden;">
+        <form id="frm_stockVirtual_choose" class="form-search from-input-layout" method="post">
+            <input type="hidden" name="search_EQS_virtualStatus" th:value="N"/>
+            <input type="hidden" name="search_EQS_sellMatchUserId_OR_ISNULLS_sellMatchUserId" th:value = "${@shiroUtil.getCurrentUserId()}">
+            <div class="mt10 mb10">
+                <p class="yw-table-filter">
+                    <label>报价编号:</label>
+                    <input type="text" name="search_LIKES_stockVirtualNo"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>品名:</label>
+                    <input id="productCd_query" name="search_EQS_productCd"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>牌号:</label>
+                    <input type="text" name="search_LIKES_brandNumber"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>厂商:</label>
+                    <input id="factoryName_query" type="text" name="search_LIKES_factoryName"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>包装规格:</label>
+                    <input id="wrapSpecs_query" type="text" name="search_EQS_wrapSpecs"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>质量标准:</label>
+                    <input id="qualityStandard_query" type="text" name="search_EQS_qualityStandard"/>
+                </p>
+            </div>
+            <div class="mt10 mb10">
+                <p class="yw-table-filter">
+                    <label>数量:</label>
+                    <input type="text" name="search_GTEM_dealNumber"/>
+                </p>
+                <span style="margin-left: -15px;">
+				    <label>~</label>
+			    </span>
+                <p class="yw-table-filter">
+                    <input type="text" name="search_LTEM_dealNumber"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>企业名称:</label>
+                    <input name="search_LIKES_companyName" type="text"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>我方:</label>
+                    <input type="text" id="ourCompanyName_query" name="search_EQS_ourCompanyName"/>
+                </p>
+                <p class="yw-table-filter" id="userCombobox">
+                    <label>业务员:</label>
+                    <input id="matchUserName_query" type="text" name="search_EQS_matchUserName"/>
+                </p>
+                <a href="#" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('frm_stockVirtual_choose','tt_virtual_choose');">查询</a>
+                <a href="#" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#frm_stockVirtual_choose').form('reset');">清空</a>
+            </div>
+        </form>
+    </div>
+    <div class="mb10" region="center">
+        <table id="tt_virtual_choose" style="height:340px;" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+    </div>
+
+    <div region="south" border="false" style="overflow: hidden;height: 40px;">
+        <div class="actions_bar">
+            <a href="#" class="easyui-linkbutton btn-solid btn64 ml6" onclick="ContractChoose.confirmChoose();">确&nbsp;认</a>
+            <a href="#" class="easyui-linkbutton btn-solid btn64 ml6" onclick="ContractChoose.closeAndCancel();">取&nbsp;消</a>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var lastIndex=0;
+    var _url = "";
+    // 代采赊销-采购-我方
+    var _dcsx_our_companyNameJson = eval('[(${dcsxOurCompanyNameJson})]');
+    var _ourCompanyNameJson = eval('[(${ourCompanyNameJson})]');
+    // 采购类型
+    var _$virtualBuyTypeJson = eval('[(${virtualBuyTypeJson})]');
+    var _virtual_ourCompanyNameJson = _ourCompanyNameJson;
+    $(function(){
+        $(".panel-tool-close").css("display","none");
+
+        var fileview = $.extend({}, $.fn.datagrid.defaults.view, { onAfterRender: function (target) { ContractChoose.ischeckItem(); } });
+
+        var columns =[ [
+            {field:'id',title:'报价单ID', width:100,hidden:'hidden'},
+            {field:'stockVirtualNo',title:'报价编号', width:130,align:'left'},
+            {field:'virtualBuyType',title:'类型', width:80,align:'center',formatter: function (value) {
+                    if (value == "KC") {
+                        return "库存释放";
+                    }
+                    return Convert.findValueByKey(_$virtualBuyTypeJson, 'dictCd', value, 'dictName')
+            }},
+            {field:'productName',title:'品名', width:65,align:'left'},
+            {field:'brandNumber',title:'牌号', width:65,align:'left'},
+            {field:'factoryName',title:'厂商', width:75,align:'left'},
+            {field: 'companyName', title: '供应商', align: 'left', width: 120,formatter:function(value,row){
+                    if (value){
+                        let viewName;
+                        viewName = Convert.findValueByKey(_dcsx_our_companyNameJson, "companyName", value, "companyAbbr")
+                        if (!viewName){
+                            let s_str = value.split("有限公司");
+                            if (s_str) {
+                                viewName = s_str[0];
+                            }
+                        }
+                        return '<p title="' + viewName + '" class="note">' + viewName + '</p>';
+                    }
+                }},
+            {field:'ourCompanyName',title:'我方', width:90,align:'left',formatter:function(value){
+                    return Convert.findValueByKey(_ourCompanyNameJson, "dictCd", value, "remark");
+                }},
+            {field:'dealNumber',title:'数量(吨)', width:70,align:'right'},
+            {field:'dealPrice',title:'单价(元)', width:70,align:'right'},
+            {field:'minSellPrice',title:'销售指导价(元)', width:90,align:'right'},
+            {field:'totalAmount',title:'总价(元)', width:70,align:'right'},
+            {field:'deliveryDate',title:'交货日期', width:80,align:'center'},
+            {field:'deliveryType',title:'交货方式', width:65,align:'left',formatter:function (value){
+                return Convert.findValueByKey(_deliveryTypeJson ,"dictCd",value,"dictName");
+            }},
+            {field:'wrapSpecs',title:'包装规格',align:'left',width:65, formatter:function(value){
+                return Convert.findValueByKey(_packingSpecificaJson ,"dictCd",value,"dictName");
+            }},
+            {field:'qualityStandard',title:'质量标准',align:'left',width:65, formatter:function(value){
+                return Convert.findValueByKey(_qualityStandardJson ,"dictCd",value,"dictName");
+            }},
+            {field:'publishTime',title:'发布日期', width:80,align:'center'},
+            {field:'matchUserName',title:'采购业务员',align:'left',width:80},
+            {field:'sellMatchUserName',title:'销售业务员',align:'left',width:80}
+        ]];
+
+        $('#tt_virtual_choose').datagrid({
+            pagination:true,
+            pageSize:10,
+            rownumbers:true,
+            view: fileview,
+            pageList:[500,200,100,50,30,20,10],
+            singleSelect:true,
+            queryParams:Convert.getJson4Form('frm_stockVirtual_choose'),
+            url:_ctx+"/stock/virtual/findDataList",
+            columns:columns,
+            onSelect:function(index,row){
+// 				console.log('select',ContractChoose.selected);
+                var selectedRows = $('#tt_virtual_choose').datagrid('getSelections');
+                if(selectedRows.length>2){
+                    $.messager.alert('提示','最多只能选择1单报价！','info');
+                    return;
+                }
+                ContractChoose.selected.splice(0, 1);
+                ContractChoose.selected.push(row);
+// 				console.log('select',ContractChoose.selected);
+            },
+            onUnselect:function(index,row){
+                ContractChoose.removeSelected(row);
+// 				console.log(ContractChoose.selected);
+            },
+            onLoadSuccess:function(data){
+// 				ContractChoose.selected=[];
+            }
+        });
+
+        //品名下拉框
+        $('#productCd_query').combotree({
+            data:_productTypeJson,
+            valueField:'typeCode',
+            textField:'typeName',
+            editable:'false',
+            onSelect:function(data){
+                $('#productCd_query').val(data.typeName);
+            }
+        });
+
+        //包装规格下拉框
+        $("#wrapSpecs_query").combobox({
+            data:_packingSpecificaJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:'auto'
+        });
+
+        //质量标准下拉框
+        $("#qualityStandard_query").combobox({
+            data:_qualityStandardJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:'auto'
+        });
+
+        //厂商下拉框
+        $("#factoryName_query").combobox({
+            data:_factoryJson,
+            textField:'factoryName',
+            valueField:'factoryName',
+            panelHeight:'200'
+        });
+
+        //我方
+        $('#ourCompanyName_query').combobox({
+            data:_virtual_ourCompanyNameJson,
+            valueField:'dictCd',
+            textField:'dictName',
+            panelHeight:"auto",
+            panelWidth:'220px',
+            editable:false
+        });
+
+        //业务员下拉框
+        $('#matchUserName_query').combotree({
+            data: _matchUserNameTree,
+            panelHeight:"350px",
+            panelWidth:'220px',
+            multiple : false,
+            editable : false,
+            formatter:function(node){
+                var enableFlg = node.attributes.enableFlg;
+                if (enableFlg==false){
+                    return '<span style="color:red;">'+node.text+'(无效)</span>';
+                }
+                return node.text;
+            },
+            onSelect : function(node){
+                if(node.children.length!=0){
+                    $('#matchUserName_query').combotree('clear');
+                }else{
+                    $('#matchUserName_query').combotree('setValue',node.text);
+                }
+            }
+        });
+    });
+
+    var ContractChoose={
+        selected:[],
+        ischeckItem:function () {
+            for (var i = 0; i < ContractChoose.selected.length; i++) {
+                $('#tt_virtual_choose').datagrid('selectRecord', ContractChoose.selected[i]); //根据id选中行
+            }
+        },
+        removeSelected:function(row){
+            for(var i=0; i<ContractChoose.selected.length; i++) {
+                if(ContractChoose.selected[i].id == row.id) {
+                    ContractChoose.selected.splice(i, 1);
+                    break;
+                }
+            }
+        },
+        confirmChoose:function(){
+            var selectedRows=ContractChoose.selected;
+            if (selectedRows.length==0){
+                $.messager.alert('提示','请选择报价！','info');
+                return;
+            }
+            var callbackExec = $('#w_stockVirtual_choose').attr('callbackExec');
+            var myfunc = eval(callbackExec);
+            if(typeof(myfunc) == "function"){
+                myfunc(selectedRows);
+            }
+            ContractChoose.closeCurrentWin();
+        },
+        closeCurrentWin:function(){
+            $('#w_stockVirtual_choose').window('close');
+        },
+        closeAndCancel(){
+            $('#w_stockVirtual_choose').window('close');
+            doClose();
+        }
+    }
+</script>
+</html>

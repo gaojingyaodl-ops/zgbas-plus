@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <th:block th:include="include :: header('我的首页')" />
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <th:block th:include="include :: echarts-js" />
+    <script th:src="@{/static/ruoyi/js/common.js?v=4.7.2}"></script>
+    <link th:href="@{/static/css/businessManageIndex.css}" rel="stylesheet"/>
+    <script type="text/javascript">	_ctx='[[${#request.getContextPath()}]]';</script>
+</head>
+<style>
+    body{
+        font-size: 13px;
+    }
+</style>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="pb20" style="font-size: 25px">
+        <input type="hidden" name="userId" id="userId" th:value="${userInfo.userId}" />
+        <span  th:text="${userInfo.nickName}"/>
+        <span th:text="'('+${userInfo.rank}+')'"  style="color: #22567D"/>
+        <span th:text="${deptName}" />
+    </div>
+    <div class="row">
+        <div class="dev-cards bm-div-with25" id="personAchievementDiv">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title">
+                        <h5 >个人成就</h5>
+                        <div>
+                            <span class="bm-div-toggle-show" id="benYear" onclick="clickBenYear()">本年</span>
+                            <span class="bm-div-toggle-show" id="benMonth" onclick="clickBenMonth()">本月</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row  m-t-sm idx-row" style="font-weight: bold;font-size: 15px" th:if="${showRanking}">
+                        <span class="col-xs-4 text-left  mpl noHover">公司排名</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" style="color: red" id="ranking"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >毛利额</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="grossProfitAmount"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >销售额</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="sellTotalAmount"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >销售量</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="sellTotalNumber"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25" id="performanceUserDiv">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title">
+                        <h5 >销售提成</h5>
+                        <div>
+                            <span class="bm-div-toggle-show" onclick="clickUserMonth2()" id="userMonth_2"  th:text="${month_2}"></span>
+                            <span class="bm-div-toggle-show" onclick="clickUserMonth1()" id="userMonth_1"  th:text="${month_1}"></span>
+                            <span class="bm-div-toggle-show" onclick="clickUserMonth0()" id="userMonth"  th:text="${month}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover">毛利</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" style="color: red" id="userGrossMargin"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >成本合计</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="userLaborCost"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >净利</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="usernetProfit"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >提成金额</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="userCommission"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >当月结算</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="userMonthCommission"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >当年余额</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="userYearCommission"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25" id="performanceDeptDiv" th:if="${managerLeader}">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title">
+                        <h5 >事业部分成</h5>
+                        <div>
+                            <span class="bm-div-toggle-show" onclick="clickDeptMonth2()" id="deptMonth_2"  th:text="${month_2}"></span>
+                            <span class="bm-div-toggle-show" onclick="clickDeptMonth1()" id="deptMonth_1"  th:text="${month_1}"></span>
+                            <span class="bm-div-toggle-show" onclick="clickDeptMonth0()" id="deptMonth"  th:text="${month}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover">团队净利</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" style="color: red" id="deptNetProfit"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >事业部提成</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="deptCommission"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >成本合计</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="deptTotalCost"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >负责人分成</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="leaderCommission"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >当月发放</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="leaderMonthCommission"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row">
+                        <span class="col-xs-4 text-left  mpl noHover" >当年累计</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="leaderYearCommission"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25"  id="grossProfitDiv">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <div class="bm-div-title" style="justify-content: center">
+                        <h5 >毛利润（万元）</h5>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265 echarts" id="grossProfit">
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title">
+                        <h5 >订单-执行 <span id="orderExecutionNumber" style="color: red"></span></h5>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderExecute('NCK')">
+                        <span class="col-xs-4 text-left  mpl noHover" >待出库</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="orderNCK"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderExecute('NSK')">
+                        <span class="col-xs-4 text-left  mpl noHover" >待收款</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="orderNSK"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderExecute('NKP')">
+                        <span class="col-xs-4 text-left  mpl noHover" >待开票</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="orderNKP"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderExecute('NSP')" th:if="${protocolPurchaseFlg}">
+                        <span class="col-xs-4 text-left  mpl noHover" >待收票</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="orderNSP"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title" style="display: flex;justify-content: space-between">
+                        <h5 >订单-应收 <span id="orderReceivableNumber" style="color: red"></span></h5>
+                        <div>
+                            <i class="fa fa-arrows-alt bm-scree-full-i" onclick="clickOrderReceivable('N')"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265" >
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderReceivable('N')">
+                        <span class="col-xs-4 text-left  mpl noHover" >即将到期</span>
+                        <span class="col-xs-4 text-right  mpl " id="noReceiveTotalAmountN">12</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="orderReceivableN"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderReceivable('B')">
+                        <span class="col-xs-4 text-left  mpl noHover" >宽限期</span>
+                        <span class="col-xs-4 text-right  mpl " id="noReceiveTotalAmountB">12</span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="orderReceivableB"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderReceivable('D')">
+                        <span class="col-xs-4 text-left  mpl noHover" >催告期</span>
+                        <span class="col-xs-4 text-right  mpl " id="noReceiveTotalAmountD"></span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="orderReceivableD"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderReceivable('S')">
+                        <span class="col-xs-4 text-left  mpl noHover" >逾期</span>
+                        <span class="col-xs-4 text-right  mpl " id="noReceiveTotalAmountS"></span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="orderReceivableS"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickOrderReceivable('P')">
+                        <span class="col-xs-4 text-left  mpl noHover" >诉讼</span>
+                        <span class="col-xs-4 text-right  mpl " id="noReceiveTotalAmountP"></span>
+                        <span class="col-xs-4 text-right  mpr fr noHover" id="orderReceivableP"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with50">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title" style="display: flex;justify-content: space-between">
+                        <h5 >订单-审批 <span id="orderApproveNumber" style="color: red"></span></h5>
+                        <div>
+                            <i class="fa fa-arrows-alt bm-scree-full-i" onclick="clickOrderApprove()"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265"  style="padding: 5px">
+                    <table id="orderApproveList" fit="true"
+                           title="" iconCls="icon-edit" singleSelect="true"
+                           idField="id">
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title">
+                        <h5 >库存</h5>
+                        <div>
+                            <i class="fa fa-arrows-alt bm-scree-full-i" onclick="clickInventory()"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265"  style="padding: 5px">
+                    <table id="inventory" fit="true"
+                           title="" iconCls="icon-edit" singleSelect="true"
+                           idField="id">
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title" style="display: flex;justify-content: space-between">
+                        <h5 >用户 <span id="companyNumber" style="color: red"></span></h5>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265" >
+                    <div class="row  m-t-sm idx-row" onclick="clickCompany('XZ')">
+                        <span class="col-xs-4 text-left  mpl noHover" >本月新增</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="companyXZ"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickCompany('BX')">
+                        <span class="col-xs-4 text-left  mpl noHover" >待保险批复</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="companyBX"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickCompany('HY')">
+                        <span class="col-xs-4 text-left  mpl noHover" >活跃</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="companyHY"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title">
+                        <h5 >公海用户推送</h5>
+                        <div>
+                            <i class="fa fa-arrows-alt bm-scree-full-i"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265"  style="padding: 5px;display: flex;justify-content: center;align-items: center">
+                   <span>暂无数据</span>
+                </div>
+            </div>
+        </div>
+        <div class="dev-cards bm-div-with25">
+            <div class="ibox">
+                <div class="ibox-title" style="display: flex;justify-content: space-between">
+                    <div class="bm-div-title" style="display: flex;justify-content: space-between">
+                        <h5 >供应商 <span id="supplierNumber" style="color: red"></span></h5>
+                    </div>
+                </div>
+                <div class="imbox-content hgt265" >
+                    <div class="row  m-t-sm idx-row" onclick="clickSupplier('XZ')" th:if="${protocolPurchaseFlg}">
+                        <span class="col-xs-4 text-left  mpl noHover" >本月新增</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="supplierXZ"></span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="clickSupplier('HY')">
+                        <span class="col-xs-4 text-left  mpl noHover" >活跃</span>
+                        <span class="col-xs-4 text-right  mpr fr" id="supplierHY"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="include :: echarts-js" />
+<script type="text/javascript" th:inline="javascript">
+    let totalNumberN=0;
+    let totalNSP=0
+    var _pcSide = true;
+    // ------------------jQuery初始化函数------------
+    $(function() {
+        reSizeScreen();
+        // 本年、本月样式
+        clickBenMonth()
+        // 销售提成
+        clickUserMonth0()
+        // 事业部分成
+        clickDeptMonth0()
+        // 初始化毛利润折线图
+        initGrossProfit()
+        // 获取订单执行统计数据
+        findContractExecutionStatistList()
+        // // 获取 订单应收
+        findContractReceivableStatistList()
+        // 获取订单审批
+        findContractApproveStatistList()
+        // 库存
+        findInventoryVirtualPage()
+        // 获取用户统计
+        findCompanyStatistList()
+        // 获取供应商统计
+        findSupplierStatistList()
+        $(window).resize(function() {
+            reSizeScreen();
+        });
+    });
+    // 获取个人成就
+    function getPersonAchievement(param){
+        $.ajax({
+            type:"post",
+            url:_ctx+"/business/manager/workbench/findPersonalAchievement",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+                $("#ranking").text(data.ranking?parseInt(data.ranking):'')
+                $("#grossProfitAmount").text('￥'+(data.grossProfitAmount?formateNum(data.grossProfitAmount):0)+'万')
+                $("#sellTotalAmount").text('￥'+(data.sellTotalAmount?formateNum(data.sellTotalAmount):0)+'万')
+                $("#sellTotalNumber").text((data.sellTotalNumber?formateNum(data.sellTotalNumber):0)+'吨')
+            }
+        });
+    }
+    // 获取销售提成
+    function getPerformanceCommissionUser(param){
+        $.ajax({
+            type:"post",
+            url:_ctx+`/performance/user/findPerformanceCommissionUser/${param}`,
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+                $("#userGrossMargin").text('￥'+(data.grossMargin?formateNum(data.grossMargin):0));
+                $("#userLaborCost").text('￥'+(data.laborCost?formateNum(data.laborCost):0));
+                $("#usernetProfit").text('￥'+(data.netProfit?formateNum(data.netProfit):0));
+                $("#userCommission").text('￥'+(data.commission?formateNum(data.commission):0));
+                $("#userMonthCommission").text('￥'+(data.monthCommission?formateNum(data.monthCommission):0));
+                $("#userYearCommission").text('￥'+(data.yearCommission?formateNum(data.yearCommission):0));
+            }
+        });
+    }
+
+    // 获取事业部分成
+    function getPerformanceCommissionDept(param){
+        $.ajax({
+            type:"post",
+            url:_ctx+`/performance/dept/findPerformanceCommissionDept/${param}`,
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+                $("#deptNetProfit").text('￥'+(data.deptNetProfit?formateNum(data.deptNetProfit):0));
+                $("#deptCommission").text('￥'+(data.deptCommission?formateNum(data.deptCommission):0));
+                $("#deptTotalCost").text('￥'+(data.leaderLaborCost?formateNum(data.leaderLaborCost):0));
+                $("#leaderCommission").text('￥'+(data.leaderCommission?formateNum(data.leaderCommission):0));
+                $("#leaderMonthCommission").text('￥'+(data.leaderMonthCommission?formateNum(data.leaderMonthCommission):0));
+                $("#leaderYearCommission").text('￥'+(data.leaderYearCommission?formateNum(data.leaderYearCommission):0));
+            }
+        });
+    }
+
+    function clickUserMonth0(){
+        $("#userMonth").css('background-color','#FFFFFF');
+        $("#userMonth_1").css('background-color','#F2F2F2');
+        $("#userMonth_2").css('background-color','#F2F2F2');
+        getPerformanceCommissionUser("userMonth");
+    }
+
+    function clickUserMonth1(){
+        $("#userMonth").css('background-color','#F2F2F2');
+        $("#userMonth_1").css('background-color','#FFFFFF');
+        $("#userMonth_2").css('background-color','#F2F2F2');
+        getPerformanceCommissionUser("userMonth1");
+    }
+
+    function clickUserMonth2(){
+        $("#userMonth").css('background-color','#F2F2F2');
+        $("#userMonth_1").css('background-color','#F2F2F2');
+        $("#userMonth_2").css('background-color','#FFFFFF');
+        getPerformanceCommissionUser( "userMonth2");
+    }
+
+    function clickDeptMonth0(){
+        $("#deptMonth").css('background-color','#FFFFFF');
+        $("#deptMonth_1").css('background-color','#F2F2F2');
+        $("#deptMonth_2").css('background-color','#F2F2F2');
+        getPerformanceCommissionDept("deptMonth");
+    }
+
+    function clickDeptMonth1(){
+        $("#deptMonth").css('background-color','#F2F2F2');
+        $("#deptMonth_1").css('background-color','#FFFFFF');
+        $("#deptMonth_2").css('background-color','#F2F2F2');
+        getPerformanceCommissionDept("deptMonth1");
+    }
+
+    function clickDeptMonth2(){
+        $("#deptMonth").css('background-color','#F2F2F2');
+        $("#deptMonth_1").css('background-color','#F2F2F2');
+        $("#deptMonth_2").css('background-color','#FFFFFF');
+        getPerformanceCommissionDept("deptMonth2");
+    }
+
+    function clickBenYear(){
+        $("#benYear").css('background-color','#FFFFFF')
+        $("#benMonth").css('background-color','#F2F2F2')
+        let userId =$('#userId').val()
+        let param = {
+            matchUserId: userId,
+            yearFlag: true,
+            monthFlag: false
+        }
+        getPersonAchievement(param)
+    }
+    function clickBenMonth(){
+        $("#benYear").css('background-color','#F2F2F2')
+        $("#benMonth").css('background-color','#FFFFFF')
+        let userId =$('#userId').val()
+        let param = {
+            matchUserId: userId,
+            yearFlag: false,
+            monthFlag: true
+        }
+        getPersonAchievement(param)
+    }
+    function initGrossProfit(){
+        let userId =$('#userId').val()
+        let param = {
+            matchUserId: userId
+        }
+        let xAxisData=[]
+        let seriesData= []
+        $.ajax({
+            type:"post",
+            async: false,
+            url:_ctx+"/business/manager/workbench/findFiveMonthGrossProfitAmount",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+              if(data!=null&&data.length>0){
+                  xAxisData = data.map(it=>it.month)
+                  seriesData = data.map(it=>it.grossProfitAmount)
+              }
+            }
+        });
+        var chartDom = document.getElementById('grossProfit');
+        var myChart = echarts.init(chartDom);
+        var option;
+        option = {
+            grid: {
+                top: '20',
+                right: 5
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            xAxis: {
+                type: 'category',
+                data: xAxisData
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    data: seriesData,
+                    type: 'line',
+                    smooth: true,
+                    lineStyle: {
+                        color: '#0000FF' // 使用HEX颜色表示蓝色
+                    },
+                    showSymbol: false
+                }
+            ]
+        };
+        option && myChart.setOption(option);
+        window.addEventListener("resize",function(){
+            myChart.resize();
+        });
+    }
+    function findContractExecutionStatistList(){
+        let userId =$('#userId').val()
+        let param = {
+            matchUserId: userId
+        }
+        $.ajax({
+            type:"post",
+            url:_ctx+"/business/manager/workbench/findContractExecutionStatistList",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+                if(data!=null&&data.length>0){
+                    const totalNumber = data.reduce((sum, item) => {
+                        return sum + (item.count || 0); // 确保 item.brandNumer 存在，若不存在则加 0
+                    }, 0);
+                    totalNumberN=totalNumber
+                    $("#orderExecutionNumber").text(' （'+totalNumber+"）")
+                    data.forEach((it)=>{
+                        switch (it.labelCode){
+                            case 'NCK':
+                                $("#orderNCK").text((it.count?it.count.toLocaleString():0)+'单').css('color','#3E3D9D')
+                                break;
+                            case 'NSK':
+                                $("#orderNSK").text((it.count?it.count.toLocaleString():0)+'单').css('color','#3E3D9D')
+                                break;
+                            case 'NKP':
+                                $("#orderNKP").text((it.count?it.count.toLocaleString():0)+'单').css('color','#3E3D9D')
+                                break;
+                            case 'NSP':
+                                totalNSP = it.count?it.count:0
+                                $("#orderNSP").text((it.count?it.count.toLocaleString():0)+'单').css('color','#3E3D9D')
+                                break;
+                        }
+                    })
+                }
+            }
+        });
+    }
+    function findContractReceivableStatistList(){
+        let userId =$('#userId').val()
+        let param = {
+            matchUserId: userId
+        }
+        $.ajax({
+            type:"post",
+            url:_ctx+"/business/manager/workbench/findContractReceivableStatistList",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+                if(data!=null&&data.length>0){
+                    const totalNumber = data.reduce((sum, item) => {
+                        return sum + (item.count || 0); // 确保 item.brandNumer 存在，若不存在则加 0
+                    }, 0);
+                    $("#orderReceivableNumber").text(' （'+totalNumber+"）")
+                    data.forEach((it)=>{
+                        switch (it.labelCode){
+                            case 'N':
+                                $("#noReceiveTotalAmountN").text('￥'+(it.noReceiveTotalAmount?it.noReceiveTotalAmount.toLocaleString():0)).css('color','#3E3D9D')
+                                $("#orderReceivableN").text((it.count?it.count.toLocaleString():0)+'单')
+                                break;
+                            case 'B':
+                                $("#noReceiveTotalAmountB").text('￥'+(it.noReceiveTotalAmount?it.noReceiveTotalAmount.toLocaleString():0)).css('color','#3E3D9D')
+                                $("#orderReceivableB").text((it.count?it.count.toLocaleString():0)+'单')
+                                break;
+                            case 'D':
+                                $("#noReceiveTotalAmountD").text('￥'+(it.noReceiveTotalAmount?it.noReceiveTotalAmount.toLocaleString():0)).css('color','#3E3D9D')
+                                $("#orderReceivableD").text((it.count?it.count.toLocaleString():0)+'单')
+                                break;
+                            case 'S':
+                                $("#noReceiveTotalAmountS").text('￥'+(it.noReceiveTotalAmount?it.noReceiveTotalAmount.toLocaleString():0)).css('color','#3E3D9D')
+                                $("#orderReceivableS").text((it.count?it.count.toLocaleString():0)+'单')
+                                break;
+                            case 'P':
+                                $("#noReceiveTotalAmountP").text('￥'+(it.noReceiveTotalAmount?it.noReceiveTotalAmount.toLocaleString():0)).css('color','#3E3D9D')
+                                $("#orderReceivableP").text((it.count?it.count.toLocaleString():0)+'单')
+                                break;
+                        }
+                    })
+                }
+            }
+        });
+    }
+    function findContractApproveStatistList(){
+        $('#orderApproveList').datagrid({
+            pageSize:10,
+            url:_ctx+"/business/manager/workbench/findContractApproveStatistList",
+            columns:[ [
+                {field:'labelName',title:'预算类型',align:'center', width:150},
+                {field:'budgetCount',title:'预算申请',align:'center', width:140},
+                {field:'buySealCount',title:'供应商双签',align:'center', width:140},
+                {field:'sellSealCount',title:'客户双签',align:'center', width:140},
+                {field:'buyPayCount',title:'供应商付款',align:'center', width:140}
+            ]],
+            onLoadSuccess: function (data){
+                if(data.rows!=null&&data.rows.length>0){
+                    let arr =data.rows
+                    const totalNumber = arr.reduce((sum, item) => {
+                        return sum + (item.budgetCount || 0); // 确保 item.brandNumer 存在，若不存在则加 0
+                    }, 0);
+                    $("#orderApproveNumber").text(' （'+totalNumber+"）")
+                }
+            }
+        });
+    }
+    function findInventoryVirtualPage(){
+        $('#inventory').datagrid({
+            pageSize: 5,
+            queryParams: {
+                // (数量-释放数量)库存数量大于0，且销售指导价不为空,且状态不失效R
+                search_NEQS_inventoryStatus: 'C',
+                search_GTM_minSellPrice: 0,
+                rows: 5
+            },
+            url:_ctx+"/inventory/stockVirtual/findInventoryVirtualPage",
+            columns:[ [
+                {field:'productName',title:'品种',align:'center', width:90},
+                {field:'brandNumber',title:'牌号',align:'center',width:90},
+                {field:'dealNumber',title:'数量(吨)',align:'right',width: 80,formatter:function (value,row,index){
+                        let releaseNumber =  row.releaseNumber == null ?0:row.releaseNumber
+                        return formateNum(Number(row.dealNumber-releaseNumber));
+                    }},
+                {field:'minSellPrice',title:'单价(元)',align:'right',width: 80,formatter:formateNum},
+
+            ]],
+        });
+    }
+    function findCompanyStatistList(){
+        let userId =$('#userId').val()
+        let param = {
+            matchUserId: userId
+        }
+        $.ajax({
+            type:"post",
+            url:_ctx+"/business/manager/workbench/findCompanyStatistList",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+                if(data!=null&&data.length>0){
+                    const totalNumber = data.reduce((sum, item) => {
+                        return sum + (item.count || 0); // 确保 item.brandNumer 存在，若不存在则加 0
+                    }, 0);
+                    $("#companyNumber").text(' （'+totalNumber+"）")
+                    data.forEach((it)=>{
+                        switch (it.labelCode){
+                            case 'XZ':
+                                $("#companyXZ").text((it.count?it.count.toLocaleString():0)+'家').css('color','#3E3D9D')
+                                break;
+                            case 'BX':
+                                $("#companyBX").text((it.count?it.count.toLocaleString():0)+'家').css('color','#3E3D9D')
+                                break;
+                            case 'HY':
+                                $("#companyHY").text((it.count?it.count.toLocaleString():0)+'家').css('color','#3E3D9D')
+                                break;
+                        }
+                    })
+                }
+            }
+        });
+    }
+    function findSupplierStatistList(){
+        let userId =$('#userId').val()
+        let param = {
+            matchUserId: userId
+        }
+        $.ajax({
+            type:"post",
+            url:_ctx+"/business/manager/workbench/findSupplierStatistList",
+            dateType:"json",
+            contentType : 'application/json',
+            data:JSON.stringify(param),
+            success:function(data){
+                if(data!=null&&data.length>0){
+                    const totalNumber = data.reduce((sum, item) => {
+                        return sum + (item.count || 0); // 确保 item.brandNumer 存在，若不存在则加 0
+                    }, 0);
+                    $("#supplierNumber").text(' （'+totalNumber+"）")
+                    data.forEach((it)=>{
+                        switch (it.labelCode){
+                            case 'XZ':
+                                $("#supplierXZ").text((it.count.toLocaleString()?it.count:0)+'家').css('color','#3E3D9D')
+                                break;
+                            case 'HY':
+                                $("#supplierHY").text((it.count.toLocaleString()?it.count:0)+'家').css('color','#3E3D9D')
+                                break;
+                        }
+                    })
+                }
+            }
+        });
+    }
+    function clickOrderExecute(val){
+        let numberSY=0
+       if(val ==='NSP'){
+           numberSY = totalNSP
+           var url = _ctx + "/business/manager/workbenchSkip/orderExecuteNSP?labelCode="+val
+           top.layer.open({
+               type: 2,
+               title: '订单-待收票'+'('+numberSY+')',
+               fixed : false,
+               shadeClose:true,
+               area: ['1200px', '600px'],
+               // btn: ['确定', '关闭'],
+               content: url,
+               offset: '100px'
+           });
+       } else {
+           numberSY = totalNumberN-totalNSP
+           var url = _ctx + "/business/manager/workbenchSkip/orderExecute?labelCode="+val
+           top.layer.open({
+               type: 2,
+               title: '订单-执行'+'('+numberSY+')',
+               fixed : false,
+               shadeClose:true,
+               area: ['1200px', '600px'],
+               // btn: ['确定', '关闭'],
+               content: url,
+               offset: '100px'
+           });
+       }
+    }
+    function clickOrderReceivable(val){
+        let number =$("#orderReceivableNumber").text()
+        var url = _ctx + "/business/manager/workbenchSkip/orderReceivable?labelCode="+val
+        top.layer.open({
+            type: 2,
+            title: '订单-应收'+number,
+            fixed : false,
+            shadeClose:true,
+            area: ['1200px', '600px'],
+            // btn: ['确定', '关闭'],
+            content: url,
+            offset: '100px'
+        });
+    }
+    function clickOrderApprove(){
+        var url = _ctx + "/business/manager/workbenchSkip/orderApprove"
+        top.layer.open({
+            type: 2,
+            title: '订单-审批',
+            fixed : false,
+            shadeClose:true,
+            area: ['1200px', '600px'],
+            // btn: ['确定', '关闭'],
+            content: url,
+            offset: '100px'
+        });
+    }
+    function clickInventory(){
+        var url = _ctx + "/business/manager/workbenchSkip/inventory"
+        top.layer.open({
+            type: 2,
+            title: '库存',
+            fixed : false,
+            shadeClose:true,
+            area: ['900px', '500px'],
+            // btn: ['确定', '关闭'],
+            content: url,
+            offset: '100px'
+        });
+    }
+    function clickCompany(val){
+        if(val==='XZ'){
+            let number =extractNumber($("#companyXZ").text())
+            var url = _ctx + "/business/manager/workbenchSkip/companyXZ?companyType=I"
+            top.layer.open({
+                type: 2,
+                title: '用户-新增'+'('+number+')',
+                fixed : false,
+                shadeClose:true,
+                area: ['1000px', '600px'],
+                // btn: ['确定', '关闭'],
+                content: url,
+                offset: '100px'
+            });
+        } else if(val==='BX'){
+            let number =extractNumber($("#companyBX").text())
+            var url = _ctx + "/business/manager/workbenchSkip/companyBX"
+            top.layer.open({
+                type: 2,
+                title: '用户-待人保批复'+'('+number+')',
+                fixed : false,
+                shadeClose:true,
+                area: ['1000px', '600px'],
+                // btn: ['确定', '关闭'],
+                content: url,
+                offset: '100px'
+            });
+        } else if(val==='HY'){
+            let number =extractNumber($("#companyHY").text())
+            var url = _ctx + "/business/manager/workbenchSkip/companyHY?companyType=I"
+            top.layer.open({
+                type: 2,
+                title: '用户-活跃'+'('+number+')',
+                fixed : false,
+                shadeClose:true,
+                area: ['1200px', '650px'],
+                // btn: ['确定', '关闭'],
+                content: url,
+                offset: '100px'
+            });
+        }
+    }
+    function clickSupplier(val){
+        if(val==='XZ'){
+            let number =extractNumber($("#supplierXZ").text())
+            var url = _ctx + "/business/manager/workbenchSkip/companyXZ?companyType=T"
+            top.layer.open({
+                type: 2,
+                title: '供应商-新增'+'('+number+')',
+                fixed : false,
+                shadeClose:true,
+                area: ['1000px', '600px'],
+                // btn: ['确定', '关闭'],
+                content: url,
+                offset: '100px'
+            });
+        } else if(val==='HY'){
+            let number =extractNumber($("#supplierHY").text())
+            var url = _ctx + "/business/manager/workbenchSkip/companyHY?companyType=T"
+            top.layer.open({
+                type: 2,
+                title: '供应商-活跃'+'('+number+')',
+                fixed : false,
+                shadeClose:true,
+                area: ['1000px', '600px'],
+                // btn: ['确定', '关闭'],
+                content: url,
+                offset: '100px'
+            });
+        }
+    }
+    function browserRedirect() {
+        var sUserAgent = navigator.userAgent.toLowerCase();
+        var bIsIpad = sUserAgent.match(/ipad/i) == "ipad";
+        var bIsIphoneOs = sUserAgent.match(/iphone os/i) == "iphone os";
+        var bIsMidp = sUserAgent.match(/midp/i) == "midp";
+        var bIsUc7 = sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4";
+        var bIsUc = sUserAgent.match(/ucweb/i) == "ucweb";
+        var bIsAndroid = sUserAgent.match(/android/i) == "android";
+        var bIsCE = sUserAgent.match(/windows ce/i) == "windows ce";
+        var bIsWM = sUserAgent.match(/windows mobile/i) == "windows mobile";
+        if (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM){
+            return false;
+        }
+        return true;
+    }
+    function extractNumber(str) {
+        const match = str.match(/\d+/);  // 匹配一个或多个数字
+        return match ? parseInt(match[0], 10) : 0;  // 如果匹配到数字，返回数字；否则返回 null
+    }
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+    function reSizeScreen(){
+        // 识别手机与PC段
+        _pcSide = browserRedirect();
+        if (_pcSide) {
+            $(".bm-div-with50").css("width",'720px')
+        } else {
+            $(".bm-div-with50").css("width",'350px')
+        }
+    }
+    // 五分钟自动刷新数据
+    setInterval(function(){
+        location.reload();  // 刷新页面
+    }, 300000);
+</script>
+</body>
+</html>

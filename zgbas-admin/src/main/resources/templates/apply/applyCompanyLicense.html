@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<title>事项申请</title>
+	<th:block th:include="include :: summernote-css" />
+	<script th:src="@{/static/js/bootstrap.min.js?v=3.3.7}"></script>
+	<th:block th:include="include :: summernote-js" />
+</head>
+
+<div class="easyui-layout" id="inputForm" border="false" fit="true">
+	<input type="hidden" name="id" id="entityId" th:value="${entity.id == null ? 0 : entity.id}" />
+	<input type="hidden" name="applyUserId" id="applyUserId" th:value="${entity.applyUserId}" />
+	<input type="hidden" name="applyUserName" id="applyUserName" th:value="${entity.applyUserName}" />
+	<input type="hidden" name="applyDate" id="applyDate" th:value="${#dates.format(entity.applyDate,'yyyy-MM-dd')}" />
+	<input type="hidden" name="status" id="entityStatus" th:value="${entity.status}" />
+	<input type="hidden" name="deptId" id="deptId" th:value="${entity.deptId}" />
+	<input type="hidden" name="ownRegion" id="ownRegion" th:value="${entity.ownRegion}" />
+	<div class="mb6">
+		<p class="yw-table-filter w2">
+			<label>公司名称</label>
+			<input name="companyName" class="control" id="companyName" type="text" th:value="${entity.companyName}"/>
+			<input name="companyCode" class="control" id="companyCode" type="hidden" th:value="${entity.companyCode}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>文件类型</label>
+			<input class="control" name="fileType" id="fileType" th:value="${entity.fileType}"/>
+		</p>
+	</div>
+	<div class="mb6">
+		<p class="yw-table-filter">
+			<label>用途</label>
+			<input class="control" name="useType" id="useType" th:value="${entity.useType}"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>其他用途</label>
+			<input name="otherType" id="otherType" th:value="${entity.otherType}" type="text"></input>
+		</p>
+		<p class="yw-table-filter">
+			<label>使用期限</label>
+			<input name="periodDate" id="periodDate" th:value="${#dates.format(entity.periodDate, 'yyyy-MM-dd')}" type="text"></input>
+		</p>
+	</div>
+	<div class="mb6">
+		<p class="yw-table-filter w3">
+			<label>备注:</label>
+			<input name="remark" id="remark" th:value="${entity.remark}" type="text"></input>
+		</p>
+	</div>
+
+	<div class="editForm">
+		<p style="width:240px">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+		</p>
+		<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+	<div id="btn" class="add-btn" style="margin-top: 10px" th:if="${entity.status == 'D' && entity.applyUserId == @shiroUtil.getCurrentUserId()}">
+		<a href="#" class="easyui-linkbutton btn-empty" onclick="downloadPic()">下载公司证照</a>
+	</div>
+</div>
+<div id="w_loading" title="公司证照详情" data-options="width:700,height:500">
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js?v=1}"  type="text/javascript"></script>
+<script type="text/javascript">
+	var filePlugin = new FilePlugin('#fileId', $('#entityId').val(), '/apply/companyLicense/updateFileId', [[${param.hasEditFile}]]);
+	var _curStatus = $('#entityStatus').val()
+	var _fileShowUrl = '[[${fileShowUrl}]]';
+	var _fileTypeJson = eval('[(${companyLicenseFileTypeJson})]');
+	var _useTypeJson = eval('[(${companyLicenseUseTypeJson})]');
+	var _companyListJson = eval('[(${companyListJson})]');
+	var hasApprove =  '[[${psv.hasApprove}]]' === 'true';
+
+	$(function(){
+
+		$('#w_loading').window({
+			title: '公司证照下载',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+
+		//加载附件列表
+		$('.easyui-linkbutton').linkbutton();
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+
+		// 状态不是完成 且 是当前审批人时 文件可以上传
+		if (("D" !== _curStatus && hasApprove) || _curStatus === "N") {
+			if ($('#btn_fileId').length > 0) {
+				fileUpload("btn_fileId", "fileId");
+			}
+		}
+
+		$("#companyName").combobox({
+			data: _companyListJson,
+			textField: 'companyName',
+			valueField: 'companyName',
+			panelHeight: "auto",
+			editable: false,
+			required: true,
+			onSelect: function (data) {
+				$("#companyCode").val(data.companyCode);
+			}
+		});
+
+		$("#fileType").combobox({
+			data: _fileTypeJson,
+			textField: 'dictName',
+			valueField: 'dictCd',
+			panelHeight: "auto",
+			editable: false,
+			required: true
+		});
+
+		$('#otherType').textbox({
+			required: false,
+			readonly: true,
+			disabled: true
+		});
+
+		$("#useType").combobox({
+			data: _useTypeJson,
+			textField: 'dictName',
+			valueField: 'dictCd',
+			panelHeight: "auto",
+			editable: false,
+			required: true,
+			onSelect: function (data) {
+				if (data.dictCd === '3') {
+					$('#otherType').textbox({
+						required: true,
+						readonly: false,
+						disabled: false
+					});
+				} else {
+					$('#otherType').textbox({
+						required: false,
+						readonly: true,
+						disabled: true
+					});
+				}
+			}
+		});
+
+		$("#periodDate").datebox({
+			required: true
+		})
+
+		if (_curStatus && (_curStatus === 'N' || _curStatus === 'B' || _curStatus === 'C')) {
+
+		} else {
+			$("#inputForm").find("input").not('.tags input').not("[type='button']").attr("readonly", true);
+			$("#fileType").combobox({
+				readonly: true
+			});
+			$("#useType").combobox({
+				readonly: true
+			});
+			$("#companyName").combobox({
+				readonly: true
+			});
+			$("#periodDate").datebox({
+				readonly: true
+			})
+		}
+		applyLoadSucess();
+		_beforSaveOper = true;
+	});
+	//发起申请前操作
+	function beforSaveOper() {
+		var aHTML = $('.click2edit').summernote('code');
+		$("#content").val(aHTML)
+		//点击申请前，先检查是否有改库存数据
+		return true;
+	}
+	function chooseCallback(contractRows){
+		var contract = contractRows[0];
+		byContract(contract);
+	}
+
+	// 上传文件
+	function sendFile(file, obj) {
+		var data = new FormData();
+		data.append("file", file);
+		$.ajax({
+			type: "POST",
+			url: _ctx + "/apply/matters/uploadFile",
+			data: data,
+			cache: false,
+			contentType: false,
+			processData: false,
+			dataType: 'json',
+			success: function(result) {
+				if (result) {
+					$(obj).summernote('editor.insertImage',_fileShowUrl+"/view/show/"+result,true);
+				} else {
+					$.modal.alertError(result.msg);
+				}
+			}
+		});
+	}
+
+	// 下载公司证照
+	function downloadPic() {
+		const id = $("#entityId").val();
+		const url = _ctx + "/apply/companyLicense/downloadPic?id=" + id;
+		$('#w_loading').window({
+			href: url,
+			title: '公司证照下载',
+			modal: true,
+			closed: true,
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			cache: false
+		});
+		$('#w_loading').window("open");
+	}
+</script>
+<style>
+.modal-backdrop {
+	z-index: -1 !important
+}
+#contentHtml {
+	border:1px solid #c2c0c0;
+}
+</style>

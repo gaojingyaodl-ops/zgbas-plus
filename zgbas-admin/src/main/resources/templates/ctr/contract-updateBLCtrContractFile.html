@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css?v=5565}" type="text/css" rel="stylesheet"/>
+<div class="easyui-layout" fit="true" id="tab">
+    <div region="center" border="false">
+        <form id="inputForm" method="post" enctype="multipart/form-data" class="from-input-layout"
+              style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden" name="ctrContractId" id="ctrContractId" th:value="${entity.id}"/>
+            <input type="hidden" name="ctrContractNo" id="ctrContractNo" th:value="${entity.contractNo}"/>
+            <input type="hidden" id="contractType" th:value="${entity.contractType}"/>
+
+            <div class="editForm" style="margin-left:90px">
+                <p style="width:240px">
+                    <span class="upload-btn" id="btn_debtCertificateFileId">
+                         <a href="#" class="easyui-linkbutton addBtn btn220" data-options="iconCls:'icon-upload'">上传债权凭证附件 </a>
+                    </span>
+                    <input class="control" id="debtCertificateFileId" name="debtCertificateFileId" type="hidden" th:value="${entity.debtCertificateFileId}"/>
+                </p>
+                <label class="control-label" id="debtCertificateFilePath"></label>
+                <p class="controls showImg debtCertificateFileId" id="span_debtCertificateFileId"></p>
+                <br>
+                <p style="width:240px">
+                    <span class="upload-btn" id="btn_fileId">
+                         <a href="#" class="easyui-linkbutton addBtn btn220">开票附件</a>
+                    </span>
+                    <input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.invoiceFileId}"/>
+                </p>
+                <label class="control-label" id="fileIdFilePath"></label>
+                <p class="controls showImg fileId" id="span_fileId"></p>
+                <br>
+                <p style="width:240px">
+                    <span class="upload-btn" id="btn_goodsFileId">
+                         <a href="#" class="easyui-linkbutton addBtn btn220">收货确认附件 </a>
+                    </span>
+                    <input class="control" id="goodsFileId" name="goodsFileId" type="hidden" th:value="${entity.goodsFileId}"/>
+                </p>
+                <label class="control-label" id="goodsFileIdPath"></label>
+                <p class="controls showImg goodsFileId" id="span_goodsFileId"></p>
+                <br>
+            </div>
+            <div>
+                <th:block th:if="${editFlg}">
+                    <p style="margin-left:140px;">
+                    <span class="upload-btn" id="btn_factor">
+                         <a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'"
+                            id="uploadComplete" name="uploadComplete" onclick="uploadComplete()">上传完成</a>
+                    </span>
+                </th:block>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    var editFlg = [[${editFlg}]];
+    var filePlugin = new FilePlugin('#fileId', $('#entityId').val(), '/bs/company/updateFileId', editFlg);
+    var onClickFlg = true;
+    var InvoiceFileIdPlugin = new FilePlugin('#fileId', $('#ctrContractId').val(), '/ctr/contract/updateInvoiceFileId', false);
+    var debtCertificateFileIdPlugin = new FilePlugin('#debtCertificateFileId', $('#ctrContractId').val(), '/ctr/contract/updateDebtCertificateFileId', editFlg);
+    var goodsFileIdPlugin = new FilePlugin('#goodsFileId', $('#ctrContractId').val(), '/ctr/contract/updateGoodsFileId', false);
+    //上传开票附件
+
+    //加载开票附件列表
+    InvoiceFileIdPlugin.load($('#fileId').val(), '#span_fileId');
+    // if ($("#btn_fileId").length > 0 && editFlg == true) {
+    //     fileUpload("btn_fileId", "fileId", "fileIdFilePath", InvoiceFileIdPlugin);
+    // }
+    //加载债权凭证附件列表
+    debtCertificateFileIdPlugin.load($('#debtCertificateFileId').val(), '#span_debtCertificateFileId');
+    if ($("#btn_debtCertificateFileId").length > 0 && editFlg == true) {
+        fileUpload("btn_debtCertificateFileId", "debtCertificateFileId", "debtCertificateFilePath", debtCertificateFileIdPlugin);
+    }
+
+    //上传收货确认附件
+    goodsFileIdPlugin.load($('#goodsFileId').val(), '#span_goodsFileId');
+    // if ($("#btn_goodsFileId").length > 0 && editFlg == true) {
+    //     fileUpload("btn_goodsFileId", "goodsFileId", "goodsFileIdPath", goodsFileIdPlugin);
+    // }
+
+    function uploadComplete() {
+        $.post(_ctx + "/ctr/contract/uploadComplete/" + $("#ctrContractId").val(), function (entity) {
+            if (entity) {
+                $.messager.show({title: 'Tip', msg: '上传成功', timeout: 2000, showType: 'show'});
+            }
+        });
+        window.opener = null;
+        window.open(' ', '_self')
+        window.close();
+    }
+
+
+    function save() {
+        var contractId = $('#ctrContractId').val();
+        var doubleCheckFileId = $('#fileId').val();
+        if (doubleCheckFileId && onClickFlg) {
+            onClickFlg = false;
+            var _url = _ctx + "/ctr/contract/doSigning";
+            var options = {
+                url: _url,
+                success: function (data) {
+                    var rObj = eval('(' + data + ')');
+                    if (rObj.success) {
+                        $.messager.show({title: 'Tip', msg: '保存成功', timeout: 2000, showType: 'show'});
+                        $('#w_doubleCheck_window').window("close");
+                        $('#tt').datagrid('reload');
+                    } else {
+                        var failure = rObj.failure;
+                        $.messager.alert('error', failure, 'warning');
+                        onClickFlg = true;
+                        $('#tt').datagrid('reload');
+                    }
+                }
+            };
+            $('#inputForm').form('submit', options);
+        }
+    }
+
+    function fileUpload(fileBtn, fileId, filePath, filePlugin) {
+        var $this = $('#' + fileId);
+        var uploader = WebUploader.create({
+            auto: true,
+            // swf文件路径
+            swf: _ctx + '/static/webuploader-0.1.5/Uploader.swf',
+            // 文件接收服务端。
+            server: _ctx + '/file/uploadFile',
+            // 选择文件的按钮。可选。
+            // 内部根据当前运行是创建，可能是input元素，也可能是flash.
+            pick: '#' + fileBtn,
+            // 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
+            resize: false,
+            duplicate: true,//true可重复上传，默认不可多次重复上传
+            // 只允许选择图片文件。
+            accept: {
+                title: 'file',
+                extensions: 'gif,jpg,jpeg,bmp,png,pdf,rar,zip,doc,docx,xlsx,xls',
+                mimeTypes: "*"
+            }
+        });
+        // 去掉文件上传组件样式，使用上传dom 自己样式
+        $(".webuploader-pick").removeClass();
+
+        uploader.on('beforeFileQueued', function (file) {
+            $.messager.progress('close');
+            if (file && file.size > 104857600) {
+                $.messager.alert('tip', "上传文件不能超过100M!", 'info');
+                return false;
+            }
+        })
+
+        // 当有文件添加进来的时候
+        uploader.on('fileQueued', function (file) {
+            $.messager.progress();
+        });
+
+        // 文件上传成功，给item添加成功class, 用样式标记上传成功。
+        uploader.on('uploadSuccess', function (file, response) {
+            $.messager.progress('close');
+            if (file && file.size > 104857600) {
+                $.messager.alert('tip', "上传文件不能超过100M!", 'info');
+                return;
+            }
+            $this.val("");
+            if (response && response.result) {//上传成功
+                var fileId = response.fileId;
+                filePlugin.uploadSuccess(fileId);
+                //加载附件列表
+                filePlugin.load($this.val(), '#' + filePath);
+            } else {
+                $.messager.alert('tip', "上传文件失败，失败信息：" + response._raw, 'info');
+            }
+
+        });
+        uploader.on('error', function (file) {
+            $.messager.progress('close');
+            $.messager.alert('tip', '文件格式不支持!', 'info');
+        })
+        // 文件上传失败，显示上传出错。
+        uploader.on('file', function (file) {
+            $.messager.progress('close');
+            $.messager.alert('tip', '文件上传失败,请重试!', 'info');
+        });
+        // --end-文件上传---
+    }
+</script>

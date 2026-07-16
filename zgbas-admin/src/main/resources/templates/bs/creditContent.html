@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css?v=5565}" type="text/css" rel="stylesheet"/>
+<div class="easyui-layout" fit="true" id="tab">
+    <div region="center" border="false" class="pl20 pt20">
+        <form id="inputForm" method="post" class="from-input-layout"
+              style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>企业名称</label>
+                    <input name="companyName" th:value="${companyName}" readonly/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>授信类别</label>
+                    <input name="creditType" id="creditType" th:value="${creditType}" readonly/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter ">
+                    <label>授信额度</label>
+                    <input  name="creditAmount" th:value="${creditAmount}" readonly/>
+                </p>
+                <p class="yw-table-filter ">
+                    <label>风控额度</label>
+                    <input  name="riskAmount" th:value="${riskAmount}" readonly/>
+                </p>
+                <p class="yw-table-filter ">
+                    <label>临时额度</label>
+                    <input  name="temporaryAmount" th:value="${temporaryAmount}" readonly/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter ">
+                    <label>临时额度失效日</label>
+                    <input  name="temporaryExpiryDate" th:value="${temporaryExpiryDate}" readonly/>
+                </p>
+                <p class="yw-table-filter ">
+                    <label>已用额度</label>
+                    <input  name="usedCreditAmount" th:value="${usedCreditAmount}" readonly/>
+                </p>
+                <p class="yw-table-filter ">
+                    <label>可用额度</label>
+                    <input  name="availableCreditAmount" th:value="${availableCreditAmount}" readonly/>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    var creditTypeJson = eval('[(${creditTypeJson})]');
+	$(function(){
+        $("#creditType").combobox({
+            data:creditTypeJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:"auto",
+            editable:false,
+            readonly: true
+        });
+	});
+
+</script>

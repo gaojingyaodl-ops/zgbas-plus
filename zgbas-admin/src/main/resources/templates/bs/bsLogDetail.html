@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>日志详情</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<div  th:each="entity:${entity}">
+		<div class="mb10">
+			<input type="hidden" th:value="${entity.id}" name="id"/>
+			<p class="yw-table-filter">
+				<label>ip</label>
+				<input id="ipAddre" name="ipAddre" th:value="${entity.ipAddre}" class="control text_padding" type="text" readonly="readonly"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>远程端口</label>
+				<input id="remortPort" name="remortPort" th:value="${entity.remortPort}" class="control text_padding" type="text" readonly="readonly"/>
+			</p>
+		</div>
+		<div class="mb10">
+			<p class="yw-table-filter">
+				<label>操作人</label>
+				<input id="operatorName" name="operatorName" th:value="${entity.operatorName}" class="control text_padding" type="text" readonly="readonly"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>操作目标</label>
+				<input id="targetName" name="targetName" th:value="${entity.targetName}" class="control text_padding" type="text" readonly="readonly"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>操作类型</label>
+				<input id="operation" name="operation" th:value="${entity.operation}" class="control text_padding" type="text" readonly="readonly"/>
+			</p>
+		</div>
+		<div class="mb10">
+		<p class="yw-table-filter">
+			<label>日志内容</label>
+			<textarea id="remark" name="remark" style="width: 600px;height: 230px" th:text="${entity.remark}" class="control text_padding"  readonly="readonly"/>
+		</p>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+	$(function(){
+
+	});
+</script>
+</body>
+</html>

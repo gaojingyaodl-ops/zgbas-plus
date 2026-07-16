@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+    <script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+    <script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+    <script th:src="@{/static/jquery/FileSaver.js}" type="text/javascript"></script>
+    <script th:src="@{/static/jquery/jquery.wordexport.js}" type="text/javascript"></script>
+    <script th:src="@{/static/js/areaJson.js?v=2}" type="text/javascript"></script>
+</head>
+<style>
+    .datagrid-cell-check{height: 26px;}
+    .datagrid-header-check{height: 26px;}
+</style>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+    <input type="hidden" id="current_userId" th:value = "${@shiroUtil.getCurrentUserId()}">
+    <input type="hidden" id="current_userName" th:value="${@shiroUtil.getCurrentUserName()}">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <div class="mb6">
+
+            <p class="yw-table-filter">
+                <label>年月</label>
+                <input class="control" id="yearAndMonth" name="yearAndMonth" type="text" th:value="${yearAndMonth}"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>姓名</label>
+                <input class="control" name="evaluateName" id="evaluateName" type="text"/>
+            </p>
+            <a href="#" id="btnEdit" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" id="btnDel" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+        </div>
+    </form>
+    <div id="btnDiv" class="add-btn" style="margin-top: 10px">
+        <a href="#" class="easyui-linkbutton btn64 addBtn"  onclick="saveSorce()">确认评分</a>
+    </div>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right: 20px;padding-left:20px;">
+    <table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id">
+    </table>
+</div>
+<div id="w" title="考核" data-options="width:1020,height:580"></div>
+<script type="text/javascript">
+    var _evaluateUserStatusJson = eval('[(${evaluateUserStatusJson})]');
+    var _evaluateGroupJson = eval('[(${evaluateGroupJson})]');
+    var _evaluateMetricsJson = eval('[(${evaluateMetricsJson})]');
+    var $current_userId = $('#current_userId').val();
+    var lastIndex;
+    $(function () {
+        $('#tt').datagrid({
+            pagination:true,
+            pageSize:25,
+            rownumbers:true,
+            showFooter:true,
+            singleSelect:true,
+            selectOnCheck:true,
+            checkOnSelect:false,
+            pageList:[100,50,45,40,35,30,25],
+            queryParams: Convert.getJson4Form('searchForm'),
+            url: _ctx + "/evaluate/evaluateDetail/evaluatelist?evaluateDept=HR&type=0",
+            columns: [ [
+                {field: 'evaluateUserId', hidden: 'true'},
+                {field: 'evaluateDetailId', hidden: 'true'},
+                {field: 'evaluateUserDetailStatus', hidden: 'true'},
+                {field: 'evaluateUserStatus', hidden: 'true'},
+                {field: 'evaluateMonth', title: '年月', align: 'center', width: 60},
+                {field: 'userName', title: '姓名', align: 'center', width: 60},
+                {
+                    field: 'evaluateGroup', title: '考核项目', align: 'center', width: 60,
+                    formatter: function (value) {
+                        if(strIsNull(value)){
+                            return "";
+                        }
+                        return Convert.findValueByKey(_evaluateGroupJson, 'dictCd', value, 'dictName')
+                    }
+                },
+                {
+                    field: 'evaluateMetrics', title: '考核指标', align: 'center', width: 60,
+                    formatter: function (value) {
+                        if(strIsNull(value)){
+                            return "";
+                        }
+                        return Convert.findValueByKey(_evaluateMetricsJson, 'dictCd', value, 'dictName')
+                    }
+                },
+                {field: 'weight', title: '权重(分)', align: 'left', width: 60},
+                {field:'metricsContent',title:'指标定义', width:600,nowrap:true,align: 'left',
+                    formatter:function(value,row,index){
+                        return '<div style="word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                    }
+                },
+                {
+                    field: 'detailScore', title: '评分', align: 'center', width: 80,
+                    formatter:function (value,row,index){
+                       return '<input name="detailScore" id="detailScore'+ index +'"type="text" style="width: 100%;height: 100%" />';
+                    },
+                    styler: function(value,row,index){
+                        return 'height:50px';
+                    }
+                },
+                {field: 'scoreUserName', title: '评分人员', align: 'center', width: 160},
+                {field: 'scoreUserId', hidden: 'true'},
+            ]],
+            onLoadSuccess:function (){
+                $("input[name='detailScore']").numberbox({
+                    required:true,
+                    precision:0,
+                    min:0,
+                });
+                // 获取行号
+                let rows = $(this).datagrid("getRows");
+                for(let index = 0 ; index < rows.length ; index++){
+                    let _detailScore = rows[index].detailScore;
+                    let _scoreUserId = rows[index].scoreUserId;
+                    let evaluateUserStatus = rows[index].evaluateUserStatus;
+                    if(!strIsNull(_detailScore)){
+                        // 将表格的值设置给 input框
+                        $("input[id='detailScore" + index + "']").numberbox('setValue',_detailScore);
+                        $("input[id='detailScore" + index + "']").numberbox({
+                            readonly:true
+                        });
+                    }
+                    if(evaluateUserStatus == "1" || evaluateUserStatus == "0"){
+                        $("input[id='detailScore" + index + "']").numberbox({
+                            required: true,
+                            readonly:false
+                        });
+                    }
+                    // 如果评分人不是当前登录人，说明当前登录人只是拥有查看的权限
+                    if(!checkCurrentUserIsSourceUser( $current_userId,_scoreUserId)){
+                        $("input[id='detailScore" + index + "']").numberbox({
+                            required: false,
+                            readonly:true
+                        });
+                    }
+                }
+            }
+        });
+
+        $('#evaluateStatus').combobox({
+            data:_evaluateUserStatusJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:"auto",
+            editable:false
+        })
+        intiMonthBox('yearAndMonth');
+
+
+    });
+
+//    ===========================函数==========================
+    // 确认评分
+    function saveSorce (){
+
+        // let checkFlag = false;
+        let checkIsCurrentUser = false;
+        let detailArray =[];
+        let rows=$('#tt').datagrid("getRows");
+        for (var index = 0; index < rows.length; index++) {
+            let element = rows[index];
+            if(!checkCurrentUserIsSourceUser( $current_userId,element.scoreUserId)){
+                checkIsCurrentUser = true;
+            }
+            let score = $("input[id='detailScore" + index + "']").numberbox('getValue');
+            if ((element.evaluateUserDetailStatus == 1 && element.evaluateUserStatus != 0 && element.evaluateUserStatus != 1) || strIsNull(score)) {
+                continue;
+            }
+            let detailScore = {
+                evaluateDetailId: element.evaluateDetailId,
+                evaluateUserId: element.evaluateUserId,
+                detailScore: score
+            }
+            detailArray.push(detailScore);
+
+        }
+        // 如果当前登录人不是评分人，说明当前登录人只是拥有查看的权限
+        if(checkIsCurrentUser){
+            $.messager.alert('提示','抱歉，您没有评分的权限！','warning');
+            return;
+        }
+        if(detailArray.length < 1){
+            $('#tt').datagrid('reload');
+            return;
+        }
+        // console.log("_evaluateRemark="+_evaluateRemark);
+        let data = {
+            detailScoreArray: detailArray,
+            evaluateRemark:null
+        }
+
+        let dataJson = JSON.stringify(data);
+        // if(checkFlag){
+        //     $.messager.alert('提示','请填写完所有必填项！','warning');
+        // }else{
+            $.ajax({
+                type: 'post',
+                url: _ctx+'/evaluate/evaluateDetail/hrSaveAssessment',
+                contentType:'application/json',
+                // dataJson:'json',
+                data: dataJson,
+                success: function(data){
+                    if(data == 'success'){
+                        $.messager.show({
+                            title:'提示',
+                            msg:'考评成功！',
+                            timeout:2000,
+                            cls:'c9',
+                            border:'thin',
+                            showType:'show'
+                        });
+                        $('#tt').datagrid('reload');
+                    }else if(data == 'noPermission'){
+                        $.messager.alert('提示','抱歉，您没有评分的权限！','warning');
+                    }
+                    else{
+                        $.messager.alert('提示','考评失败，请联系管理员！','warning');
+                    }
+                },
+                error:function (r){
+                    console.log("出错了！！！")
+                }
+            });
+        // }
+    }
+
+    // 校验当前登录人是否是评分人
+    function checkCurrentUserIsSourceUser(currentUserId,sourceUserIds){
+        if(sourceUserIds.indexOf('|') != -1){
+            let split = sourceUserIds.split("|");
+            debugger
+            for (let i = 0; i < split.length; i++) {
+                if(split[i] == currentUserId){
+                    return true;
+                }
+            }
+            return false;
+        }else{
+            return currentUserId == sourceUserIds;
+        }
+    }
+
+    // 初始化年-月
+    function intiMonthBox(id){
+        var db = $('#'+id);
+        db.datebox({
+            onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                span.trigger('click'); //触发click事件弹出月份层
+                if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                    tds = p.find('div.calendar-menu-month-inner td');
+                    tds.click(function (e) {
+                        e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                        var year = /\d{4}/.exec(span.html())[0]//得到年份
+                            , month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+                        db.datebox('hidePanel')//隐藏日期对象
+                            .datebox('setValue', year + '-' + month); //设置日期的值
+                    });
+                }, 0);
+                yearIpt.unbind();//解绑年份输入框中任何事件
+            },
+            parser: function (s) {
+                if (!s) return new Date();
+                var arr = s.split('-');
+                return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+            },
+            formatter: function (d) {
+                let year = d.getFullYear();
+                let month = d.getMonth() + 1;
+                if (month < 10) {
+                    month = '0' + month;
+                }
+                return year + '-' + month;
+            }
+        });
+        var p = db.datebox('panel'), //日期选择对象
+            tds = false, //日期选择对象中月份
+            yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+            span = p.find('span.calendar-text'); //显示月份层的触发控件
+    }
+
+    // 考核函数
+    function assessment(id){
+        assessmentDetail(id,0);
+    }
+    function assessmentDetail(id,isDetail){
+        $('#w').window({
+            href:_ctx + "/evaluate/evaluateDetail/getEvaluateDetail?evaluateUserId=" + id + "&evaluateDept=UP&isDetail="+isDetail,
+            title : '考核',
+            modal : true,
+            closed : true,
+            collapsible : false,
+            minimizable : false,
+            maximizable : false,
+            cache : false,
+            onClose : function() {
+                $('#tt').datagrid('reload');
+            }
+        });
+        $('#w').window('open');
+
+    }
+    // 详情函数
+    function details(id){
+        assessmentDetail(id,1);
+    }
+</script>
+</body>
+</html>

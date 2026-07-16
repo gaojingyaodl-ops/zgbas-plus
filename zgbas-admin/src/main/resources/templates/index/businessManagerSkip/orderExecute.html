@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>库存查询</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/css/businessManageIndex.css}" rel="stylesheet"/>
+</head>
+<body class="easyui-layout">
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <input type="hidden" name="labelCode" id="labelCode" th:value="${labelCode}" />
+    <div style="display: flex;justify-content: flex-end;height: 40px;align-items: center">
+        <div>
+            <span class="bm-div-toggle-show" id="NCK" onclick="changeSpan('NCK')">待出库</span>
+            <span class="bm-div-toggle-show" id="NSK" onclick="changeSpan('NSK')">待收款</span>
+            <span class="bm-div-toggle-show" id="NKP" onclick="changeSpan('NKP')">待开票</span>
+        </div>
+    </div>
+    <div style="height: 450px">
+        <table id="list" fit="true"
+               title="" iconCls="icon-edit" singleSelect="true"
+               idField="id">
+        </table>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var processListJson = eval('[(${processListJson})]');
+    var businessKindJson=eval('[(${businessKindJson})]');
+    var columnsNCSK =[
+        {field:'contractNo',title:'合同编号',align:'center', width:120},
+        {field:'companyName',title:'客户名称',align:'left', width:150,formatter:function(value,row){
+                if (value){
+                    var s_str = value.split("有限公司");
+                    if (s_str) {
+                        value = s_str[0];
+                    }
+                    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                    return content;
+                }
+            }},
+        {field:'businessKind',title:'业务类型', width:80,align:'center',formatter:function(value,row,index){
+                return Convert.findValueByKey(businessKindJson,"dictCd",value,"dictName");
+            }},
+        {field:'totalAmount',title:'合同金额(元)',align:'right', width:100,formatter:formateNum},
+        {field:'receivableAmount',title:'待收金额（元)',align:'right',width: 100,formatter:function (value,row,index){
+                let totalAmount= row.totalAmount? row.totalAmount:0
+                let dealedAmount=row.dealedAmount?row.dealedAmount:0
+                let breachAmount =row.breachAmount?row.breachAmount:0
+                let receiveBreachAmount =row.receiveBreachAmount?row.receiveBreachAmount:0
+                let receivableAmount =  totalAmount+breachAmount-dealedAmount-receiveBreachAmount
+                return formateNum(Number(receivableAmount));
+            }},
+        {field:'appointPayFullTime',title:'约定回款日期',align:'center',width: 100},
+        {field:'unBillAmount',title:'未收票（元）',align:'right',width: 100,formatter:function (value,row,index){
+                let totalAmount= row.totalAmount? row.totalAmount:0
+                let breachAmount =row.breachAmount?row.breachAmount:0
+                let billedAmount =row.billedAmount?row.billedAmount:0
+                let unBillAmount =  totalAmount+breachAmount-billedAmount
+                return formateNum(Number(unBillAmount));
+            }},
+        {field:'unWarehouseNumber',title:'未出库（吨）',align:'right',width: 100,formatter:function (value,row,index){
+                let totalNumber =row.totalNumber?row.totalNumber:0
+                let warehouseNumber= row.warehouseNumber? row.warehouseNumber:0
+                let unWarehouseNumber =  totalNumber-warehouseNumber
+                return formateNum(Number(unWarehouseNumber));
+            }},
+        {field:'contractStatus', title: '合同状态', width: 200,align:'left',formatter:function(value,row,index){
+                return contractStatusView(value, row);
+            }},
+        {field:'sealDate',title:'双签日',align:'center',width: 90},
+        {field:'totalNumber',title:'数量（吨）',align:'center',width: 90},
+        {field:'receiptArrivedFlg',title:'发票要求',align:'center',width: 90,formatter:function(value,row,index){
+                if(row.receiptArrivedFlg){
+                    return '货到票到'
+                }
+            }}
+    ]
+    var columnsNKP =[
+        {field:'contractNo',title:'合同编号',align:'center', width:120},
+        {field:'companyName',title:'客户名称',align:'left', width:150,formatter:function(value,row){
+                if (value){
+                    var s_str = value.split("有限公司");
+                    if (s_str) {
+                        value = s_str[0];
+                    }
+                    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                    return content;
+                }
+            }},
+        {field:'businessKind',title:'业务类型', width:80,align:'center',formatter:function(value,row,index){
+                return Convert.findValueByKey(businessKindJson,"dictCd",value,"dictName");
+            }},
+        {field:'totalAmount',title:'合同金额(元)',align:'right', width:100,formatter:formateNum},
+        {field:'receivableAmount',title:'待收金额（元)',align:'right',width: 100,formatter:function (value,row,index){
+                let totalAmount= row.totalAmount? row.totalAmount:0
+                let dealedAmount=row.dealedAmount?row.dealedAmount:0
+                let breachAmount =row.breachAmount?row.breachAmount:0
+                let receiveBreachAmount =row.receiveBreachAmount?row.receiveBreachAmount:0
+                let receivableAmount =  totalAmount+breachAmount-dealedAmount-receiveBreachAmount
+                return formateNum(Number(receivableAmount));
+            }},
+        {field:'appointPayFullTime',title:'约定回款日期',align:'center',width: 100},
+        {field:'unBillAmount',title:'未收票（元）',align:'right',width: 100,formatter:function (value,row,index){
+                let totalAmount= row.totalAmount? row.totalAmount:0
+                let breachAmount =row.breachAmount?row.breachAmount:0
+                let billedAmount =row.billedAmount?row.billedAmount:0
+                let unBillAmount =  totalAmount+breachAmount-billedAmount
+                return formateNum(Number(unBillAmount));
+            }},
+        {field:'unWarehouseNumber',title:'未出库（吨）',align:'right',width: 100,formatter:function (value,row,index){
+                let totalNumber =row.totalNumber?row.totalNumber:0
+                let warehouseNumber= row.warehouseNumber? row.warehouseNumber:0
+                let unWarehouseNumber =  totalNumber-warehouseNumber
+                return formateNum(Number(unWarehouseNumber));
+            }},
+        {field:'contractStatus', title: '合同状态', width: 200,align:'left',formatter:function(value,row,index){
+                return contractStatusView(value, row);
+            }},
+        {field:'sealDate',title:'双签日',align:'center',width: 90},
+        {field:'totalNumber',title:'数量（吨）',align:'center',width: 90},
+        {field:'receiptArrivedFlg',title:'发票要求',align:'center',width: 90,formatter:function(value,row,index){
+                if(row.receiptArrivedFlg){
+                    return '货到票到'
+                }
+            }},
+        {field:'controls',title:'操作',align:'center',width: 90,formatter:function (value,row,index){
+                let buyTotalAmount =row.buyTotalAmount?row.buyTotalAmount:0
+                let buyBilledAmount =row.buyBilledAmount?row.buyBilledAmount:0
+                let totalNumber= row.totalNumber? row.totalNumber:0
+                let warehouseNumber =row.warehouseNumber?row.warehouseNumber:0
+                let totalAmount= row.totalAmount? row.totalAmount:0
+                if(row.finalTotalAmount){
+                    totalAmount=row.finalTotalAmount
+                }
+                let dealedAmount= row.dealedAmount? row.dealedAmount:0
+                if(buyBilledAmount>=buyTotalAmount&&warehouseNumber>=totalNumber&&dealedAmount>=totalAmount){
+                    return  '<span class="contract-btn contract-btn-3" onclick="startInvoice('+row.id+','+row.applyCancelFlg+')">开票</span>';
+                }
+            }}
+    ]
+    $(function(){
+        let labelCode =$("#labelCode").val()
+        $('#'+labelCode).addClass('active')
+        changeSpan(labelCode)
+    });
+    function changeSpan(labelCode){
+        // 给所有的 <span> 元素添加点击事件
+        $(".bm-div-toggle-show").click(function() {
+            // 移除所有的 active 类
+            $(".bm-div-toggle-show").removeClass("active");
+            // 为当前点击的 <span> 元素添加 active 类
+            $(this).addClass("active");
+        });
+        if(labelCode=='NKP'){
+            getDataShow(labelCode,columnsNKP)
+        } else {
+            getDataShow(labelCode,columnsNCSK)
+        }
+    }
+    function getDataShow(labelCode,columns){
+        $('#list').datagrid({
+            pagination:true,
+            pageSize:10,
+            height: 550,
+            rownumbers:true,
+            pageList:[10,20,30,40,50],
+            queryParams: {
+                // (数量-释放数量)库存数量大于0，且销售指导价不为空,且状态不失效R
+                labelCode:labelCode
+            },
+            method: 'post',
+            url:_ctx+"/business/manager/workbench/findSellContractExecutionPage",
+            columns:[columns],
+        });
+    }
+    /**
+     * 合同状态图标展示逻辑
+     */
+    function contractStatusView(value, row) {
+        let str = '';
+        let contractType = row.contractType;
+        var _totalAmount = row.totalAmount;
+        if (row.finalTotalAmount){
+            _totalAmount = row.finalTotalAmount;
+        }
+        if (!row.id){
+            return str;
+        }
+        if (value === 'B') {
+            // 已审批
+            str += '<img class="icon-contract-approve"/>';
+        } else if (value === 'S') {
+            // 已签约
+            str += '<img class="icon-contract-sign"/>';
+        } else if (value === 'D') {
+            // 已完成
+            str += '<img class="icon-contract-complete"/>';
+        } else if (value === 'C') {
+            // 作废
+            return '<img class="icon-contract-invalid"/>';
+        } else {
+            str += '<img class="icon-contract-sign"/>';
+        }
+        // 出入库
+        if (row.warehouseNumber >= row.totalNumber){
+            str += contractType === 'B' ?  '<img class="icon-deliveryIn"/>' : '<img class="icon-deliveryOut"/>';
+        }
+
+        // 确认收货
+        if (row.confirmReceiveNumber >= row.totalNumber){
+            str += '<img class="icon-confirmReceipt"/>';
+        }
+
+        // 收付款
+        if (row.dealedAmount >= _totalAmount) {
+            str += contractType === 'B' ? '<img class="icon-pay"/>' : '<img class="icon-receive"/>';
+        }
+
+        // 收开票
+        if (row.billedAmount >= _totalAmount) {
+            str += contractType === 'B' ?  '<img class="icon-invoiceReceive"/>' : '<img class="icon-invoice"/>';
+        }
+
+        // 罚金
+        if (contractType === 'S' && row.breachAmount > 0 && row.receiveBreachAmount < row.breachAmount) {
+            str += '<img class="icon-fine"/>';
+        }
+
+        if (row.performanceStatus === 'B'){
+            // 履约状态-宽限
+            str += '<img class="icon-grace"/>';
+        }else if (row.performanceStatus === 'D'){
+            // 履约状态-催告
+            str += '<img class="icon-interpellation"/>';
+        }else if (row.performanceStatus === 'S'){
+            // 履约状态-逾期
+            str += '<img class="icon-overdue"/>';
+        }else if (row.performanceStatus === 'P'){
+            // 履约状态-违约
+            str += '<img class="icon-breach"/>';
+        }
+        return str;
+    }
+    function startInvoice(contractId,applyCancelFlg){
+        if (applyCancelFlg){
+            $.messager.alert('提示','本合同已发起作废申请，当前不可发起申请 !','info');
+            return false;
+        }
+        var title ='新建:开票申请';
+        var processCode = "CTR_INVOICE";
+        doRedirect(title,processCode,contractId);
+    }
+    function doRedirect(title,processCode,contractId){
+        var processId = Convert.findValueByKey(processListJson,"processCode",processCode,"id");
+        window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+processId+'?contractId='+contractId);
+    }
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+</script>
+</body>
+<style>
+    .active {
+        background-color: #FFFFFF; /* 点击时的背景颜色 */
+    }
+</style>
+</html>

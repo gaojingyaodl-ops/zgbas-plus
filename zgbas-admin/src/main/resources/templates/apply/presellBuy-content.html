@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<!-- <script th:src="@{/static/jquery-easyui/jquery.easyui.min.js}" type="text/javascript"></script> -->
+<div class="easyui-layout" id="inputForm" border="false" fit="true">
+	<div region="north" border="false" method="post"  style="margin-bottom:10px;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" id="entityStatus" th:value="${entity.status}" />
+		<input type="hidden" id="applyType" name="applyType" th:value="A" />
+		<input type="hidden" id="businessType" name="businessType" th:value="${entity.businessType}">
+		<input type="hidden" id="defaultFlg" th:value="${defaultFlg}">
+		<!-- <div id="btn" class="add-btn" th:if="${entity.status eq 'N'}">
+			<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onClick="selectPreSell()">选择</a>
+		</div> -->
+		<div class="mb10">
+	         <table id="relaTable" title="" iconCls="icon-edit" singleSelect="true" idField="id" style="max-height:196px;"></table>
+	    </div>
+	</div>
+
+	<div region="center" id="inputForm" style="position: relative;overflow:hidden;" fit="true" border="false">
+		<!--  <input type="hidden" id="canApproveEdit" th:value="${psv.canApproveEdit}"/>-->
+		<input type="hidden" id="companyId" name="companyId" th:value="${entity.companyId}"/>
+		<input type="hidden" name="status" id="status" th:value="${entity.status}" />
+		<input type="hidden" id="contractId" th:value="${entity.contractId}" />
+		<div class="mb6">
+			<th:block th:replace="~{tags/apply :: contractNo (${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<p class="yw-table-filter">
+				<label>合同总价(元):</label>
+				<input id="totalAmount" type="text" th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}" readonly="readonly"/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>我方:</label>
+				<input name="ourCompanyName" id="ourCompanyName" readonly="readonly" type="text" required="required" th:value="${entity.ourCompanyName}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>业务类型:</label>
+				<input type="text" th:value="${business}" readonly="readonly"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同属性:</label>
+				<input name="contractAttr" id="contractAttr" type="text"  required="required" th:value="${entity.contractAttr}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>供方:</label>
+				<input name="companyName" id="companyName" type="text" required="required" th:value="${entity.companyName}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<th:block th:replace="~{tags/apply :: deliveryType (${#maps.containsKey(psv.mapEdit, 'deliveryType')}?${psv.mapEdit['deliveryType'].require},${#maps.containsKey(psv.mapEdit, 'deliveryType')}?${psv.mapEdit['deliveryType'].edit && psv.hasEdit}:${ psv.hasEdit},${deliveryTypeJson})}"/>
+			<p class="yw-table-filter">
+				<label>质量标准:</label>
+				<input name="qualityStandard" id="qualityStandard"  type="text" th:value="${entity.qualityStandard}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>开票日期:</label>
+				<input name="invoiceDate" id="invoiceDate"  type="text" th:value="${entity.invoiceDate}"></input>
+			</p>
+		</div>
+
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>运输费(元):</label>
+				<input name="transportAmount" id="transportAmount" type="text" th:value="${#numbers.formatDecimal(entity.transportAmount,1,'COMMA',2,'POINT')}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>不含税运输费:</label>
+				<input id="tax_transportAmount" type="text" th:value="${entity.transportAmount}==null ? '' : ${#numbers.formatDecimal(entity.transportAmount/1.09,1,'COMMA',2,'POINT')}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>仓储费(元):</label>
+				<input name="warehouseAmount" id="warehouseAmount" type="text" th:value="${#numbers.formatDecimal(entity.warehouseAmount,1,'COMMA',2,'POINT')}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>不含税仓储费:</label>
+				<input id="tax_warehouseAmount" type="text" th:value="${entity.warehouseAmount}==null ? '' : ${#numbers.formatDecimal(entity.warehouseAmount/1.06,1,'COMMA',2,'POINT')}"/>
+			</p>
+		</div>
+
+		<div class="mb6">
+			<th:block th:replace="~{tags/apply :: deliveryMode (${#maps.containsKey(psv.mapEdit, 'deliveryMode')}?${psv.mapEdit['deliveryMode'].require},${#maps.containsKey(psv.mapEdit, 'deliveryMode')}?${psv.mapEdit['deliveryMode'].edit && psv.hasEdit}:${ psv.hasEdit},${deliveryModeJson},'结算方式')}"/>
+			<th:block th:replace="~{tags/apply :: payType (${#maps.containsKey(psv.mapEdit, 'payType')}?${psv.mapEdit['payType'].require},${#maps.containsKey(psv.mapEdit, 'payType')}?${psv.mapEdit['payType'].edit && psv.hasEdit}:${ psv.hasEdit},${payTypeJson},'')}"/>
+			<p class="yw-table-filter">
+				<label>到货日期:</label>
+				<input name="arrivalTime" id="arrivalTime" class="easyui-datebox" required="required" th:value="${#dates.format(entity.arrivalTime,'yyyy-MM-dd')}" />
+			</p>
+			<p class="yw-table-filter">
+				<input name="arrivalTimeExt" id="arrivalTimeExt" th:value="${entity.arrivalTimeExt}"/>
+			</p>
+		</div>
+
+		<div class="mb6">
+			<p class="yw-table-filter" id="br">
+				<label>定金比例:</label>
+				<input id="bondRate" name="bondRate" type="text" th:value="${entity.bondRate}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>定金(元):</label>
+				<input name="bondAmount" id="bondAmount" type="text" th:value="${#numbers.formatDecimal(entity.bondAmount,1,'COMMA',2,'POINT')}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>付定金日期:</label>
+				<input name="payBondTime" id="payBondTime" class="easyui-datebox" required="required" th:value="${#dates.format(entity.payBondTime,'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>付全款日期:</label>
+				<input name="payFullTime" id="payFullTime" class="easyui-datebox" required="required" th:value="${#dates.format(entity.payFullTime,'yyyy-MM-dd')}"></input>
+			</p>
+		</div>
+
+		<div class="p_text hide">
+			<p class="yw-table-filter w4">
+				<label>付款方式:</label>
+				<input name="payKind" id="payKind"  type="text" th:value="${entity.payKind}"></input>
+				<input name="payKindCode" id="payKindCode" type="hidden" th:value="${entity.payKindCode}"></input>
+			</p>
+		</div>
+		<!-- <p class="p_text">
+			<span class="input-colspan">
+				<label>成本毛利:</label>
+				<input name="costProfit" id="costProfit"  type="text" readonly="readonly"></input>
+			</span>
+			<span class="input-colspan">
+				<label>合同毛利:</label>
+				<input name="grossProfit" id="grossProfit" type="text" th:value="${entity.grossProfit}"></input>
+			</span>
+		</p> -->
+
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>收款银行:</label>
+				<input name="receiveBank" id="receiveBank" type="text" th:value="${entity.receiveBank}"/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>收款账号:</label>
+				<input name="receiveAccount" id="receiveAccount" class="control text_padding" type="text" th:value="${entity.receiveAccount}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>联系地址:</label>
+				<input name="contactAddr" id="contactAddr" type="text" th:value="${entity.contactAddr}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>联系人:</label>
+				<input name="contactName" id="contactName" type="text" th:value="${entity.contactName}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>联系电话:</label>
+				<input name="contactPhone" id="contactPhone" type="text" th:value="${entity.contactPhone}"/>
+			</p>
+		</div>
+		<div class="mb6">
+		    <p class="yw-table-filter w2">
+				<label>交货地点:</label>
+				<input required="required" name="deliveryAddr" id="deliveryAddr" type="text" th:value="${entity.deliveryAddr}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>交货电话:</label>
+				<input name="deliveryPhone" id="deliveryPhone" type="text" th:value="${entity.deliveryPhone}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>补充条款:</label>
+				<input name="extraTerm" type="text" id="extraTerm" th:value="${entity.extraTerm}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+			</p>
+		</div>
+	</div>
+	<div class="editForm">
+		<p style="width:240px">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+		</p>
+		<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+	<div id="w_stock_choose" class="easyui-window" title="合同详情" data-options="width:1100,height:540"></div>
+</div>
+<script type="text/javascript" th:inline="javascript">
+var lastIndex;
+var _factoryJson = eval('[(${factoryJson})]');
+var _productTypeJson = eval('[(${productTypeJson})]');
+var _brandJson = eval('[(${brandJson})]');
+var _productTypeJson = eval('[(${productTypeJson})]');
+var _payTypeJson = eval('[(${payTypeJson})]');
+var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+var _warehouseJson = eval('[(${warehouseJson})]');
+var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+var _deliveryModeJson = eval('[(${deliveryModeJson})]');
+var _contractAttrJson= eval('[(${contractAttr})]');
+var _arrivalTimeExtJson = eval('[(${arrivalTimeExtJson})]');
+var _qualityStandardJson = eval('[(${qualityStandardJson})]');
+var _invoiceDateJson = eval('[(${invoiceDateJson})]');
+var packingSpecificaJson = eval('[(${packingSpecificaJson})]');
+var _contractBondRateJson = eval('[(${contractBondRateJson})]');
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/buy/updateFileId',[[${param.hasEditFile}]]);
+var hasEdit = [[${psv.hasEdit}]];
+var maxNumberArray = [];
+var colums = [ [ ] ];
+var defaultFlg = [[${defaultFlg}]];
+$(function(){
+	$('.easyui-linkbutton').linkbutton();
+	_beforSaveOper = true;
+	var _curStatus = $("#entityStatus").val();
+	var _flg = defaultFlg;
+	var _url = _ctx+"/apply/productDetail/productList?search_EQS_applyType="+$("#applyType").val()+"&search_EQL_applyId="+$("#entityId").val();
+	colums =[ [
+		{field:'productCd',title:'品名',align:'center',width:150,
+			formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_productTypeJson,"id",value,"text");
+		}},
+		{field:'brandNumber',title:'牌号',align:'center',width:150},
+		{field:'factoryId',title:'厂商',align:'center',width:180,
+			formatter:function(value,row,index){
+				return Convert.findValueByKey(_factoryJson,"id",value,"factoryName");
+		}},
+		{field:'warehouseName',title:'提货/配送仓库',align:'center',width:180},
+		/* {field:'warehousePos',title:'仓库所在地', width:120,align:'left',
+			formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_bsAreaJson,"id",value,"text");
+		}},
+		{field:'wrapSpecs',title:'包装规格',align:'center',width:120,
+			formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(packingSpecificaJson,"dictCd",value,"dictName");
+		}}, */
+		{field:'dealNumber',title:'数量(吨)', width:100,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4,}},
+			formatter: function (value, row, index) {
+                if (row != null) {
+                    return parseFloat(value).toFixed(3);
+                }
+		}},
+		{field:'maxNumber',title:'最大数量',width:100,hidden:true,editor:{type:'numberbox',options:{validType:'length[1,20]',precision:2}}},
+		{field:'otherDealPrice',title:'采购单价(元)',align:'right', width:95,hidden:true},
+		{field:'dealPrice',title:'单价(元)', width:100,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2,
+					parser: function(val) {
+						// 解析时去除千分位分隔符
+						if(val) {
+							return parseFloat(String(val).replace(/,/g, ''));
+						} else {
+							if(isNaN(val)) {
+								return '';
+							} else {
+								return val;
+							}
+						}
+					},
+					formatter: function(val) {
+						if (val || val === 0) {
+							val = parseFloat(val).toFixed(2).toString().split(".");
+							val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+							return val.join(".");
+						} else {
+							if(isNaN(val)){
+								return ""
+							} else {
+								return val;
+							}
+						}
+					}}},
+			formatter: function (value, row, index) {
+                if (row != null) {
+                    return parseFloat(value).toFixed(2);
+                }
+		}},
+		{field:'totalPrice',title:'总价(元)', width:120,align:'right',editor:{type:'numberbox',options:{required:'true' ,readonly:'true',validType:'length[1,20]',precision:2,
+					parser: function(val) {
+						// 解析时去除千分位分隔符
+						if(val) {
+							return parseFloat(String(val).replace(/,/g, ''));
+						} else {
+							if(isNaN(val)) {
+								return '';
+							} else {
+								return val;
+							}
+						}
+					},
+					formatter: function(val) {
+						if (val || val === 0) {
+							val = parseFloat(val).toFixed(2).toString().split(".");
+							val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+							return val.join(".");
+						} else {
+							if(isNaN(val)){
+								return ""
+							} else {
+								return val;
+							}
+						}
+					}}},
+			formatter: function (value, row, index) {
+                if (row != null) {
+                    return parseFloat(value).toFixed(2);
+                }
+		}},
+		{field:'option',title:'操作', width:120,hidden:true, align:'center',formatter:function(value, row, index){
+			var str = '<i class="icon-remove ml10 icon cursor" onclick="remove(\''+row.id+'\',event,this)"></i>';
+	        return str;
+		}}
+	]];
+	$('#w_stock_choose').window({
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		title:"请选择预售采购"
+	});
+	if (_industry.indexOf('SL')==-1){
+		for(var i in colums[0]){
+			var col =colums[0][i];
+			if (col.field=='brandNumber' || col.field=='factoryId'){
+				if (col.editor){
+					col.editor.options.required = false;
+				}
+				col.hidden = true;
+			}
+
+		}
+	}
+
+	setCostProfitValue();
+
+	$('#relaTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:colums,
+		//toolbar:'#btn',
+		onBeginEdit:function(index,row){
+			//新增采购申请默认属性为在途P
+			row.productAttr = "P";
+			var ctr_product_id = row.ctrProductId;
+			//预售采购设置最大值
+			if(contractId){
+				var ed_curNumber = $('#relaTable').datagrid('getEditor', {index:index,field:'dealNumber'});
+				var maxNumber = maxNumberArray[index]
+				$(ed_curNumber.target).numberbox({max:maxNumber,min:0});
+			}else{
+
+			};
+			curOper(index,row);
+			/* if (ctr_product_id){
+				getMaxArriveTime();
+			} */
+		},
+		onDblClickRow:function(index,row,field){
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				//进入可编辑状态
+				$('#relaTable').datagrid('endEdit', lastIndex);
+				$('#relaTable').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("relaTable",field,lastIndex);
+			}
+		},
+		onClickCell:function(index,field){
+			var rows =$('#relaTable').datagrid('getData').rows;
+			var row =rows[index];
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				if (lastIndex != index){
+					$('#relaTable').datagrid('endEdit', lastIndex);
+					$('#relaTable').datagrid('beginEdit', index);
+				}
+				lastIndex = index;
+				Convert.focusEditor('relaTable',field,lastIndex);
+			}
+		},
+		onClickRow:function(index,row){
+			lastIndex = index;
+		},
+		onLoadSuccess:function(data){
+			//预售采购
+			if(contractId){
+				newRow(contractId);
+			}else{
+				if(_curStatus && _curStatus=='N'||_curStatus=='B'){
+					if(data.total==0){
+						var new_row = {id:0};
+						$('#relaTable').datagrid('appendRow', new_row);
+						var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+						lastIndex = rowIndex;
+						$('#relaTable').datagrid('beginEdit', rowIndex);
+					}else{
+						getTotalAmount();
+					}
+				}else{
+				}
+				if (data.rows.length>0){
+
+					var _productCode = data.rows[0].productCd
+					if(_productCode && _productCode.indexOf("SL")>=0){
+//	 					$('#relaTable').datagrid('showColumn', 'brandNumber');
+//	 					$('#relaTable').datagrid('showColumn', 'factoryId');
+					}else{
+
+//	 					$('#relaTable').datagrid('hideColumn', 'brandNumber');
+//	 					$('#relaTable').datagrid('hideColumn', 'factoryId');
+					}
+
+				}
+			}
+	}
+
+	});
+
+	//if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+	if(hasEdit){
+		$('#payKind').combobox({});
+		$('#relaTable').datagrid('showColumn', 'option');
+		$('#productType').combobox({
+			data:_productTypeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			onLoadSuccess:function(){
+				$(this).combobox("setValue","P");
+			}
+		});
+		$('#deliveryAddr').textbox({
+			required:true
+		});
+
+		$('#arrivalTime').datebox({
+			 required: true,
+			 editable: false,
+			 onChange : function(newValue,oldValue){
+				/* var dateFullTime = strDateForDate($('#payFullTime').datebox('getValue')).getTime();
+				var dateFullTimeValue = $('#payFullTime').datebox('getValue');
+				var dateBondTime = $('#payBondTime').datebox('getValue');
+				var dateBondTimeValure = strDateForDate(dateBondTime).getTime();
+				var DeliveryTime = strDateForDate(newValue).getTime();
+				if(newValue){
+					$('#payFullTime').datebox().datebox('calendar').calendar({
+						validator: function(date){
+			                return strDateForDate(dateBondTime) <=date && date<=strDateForDate(newValue) ;//<=
+			            }
+					 });
+					if(dateBondTimeValure > dateFullTime){
+						$('#payFullTime').datebox('setValue',dateBondTime);
+					}else if(dateFullTime > DeliveryTime){
+						$('#payFullTime').datebox('setValue', newValue);
+					}else{
+						$('#payFullTime').datebox('setValue',dateFullTimeValue);
+					}
+				}else {
+				 	$('#payFullTime').datebox().datebox('calendar').calendar({
+						validator: function(date){
+			                return strDateForDate(dateBondTime) <=date;//<=
+			            }
+					});
+				} */
+			}
+		});
+
+		//开票日期
+		$('#invoiceDate').combobox({
+			data:_invoiceDateJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false
+		});
+
+		// 质量标准
+		$('#qualityStandard').combobox({
+			data:_qualityStandardJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false,
+			hasDownArrow:false,
+			readonly:true
+		});
+
+		$('#grossProfit,#costProfit').numberbox({
+		    precision:2,
+		    readonly:true
+		});
+
+		$('#arrivalTimeExt').combobox({
+			data:_arrivalTimeExtJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false,
+			onLoadSuccess:function(){
+				var value = $(this).combobox('getValue');
+				if(!value){
+					$(this).combobox("setValue","LR");
+				}
+			},
+			onSelect:function(record){
+				if(record.dictCd == 'K'){
+			 		$('#arrivalTime').datebox('clear');
+			 		$('#arrivalTime').datebox({required:false});
+			 		$("#inputForm").find("input[name='arrivalTime']").parent().addClass("hide");
+			 		$("#deliveryMode").combobox({
+						hasDownArrow:false,
+						readonly:true,
+						onLoadSuccess:function(){
+							$(this).combobox('setValue','XKHH');
+						}
+				 	});
+			 	}else{
+			 		var _deliveryMode = $('#deliveryMode').val();
+			 		var _value = $('#arrivalTime').datebox('getValue');
+			 		$('#arrivalTime').datebox({required:true});
+			 		$('#arrivalTime').datebox('setValue',_value);
+			 		$("#inputForm").find("input[name='arrivalTime']").parent().removeClass("hide");
+			 		$("#deliveryMode").combobox({
+						hasDownArrow:true,
+						readonly:false
+				 	});
+			 		$("#deliveryMode").combobox('setValue',_deliveryMode);
+			 	}
+		 	}
+		});
+
+		$('#bondAmount,#totalAmount').numberbox({
+		    min:0,
+		    precision:2,
+		    editable:false,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		//结算方式
+		$("#deliveryMode").combobox({
+	 		data:_deliveryModeJson,
+			hasDownArrow:true,
+			readonly:false,
+			editable:false
+		});
+
+		$('#payBondTime').datebox({
+			editable:false,
+			onChange : function(newValue,oldValue){
+			}
+		});
+
+
+		$('#payFullTime').datebox({
+			editable:false,
+			onChange : function(newValue,oldValue){
+			}
+		});
+
+		$('#bondRate').combobox({
+			data:_contractBondRateJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			editable:false,
+			onLoadSuccess:function(data){
+				var value = $(this).val();
+				if (!value){
+					$(this).combobox('setValue',data[0].dictCd);
+				}
+			},
+			onSelect : function(node){
+				var value = node.dictCd;
+				var total_amount = $('#totalAmount').val();
+				var bond_amount = Number(total_amount)*value;
+				$("#bondAmount").numberbox('setValue',bond_amount);
+				if (value > 0){
+					$("#payBondTime").parent().removeClass("hide");
+					$("#payBondTime").datebox('options').required = true;
+					$("#payBondTime").datebox('textbox').validatebox('options').required = true;
+					$("#payBondTime").datebox('validate');
+					$("#deliveryMode").combobox('setValue','XKHH');
+				}else{
+					$("#payBondTime").parent().addClass("hide");
+					$("#payBondTime").datebox({required:false});
+					$("#deliveryMode").combobox('setValue','XHHK');
+				}
+			}
+		});
+		//合同属性
+		$('#contractAttr').combobox({
+			data:_contractAttrJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false,
+			required: true,
+			onLoadSuccess:function(){
+				if(!$(this).combobox('getValue')){
+					$(this).combobox("setValue","N");
+					var curr_time = new Date();
+					$("#arrivalTime").datebox('setValue',myformatter(curr_time));
+				}
+
+			}
+		});
+
+		//交货方式
+		$('#deliveryType').combobox({
+			data:_deliveryTypeJson,
+			required: true,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false,
+			onLoadSuccess:function(){
+				var value =$(this).combobox('getValue');
+				if(!value){
+					$(this).combobox('select',_deliveryTypeJson[0].dictCd);
+				}
+			}
+		});
+
+		$('#tax_transportAmount,#tax_warehouseAmount').numberbox({
+		    min:0,
+		    precision:2,
+		    readonly:true,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		//运输费仓储费
+		$('#transportAmount').numberbox({
+			min:0,
+		    precision:2,
+		    required: true,
+		    onChange:function(newValue){
+				var _tax_transportAmount = parseFloat(newValue/1.09).toFixed(2);
+				$('#tax_transportAmount').numberbox('setValue',_tax_transportAmount);
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+		$('#warehouseAmount').numberbox({
+			min:0,
+		    precision:2,
+		    required: true,
+		    onChange:function(newValue){
+		    	var _tax_warehouseAmount = parseFloat(newValue/1.06).toFixed(2);
+				$('#tax_warehouseAmount').numberbox('setValue',_tax_warehouseAmount);
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		//自定义交货电话的验证规则
+		$.extend($.fn.validatebox.defaults.rules, {
+		    phoneRex: {
+		        validator: function(value){
+			        var rex=/^1[3-8]+\d{9}$/;
+			        var rex2=/^((0\d{2,3})-)(\d{7,8})(-(\d{3,}))?$/;
+			        if(rex.test(value)||rex2.test(value)){
+			        	return true;
+			        }else{
+			            return false;
+			        }
+		        },
+		        message: '请输入正确电话或手机格式'
+		    }
+		});
+		$('#deliveryPhone').validatebox({
+		    validType: 'phoneRex'
+		});
+
+		var _companyId = $('#companyId').val();
+		if(!_companyId){
+			_companyId = 0;
+		}
+		$('#companyName').combobox({
+			url:_ctx+"/bs/company/listMyCompany/"+ _companyId + "/1",
+			mode:'remote',
+			limitToList:true,
+			valueField:'companyName',
+			textField:'text',
+			panelHeight:300,
+			formatter: function(row){
+				var text = row.text;
+				var myFlag = row.myFlag;
+				if (myFlag!=true){
+					text = '<span style="color:#ccc">'+text+'</span>';
+				}
+				return text;
+			},
+			onSelect : function(node){
+				//是否是我的企业
+				var myFlag = node.myFlag;
+				var bankName = node.bankName;
+				var bankAccount = node.bankAccount;
+				if (myFlag!=true){
+					setTimeout(function () { $("#companyName").combobox("clear"); }, 1)
+				}else{
+					var _id = node.id;
+					$("#companyId").val(_id);
+					var _remark = "";
+					var receiveAccount = $('#receiveAccount').val();
+					var receiveBank = $('#receiveBank').val();
+					if (!_flg){
+						bankName = receiveBank;
+						bankAccount = receiveAccount;
+						_flg = true;
+					}
+					if (bankName){
+						_remark = '('+bankName+'，账号：'+bankAccount+')';
+					}else{
+						_remark = company_remark;
+					}
+					if (node.contactName){
+						$("#contactName").val(node.contactName);
+					}else{
+						$("#contactName").val("");
+					}
+					if (node.contactPhone){
+						$("#contactPhone").val(node.contactPhone);
+					}else{
+						$("#contactPhone").val("");
+					}
+					if (node.address){
+						$("#contactAddr").val(node.address);
+					}else{
+						$("#contactAddr").val("");
+					}
+					if (node.bankName){
+						$("#receiveBank").val(bankName);
+					}else{
+						$("#receiveBank").val("");
+					}
+					if (node.bankAccount){
+						$("#receiveAccount").val(bankAccount);
+					}else{
+						$("#receiveAccount").val("");
+					}
+				}
+			}
+		});
+
+
+
+		if (contract == null || contract == undefined){
+			$('#ourCompanyName').removeAttr('readOnly');
+			$('#ourCompanyName').combobox({
+				data:_ourCompanyJson,
+				valueField:'dictName',
+				textField:'dictName',
+				panelHeight:"auto",
+				readonly:true,
+				hasDownArrow:false
+			});
+		}
+
+		$('#bondAmount').numberbox('textbox').on('blur',function(){
+			 var bondAmount = Number($('#bondAmount').val());
+		     var totalAmount = Number($('#totalAmount').val());
+		     if(bondAmount>totalAmount){
+		    	 $('#bondAmount').numberbox('setValue', totalAmount);
+			  }
+		})
+		$('#receiveBank').on('blur',function(){
+ 			mergePayKind();
+ 		});
+ 		$('#receiveAccount').on('blur',function(){
+ 			mergePayKind();
+ 		});
+ 		var bondTime = $('#payBondTime').datebox('getValue');
+		var fullTime = $('#payFullTime').datebox('getValue');
+		var beginBondTime = strDateForDate(bondTime);
+		var deliveryTimeStr = $('#arrivalTime').datebox('getValue');
+		var beginDeliveryTime = strDateForDate(deliveryTimeStr);
+	} else {
+		$("#toolbar").addClass("hide");
+		$("#inputForm").find("input").not('.tags input').not("[type='button']").attr("readonly",true);
+		var _productType = $("#productType").val();
+		var _conProductType = Convert.findValueByKey(_productTypeJson,"dictCd",_productType,"dictName");
+		$("#productType").val(_conProductType);
+		var _payType = $('#payType').val();
+		var _conPayType = Convert.findValueByKey(_payTypeJson,"dictCd",_payType,"dictName");
+		$("#payType").val(_conPayType);
+
+		var _deliveryType = $('#deliveryType').val();
+		var _conDeliveryType = Convert.findValueByKey(_deliveryTypeJson,"dictCd",_deliveryType,"dictName");
+		$("#deliveryType").val(_conDeliveryType);
+
+		var _deliveryMode = $('#deliveryMode').val();
+		var _conDeliveryMode = Convert.findValueByKey(_deliveryModeJson,"dictCd",_deliveryMode,"dictName");
+		$("#deliveryMode").val(_conDeliveryMode);
+		$("#br,#ta").removeClass("hide");
+		$("#bondRate").val(toPercent($("#bondRate").val()));
+		/* var _ourCompanyName = $('#ourCompanyName').val();
+		var _conDeliveryType = Convert.findValueByKey(_ourCompanyJson,"dictCd",_ourCompanyName,"dictName");
+		$("#ourCompanyName").val(_conDeliveryType); */
+		//格式化合同总价
+		// $("#totalAmount").val(Number($("#totalAmount").val()).toFixed(2));
+
+		var _contractAttr = $('#contractAttr').val();
+		var _concontractAttrMsg = Convert.findValueByKey(_contractAttrJson,"dictCd",_contractAttr,"dictName");
+		$("#contractAttr").val(_concontractAttrMsg);
+
+		//开票日期
+		var _invoiceDate = $('#invoiceDate').val();
+		var invoiceDate = Convert.findValueByKey(_invoiceDateJson,"dictCd",_invoiceDate,"dictName");
+		$("#invoiceDate").val(invoiceDate);
+
+		//到货日期
+		$("#arrivalTimeExt").attr('type','hidden');
+		var _arrivalTimeExt = $('#arrivalTimeExt').val();
+		var arrivalTimeExt = Convert.findValueByKey(_arrivalTimeExtJson,"dictCd",_arrivalTimeExt,"dictName");
+		var arrivalTime = $("#arrivalTime").val();
+		$("#arrivalTime").val(arrivalTime + arrivalTimeExt);
+
+		//质量标准
+		var _qualityStandard = $('#qualityStandard').val();
+		var qualityStandard = Convert.findValueByKey(_qualityStandardJson,"dictCd",_qualityStandard,"dictName");
+		$("#qualityStandard").val(qualityStandard);
+
+		setCostProfitValue();
+
+		//阻止复选框被选择
+		$("[type=checkbox]").attr('onclick','return false');
+
+	}
+
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($("#btn_fileId").length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+});
+
+//获取当前日期
+function myformatter(date){
+    var y = date.getFullYear();
+    var m = date.getMonth()+1;
+    var d = date.getDate();
+    return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+}
+
+function formattData(date){
+	if (date=='undefined'||date==null||date==""){
+		date = myformatter(new Date());
+	}
+	var arr = date.split('-');
+	var year = arr[0]
+    var month = arr[1];
+    var day = arr[2];
+	return year + '年' + month + '月' + day + '日';
+}
+
+
+function selectPreSell(){
+	//弹出框
+	var url=_ctx+"/stock/detailPresell/choose";
+	$('#w_stock_choose').attr('callbackExec', 'chooseCallback');
+	$('#w_stock_choose').window({href:url});
+	$('#w_stock_choose').window("open");
+	$('#differPrice').numberbox('clear');
+	$('#grossProfit').numberbox('clear');
+	$('#costProfit').numberbox('clear');
+}
+function chooseCallback(stockRows){
+	var rows = $('#relaTable').datagrid('getRows');
+	var length =rows.length;
+	for(var i=0;i<length;i++){
+		$('#relaTable').datagrid('deleteRow',0);
+	}
+	if(stockRows){
+		var _curProductCd = "";
+		var _ctrContractId = "";
+		var total_amount = 0;
+		var companyName = "";
+		for(var i=0;i<stockRows.length;i++){
+			var row = stockRows[i];
+			_ctrContractId = stockRows[i].contractId;
+			var maxNumber = row.presellNumber-row.approveBuyNumber-row.buyedNumber;
+			var totalPrice = maxNumber*row.dealPrice;
+			var new_row = {
+					id:0,
+					productCd:row.productCd,
+					productName:row.productName,
+					brandNumber:row.brandNumber,
+					factoryId:row.factoryId,
+					warehouseName:row.warehouseName,
+					factoryName:row.factoryName,
+					warehouseId:row.warehouseId,
+					maxNumber:maxNumber,
+					dealNumber:maxNumber,
+					productAttr:row.productAttr,
+					stockDetailId:row.id,
+					dealPrice:row.dealPrice,
+					otherDealPrice:row.dealPrice,
+					totalPrice:totalPrice,
+					applyType:"A",
+					linkContractId:row.id,
+					ctrProductId:row.ctrProductId,
+					/* warehousePos:row.warehousePos,
+					wrapSpecs:row.wrapSpecs, */
+					warehousePrice:row.warehousePrice
+			};
+			total_amount += new_row.totalPrice;
+			_curProductCd = row.productCd;
+			$('#relaTable').datagrid('appendRow', new_row);
+			var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+			$('#relaTable').datagrid('beginEdit', rowIndex);
+			companyName = row.ourCompanyName;
+		}
+		$('#ourCompanyName').combobox('setValue',companyName);
+		$("#totalAmount").numberbox('setValue', total_amount);
+		var qualityValue = Convert.findValueByKey(_qualityStandardJson,"dictCd",row.qualityStandard,"dictName");
+		if (row.qualityStandard){
+			$('#qualityStandard').combobox('setValue',row.qualityStandard);
+		}else{
+			$('#qualityStandard').combobox('setValue',"Y");
+		}
+		grossProfit();
+	}
+}
+function remove(id,event,target){
+	var row , index;
+	index = getRowIndex(target);
+	if(id=='0' ||id =='' || id == undefined) {
+		//row = $('#relaTable').datagrid('getSelected');
+		//index = $('#relaTable').datagrid('getRowIndex', row);
+		$('#relaTable').datagrid('deleteRow',index);
+	}else{
+		//$('#relaTable').datagrid('selectRecord',id);
+		//row = $('#relaTable').datagrid('getSelected');
+		//index = $('#relaTable').datagrid('getRowIndex', row);
+		$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+			if(t){
+				$('#relaTable').datagrid('deleteRow', index);
+				var nextSelect = index > 0 ? index-1 : 0;
+				$('#relaTable').datagrid('selectRow', nextSelect);
+				getTotalAmount();
+			}
+		});
+	}
+	grossProfit();
+	/* getMaxArriveTime(); */
+	event.stopPropagation();
+}
+function remove1(index,event){
+	$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+		if(t){
+			$('#relaTable').datagrid('deleteRow', index);
+			var nextSelect=index>0?index-1:0;
+			$('#relaTable').datagrid('selectRow', nextSelect);
+			getTotalAmount();
+		}
+	});
+	event.stopPropagation();
+}
+
+function getTotalAmount(){
+	var _datagrid = $('#relaTable');
+	var rows = $('#relaTable').datagrid('getRows');
+	var totalAmount = 0;
+	var _totalPrice=0;
+	for(var i=0; i<rows.length; i++){
+		var _ed_totalPrice =  _datagrid.datagrid('getEditor', {index:i,field:'totalPrice'});
+			_totalPrice=rows[i].totalPrice;
+		if(_ed_totalPrice){
+			 _totalPrice =$(_ed_totalPrice.target).numberbox('textbox').val();
+		}else{
+		}
+		totalAmount = Number(totalAmount) + Number(_totalPrice);
+	}
+	$("#totalAmount").numberbox('setValue', totalAmount);
+}
+
+function grossProfit(){
+	var _datagrid = $('#relaTable');
+	var rows = $('#relaTable').datagrid('getRows');
+	var grossProfit = 0;
+	var _dealPrice = 0;
+	var _otherDealPrice = 0;
+	var _dealNumber = 0;
+	var _grossProfit = 0;
+	for(var i=0; i<rows.length; i++){
+		var _ed_dealPrice =  _datagrid.datagrid('getEditor', {index:i,field:'dealPrice'});
+		var _ed_dealNumber =  _datagrid.datagrid('getEditor', {index:i,field:'dealNumber'});
+			_otherDealPrice=rows[i].otherDealPrice;
+			_dealNumber=rows[i].dealNumber;
+		if(_ed_dealPrice != null && _ed_dealPrice != undefined && _ed_dealNumber != null && _ed_dealNumber != undefined){
+			var deal_price = Number($(_ed_dealPrice.target).numberbox('textbox').val());
+			var deal_number = Number($(_ed_dealNumber.target).numberbox('textbox').val());
+			if (deal_price > 0 && deal_number > 0){
+				_dealPrice = Number(_otherDealPrice) - deal_price;
+				_grossProfit = deal_number * Number(_dealPrice);
+				grossProfit = Number(grossProfit) + Number(_grossProfit);
+			}
+		}
+	}
+	$("#grossProfit").numberbox('setValue', grossProfit);
+	var transAmount = $('#transportAmount').numberbox('getValue');
+	var warehouseAmunt = $('#warehouseAmount').numberbox('getValue');
+	var _costProfit = Number(grossProfit)-Number(transAmount)-Number(warehouseAmunt);
+	$("#costProfit").numberbox('setValue',_costProfit);
+}
+
+//计算商品总价
+function curOper(curIndex,row){
+	debugger
+	var _datagrid = $('#relaTable');
+	var _ed_dealPrice = _datagrid.datagrid('getEditor', {index:curIndex,field:'dealPrice'});
+	var _ed_dealNumber = _datagrid.datagrid('getEditor', {index:curIndex,field:'dealNumber'});
+	var _ed_dealAmount = _datagrid.datagrid('getEditor', {index:curIndex,field:'totalPrice'});
+	var _ed_maxNumber = _datagrid.datagrid('getEditor', {index:curIndex,field:'maxNumber'});
+	var _ed_otherDealPrice = _datagrid.datagrid('getEditor', {index:curIndex,field:'otherDealPrice'});
+	var _ed_stock_detail_id = _datagrid.datagrid('getEditor', {index:curIndex,field:'stockDetailId'});
+	var sumAmount=function(){
+		var _dealNumber=$(_ed_dealNumber.target).numberbox('textbox').val();
+		var _dealPrice= $(_ed_dealPrice.target).numberbox('textbox').val();
+		_dealNumber = parseFloat(String(_dealNumber).replace(/,/g, ''));
+		_dealPrice = parseFloat(String(_dealPrice).replace(/,/g, ''));
+		if(_dealPrice &&_dealNumber){
+			$(_ed_dealAmount.target).numberbox('setValue', _dealPrice*_dealNumber);
+		}
+	}
+	var maxNumberFun = function(){
+		var _maxNumber=$(_ed_maxNumber.target).numberbox('textbox').val();
+		_maxNumber = parseFloat(String(_maxNumber).replace(/,/g, ''));
+		if (!_maxNumber){
+			var rows = _datagrid.datagrid('getRows');
+			var _$stockDetailId = rows[curIndex].stockDetailId;
+			$.post(_ctx+"/stock/detailPresell/findById?id="+_$stockDetailId,function(result){
+				var row = result;
+				if (row != null && row != undefined){
+					_maxNumber = row.presellNumber-row.buyedNumber-row.approveBuyNumber;
+					var _dealNumber=$(_ed_dealNumber.target).numberbox('textbox').val();
+					_dealNumber = parseFloat(String(_dealNumber).replace(/,/g, ''));
+					if(Number(_dealNumber)>Number(_maxNumber)){
+						$(_ed_dealNumber.target).numberbox('setValue', _maxNumber);
+					}
+				}
+			});
+		}else{
+			var _dealNumber=$(_ed_dealNumber.target).numberbox('textbox').val();
+			_dealNumber = parseFloat(String(_dealNumber).replace(/,/g, ''));
+			if(Number(_dealNumber)>Number(_maxNumber)){
+				$(_ed_dealNumber.target).numberbox('setValue', _maxNumber);
+			}
+		}
+
+	}
+	var totalAmount = function(){
+		var rows = $('#relaTable').datagrid('getRows');
+		var totalAmount = 0;
+		var _totalPrice=0;
+		for(var i=0; i<rows.length; i++){
+			var _ed_totalPrice =  _datagrid.datagrid('getEditor', {index:i,field:'totalPrice'});
+				_totalPrice=rows[i].totalPrice;
+			if(_ed_totalPrice){
+				 _totalPrice =$(_ed_totalPrice.target).numberbox('textbox').val();
+			}else{
+			}
+			_totalPrice = parseFloat(String(_totalPrice).replace(/,/g, ''));
+			totalAmount = Number(totalAmount) + Number(_totalPrice);
+		}
+		$("#totalAmount").numberbox('setValue', totalAmount);
+	}
+	var grossProfit = function(){
+		var rows = $('#relaTable').datagrid('getRows');
+		var grossProfit = 0;
+		var _dealPrice = 0;
+		var _otherDealPrice = 0;
+		var _dealNumber = 0;
+		var _grossProfit = 0;
+		for(var i=0; i<rows.length; i++){
+			var _ed_dealPrice =  _datagrid.datagrid('getEditor', {index:i,field:'dealPrice'});
+			var _ed_dealNumber =  _datagrid.datagrid('getEditor', {index:i,field:'dealNumber'});
+				_otherDealPrice=rows[i].otherDealPrice;
+				_dealNumber=rows[i].dealNumber;
+			if(_ed_dealPrice != null && _ed_dealPrice != undefined && _ed_dealNumber != null && _ed_dealNumber != undefined){
+				var deal_price = Number($(_ed_dealPrice.target).numberbox('textbox').val());
+				var deal_number = Number($(_ed_dealNumber.target).numberbox('textbox').val());
+				if (deal_price > 0 && deal_number > 0){
+					_dealPrice = Number(_otherDealPrice) - deal_price;
+					_grossProfit = deal_number * Number(_dealPrice);
+					grossProfit = Number(grossProfit) + Number(_grossProfit);
+				}
+			}
+		}
+		$("#grossProfit").numberbox('setValue', grossProfit);
+		var transAmount = $('#transportAmount').numberbox('getValue');
+		var warehouseAmunt = $('#warehouseAmount').numberbox('getValue');
+		var _costProfit = Number(grossProfit)-Number(transAmount)-Number(warehouseAmunt);
+		$("#costProfit").numberbox('setValue',_costProfit);
+	}
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',sumAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',grossProfit);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',maxNumberFun);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',grossProfit);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',sumAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',grossProfit);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',maxNumberFun);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',grossProfit);
+
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',totalAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',grossProfit);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',totalAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',grossProfit);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',totalAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',grossProfit);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',totalAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',grossProfit);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',grossProfit);
+
+	$(_ed_dealAmount.target).numberbox('textbox').on("keyup",function(){
+		var _dealAmount = $(this).val();
+		$(_ed_dealAmount.target).numberbox('setValue', _dealAmount);
+	})
+
+}
+
+function grossProfit(){
+	var _datagrid = $('#relaTable');
+	var rows = $('#relaTable').datagrid('getRows');
+	var grossProfit = 0;
+	var _dealPrice = 0;
+	var _otherDealPrice = 0;
+	var _dealNumber = 0;
+	var _grossProfit = 0;
+	for(var i=0; i<rows.length; i++){
+		var _ed_dealPrice =  _datagrid.datagrid('getEditor', {index:i,field:'dealPrice'});
+		var _ed_dealNumber =  _datagrid.datagrid('getEditor', {index:i,field:'dealNumber'});
+			_otherDealPrice=rows[i].otherDealPrice;
+			_dealNumber=rows[i].dealNumber;
+		if(_ed_dealPrice != null && _ed_dealPrice != undefined && _ed_dealNumber != null && _ed_dealNumber != undefined){
+			var deal_price = Number($(_ed_dealPrice.target).numberbox('textbox').val());
+			var deal_number = Number($(_ed_dealNumber.target).numberbox('textbox').val());
+			deal_price = parseFloat(String(deal_price).replace(/,/g, ''));
+			deal_number = parseFloat(String(deal_number).replace(/,/g, ''));
+			if (deal_price > 0 && deal_number > 0){
+				_dealPrice = deal_price - Number(_otherDealPrice);
+				_grossProfit = deal_number * Number(_dealPrice);
+				grossProfit = Number(grossProfit) + Number(_grossProfit);
+			}
+		}
+	}
+	$("#grossProfit").numberbox('setValue', grossProfit);
+	var transAmount = $('#transportAmount').numberbox('getValue');
+	var warehouseAmunt = $('#warehouseAmount').numberbox('getValue');
+	var _costProfit = Number(grossProfit)-Number(transAmount)-Number(warehouseAmunt);
+	$("#costProfit").numberbox('setValue',_costProfit);
+}
+
+//发起申请前操作
+function beforSaveOper(){
+	var changeRows = $('#relaTable').datagrid('getRows');
+	var notStart = false;
+	var index = 0;
+	var number = 0;
+	for(var i=0;i<changeRows.length;i++){
+		var rowIndex=$('#relaTable').datagrid('getRowIndex',changeRows[i]);
+		flag=$('#relaTable').datagrid('validateRow',rowIndex);
+		if (!flag){
+			$('#relaTable').datagrid('selectRow',rowIndex);
+			$('#relaTable').datagrid('beginEdit', rowIndex);
+			break;
+		}else{
+
+			var ed_warehouseName = $('#relaTable').datagrid('getEditor', {index:i,field:'warehouseName'});
+			if(ed_warehouseName){
+				var warehouseName = $(ed_warehouseName.target).combobox('textbox').val();
+				$(ed_warehouseName.target).combobox('setValue',warehouseName);
+			}
+			$('#relaTable').datagrid('endEdit', rowIndex);
+		}
+	}
+    Convert.setChildren2Form("inputFormApprove","relaTable");
+    return true;
+}
+//将小数转为百分数
+function toPercent(point){
+    var str=Number(point*100).toFixed(2);
+    str+="%";
+    return str;
+}
+function getTotalAmount(){
+	var totalAmount = 0;
+	var changeRows = $('#relaTable').datagrid('getRows');
+	for(var i=0;i<changeRows.length;i++){
+		var row = changeRows[i];
+		var rowIndex=$('#relaTable').datagrid('getRowIndex',row);
+		totalAmount += Number(row.totalPrice);
+	}
+	$("#totalAmount").numberbox('setValue',totalAmount);
+}
+
+function newRow(presellContractId){
+	console.log('presellContractId',presellContractId)
+	var _url = _ctx+"/stock/detailPresell/findList?contractId="+presellContractId;
+	var _totalAmount = 0;
+	$.ajaxSettings.async = false;
+	$.getJSON(_url ,function(data){
+		for(var i in data.rows){
+			var row =data.rows[i];
+			//预售数量
+			var presellNumber = row.presellNumber;
+			//已购数量
+			var buyedNumber = row.buyedNumber;
+			//当前审批中的采购数量
+			var approveBuyNumber = row.approveBuyNumber;
+			var num =buyedNumber + approveBuyNumber;
+			if (presellNumber > num){
+				var maxNumber = row.presellNumber-row.buyedNumber-row.approveBuyNumber;
+				maxNumberArray.push(maxNumber);
+				var totalPrice = maxNumber * row.dealPrice;
+				var new_row = {
+						id:0,
+						productCd:row.productCd,
+						productName:row.productName,
+						brandNumber:row.brandNumber,
+						factoryId:row.factoryId,
+						warehouseName:row.warehouseName,
+						factoryName:row.factoryName,
+						warehouseId:row.warehouseId,
+						maxNumber:maxNumber,
+						dealNumber:maxNumber,
+						productAttr:row.productAttr,
+						stockDetailId:row.id,
+						dealPrice:row.dealPrice,
+						otherDealPrice:row.dealPrice,
+						totalPrice:totalPrice,
+						applyType:"A",
+						linkContractId:row.id,
+						ctrProductId:row.ctrProductId,
+						/* warehousePos:row.warehousePos,
+						wrapSpecs:row.wrapSpecs, */
+						warehousePrice:row.warehousePrice
+				};
+				$('#relaTable').datagrid('appendRow', new_row);
+				var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+				$('#relaTable').datagrid('beginEdit', rowIndex);
+				_totalAmount += Number(totalPrice);
+				if (row.qualityStandard){
+					$('#qualityStandard').combobox('setValue',row.qualityStandard);
+				}else{
+					$('#qualityStandard').combobox('setValue',"Y");
+				}
+			}
+		}
+	});
+	$.post(_ctx+"/ctr/contract/findById?contractId="+presellContractId,function(result){
+		if (contract!=undefined){
+			var companyName = contract.ourCompanyName;
+			$('#ourCompanyName').val(companyName);
+			/* var _remark = Convert.findValueByKey(_ourCompanyJson,"dictName",companyName,"remark");
+			for(var i=0;i<_payModeJson.length;i++){
+				_payModeJson[i].content = _payModeJson[i].content.replace(/\([^\)]*\)/g, _remark);
+			}
+			var payMode = $('#payKind').combobox('getValue');
+			$('#payKind').combobox('loadData',_payModeJson);
+			$('#payKind').combobox('select',payMode);  */
+		}
+	});
+	$('#applyType').val("A");
+	$("#totalAmount").numberbox('setValue', Number(_totalAmount));
+	//质量标准
+	var _qualityStandard = $('#qualityStandard').val();
+	var qualityStandard = Convert.findValueByKey(_qualityStandardJson,"dictCd",_qualityStandard,"dictName");
+	$("#qualityStandard").val(qualityStandard);
+	$('#btn').addClass('hide');
+}
+
+function strDateForDate(str){
+	if (!str){
+		str = myformatter(new Date());
+	}
+	var strDate = str.split(" ");
+	var strDatepart = strDate[0].split("-");
+	var dtDate = new Date(strDatepart[0],strDatepart[1]-1,strDatepart[2]);
+	return dtDate;
+}
+function setCostProfitValue(){
+	var grossProfit = $("#grossProfit").val();
+	var transportCost = $("#transportAmount").val();
+	var warehouseCost = $("#warehouseAmount").val();
+	var num = Number(grossProfit) - Number(transportCost) - Number(warehouseCost);
+	$("#costProfit").val(Number(num).toFixed(2));
+}
+/* function getMaxArriveTime(){
+	var rows = $('#relaTable').datagrid('getRows');
+	var productArr = [];
+	for(var i=0;i<rows.length;i++){
+		var productId = rows[i].ctrProductId;
+		if (productId){
+			productArr.push(productId);
+		}
+	}
+	$.ajax({
+        url:_ctx+"/ctr/product/findMinDeliveryDateByProductId?list="+productArr,
+        type:"post",
+        async:false,
+        success:function(data){
+        	if (data){
+            	console.log(data);
+            	var formatterDate = new Date(data).getTime();
+        		$("#arrivalTime").datebox('calendar').calendar({
+        			validator:function(date){
+        				return  date <= formatterDate;
+        			}
+        		});
+        		$("#arrivalTime").datebox('setValue',myformatter(new Date(data)));
+	        }
+        }
+ 	});
+} */
+</script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>

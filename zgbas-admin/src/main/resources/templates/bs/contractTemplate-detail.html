@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css?v=5565}" type="text/css" rel="stylesheet" />
+<div region="north" class="search_div pt20	pl20 pr20 ofh" border="false">
+	<div region="center" border="false">
+		<form id="inputForm" method="post"  enctype="multipart/form-data" class="editForm from-input-layout">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label for="contractType"  class="control-label">合同类型:</label>
+					<input name="contractType" id="contractType" type="text" th:value="${entity.contractType}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<label for="templateName"  class="control-label">模板名称:</label>
+					<input name="templateName" id="templateName" type="text" th:value="${entity.templateName}" ></input>
+				</p>
+				<p class="yw-table-filter">
+					<label for="templateTag"  class="control-label">模板标识:</label>
+					<input name="templateTag" id="templateTag" type="text" th:value="${entity.templateTag}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<input type="checkbox" th:checked="${entity.enableFlg}" onchange="$('#enableFlg').val($(this).attr('checked')=='checked');" />
+					<span>是否有效</span>
+					<input type="hidden" name="enableFlg" th:value="${entity.enableFlg}" id="enableFlg" />
+				</p>
+			</div>
+			<div>
+				<p class="yw-table-filter">
+				<label for="content"  class="control-label">模板内容:</label>
+				</p>
+				<textarea name="content" style="width:700px;height:385px;;" id="content" class="easyui-validatebox control textarea-middle" th:text="${entity.content}"></textarea>
+			</div>
+			<!-- <div class="editForm"> 
+				<p style="width:240px">
+					<span class="upload-btn" id="btn_fileId">
+		               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">合同附件 </a>
+		           	</span>
+					<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+				</p>
+				<p class="controls showImg fileId" id="span_fileId"></p>
+			</div> -->
+		</form>
+	</div>
+	<div region="south" border="false" style="overflow: hidden;height: 40px;padding-top:10px;">
+		<div class="actions_bar">
+			<span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" id="save" onclick="save()">保存</span>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/bs/contractTemplate/updateFileId',true);
+$(function(){
+	//合同类型
+	$("#contractType").combobox({
+		data : _contractType,
+		textField : 'dictName',
+		valueField : 'dictCd',
+		panelHeight : "auto",
+		required: true
+	});
+	//模板名称
+	$("#templateName").textbox({
+		required: true
+	});
+	//模板标识
+	$("#templateTag").textbox({
+		required: true
+	});
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($("#btn_fileId").length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+});
+
+function save() {
+	var options = {
+		url : _ctx + '/bs/contractTemplate/saveTemplate',
+		onSubmit : function() {
+			var flag = $("#inputForm").form('validate');
+			if (!flag) {
+				$.messager.alert('提示','请填写完整','info');
+			}
+			return flag;
+		},
+		success : function(data) {
+			var result = eval('(' + data + ')');
+			if (result.success) {
+				$.messager.show({
+					title : 'Tip',
+					msg : '保存成功',
+					timeout : 2000,
+					showType : 'show'
+				});
+				$('#w').window("close");
+				$('#tt1').datagrid('reload');
+			} else {
+				$.messager.alert('error', result.failure, 'warning');
+			}
+		}
+	}
+	$('#inputForm').form('submit', options);
+}
+</script>

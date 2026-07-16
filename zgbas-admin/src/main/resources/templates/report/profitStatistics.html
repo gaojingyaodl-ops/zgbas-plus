@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>授信额度监控</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+<script th:src="@{/static/ruoyi/js/common.js?v=4.7.3}"></script>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 80px;">年月:</label>
+				<input name="searchMonth" class="easyui-validatebox" id="searchMonth" type="text" th:value="${nowTargetMonth}"/>
+			</p>
+<!--			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>-->
+
+			<a class="easyui-linkbutton addBtn btn110" id="businessLicenseC" onclick="businessLicenseC()" style="margin-left: 60px;">签约数据</a>
+			<a class=" addBtn" >|</a>
+			<a class="easyui-linkbutton addBtn btn110" id="businessLicenseP" onclick="businessLicenseP()">结算数据</a>
+		</div>
+	</form>
+</div>
+
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+
+
+	<div class="business-license" id="business-license-c">
+
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label"></span>
+						<span class="span-text-right">本期金额</span>
+						<span class="span-text-right">本年累计</span>
+						<span class="span-text-remark">备注</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">主营业务收入</span>
+						<span class="span-text-right" id="monthBusinessIncomeSum"></span>
+						<span class="span-text-right" id="yearBusinessIncomeSum"></span>
+						<span class="span-text-remark">销售总额/1.13</span>
+					</li>
+					<li>
+						<span class="span-text-label2">代采收入</span>
+						<span class="span-text-right amount_span" id="monthDcBusinessIncome" onclick="toDetail('false','dc-sr')"></span>
+						<span class="span-text-right" id="yearDcBusinessIncome"></span>
+						<span class="span-text-remark"></span>
+					</li>
+					<li>
+						<span class="span-text-label2">代采赊销收入</span>
+						<span class="span-text-right amount_span" id="monthDcsxBusinessIncome" onclick="toDetail('false','dcsx-sr')"></span>
+						<span class="span-text-right" id="yearDcsxBusinessIncome"></span>
+						<span class="span-text-remark"></span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">主营业务成本</span>
+						<span class="span-text-right" id="monthBusinessCostsSum"></span>
+						<span class="span-text-right" id="yearBusinessCostsSum"></span>
+						<span class="span-text-remark">采购总额/1.13</span>
+					</li>
+					<li>
+						<span class="span-text-label2">代采成本</span>
+						<span class="span-text-right amount_span" id="monthDcBusinessCosts" onclick="toDetail('false','dc-cb')"></span>
+						<span class="span-text-right" id="yearDcBusinessCosts"></span>
+						<span class="span-text-remark"></span>
+					</li>
+					<li>
+						<span class="span-text-label2">代采赊销成本</span>
+						<span class="span-text-right amount_span" id="monthDcsxBusinessCosts" onclick="toDetail('false','dcsx-cb')"></span>
+						<span class="span-text-right" id="yearDcsxBusinessCosts"></span>
+						<span class="span-text-remark"></span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">营业利润</span>
+						<span class="span-text-right" id="monthBusinessProfitSum"></span>
+						<span class="span-text-right" id="yearBusinessProfitSum"></span>
+						<span class="span-text-remark">主营业务收入 - 主营业务成本</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">营业费用</span>
+						<span class="span-text-right" id="monthBusinessFeeSum"></span>
+						<span class="span-text-right" id="yearBusinessFeeSum"></span>
+						<span class="span-text-remark">所有费用合计（【保费、金融服务费】不参与计算）</span>
+					</li>
+					<li>
+						<span class="span-text-label2">运输费</span>
+						<span class="span-text-right amount_span" id="monthTransportFee" onclick="toDetail('false','ysf')"></span>
+						<span class="span-text-right" id="yearTransportFee"></span>
+						<span class="span-text-remark">运输费合计/1.09</span>
+					</li>
+					<li>
+						<span class="span-text-label2">仓储费</span>
+						<span class="span-text-right amount_span" id="monthWarehouseAmount" onclick="toDetail('false','ysf')"></span>
+						<span class="span-text-right" id="yearWarehouseAmount"></span>
+						<span class="span-text-remark">( 仓储费 + 出库费 + 装卸费 ) /1.06</span>
+					</li>
+					<li>
+						<span class="span-text-label2">资金成本</span>
+						<span class="span-text-right" id="monthCapitalCost"></span>
+						<span class="span-text-right" id="yearCapitalCost"></span>
+						<span class="span-text-remark">( 金融服务费 + 资方逾期利息【销售逾期金额*逾期天数*0.1/365-已收客户逾期罚息】 ) / 1.13</span>
+					</li>
+					<li>
+						<span class="span-text-label2">金融服务费</span>
+						<span class="span-text-right" id="monthFinancialServiceAmount"></span>
+						<span class="span-text-right" id="yearFinancialServiceAmount"></span>
+						<span class="span-text-remark">我司是中游甲方：下游-中游；是乙方：中游-上游（不参与计算）</span>
+					</li>
+					<li>
+						<span class="span-text-label2">贴现成本</span>
+						<span class="span-text-right" id="monthDiscountCost"></span>
+						<span class="span-text-right" id="yearDiscountCost"></span>
+						<span class="span-text-remark">收款审核中贴现费用</span>
+					</li>
+					<li>
+						<span class="span-text-label2">保费</span>
+						<span class="span-text-right amount_span" id="monthInsuranceFee" onclick="toDetail('false','bf')"></span>
+						<span class="span-text-right" id="yearInsuranceFee"></span>
+						<span class="span-text-remark">销售合同金额 * 保险费率 / 1.06（不参与计算）</span>
+					</li>
+					<li>
+						<span class="span-text-label2">税金</span>
+						<span class="span-text-right" id="monthTaxes"></span>
+						<span class="span-text-right" id="yearTaxes"></span>
+						<span class="span-text-remark">附加税 + 印花税</span>
+					</li>
+					<li>
+						<span class="span-text-label2">人员成本</span>
+						<span class="span-text-right amount_span" id="monthPersonCost" onclick="toDetail('false','rycb')"></span>
+						<span class="span-text-right" id="yearPersonCost"></span>
+						<span class="span-text-remark">业务成本统计 --> (工资 + 社保 + 公积金 + 提成)</span>
+					</li>
+					<li>
+						<span class="span-text-label2">差旅招待费</span>
+						<span class="span-text-right amount_span" id="monthTravelExpensesFee" onclick="toDetail('false','clzdf')"></span>
+						<span class="span-text-right" id="yearTravelExpensesFee"></span>
+						<span class="span-text-remark">业务成本统计 --> 出差报销费用</span>
+					</li>
+					<li>
+						<span class="span-text-label2">其他费用</span>
+						<span class="span-text-right amount_span" id="monthOtherFee" onclick="toDetail('false','qtfy')"></span>
+						<span class="span-text-right" id="yearOtherFee"></span>
+						<span class="span-text-remark">业务成本统计 --> 其他费用</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">净利润</span>
+						<span class="span-text-right" id="monthNetProfitSum"></span>
+						<span class="span-text-right" id="yearNetProfitSum"></span>
+						<span class="span-text-remark">营业利润 - 营业费用</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		
+	</div>
+
+
+	<div class="business-license" id="business-license-p">
+
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label"></span>
+						<span class="span-text-right">本期金额</span>
+						<span class="span-text-right">本年累计</span>
+						<span class="span-text-remark">备注</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">主营业务收入</span>
+						<span class="span-text-right" id="monthBusinessIncomeSum_P"></span>
+						<span class="span-text-right" id="yearBusinessIncomeSum_P"></span>
+						<span class="span-text-remark">销售总额/1.13</span>
+					</li>
+					<li>
+						<span class="span-text-label2">代采收入</span>
+						<span class="span-text-right amount_span" id="monthDcBusinessIncome_P" onclick="toJsDetail('false','dc-sr')"></span>
+						<span class="span-text-right" id="yearDcBusinessIncome_P"></span>
+						<span class="span-text-remark"></span>
+					</li>
+					<li>
+						<span class="span-text-label2">代采赊销收入</span>
+						<span class="span-text-right amount_span" id="monthDcsxBusinessIncome_P" onclick="toJsDetail('false','dcsx-sr')"></span>
+						<span class="span-text-right" id="yearDcsxBusinessIncome_P"></span>
+						<span class="span-text-remark"></span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">主营业务成本</span>
+						<span class="span-text-right" id="monthBusinessCostsSum_P"></span>
+						<span class="span-text-right" id="yearBusinessCostsSum_P"></span>
+						<span class="span-text-remark">采购总额/1.13</span>
+					</li>
+					<li>
+						<span class="span-text-label2">代采成本</span>
+						<span class="span-text-right amount_span" id="monthDcBusinessCosts_P" onclick="toJsDetail('false','dc-cb')"></span>
+						<span class="span-text-right" id="yearDcBusinessCosts_P"></span>
+						<span class="span-text-remark"></span>
+					</li>
+					<li>
+						<span class="span-text-label2">代采赊销成本</span>
+						<span class="span-text-right amount_span" id="monthDcsxBusinessCosts_P" onclick="toJsDetail('false','dcsx-cb')"></span>
+						<span class="span-text-right" id="yearDcsxBusinessCosts_P"></span>
+						<span class="span-text-remark"></span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">营业利润</span>
+						<span class="span-text-right" id="monthBusinessProfitSum_P"></span>
+						<span class="span-text-right" id="yearBusinessProfitSum_P"></span>
+						<span class="span-text-remark">主营业务收入 - 主营业务成本</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">营业费用</span>
+						<span class="span-text-right" id="monthBusinessFeeSum_P"></span>
+						<span class="span-text-right" id="yearBusinessFeeSum_P"></span>
+						<span class="span-text-remark">所有费用合计（【保费、金融服务费】不参与计算）</span>
+					</li>
+					<li>
+						<span class="span-text-label2">运输费</span>
+						<span class="span-text-right amount_span" id="monthTransportFee_P" onclick="toJsDetail('false','ysf')"></span>
+						<span class="span-text-right" id="yearTransportFee_P"></span>
+						<span class="span-text-remark">运输费合计/1.09</span>
+					</li>
+					<li>
+						<span class="span-text-label2">仓储费</span>
+						<span class="span-text-right amount_span" id="monthWarehouseAmount_P" onclick="toJsDetail('false','ysf')"></span>
+						<span class="span-text-right" id="yearWarehouseAmount_P"></span>
+						<span class="span-text-remark">( 仓储费 + 出库费 + 装卸费 ) /1.06</span>
+					</li>
+					<li>
+						<span class="span-text-label2">资金成本</span>
+						<span class="span-text-right" id="monthCapitalCost_P"></span>
+						<span class="span-text-right" id="yearCapitalCost_P"></span>
+						<span class="span-text-remark">( 金融服务费 + 资方逾期利息【销售逾期金额*逾期天数*0.1/365-已收客户逾期罚息】 ) / 1.13</span>
+					</li>
+					<li>
+						<span class="span-text-label2">金融服务费</span>
+						<span class="span-text-right" id="monthFinancialServiceAmount_P"></span>
+						<span class="span-text-right" id="yearFinancialServiceAmount_P"></span>
+						<span class="span-text-remark">结算数据 --> 金融服务费（不参与计算）</span>
+					</li>
+					<li>
+						<span class="span-text-label2">贴现成本</span>
+						<span class="span-text-right" id="monthDiscountCost_P"></span>
+						<span class="span-text-right" id="yearDiscountCost_P"></span>
+						<span class="span-text-remark">收款审核中贴现费用</span>
+					</li>
+					<li>
+						<span class="span-text-label2">保费</span>
+						<span class="span-text-right amount_span" id="monthInsuranceFee_P" onclick="toJsDetail('false','bf')"></span>
+						<span class="span-text-right" id="yearInsuranceFee_P"></span>
+						<span class="span-text-remark">销售合同金额 * 保险费率 / 1.06（不参与计算）</span>
+					</li>
+					<li>
+						<span class="span-text-label2">税金</span>
+						<span class="span-text-right" id="monthTaxes_P"></span>
+						<span class="span-text-right" id="yearTaxes_P"></span>
+						<span class="span-text-remark">结算数据 -- > (附加税 + 印花税)</span>
+					</li>
+					<li>
+						<span class="span-text-label2">人员成本</span>
+						<span class="span-text-right amount_span" id="monthPersonCost_P" onclick="toJsDetail('false','rycb')"></span>
+						<span class="span-text-right" id="yearPersonCost_P"></span>
+						<span class="span-text-remark">业务成本统计 --> (工资 + 社保 + 公积金 + 提成)</span>
+					</li>
+					<li>
+						<span class="span-text-label2">差旅招待费</span>
+						<span class="span-text-right amount_span" id="monthTravelExpensesFee_P" onclick="toJsDetail('false','clzdf')"></span>
+						<span class="span-text-right" id="yearTravelExpensesFee_P"></span>
+						<span class="span-text-remark">业务成本统计 --> 出差报销费用</span>
+					</li>
+					<li>
+						<span class="span-text-label2">其他费用</span>
+						<span class="span-text-right amount_span" id="monthOtherFee_P" onclick="toJsDetail('false','qtfy')"></span>
+						<span class="span-text-right" id="yearOtherFee_P"></span>
+						<span class="span-text-remark">业务成本统计 --> 其他费用</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+		<div class="border_bottom"></div>
+		<div class="business-container">
+			<div class="business-body">
+				<ul class="body-item">
+					<li>
+						<span class="span-text-label">净利润</span>
+						<span class="span-text-right" id="monthNetProfitSum_P"></span>
+						<span class="span-text-right" id="yearNetProfitSum_P"></span>
+						<span class="span-text-remark">营业利润 - 营业费用</span>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+	</div>
+	
+	
+	
+</div>
+</div>
+<script type="text/javascript">
+	var lastIndex=0;
+	
+	$(function(){
+		$('#searchMonth').datebox({
+			editable: false,
+
+			onChange: function(newValue, oldValue) {
+				// 调用其他方法
+				getRptProfitStatistics();
+				getRptProfitStatisticsByRealPayFullTime();
+				businessLicenseC();
+			}
+		});
+		intiMonthBox('searchMonth');
+
+		getRptProfitStatistics();//获取利润表数据
+		getRptProfitStatisticsByRealPayFullTime();//获取利润表数据
+		businessLicenseC();
+	});
+	/*  获取利润表数据 */
+	async function getRptProfitStatistics(){
+		$.modal.loading("正在加载中，请稍候...");
+		$.ajax({
+			type: 'POST',
+			url: _ctx+'/rpt/profitStatistics/getRptProfitStatistics',
+			data: Convert.getJson4Form('searchForm'),
+			success: function (result) {
+				$("#monthBusinessIncomeSum").text(formateNumTon(result.monthBusinessIncomeSum));
+				$("#yearBusinessIncomeSum").text(formateNumTon(result.yearBusinessIncomeSum));
+				$("#monthDcBusinessIncome").text(formateNumTon(result.monthDcBusinessIncome));
+				$("#yearDcBusinessIncome").text(formateNumTon(result.yearDcBusinessIncome));
+				$("#monthDcsxBusinessIncome").text(formateNumTon(result.monthDcsxBusinessIncome));
+				$("#yearDcsxBusinessIncome").text(formateNumTon(result.yearDcsxBusinessIncome));
+				$("#monthBusinessCostsSum").text(formateNumTon(result.monthBusinessCostsSum));
+				$("#yearBusinessCostsSum").text(formateNumTon(result.yearBusinessCostsSum));
+				$("#monthDcBusinessCosts").text(formateNumTon(result.monthDcBusinessCosts));
+				$("#yearDcBusinessCosts").text(formateNumTon(result.yearDcBusinessCosts));
+				$("#monthDcsxBusinessCosts").text(formateNumTon(result.monthDcsxBusinessCosts));
+				$("#yearDcsxBusinessCosts").text(formateNumTon(result.yearDcsxBusinessCosts));
+				$("#monthBusinessProfitSum").text(formateNumTon(result.monthBusinessProfitSum));
+				$("#yearBusinessProfitSum").text(formateNumTon(result.yearBusinessProfitSum));
+				$("#monthBusinessFeeSum").text(formateNumTon(result.monthBusinessFeeSum));
+				$("#yearBusinessFeeSum").text(formateNumTon(result.yearBusinessFeeSum));
+				$("#monthTransportFee").text(formateNumTon(result.monthTransportFee));
+				$("#yearTransportFee").text(formateNumTon(result.yearTransportFee));
+				$("#monthWarehouseAmount").text(formateNumTon(result.monthWarehouseAmount));
+				$("#yearWarehouseAmount").text(formateNumTon(result.yearWarehouseAmount));
+				$("#monthFinancialServiceAmount").text(formateNumTon(result.monthFinancialServiceAmount));
+				$("#yearFinancialServiceAmount").text(formateNumTon(result.yearFinancialServiceAmount));
+				$("#monthCapitalCost").text(formateNumTon(result.monthCapitalCost));
+				$("#yearCapitalCost").text(formateNumTon(result.yearCapitalCost));
+				$("#monthDiscountCost").text(formateNumTon(result.monthDiscountCost));
+				$("#yearDiscountCost").text(formateNumTon(result.yearDiscountCost));
+				$("#monthInsuranceFee").text(formateNumTon(result.monthInsuranceFee));
+				$("#yearInsuranceFee").text(formateNumTon(result.yearInsuranceFee));
+				$("#monthTaxes").text(formateNumTon(result.monthTaxes));
+				$("#yearTaxes").text(formateNumTon(result.yearTaxes));
+				$("#monthPersonCost").text(formateNumTon(result.monthPersonCost));
+				$("#yearPersonCost").text(formateNumTon(result.yearPersonCost));
+				$("#monthTravelExpensesFee").text(formateNumTon(result.monthTravelExpensesFee));
+				$("#yearTravelExpensesFee").text(formateNumTon(result.yearTravelExpensesFee));
+				$("#monthOtherFee").text(formateNumTon(result.monthOtherFee));
+				$("#yearOtherFee").text(formateNumTon(result.yearOtherFee));
+				$("#monthNetProfitSum").text(formateNumTon(result.monthNetProfitSum));
+				$("#yearNetProfitSum").text(formateNumTon(result.yearNetProfitSum));
+				$.modal.closeLoading();
+			},
+		});
+	}
+
+	/*  获取利润表数据 */
+	async function getRptProfitStatisticsByRealPayFullTime(){
+		$.modal.loading("正在加载中，请稍候...");
+		$.ajax({
+			type: 'POST',
+			url: _ctx+'/rpt/profitStatistics/getRptProfitStatisticsByRealPayFullTime',
+			data: Convert.getJson4Form('searchForm'),
+			success: function (result) {
+				$("#monthBusinessIncomeSum_P").text(formateNumTon(result.monthBusinessIncomeSum));
+				$("#yearBusinessIncomeSum_P").text(formateNumTon(result.yearBusinessIncomeSum));
+				$("#monthDcBusinessIncome_P").text(formateNumTon(result.monthDcBusinessIncome));
+				$("#yearDcBusinessIncome_P").text(formateNumTon(result.yearDcBusinessIncome));
+				$("#monthDcsxBusinessIncome_P").text(formateNumTon(result.monthDcsxBusinessIncome));
+				$("#yearDcsxBusinessIncome_P").text(formateNumTon(result.yearDcsxBusinessIncome));
+				$("#monthBusinessCostsSum_P").text(formateNumTon(result.monthBusinessCostsSum));
+				$("#yearBusinessCostsSum_P").text(formateNumTon(result.yearBusinessCostsSum));
+				$("#monthDcBusinessCosts_P").text(formateNumTon(result.monthDcBusinessCosts));
+				$("#yearDcBusinessCosts_P").text(formateNumTon(result.yearDcBusinessCosts));
+				$("#monthDcsxBusinessCosts_P").text(formateNumTon(result.monthDcsxBusinessCosts));
+				$("#yearDcsxBusinessCosts_P").text(formateNumTon(result.yearDcsxBusinessCosts));
+				$("#monthBusinessProfitSum_P").text(formateNumTon(result.monthBusinessProfitSum));
+				$("#yearBusinessProfitSum_P").text(formateNumTon(result.yearBusinessProfitSum));
+				$("#monthBusinessFeeSum_P").text(formateNumTon(result.monthBusinessFeeSum));
+				$("#yearBusinessFeeSum_P").text(formateNumTon(result.yearBusinessFeeSum));
+				$("#monthTransportFee_P").text(formateNumTon(result.monthTransportFee));
+				$("#yearTransportFee_P").text(formateNumTon(result.yearTransportFee));
+				$("#monthWarehouseAmount_P").text(formateNumTon(result.monthWarehouseAmount));
+				$("#yearWarehouseAmount_P").text(formateNumTon(result.yearWarehouseAmount));
+				$("#monthFinancialServiceAmount_P").text(formateNumTon(result.monthFinancialServiceAmount));
+				$("#yearFinancialServiceAmount_P").text(formateNumTon(result.yearFinancialServiceAmount));
+				$("#monthCapitalCost_P").text(formateNumTon(result.monthCapitalCost));
+				$("#yearCapitalCost_P").text(formateNumTon(result.yearCapitalCost));
+				$("#monthDiscountCost_P").text(formateNumTon(result.monthDiscountCost));
+				$("#yearDiscountCost_P").text(formateNumTon(result.yearDiscountCost));
+				$("#monthInsuranceFee_P").text(formateNumTon(result.monthInsuranceFee));
+				$("#yearInsuranceFee_P").text(formateNumTon(result.yearInsuranceFee));
+				$("#monthTaxes_P").text(formateNumTon(result.monthTaxes));
+				$("#yearTaxes_P").text(formateNumTon(result.yearTaxes));
+				$("#monthPersonCost_P").text(formateNumTon(result.monthPersonCost));
+				$("#yearPersonCost_P").text(formateNumTon(result.yearPersonCost));
+				$("#monthTravelExpensesFee_P").text(formateNumTon(result.monthTravelExpensesFee));
+				$("#yearTravelExpensesFee_P").text(formateNumTon(result.yearTravelExpensesFee));
+				$("#monthOtherFee_P").text(formateNumTon(result.monthOtherFee));
+				$("#yearOtherFee_P").text(formateNumTon(result.yearOtherFee));
+				$("#monthNetProfitSum_P").text(formateNumTon(result.monthNetProfitSum));
+				$("#yearNetProfitSum_P").text(formateNumTon(result.yearNetProfitSum));
+				$.modal.closeLoading();
+			},
+		});
+	}
+
+	function toDetail(yearFlg, type) {
+		let searchMonth = $("#searchMonth").val()
+		if (yearFlg === 'true') {
+			let yearStartDate = searchMonth + '-01-01'
+			let yearEndDate = searchMonth.substring(0, 4) + '-12-31'
+		} else {
+			let result = getMonthStartAndEnd(searchMonth + '-01');
+			let monthStartDate = result.start;
+			let monthEndDate = result.end;
+			if (type === 'dc-sr') {
+				$.modal.openTab('代采订单-利润表', _ctx + '/ctr/contract/findDC?contractType=S&profitFlg=true&defaultSealFlg=true'
+						+ '&contractTimeStart=' + monthStartDate
+						+ '&contractTimeEnd=' + monthEndDate);
+			} else if (type === 'dc-cb') {
+				$.modal.openTab('代采订单-利润表', _ctx + '/ctr/contract/findDC?contractType=B&profitFlg=true&defaultSealFlg=true'
+						+ '&contractTimeStart=' + monthStartDate
+						+ '&contractTimeEnd=' + monthEndDate);
+			} else if (type === 'dcsx-sr') {
+				$.modal.openTab('赊销订单-利润表', _ctx + '/ctr/contract/findDCSX?contractType=S&profitFlg=true&defaultSealFlg=true'
+						+ '&contractTimeStart=' + monthStartDate
+						+ '&contractTimeEnd=' + monthEndDate);
+			} else if (type === 'dcsx-cb') {
+				$.modal.openTab('赊销订单-利润表', _ctx + '/ctr/contract/findDCSX?contractType=B&profitFlg=true&defaultSealFlg=true'
+						+ '&contractTimeStart=' + monthStartDate
+						+ '&contractTimeEnd=' + monthEndDate);
+			} else if (type === 'ysf' || type === 'zjcb' | type === 'bf') {
+				$.modal.openTab('赊销订单-利润表', _ctx + '/ctr/contract/findDCSX?profitFlg=true&defaultSealFlg=true'
+						+ '&contractTimeStart=' + monthStartDate
+						+ '&contractTimeEnd=' + monthEndDate);
+			} else if (type === 'rycb' || type === 'clzdf' || type === 'qtfy') {
+				$.modal.openTab('业务成本-利润表', _ctx + '/rpt/baseCost/index?profitFlg=true'
+						+ '&targetMonth=' + searchMonth);
+			}
+		}
+
+	}
+
+	// 前往结算数据明细
+	function toJsDetail(yearFlg, type) {
+		let searchMonth = $("#searchMonth").val()
+		if (yearFlg === 'true') {
+			let yearStartDate = searchMonth + '-01-01'
+			let yearEndDate = searchMonth.substring(0, 4) + '-12-31'
+		} else {
+			let result = getMonthStartAndEnd(searchMonth + '-01');
+			let monthStartDate = result.start;
+			let monthEndDate = result.end;
+			if (type === 'dc-sr') {
+				$.modal.openTab('结算数据-利润表', _ctx + '/rpt/contractSettlement/content?budgetType=DC'
+						+ '&receiveDateStart=' + monthStartDate
+						+ '&receiveDateEnd=' + monthEndDate);
+			} else if (type === 'dc-cb') {
+				$.modal.openTab('结算数据-利润表', _ctx + '/rpt/contractSettlement/content?budgetType=DC'
+						+ '&receiveDateStart=' + monthStartDate
+						+ '&receiveDateEnd=' + monthEndDate);
+			} else if (type === 'dcsx-sr') {
+				$.modal.openTab('结算数据-利润表', _ctx + '/rpt/contractSettlement/content?budgetType=DCSX'
+						+ '&receiveDateStart=' + monthStartDate
+						+ '&receiveDateEnd=' + monthEndDate);
+			} else if (type === 'dcsx-cb') {
+				$.modal.openTab('结算数据-利润表', _ctx + '/rpt/contractSettlement/content?budgetType=DCSX'
+						+ '&receiveDateStart=' + monthStartDate
+						+ '&receiveDateEnd=' + monthEndDate);
+			} else if (type === 'ysf' || type === 'zjcb' | type === 'bf') {
+				$.modal.openTab('结算数据-利润表', _ctx + '/rpt/contractSettlement/content?budgetType=DC,DCSX'
+						+ '&receiveDateStart=' + monthStartDate
+						+ '&receiveDateEnd=' + monthEndDate);
+			} else if (type === 'rycb' || type === 'clzdf' || type === 'qtfy') {
+				$.modal.openTab('业务成本-利润表', _ctx + '/rpt/baseCost/index?profitFlg=true'
+						+ '&targetMonth=' + searchMonth);
+			}
+		}
+
+	}
+
+	function businessLicenseC() {
+		$('#businessLicenseP').css("background","#e4e6e4");
+		$('#businessLicenseP').css("color","#757475");
+		$('#businessLicenseP').css("box-shadow","0 2px 6px 0 #cccccc");
+
+		$('#businessLicenseC').css("background","var(--skin-color)");
+		$('#businessLicenseC').css("color","#FFF");
+		$('#businessLicenseC').css("box-shadow","0 2px 6px 0 #43b77f");
+
+		$('#business-license-c').show();
+		$('#business-license-p').hide();
+	}
+
+	function businessLicenseP() {
+		$('#businessLicenseC').css("background","#e4e6e4");
+		$('#businessLicenseC').css("color","#757475");
+		$('#businessLicenseC').css("box-shadow","0 2px 6px 0 #cccccc");
+
+		$('#businessLicenseP').css("background","var(--skin-color)");
+		$('#businessLicenseP').css("color","#FFF");
+		$('#businessLicenseP').css("box-shadow","0 2px 6px 0 #43b77f");
+
+		$('#business-license-c').hide();
+		$('#business-license-p').show();
+	}
+
+	// 获取指定日期的当月开始和结束日期
+	function getMonthStartAndEnd(dateStr) {
+		// 将传入的日期字符串转换为 Date 对象
+		let date = new Date(dateStr);
+
+		// 获取当前月份的第一天
+		let startDate = new Date(date.getFullYear(), date.getMonth(), 1);
+
+		// 获取下个月的第一天
+		let nextMonth = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+
+		// 获取当前月份的最后一天
+		let endDate = new Date(nextMonth.getTime() - 24 * 60 * 60 * 1000);
+
+		// 返回结果
+		return {
+			start: formatDate(startDate), // 格式化开始日期
+			end: formatDate(endDate) // 格式化结束日期
+		};
+	}
+
+	// 格式化日期函数
+	function formatDate(date) {
+		let year = date.getFullYear();
+		let month = date.getMonth() + 1;
+		let day = date.getDate();
+
+		// 补0操作，保证月份和日期为两位数
+		month = month < 10 ? '0' + month : month;
+		day = day < 10 ? '0' + day : day;
+
+		return year + '-' + month + '-' + day;
+	}
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return '0.000';
+		}
+	}
+	function formateRateTon(num, row, index) {
+		if(row.companyId) {
+			if (num) {
+				num = parseFloat(num).toFixed(2).toString().split(".");
+				num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+				return num.join(".")+'%';
+			} else {
+				return '0.00%';
+			}
+		}
+	}
+	function intiMonthBox(id){
+		var db = $('#'+id);
+		db.datebox({
+			onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+				span.trigger('click'); //触发click事件弹出月份层
+				if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+					tds = p.find('div.calendar-menu-month-inner td');
+					tds.click(function (e) {
+						e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+						var year = /\d{4}/.exec(span.html())[0]//得到年份
+								, month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+						db.datebox('hidePanel')//隐藏日期对象
+								.datebox('setValue', year + '-' + month); //设置日期的值
+					});
+				}, 0);
+				yearIpt.unbind();//解绑年份输入框中任何事件
+			},
+			parser: function (s) {
+				if (!s) return new Date();
+				var arr = s.split('-');
+				return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+			},
+			formatter: function (d) {
+				let year = d.getFullYear();
+				let month = d.getMonth() + 1;
+				if (month < 10) {
+					month = '0' + month;
+				}
+				return year + '-' + month;
+			}
+		});
+		var p = db.datebox('panel'), //日期选择对象
+				tds = false, //日期选择对象中月份
+				yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+				span = p.find('span.calendar-text'); //显示月份层的触发控件
+	}
+
+</script>
+<style scoped>
+	.business-license {
+		overflow-x: auto; /* 或者使用 'scroll' 替代 'auto'，根据需要选择 */
+		white-space: nowrap; /* 防止内容换行 */
+		font-size: 14px;
+	}
+	.business-license .business-container {
+		display: flex;
+	}
+	.business-license .pic-container {
+		width: 80px;
+		height: 80px;
+		margin: 20px 0px 0px 30px;
+	}
+	.business-license .business-body {
+		margin-right: 10px;
+		width: 290px;
+		display: flex;
+	}
+	.business-license .business-body .body-item {
+		margin-right: 10px;
+		flex-grow: 1;
+	}
+	.business-license .business-body .body-item li{
+		list-style: none;
+		margin-bottom: 10px;
+	}
+	.business-license .business-body .body-item .span-text-right{
+		width: 150px;
+		text-align:right;
+		display:inline-block;
+	}
+	.amount_span {
+		color: #1b55ffeb
+	;
+		cursor: pointer;
+	}
+	.business-license .business-body .body-item .span-text-right2{
+		width: 200px;
+		text-align:right;
+		display:inline-block;
+	}
+	.business-license .business-body .body-item .span-text-label{
+		width: 140px;
+		text-align:left;
+		padding-left: 20px;
+		display:inline-block;
+		margin-top: 10px;
+	}
+	.business-license .business-body .body-item .span-text-label2{
+		width: 120px;
+		text-align:left;
+		padding-left: 40px;
+		display:inline-block;
+	}
+	.business-license .business-body .body-item .span-text-remark{
+		width: 600px;
+		text-align:left;
+		padding-left: 40px;
+		display:inline-block;
+	}
+	.border_bottom {
+		border-bottom: 1px solid #d9d9d9;
+	}
+</style>
+</body>
+</html>

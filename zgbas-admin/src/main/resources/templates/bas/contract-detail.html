@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+<style>/*
+.webuploader-pick{background: #ffffff!important;}
+.webuploader-pick-hover{background: #ffffff!important;}
+.showImg span img{width: 60px;height: 60px;border: 1px solid #e5e5e5;cursor:pointer;}
+.showImg span a{font-size: 12px;text-align: center;cursor: pointer;display: block;margin-top: 2px;height: 16px;}
+.date .datebox {width:220px!important;height:30px!important;border-radius: 4px!important;}
+.date input {width:220px;height:30px!important;font-size:14px!important;}*/
+</style>
+</head>
+<div class="easyui-layout" fit="true">
+	<div region="center" border="false">
+		<form id="inputForm" method="post"  enctype="multipart/form-data" class="from-input-layout">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<input type="hidden" id="contractNoOld" th:value="${entity.id>0?entity.contractNo:''}" />
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="contractType">类别:</label>
+					<input name="contractType" id="contractType" readonly="readonly" type="text" th:value="${entity.contractType}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="oppCompanyId">对方企业:</label>
+					<input type="hidden" name="ourCompanyName" id="ourCompanyName" />
+					<input type="hidden" name="oppCompanyName" id="oppCompanyName" />
+					<input name="oppCompanyId" id="oppCompanyId" readonly="readonly" type="text" th:value="${entity.oppCompanyId}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="productName">商品名称:</label>
+					<input name="productName" id="productName" readonly="readonly" type="text" th:value="${entity.productName}"></input>
+				</span>
+			</p>
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="companyId">我方抬头:</label>
+					<input name="ourCompanyName" id="ourCompanyName" type="text" readonly="readonly" th:value="${entity.ourCompanyName}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="businessNo">业务编号:</label>
+					<input name="businessNo" id="businessNo" readonly="readonly" type="text" th:value="${entity.businessNo}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="contractNo">合同编号:</label>
+					<input name="contractNo" id="contractNo" readonly="readonly"  type="text" th:value="${entity.contractNo}"></input>
+				</span>
+			</p>
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="contractTime">合同时间:</label>
+					<input name="contractTime" id="contractTime" readonly="readonly"  type="text" th:value="${entity.contractTime}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="dealPrice">单价:</label>
+					<input name="dealPrice" id="dealPrice" readonly="readonly"  type="text" th:value="${entity.dealPrice}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="dealNumber">数量:</label>
+					<input name="dealNumber" id="dealNumber" readonly="readonly"  type="text" th:value="${entity.dealNumber}"></input>
+				</span>
+			</p>
+
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="numberUnit">数量单位:</label>
+					<input name="numberUnit" id="numberUnit" readonly="readonly"  type="text" th:value="${entity.numberUnit}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="dealAmount">合同总价:</label>
+					<input name="dealAmount" id="dealAmount" readonly="readonly" type="text"  th:value="${entity.dealAmount}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="dealAmountNotax">不含税价:</label>
+					<input name="dealAmountNotax" id="dealAmountNotax" readonly="readonly" type="text" th:value="${entity.dealAmountNotax}"></input>
+				</span>
+			</p>
+
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="taxAmount">税:</label>
+					<input name="taxAmount" id="taxAmount" readonly="readonly" type="text" th:value="${entity.taxAmount}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="bondRate">定金比率:</label>
+					<input name="bondRate" id="bondRate" readonly type="text" th:value="${entity.bondRate}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="payBond">已付定金:</label>
+					<input name="payBond" id="payBond" readonly type="text" th:value="${entity.payBond}"></input>
+				</span>
+			</p>
+
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="payRemain">已付尾款:</label>
+					<input name="payRemain" id="payRemain" readonly type="text" th:value="${entity.payRemain}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="deliveryDateFrom">交货期开始:</label>
+					<input name="deliveryDateFrom" id="deliveryDateFrom" readonly="readonly" type="text"  th:value="${#dates.format(entity.deliveryDateFrom,'yyyy-MM-dd')}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="deliveryDateTo">交货期结束:</label>
+					<input name="deliveryDateTo" id="deliveryDateTo" readonly="readonly" type="text" th:value="${#dates.format(entity.deliveryDateTo,'yyyy-MM-dd')}"></input>
+				</span>
+			</p>
+
+			<p class="p_text">
+				<span class="input-colspan">
+					<label for="warehouse">仓库:</label>
+					<input name="warehouse" id="warehouse" type="text" readonly="readonly"  th:value="${entity.warehouse}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="deliveryMode">交货方式:</label>
+					<input name="deliveryMode" id="deliveryMode" readonly type="text"  th:value="${entity.deliveryMode}"></input>
+				</span>
+				<span class="input-colspan">
+					<label for="status">状态:</label>
+					<input name="status" id="status" type="text" th:value="${entity.status}"></input>
+				</span>
+			</p>
+
+			<p class="p_text">
+				<span class="input-colspan2">
+					<label for="remark">备注:</label>
+					<input name="remark" id="remark" type="text" readonly="readonly" th:value="${entity.remark}"></input>
+				</span>
+			</p>
+			<p>
+			<div class="editForm" style="margin-left:50px;">
+				<p>
+					<span class="upload-btn" id="btn_fileId">
+					 	<i></i>
+		               	<span>附件上传</span>
+		           	</span>
+		           	<!-- <a id="btn_fileId" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-upload'" style="width:106px;margin-top:10px;background:transparent;color: #2d2d2d;">上传附件 </a> -->
+					<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+				</p>
+				<p class="controls showImg fileId" id="span_fileId"></p>
+			</div>
+	</form>
+	</div>
+	<!-- <div region="south" border="true" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn" data-options="iconCls:'icon-save'" onclick="save();">保存</a>
+		</div>
+	</div> -->
+</div>
+
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+	var isExists=false;
+	var imgShowUrl =_filePath+'/view/small/';
+	var siteJson =eval('[(${siteJson})]');
+	var goodsTypeJson =eval('[(${goodsTypeJson})]');
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/bas/contract/updateFileId');
+
+	$(function(){
+		$("#contractType").combobox({
+			data:contractTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			required: true,
+			editable:false
+		});
+		$("#status").combobox({
+			data:contractStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			readonly: true,
+			editable:false
+		});
+		$("#oppCompanyId").combobox({
+			data:companyJson,
+			textField:'companyName',
+			valueField:'id',
+			required: true,
+			editable:false,
+			onSelect:function(record){
+				$('#oppCompanyName').val(record.companyName);
+			}
+		});
+
+
+ 		$('#dealPrice,#dealNumber').numberbox({
+ 		    min:0,
+ 		    precision:4,
+ 		   required: true
+ 		});
+
+
+		$('#productName,#numberUnit').validatebox({
+			required: true
+		});
+
+
+		$('#contractNo').validatebox({
+			validType:{length:[1,50],remote:[_ctx+"/bas/contract/checkContractNo?contractNoOld=" + encodeURIComponent($('#contractNoOld').val()),'contractNo']}
+		});
+
+		$('#contractTime,#deliveryDateFrom').datebox({
+		    required:true
+		});
+		$('#deliveryDateTo').datebox({
+		    required:true
+		});
+
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+
+		fileUpload("btn_fileId", "fileId");
+// 		window.setTimeout(function(){
+// 		},2000);
+
+	});
+
+
+
+		function save(){
+			var url =_ctx+'/bas/contract/save';
+
+
+			var options={
+			        url:url,
+			        onSubmit: function(){
+			        	var flag=true;
+			        	if(!$("#inputForm").form('validate'))
+			        		flag=false;
+			        	if (!flag){
+			        		$.messager.alert('提示','保存失败，请输入必输项！','warning');
+			        	}
+			        	return flag;
+			        },
+			        success:function(data){
+			        	var rObj = eval('('+data+')');
+						if(rObj.success){
+							var rtnEntity = eval('('+rObj.success+')');
+			        		 $.messager.show({
+			                     title:'Tip',
+			                     msg:'保存成功',
+			                     timeout:2000,
+			                     showType:'show'
+			                 });
+			        		 var id =$("#entityId").val();
+			        		$("#entityId").val(rtnEntity.id);
+			        		$("#contractNoOld").val(rtnEntity.contractNo);
+
+			        		$('#contractNo').validatebox({
+			    				validType:{length:[1,20],remote:[_ctx+"/bas/contract/checkContractNo?contractNoOld=" + encodeURIComponent($('#contractNoOld').val()),'contractNo']}
+			    			});
+
+							if (id == '0'){
+								$('#w').window('setTitle',"合同详情");
+							}
+
+			        	}else{
+			        		$.messager.alert('error',rObj.failure,'warning');
+			        	}
+			        }
+				};
+			$('#inputForm').form('submit', options);
+		}
+
+	 	$('#dealPrice').numberbox('textbox').on('keyup',function(){
+	 		var dealNumber =$('#dealNumber').numberbox('getValue');
+	 		var dealPrice = $(this).val();
+	 		var dealAmount = (dealNumber*dealPrice).toFixed(2);
+	 		$('#dealAmount').val(dealAmount);
+	 		var dealAmountNotax = (dealAmount/1.17).toFixed(2);
+	 		$('#dealAmountNotax').val(dealAmountNotax);
+	 		$('#taxAmount').val((dealAmountNotax*0.17).toFixed(2));
+
+	 	});
+	 	$('#dealNumber').numberbox('textbox').on('keyup',function(){
+	 		var dealPrice =$('#dealPrice').numberbox('getValue');
+	 		var dealNumber = $(this).val();
+	 		var dealAmount = (dealNumber*dealPrice).toFixed(2);
+	 		$('#dealAmount').val(dealAmount);
+	 		var dealAmountNotax = (dealAmount/1.17).toFixed(2);
+	 		$('#dealAmountNotax').val(dealAmountNotax);
+	 		$('#taxAmount').val((dealAmountNotax*0.17).toFixed(2));
+
+	 	});
+
+		function fileUpload(fileUploadId, fuSaveId) {
+			var $this = $('#' + fuSaveId);
+			// fileUploadId:点击弹出选择文件事件的dom对象
+			// fusaveId:文件上传成功后，保存的服务文件Id
+			// --start-文件上传---
+			var uploader = WebUploader.create({
+				auto : true,
+				// swf文件路径
+				swf : _ctx + '/static/webuploader-0.1.5/Uploader.swf',
+				// 文件接收服务端。
+				server : _ctx + '/file/uploadFile',
+				// 选择文件的按钮。可选。
+				// 内部根据当前运行是创建，可能是input元素，也可能是flash.
+				pick : '#' + fileUploadId,
+				// 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
+				resize : false,
+				duplicate :true ,//true可重复上传，默认不可多次重复上传
+				// 只允许选择图片文件。
+				accept : {
+					title : 'file',
+					extensions : 'gif,jpg,jpeg,bmp,png,pdf,rar,zip,doc,docx,xlsx,xls',
+//	 				mimeTypes :	"image/*"
+// 					mimeTypes :	"image/jpg,image/jpeg,image/gif,image/bmp,image/png"
+					mimeTypes: "*"
+				}
+			});
+			// 去掉文件上传组件样式，使用上传dom 自己样式
+			$(".webuploader-pick").removeClass();
+
+			uploader.on('beforeFileQueued', function(file) {
+				$.messager.progress('close');
+				if(file &&file.size > 10485760){
+					$.messager.alert('tip',"上传文件不能超过10M!",'info');
+					return false;
+				}
+			})
+
+			// 当有文件添加进来的时候
+			uploader.on('fileQueued', function(file) {
+				$.messager.progress();
+				//var $li = $('<div id="' + file.id + '" class="file-item thumbnail">' + '<img>' + '<div class="info">' + file.name + '</div>' + '</div>'), $img = $li.find('img');
+			});
+
+			// 文件上传成功，给item添加成功class, 用样式标记上传成功。
+			uploader.on('uploadSuccess', function(file, response) {
+				$.messager.progress('close');
+				if(file &&file.size > 10485760){
+					$.messager.alert('tip',"上传文件不能超过10M!",'info');
+					return;
+				}
+				if(response && response.result){//上传成功
+					var fileId = response.fileId;
+
+					filePlugin.uploadSuccess(fileId);
+					//加载附件列表
+					filePlugin.load($('#fileId').val(),'#span_fileId');
+
+				}else{
+					$.messager.alert('tip',"上传文件失败，失败信息："+ response._raw,'info');
+				}
+
+			});
+			uploader.on('error',function(file){
+				$.messager.progress('close');
+				$.messager.alert('tip','请选择图片','info');
+			})
+			// 文件上传失败，显示上传出错。
+			uploader.on('file', function(file) {
+				$.messager.progress('close');
+				$.messager.alert('tip','文件上传失败,请重试!','info');
+			});
+			// --end-文件上传---
+		}
+
+
+</script>

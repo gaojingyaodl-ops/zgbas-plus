@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+  <title>群发待办</title>
+  <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+
+<div region="center" border="false" class="panel_padding pl20 pr20" style="height: 500px;">
+  <table id="list" fit="true"
+         title="" iconCls="icon-edit" singleSelect="true"
+         idField="id">
+  </table>
+</div>
+<div id="w" title="摘要" data-options="width:1080,height:350">
+  <div class="easyui-layout" fit="true">
+    <div style="padding:20px 50px">
+    <h3 id="subjectText">
+    </h3>
+  </div>
+  </div>
+</div>
+<script type="text/javascript">
+
+  $(function(){
+    var lastIndex;
+    $('#list').datagrid({
+      pagination:true,
+      width:400,
+      pageSize:10,
+      rownumbers:true,
+      pageList:[10,20,30,40,50],
+      url:_ctx+"/approve/waitDeal/findPageWaitDealById",
+      columns:[ [
+        {field:'dealType',title:'事项类型',align:'center', width:80},
+        {
+          field: 'subject', title: '摘要', width: 430, align: 'left',
+          formatter: function (value, row, index) {
+            var abValue = value;
+            var content = '<p title="' + value + '" class="note">' + abValue.replace(/<[^>]+>/g, "") + '</p>';
+            return content;
+          },
+          styler: function (value, row, index) {
+            if (row.readFlg == '1') {
+              return 'color:gray';
+            }
+          }
+        },
+        {field:'createdDate',title:'时间', width:130,formatter:function(value, row, index){
+            if (value == null || value == undefined || value == ''){
+              return row.createdDate.substr(0,16);
+            }
+            return value;
+          }},
+        {field:'operate',title:'操作', width:140,align:'left', formatter: function (value, row, index) {
+            if (row.id) {
+              var str = '';
+              if(row.completeFlg==0){
+                str += '<span class="contract-btn contract-btn-3" onclick="updateFlg(' + row.id + ','+row.relaDeptId+','+row.relaUserId+')">未完成</span>';
+              }else if (row.completeFlg==1){
+                str += '<span class="contract-btn contract-btn-2">已完成</span>';
+              }
+              if(row.readFlg==0){
+                str += '<span class="contract-btn contract-btn-3" onclick="changeStatus(' + row.id + ','+row.relaDeptId+','+row.relaUserId+')">已读</span>';
+              }else {
+
+              }
+              return str;
+            }
+
+          }
+        },
+      ]],
+
+      onDblClickRow : function(index, row) {// 双击单行进入对应销售详情
+        lastIndex = index;
+        add(row.id,row.relaUserId,row.relaDeptId);
+      },
+    });
+  });
+  $('#w').window({
+    modal : true,
+    closed : true,
+    collapsible : false,
+    minimizable : false,
+    maximizable : false,
+    cache : false
+  });
+  function changeStatus(id,relaDeptId,relaUserId) {
+    $.ajax({
+      type:"POST",
+      dataType: "json",
+      url: _ctx+'/approve/waitDeal/updateStatus',
+      data:{"id":id,"relaDeptId":relaDeptId,"relaUserId":relaUserId},
+      success: function (data){
+        console.log(data);//打印服务端返回的数据(调试用)\
+        if ((!isEmpty(data)) && !isEmpty(data.success)) {
+
+        } else {
+          $.messager.alert('error', data.failure, 'warning');
+        }
+        $("#config_detail").window("close");
+        $('#list').datagrid('reload');
+      },
+      error : function() {
+        $.messager.alert('error', "请联系管理员", 'warning');
+      }
+
+    })
+  };
+  function updateFlg(id,relaDeptId,relaUserId) {
+    $.ajax({
+      type:"POST",
+      dataType: "json",
+      url: _ctx+'/approve/waitDeal/updateFlg',
+      data:{"id":id,"relaDeptId":relaDeptId,"relaUserId":relaUserId},
+      success: function (data){
+        console.log(data);//打印服务端返回的数据(调试用)\
+        if ((!isEmpty(data)) && !isEmpty(data.success)) {
+
+        } else {
+          $.messager.alert('error', data.failure, 'warning');
+        }
+        $("#config_detail").window("close");
+        $('#list').datagrid('reload');
+      },
+      error : function() {
+        $.messager.alert('error', "请联系管理员", 'warning');
+      }
+
+    })
+  }
+
+  function add(id,relaUserId,relaDeptId){
+    $.ajax({
+      type:"POST",
+      dataType: "json",
+      url: _ctx+'/approve/waitDeal/findSubject',
+      data:{"id":id},
+      success: function (data){
+        html="<pre style='width: 580px;height: 270px;'>"+data.rows+"</pre>"
+        parent.layer.open({
+          title: '待办事项',
+          type: 1,
+          fix: false,
+          shadeClose:true,
+          // area: ['600px', '300px'],
+          // btn: ['确定', '关闭'],
+          content: html
+        });
+      },
+      error : function() {
+        $.messager.alert('error', "请联系管理员", 'warning');
+      }
+
+    });
+    $.ajax({
+      type:"POST",
+      dataType: "json",
+      url: _ctx+'/approve/waitDeal/updateStatus',
+      data:{"id":id,"relaDeptId":relaDeptId,"relaUserId":relaUserId},
+      success: function (data){
+        console.log(data);//打印服务端返回的数据(调试用)\
+        if ((!isEmpty(data)) && !isEmpty(data.success)) {
+
+        } else {
+          $.messager.alert('error', data.failure, 'warning');
+        }
+        $("#config_detail").window("close");
+        $('#list').datagrid('reload');
+      },
+      error : function() {
+        $.messager.alert('error', "请联系管理员", 'warning');
+      }
+
+    })
+
+  }
+</script>
+</body>
+</html>

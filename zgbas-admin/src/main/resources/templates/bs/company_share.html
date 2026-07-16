@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<input type="hidden" id="id" th:value="${companyId}" />
+<input type="hidden" id="matchUserId" th:value="${matchUserId}" />
+<div class="easyui-layout" fit="true">
+	<div region="center" border="false" >
+		<table id="tt2" th:url="@{'/bs/companyShare/listShare/'+${companyId}}"
+			singleSelect="true" rownumbers="true" data-options="fit:true" >
+		</table>
+	</div>
+
+	<div region="south" border="false" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+			<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'," onclick="addShare()">新增</a>
+			<a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveShare();">保存</a>
+		</div>
+	</div>
+</div>
+
+
+<script type="text/javascript">
+var deptTree = eval('[(${deptTree})]');
+
+	var lastIndex2=-1;
+	var isExists=false;
+	$(function(){
+		initShareGrid();
+	});
+
+	function saveShare(){
+		var companyId = $('#id').val();
+		var matchUserId = $('#matchUserId').val();
+		var flag=true;
+		var rows = $('#tt2').datagrid('getRows');
+		for(var i=0;i<rows.length;i++){
+			var row = rows[i];
+			row.companyId = companyId;
+			var index = $('#tt2').datagrid('getRowIndex', row);
+			flag = $('#tt2').datagrid('validateRow',index);
+			if(!flag){
+				$.messager.alert('error',"被共享人不能为空",'warning');
+				$('#tt2').datagrid('selectRow',index);
+				$('#tt2').datagrid('beginEdit', index);
+				return;
+			} else {
+				if(row.sharedUserId==matchUserId||row.sharedUserId==currentUserId){
+					$.messager.alert('error',"被共享人不能为自己或当前领用人",'warning');
+					$('#tt2').datagrid('selectRow',index);
+					$('#tt2').datagrid('beginEdit', index);
+					return;
+				} else {
+	    			$('#tt2').datagrid('endEdit', index);
+	    		}
+			}
+		}
+		$.post(_ctx+"/bs/companyShare/saveBatch",Convert.ToSaveParam("tt2") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#tt2').datagrid('reload');
+				$('#w_share').window('close');
+				$('#tt1').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		})
+	}
+
+	function initShareGrid(){
+		$('#tt2').datagrid({
+			columns:[ [
+				{field:'action',title:'被共享人',editor:{type:'combotree',options:{editable:true,required:true,panelHeight:400,panelWidth:200,multiple:false,onlyLeafCheck:true,data:deptTree,textField:'text',valueField:'id',onSelect:function(node){if(!node.id.startsWith('user')){$(this).combotree('clear')}}}},
+					formatter:function(value,row,index){
+						var _val = row.sharedUserId;
+						if (_val){
+							row.action = "user"+_val;
+							var username= Convert.findTreeValueByKey(deptTree,"id","user"+_val,"text");
+							return username;
+						}
+						},
+					width:120},
+				{field:'remark',title:'备注',width:160,editor:{type:'validatebox',options:{validType:'length[0,200]'}},
+					formatter:function(value,row,index){
+						return '<div style="overflow: hidden; white-space: nowrap; text-overflow:ellipsis;" title="'+value+'">'+value+'</div>';
+					}
+				},
+				{field:'updatedDate',title:'更新时间',width:140,
+					formatter:function(value,row,index){
+						if(value){
+							return '<div style="overflow: hidden; white-space: nowrap; text-overflow:ellipsis;" title="'+value+'">'+value+'</div>';
+						}else{
+							return '';
+						}
+					}
+				},
+				{field:'opt',title:'操作',width:60,align:'center',
+					formatter:function(value,row,index){
+						var id =row.id;
+						var d = '<img href="#" style="cursor:pointer;width:16px;hight:18px" onclick=deleterow2("'+id+'") src="../static/new-version/images/icon_delete.png"></img>';
+						return d;
+					}
+				}
+				] ],
+			onBeforeLoad:function(){
+				$(this).datagrid('rejectChanges');
+			},
+			onClickCell:function(index,field){
+				if (lastIndex2 != index){
+					$('#tt2').datagrid('endEdit', lastIndex2);
+					$('#tt2').datagrid('beginEdit', index);
+				}
+				lastIndex2 = index;
+				Convert.focusEditor("tt2",field,lastIndex2);
+			},
+			onBeginEdit:function(index,row){
+				//自动合计商品总金额
+				var ed_sharedUserId = $('#tt2').datagrid('getEditor', {index:index,field:'action'});//负责人
+				if (ed_sharedUserId==null){
+					return;
+				}
+
+				$(ed_sharedUserId.target).combotree('options').onClick=function(node){
+// 					var _val =node.id+"";
+					if (node.id.indexOf("user")<0){
+// 						row.action="";
+						var t = $(ed_sharedUserId.target).combotree('tree')
+						t.tree('uncheck',node.target);
+						return;
+					}
+
+
+					var _val = $(ed_sharedUserId.target).combotree('getValue');
+
+					console.log(_val,_val.replace("user",""));
+					var row = $('#tt2').datagrid('getSelected');
+					row.sharedUserId = _val.replace("user","");
+				};
+				$(ed_sharedUserId.target).combotree('textbox').on('keyup',function(){
+					var value =$(this).val();
+					if (value==''){
+						row.sharedUserId = '';
+						row.action = '';
+					}
+				});
+
+
+			}
+		});
+	}
+
+	function addShare(){
+		var rowSel=$('#tt2').datagrid('getSelected', lastIndex2);
+		$('#tt2').datagrid('endEdit', lastIndex2);
+		var index = $('#tt2').datagrid('getData').total;
+		if(!index)index = $('#tt2').datagrid('getRows').length;
+		var field={
+				id:'0',
+				remark:''
+			}
+		$('#tt2').datagrid('appendRow',field);
+		lastIndex2 = $('#tt2').datagrid('getRows').length-1;
+		$('#tt2').datagrid('selectRow', lastIndex2);
+		$('#tt2').datagrid('beginEdit', lastIndex2);
+		Convert.focusEditor("tt2",field,lastIndex2);
+	}
+
+	function deleterow2(id){
+		$('#tt2').datagrid('selectRecord',id);
+		var row = $('#tt2').datagrid('getSelected');
+		var index = $('#tt2').datagrid('getRowIndex',row);
+		if (id=='0'){
+			$('#tt2').datagrid('deleteRow', index);
+			var nextSelect=index>0?index-1:0;
+			$('#tt2').datagrid('selectRow', nextSelect);
+		}else{
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '删除提示',
+				msg: '确认删除共享数据?',
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				fn: function(r){
+	                if (r){
+	                	if(id){
+							$.post(_ctx+"/bs/companyShare/delete/"+id, function(result) {
+								$('#tt2').datagrid('reload');
+							});
+						}
+	                }
+	            }
+	        });
+		}
+	}
+
+
+</script>

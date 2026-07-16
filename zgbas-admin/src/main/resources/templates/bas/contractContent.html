@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/css/demo.css}" rel="stylesheet" type="text/css" />
+<script th:src="@{/static/jquery/jquery.jqprint-0.3.js}" type="text/javascript"></script>
+<script th:src="@{/static/jquery/FileSaver.js}" type="text/javascript"></script>
+<script th:src="@{/static/jquery/jquery.wordexport.js}" type="text/javascript"></script>
+</head>
+<div style="width:200px;float:right;">
+	<p>
+		<input type="button" value="下载" onclick="downLoadContract()"/>
+		<input type="button" value="打印" onclick="printTheContract()"/>
+	</p>
+</div>
+<div th:utext="${contractContent}" id="contractText"></div>
+<script type="text/javascript">
+//打印电子合同
+function printTheContract(){
+	//window.print();
+	$('#contractText').jqprint();
+}
+//下载页面内容
+function downLoadContract(){
+	$('#contractText').wordExport();
+}
+</script>

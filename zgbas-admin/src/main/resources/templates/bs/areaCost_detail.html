@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">	
+	<div region="north" border="false">
+		<form id="inputForm" method="post"  class="from-input-layout">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<p class="p_text">
+				<span class="input-colspan">
+					<label>省份:</label>
+					<input name="provinceName" id="provinceName" required="required" type="text" th:value="${entity.areaVo.provinceName}"></input>
+				</span>
+				<span class="input-colspan">
+					<label>市:</label>
+					<input name="areaCode" id="cityName" required="required" type="text" th:value="${entity.areaVo.cityName}"></input>
+				</span>
+				<span class="input-colspan">
+				<label>区:</label>
+					<input name="areaCode" id="areaCode"  type="text" th:value="${entity.areaVo.regionName}"></input>
+				</span>
+			</p>
+			<p class="p_text">
+				<span class="input-colspan">
+				<label for="warehouseUnitCost"  class="control-label">单价(元):</label>
+				<input name="warehouseUnitCost" id="warehouseUnitCost"  required="required" type="number" th:value="${entity.warehouseUnitCost}"></input>
+				</span>
+				<span class="input-colspan">
+				<label for="remark"  class="control-label">备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+				</span>
+			</p>
+	</form>
+	</div>
+	<div region="center" border="false" >
+	    <input type="hidden" id="warehouseId" th:value="${warehouseId}"/>
+		 <table id="warehouseAddrTable" fit="true" border="0"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+		</table>
+	</div>
+
+	<div region="south" border="false" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+		<span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="save();">保存</span>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+var entityId=$("#entityId").val();
+var enableFlgs = eval('[(${enableFlgs})]');
+var _warehouseId = 0;	
+	$(function(){
+		$("#provinceName").combobox({
+			url:_ctx+"/bs/areaCost/ajaxGetCity?id=1",
+			valueField:"id",
+			textField:"name",
+			width : 150,
+			height : 30,
+			onSelect:function(record){
+				$("#cityName").combobox({
+					url:_ctx+"/bs/areaCost/ajaxGetCity?id=" + record.id,
+					valueField:"id",
+					textField:"name",
+					width : 150,
+					height : 30,
+					onSelect:function(record){
+						$("#areaCode").combobox({
+							url:_ctx+"/bs/areaCost/ajaxGetCity?id=" + record.id,
+							valueField:"id",
+							textField:"name",
+							width : 150,
+							height : 30
+						});
+					}
+				});
+			}
+		});
+		
+		$("#warehouseUnitCost").textbox({
+			required: true
+		});
+	});
+
+	
+	//保存
+	function save() {
+	var options = {
+		url : _ctx + '/bs/areaCost/saveAreaCost',
+		onSubmit : function() {
+			var flag = $("#inputForm").form('validate');
+			if (!flag) {
+				$.messager.alert('提示','请填写完整','info');
+			}
+			return flag;
+		},
+		success : function(data) {
+			$.messager.show({
+				title : 'Tip',
+				msg : data,
+				timeout : 2000,
+				showType : 'show'
+			});
+			$('#w').window("close");
+			$('#tt').datagrid('reload');
+			
+		}
+	}
+	$('#inputForm').form('submit', options);
+}
+
+</script>

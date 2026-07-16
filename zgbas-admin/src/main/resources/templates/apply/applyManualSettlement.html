@@ -1,0 +1,364 @@
+<!--手动结算审批-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="center" border="false">
+        <div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden" name="companyId" id="companyId" th:value="${entity.id}" />
+            <input type="hidden" name="entityId" id="entityId" th:value="${entity.id}" />
+            <input type="hidden" name="canApproveEdit" id="canApproveEdit" th:value="${psv.canApproveEdit}" />
+            <input type="hidden" name="sellContractNo" id="sellContractNo" th:value="${entity.sellContractNo}" />
+            <input type="hidden" name="buyContractNo" id="buyContractNo" th:value="${entity.buyContractNo}" />
+            <p class="form-section-title"><span class="approve_text">采购</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>合同编号：</lable>
+                    <input type="text" readonly th:value="${entity.buyContractNo}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <lable>供方：</lable>
+                    <input type="text" readonly name="buyCompanyName" th:value="${entity.buyCompanyName}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>业务员：</lable>
+                    <input type="text" readonly name="buyMatchUserName" th:value="${entity.buyMatchUserName}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>采购合同单价(元)</lable>
+                    <input readonly type="number" name="buyUnitPrice" th:value="${entity.buyUnitPrice}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>采购合同金额(元)</lable>
+                    <input  readonly type="number" name="buyContractTotalAmount" th:value="${entity.buyContractTotalAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>入库数量(吨)</lable>
+                    <input  readonly type="number" name="deliveryInNumber" th:value="${entity.deliveryInNumber}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改入库数量(吨)</lable>
+                    <input name="deliveryInNumberB" type="number" id="deliveryInNumberB" th:value="${entity.deliveryInNumberB}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>付款金额(元)</lable>
+                    <input readonly type="number" id="payAmount" name="payAmount" th:value="${entity.payAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改付款金额(元)</lable>
+                    <input name="payAmountB" type="number" id="payAmountB"  th:value="${entity.payAmountB}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>收票金额(元)</lable>
+                    <input readonly type="number" id="receiveInvoiceAmount" name="receiveInvoiceAmount" th:value="${entity.receiveInvoiceAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改收票金额(元)</lable>
+                    <input name="receiveInvoiceAmountB" type="number" id="receiveInvoiceAmountB"  th:value="${entity.receiveInvoiceAmountB}"/>
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">销售</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>合同编号：</lable>
+                    <input type="text" readonly th:value="${entity.sellContractNo}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <lable>需方：</lable>
+                    <input type="text" readonly name="sellCompanyName" th:value="${entity.sellCompanyName}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>业务员：</lable>
+                    <input type="text" readonly name="sellMatchUserName" th:value="${entity.sellMatchUserName}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>销售合同单价(元)</lable>
+                    <input readonly type="number" name="sellUnitPrice" th:value="${entity.sellUnitPrice}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>销售合同金额(元)</lable>
+                    <input readonly type="number" name="sellContractTotalAmount" th:value="${entity.sellContractTotalAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>出库数量(吨)</lable>
+                    <input name="deliveryOutNumber" readonly type="number" th:value="${entity.deliveryOutNumber}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改出库数量(吨)</lable>
+                    <input name="deliveryOutNumberB" type="number" id="deliveryOutNumberB"  th:value="${entity.deliveryOutNumberB}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>收款金额(元)</lable>
+                    <input name="receiveAmount" readonly type="number" id="receiveAmount"  th:value="${entity.receiveAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改收款金额(元)</lable>
+                    <input name="receiveAmountB" type="number" id="receiveAmountB"  th:value="${entity.receiveAmountB}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>开票金额(元)</lable>
+                    <input name="invoiceAmount" readonly type="number" id="invoiceAmount"  th:value="${entity.invoiceAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改开票金额(元)</lable>
+                    <input name="invoiceAmountB" type="number" id="invoiceAmountB"  th:value="${entity.invoiceAmountB}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>确认收货数量(吨)</lable>
+                    <input name="confirmReceivedGoods" readonly type="number" id="confirmReceivedGoods"  th:value="${entity.confirmReceivedGoods}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改确认收货数量(吨)</lable>
+                    <input name="confirmReceivedGoodsB" type="number" id="confirmReceivedGoodsB"  th:value="${entity.confirmReceivedGoodsB}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>已收服务费金额</lable>
+                    <input name="receiveServiceAmount" readonly type="number" id="receiveServiceAmount"  th:value="${entity.receiveServiceAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改已收服务费金额</lable>
+                    <input name="receiveServiceAmountB" type="number" id="receiveServiceAmountB"  th:value="${entity.receiveServiceAmountB}"/>
+                </p>
+            </div>
+
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>运输费</lable>
+                    <input name="sellTransAmount" readonly type="number" id="sellTransAmount"  th:value="${entity.sellTransAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改运输费</lable>
+                    <input name="sellTransAmountB" type="number" id="sellTransAmountB"  th:value="${entity.sellTransAmountB}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>仓储费</lable>
+                    <input name="sellWarehouseAmount" type="number" id="sellWarehouseAmount"  th:value="${entity.sellWarehouseAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable style="color:red;">修改仓储费</lable>
+                    <input name="sellWarehouseAmountB" type="number" id="sellWarehouseAmountB"  th:value="${entity.sellWarehouseAmountB}"/>
+                </p>
+            </div>
+
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label style="color: red">损耗数量(吨):</label>
+                    <input name="lossNumber" id="lossNumber" type="text"  th:value="${entity.lossNumber}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label style="color: red">损耗金额(元):</label>
+                    <input name="lossAmount" id="lossAmount" readonly type="text"  th:value="${entity.lossAmount}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label style="color: red">物流方承担损耗金额(元):</label>
+                    <input name="lossAmountByLogistics" id="lossAmountByLogistics" type="text"  th:value="${entity.lossAmountByLogistics}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label style="color: red">实际物流费用(元):</label>
+                    <input name="lossAmountByActual" id="lossAmountByActual" readonly type="text"  th:value="${entity.lossAmountByActual}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label style="color: red">供应商承担损耗金额(元):</label>
+                    <input name="lossAmountBySupplier" id="lossAmountBySupplier" type="text"  th:value="${entity.lossAmountBySupplier}"></input>
+                </p>
+                <p class="yw-table-filter">
+                    <label style="color: red">我方承担损耗金额(元):</label>
+                    <input name="lossAmountByOur" id="lossAmountByOur" type="text"  th:value="${entity.lossAmountByOur}"></input>
+                </p>
+            </div>
+
+            <div class="mb6">
+                <div class="yw-table-filter w2">
+				<span class="upload-btn" id="btn_fileId">
+	               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+                    <input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+                    <p class="controls showImg fileId" id="span_fileId"></p>
+                </div>
+            </div>
+            <p class="form-section-title"><span class="approve_text">决算</span><i></i></p>
+            <div class="mb10">
+                <p class="yw-table-filter">
+                    <label>逾期天数</label>
+                    <input id="breachDays" name="breachDays" th:value="${entity.breachDays}" type="text" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>逾期服务费(元)</label>
+                    <input id="breachAmount" name="breachAmount" th:value="${entity.breachAmount}" type="text" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>已收逾期服务费(元)</label>
+                    <input id="receiveBreachAmount" name="receiveBreachAmount" th:value="${entity.receiveBreachAmount}" type="text" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>业务员罚金(元)</label>
+                    <input id="fineOfSalesman" name="fineOfSalesman" th:value="${entity.fineOfSalesman}" type="text" readonly="readonly"/>
+                </p>
+            </div>
+            <div class="mb10">
+                <p class="yw-table-filter">
+                    <label>利润(元)</label>
+                    <input id="marginAmount" name="marginAmount" th:value="${entity.marginAmount}" type="text" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>利润率</label>
+                    <input id="grossProfitRate" name="grossProfitRate" th:value="${entity.grossProfitRate}" type="text" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>采购提成(元)</label>
+                    <input id="buyCommissionAmount" name="buyCommissionAmount" th:value="${entity.buyCommissionAmount}" type="text" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>销售提成(元)</label>
+                    <input id="sellCommissionAmount" name="sellCommissionAmount" th:value="${entity.sellCommissionAmount}" type="text" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>管理提成(元)</label>
+                    <input id="manageCommissionAmount" name="manageCommissionAmount" th:value="${entity.manageCommissionAmount}" type="text" readonly="readonly"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>公司毛利收入(元)</label>
+                    <input id="companyCommissionAmount" name="companyCommissionAmount" th:value="${entity.companyCommissionAmount}" type="text" readonly="readonly"/>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    var entity = [[${entity}]];
+    var psv = [[${psv}]];
+    // var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/manualSettlement/updateFileId',[[${hasEditFile}]]);
+    var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/manualSettlement/updateFileId',true);
+
+    // 新建
+    if (entity.id == 0) {
+        // 调整后字段必填
+        $("#receiveInvoiceAmountB,#invoiceAmountB,#payAmountB,#receiveAmountB,#confirmReceivedGoodsB,#receiveServiceAmountB,#sellTransAmountB,#sellWarehouseAmountB").numberbox({
+            required:true,
+            validType:'length[1,20]',
+            precision:3
+        })
+        $("#deliveryInNumberB,#deliveryOutNumberB").numberbox({
+            required:true,
+            validType:'length[1,20]',
+            precision:4
+        })
+
+        $("#lossAmountByOur,#lossAmountBySupplier,#lossAmountByLogistics,#lossAmountByActual,#lossAmount").numberbox({
+            required: true,
+            precision: 2,
+            value: 0,
+            min: 0
+        });
+
+        $("#lossNumber").numberbox({
+            required: true,
+            precision: 3,
+            value: 0,
+            min: 0
+        });
+
+
+        $("#sellTransAmountB").numberbox({
+            onChange:function () {
+                $("#lossAmountByActual").numberbox("setValue", $(this).val());
+            }
+        })
+
+        $("#lossAmountByActual").numberbox("setValue", $("#sellTransAmountB").val());
+
+        // 物流方承担
+        $("#lossAmountByLogistics").numberbox({
+            onChange:function () {
+                var transformAmount = $("#sellTransAmountB").val();
+                // 实际物流费 = 当前物流费 - 物流方承担费用
+                var acutual = Number(transformAmount) - Number($(this).val());
+                acutual = acutual <= 0?0:acutual;
+                $("#lossAmountByActual").numberbox("setValue", acutual);
+                var lossAmout = Number($(this).val()) + Number($("#lossAmountBySupplier").numberbox("getValue")) + Number($("#lossAmountByOur").numberbox("getValue"));
+                $("#lossAmount").numberbox("setValue", lossAmout);
+            }
+        })
+
+        // 供应商承担
+        $("#lossAmountBySupplier").numberbox({
+            onChange:function () {
+                var lossAmout = Number($(this).val()) + Number($("#lossAmountByLogistics").numberbox("getValue")) + Number($("#lossAmountByOur").numberbox("getValue"));
+                $("#lossAmount").numberbox("setValue", lossAmout);
+            }
+        })
+
+        // 我方承担
+        $("#lossAmountByOur").numberbox({
+            onChange:function () {
+                var lossAmout = Number($(this).val()) + Number($("#lossAmountByLogistics").numberbox("getValue")) + Number($("#lossAmountBySupplier").numberbox("getValue"));
+                $("#lossAmount").numberbox("setValue", lossAmout);
+            }
+        })
+
+        $("#remark").validatebox({
+            required: true,
+        })
+
+        // 日期
+        $("#payFullTime,#payFullTimeB").datebox({
+            height:30,
+            required:true,
+            editable:false
+        })
+
+        var changeTypeJson = [
+            {
+                key:"议短",
+                value:"议短"
+            },{
+                key:"损耗",
+                value:"损耗"
+            },{
+                key:"其他",
+                value:"其他"
+            }
+            ]
+
+        // // 合同修改类型
+        // $("#changeType").combobox({
+        //     data:changeTypeJson,
+        //     required:true,
+        //     textField:'key',
+        //     valueField:'value',
+        //     panelHeight:'auto',
+        //     editable:false,
+        //     onLoadSuccess:function(){
+        //         $(this).combobox('setValue',changeTypeJson[0].key);
+        //     },
+        // });
+
+        //加载附件列表
+        filePlugin.load($('#fileId').val(),'#span_fileId');
+        if ($("#btn_fileId").length>0){
+            fileUpload("btn_fileId", "fileId");
+        }
+
+    }
+
+    if (entity.id != 0){
+        console.log("applyManualSettlement : ", entity);
+        // console.table("psv : ", psv);
+
+        // 非新建状态 所有字段只读
+        $("#inputForm").find("input").not("[type='button']").attr("readonly",true);
+
+    }
+</script>

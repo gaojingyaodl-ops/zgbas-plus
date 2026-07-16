@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+<div class="easyui-layout" fit="true">
+	<div region="center" style="padding:5px 20px 5px 5px;+position: relative;overflow-x:hidden;" border="false">
+		<form id="inputForm" method="post"  enctype="multipart/form-data" class="editForm" style="margin-top: 10px;margin-bottom: 0;">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<p>
+			<span>
+				<label for="companyName"  class="control-label">企业名称:</label>
+				<input name="companyName" id="companyName" class="easyui-validatebox control required" type="text" th:value="${entity.companyName}"></input>
+			</span>
+			<span>
+				<label for="taxNo"  class="control-label">税号:</label>
+				<input name="taxNo" id="taxNo" class="easyui-validatebox control required" type="text" th:value="${entity.taxNo}"></input>
+			</span>
+			</p>
+
+			<p>
+			<span>
+			<label for="bankName"  class="control-label">开户银行:</label>
+			<input name="bankName" id="bankName" class="easyui-validatebox control required" type="text" th:value="${entity.bankName}"></input>
+			</span>
+			<span>
+			<label for="bankAccount"  class="control-label">银行账号:</label>
+			<input name="bankAccount" id="bankAccount" class="easyui-validatebox control required" type="text" th:value="${entity.bankAccount}"></input>
+			</span>
+			</p>
+			<p>
+			<span>
+			<label for="contactName"  class="control-label">联系人:</label>
+			<input name="contactName" id="contactName" class="easyui-validatebox control required" type="text" th:value="${entity.contactName}" data-options="validType:'length[1,20]'" ></input>
+			</span>
+			<span>
+			<label for="contactPhone"  class="control-label">联系电话:</label>
+			<input name="contactPhone" id="contactPhone" class="easyui-validatebox control required" type="text" th:value="${entity.contactPhone}" data-options="validType:'length[1,20]'"></input>
+			</span>
+			</p>
+			<p>
+			<span>
+			<label for="companyPhone"  class="control-label">公司电话:</label>
+			<input name="companyPhone" id="companyPhone" class="easyui-validatebox control required" type="text" th:value="${entity.companyPhone}" data-options="validType:'length[1,20]'"></input>
+			</span>
+			</p>
+			<p>
+			<span>
+			<label for="address"  class="control-label">地址:</label>
+			<input name="address" id="address" class="easyui-validatebox control large" type="text" th:value="${entity.address}"></input>
+			</span>
+			</p>
+			<p>
+			</p>
+			<p>
+			<span class="btn_com float_left bgbai borderNone fjsc_span" id="btn_fileId">
+				 <i class="float_left i_scfj"></i>
+                <span class="float_left fontBlack fjsc_text">附件上传</span>
+             </span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId">
+
+			</p>
+
+	</form>
+</div>
+	<div region="south" border="false" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn" data-options="iconCls:'icon-save'" onclick="save();">保存</a>
+		</div>
+	</div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/bs/company/updateFileId',true);//'[[${param.hasEditFile}]]'
+	$(function(){
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		fileUpload("btn_fileId", "fileId");
+
+
+
+	});
+	function save(){
+		var options={
+		        url:_ctx+'/bs/company/save',
+		        onSubmit: function(){
+		        	var flag=true;
+		        	if(!$("#inputForm").form('validate'))
+		        		flag=false;
+		        	return flag;
+		        },
+		        success:function(data){
+					if(data.indexOf("success")>=0){
+		        		 $.messager.show({
+		                     title:'Tip',
+		                     msg:'保存成功',
+		                     timeout:2000,
+		                     showType:'show'
+		                 });
+		        		 $('#w').window("close");
+		        	}else{
+		        		$.messager.alert('error',rObj.failure,'warning');
+		        	}
+		        }
+			};
+		$('#inputForm').form('submit', options);
+	}
+
+</script>

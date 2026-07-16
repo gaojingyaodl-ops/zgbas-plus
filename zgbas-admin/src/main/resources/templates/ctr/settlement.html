@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>提成明细表</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<style>
+    .datagrid-cell-check{height: 26px;}
+    .datagrid-header-check{height: 26px;}
+</style>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <input type = "hidden" name="search_EQB_receiveFlg" value="true">
+        <input type = "hidden" name="search_EQB_confirmFlg" value="true">
+        <input type = "hidden" name="search_EQB_billFlg" value="true">
+        <input type = "hidden" id="isAdmin" th:value="${isAdmin}">
+        <input type = "hidden" id="permissionsSettlement" th:value="${permissionsSettlement}">
+        <input type = "hidden" id="settlementStatusIndex" th:value="${settlementStatus}">
+        <input type = "hidden" id="executiveFlg" th:value="${executiveFlg}">
+        <input type = "hidden" name="search_EQS_businessType" id="src_businessType">
+        <input type = "hidden" name="search_EQB_matchCreditFlg" id="src_matchCreditFlg">
+        <input type = "hidden" name="indexFlag" id="indexFlag" th:value="${indexFlag}">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label style="width: 80px;">业务类型:</label>
+                <input id="businessType" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter mobile-display-none">
+                <label style="width: 80px;">决算状态:</label>
+                <input id="finalFlagSearch" name="search_EQB_finalFlag" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter">
+                <label style="width: 80px;">结算状态:</label>
+                <input id="settlementStatus" name="search_EQS_settleStatus" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter mobile-display-none muser">
+                <label style="width: 80px;">采购业务员:</label>
+                <input id="buyMatchUserId" name="search_EQL_buyMatchUserId" type="text" value=""/>
+                <input id="buyMatchUserName" type="hidden" />
+            </p>
+            <p class="yw-table-filter mobile-display-none muser">
+                <label style="width: 80px;">销售业务员:</label>
+                <input id="sellMatchUserId" name="search_EQL_sellMatchUserId" type="text" value=""/>
+                <input id="sellMatchUserName"  type="hidden" />
+            </p>
+        </div>
+
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label style="width: 80px;">月份:</label>
+                <input name="search_createdDate" id="createdDate" class="easyui-datebox" th:value="${createDate}"/>
+            </p>
+            <p class="yw-table-filter mobile-display-none">
+                <label style="width: 80px;">合同号:</label>
+                <input name="search_LIKES_sellContractNo" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter mobile-display-none">
+                <label style="width: 100px;">是否标记供应商:</label>
+                <input id="markSupplierFlagSearch" name="search_EQB_markSupplierFlag" type="text" value=""/>
+            </p>
+            <a href="#" class="easyui-linkbutton btn64 ml10" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="restForm()">清空</a>
+            <a href="#" id="exportExcel" class="easyui-linkbutton btn-empty btn64 ml10 mobile-display-none" onclick="exportExcel()">导出</a>
+            <a href="#" th:if="${finalAccountFlg}" class="easyui-linkbutton btn-empty btn64 ml10 mobile-display-none" onclick="finalAccount()">决算</a>
+            <a href="#" class="easyui-linkbutton  btn64 ml10 mobile-display-none" onclick="markSettlement()">确认</a>
+            <a href="#" id="markSettlement" class="easyui-linkbutton  btn64 ml10 mobile-display-none" onclick="updateSettleStatus()">审核</a>
+            <a href="#" id="settlement" class="easyui-linkbutton  btn64 ml10 mobile-display-none" onclick="updateSettlement()" th:if="${permissionsSettlement}">结算</a>
+            <a href="#" id="refreshSettlement" class="easyui-linkbutton btn-empty btn64 ml10 mobile-display-none" onclick="refreshSettlement()">重新计算</a>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:20px;padding-left:20px;">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+<div id="tabDetail" class="easyui-window" title="提成明细" data-options="width:950,height:300"></div>
+<div id="tabParticulars" class="easyui-window" title="提成明细详情" data-options="width:950,height:800"></div>
+<div id="settlementDlg"  data-options="width:350,height: 240,border:'thin',collapsible: false,minimizable: false,cls:'c9'">
+    <form id="frm_appvoe_step" class="editForm from-input-layout" method="post">
+        <div style="margin-top: 20px;margin-bottom: 20px;margin-left: 50px" class="settlement_dlg_div hide">
+            <p class="yw-table-filter w2">
+                <label>其他扣除项:</label>
+                <input id="otherDeductionsAmount" class="mid" name="otherDeductionsAmount" />
+            </p>
+        </div>
+    </form>
+</div>
+</div>
+<script type="text/javascript">
+    var $settlementStatusIndex = $('#settlementStatusIndex').val();
+    var _settlementStatusJson = [{id:'',text:'--全部--'},{id:'0',text:'未确认'},{id:'1',text:'已确认'},{id:'2',text:'已审核'},{id:'3',text:'已结算'},];
+    var _finalFlagJson = [{id:'',text:'--全部--'},{id:'false',text:'未决算'},{id:'true',text:'已决算'}];
+    var _markFlagJson = [{id:'',text:'--全部--'},{id:'false',text:'否'},{id:'true',text:'是'}];
+    var _businessTypeJson = [{id:'',text:'--全部--'},{id:'A',text:'赊销'},{id:'B',text:'代采'},{id:'T',text:'托盘'},{id:'C',text:'自营'}];
+    var matchUserNameTreeJson=eval('[(${matchUserNameTree})]');
+    var $indexFlag = $('#indexFlag').val();
+    $(function(){
+        var isAdmin = $('#isAdmin').val();
+        var executiveFlg = $('#executiveFlg').val();
+        console.log('isAdmin'+isAdmin);
+        console.log('executiveFlg'+executiveFlg);
+        if (isAdmin != 'true' && executiveFlg != 'true'){
+            $('#markSettlement').hide();
+            $('#refreshSettlement').hide();
+            // $('#settlement').hide();
+            $('#exportExcel').hide();
+            $('.muser').hide();
+        }
+        $('#buyMatchUserId').combotree({
+            data : matchUserNameTreeJson,
+            multiple : false,
+            editable : true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#buyMatchUserId').combotree('clear');
+                }else{
+                    $("#buyMatchUserName").val(node.text);
+                }
+            }
+        });
+        $('#sellMatchUserId').combotree({
+            data : matchUserNameTreeJson,
+            multiple : false,
+            editable : true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#sellMatchUserId').combotree('clear');
+                }else{
+                    $("#sellMatchUserName").val(node.text);
+                }
+            }
+        });
+        $("#otherDeductionsAmount").numberbox({
+            validType:'length[1,20]',
+            precision:2,
+        });
+        //只显示年月
+        intiMonthBox('createdDate');
+        $("#settlementStatus").combobox({
+            data:_settlementStatusJson,
+            textField:'text',
+            valueField:'id',
+            panelHeight:"auto",
+            editable:false
+        });
+        $("#finalFlagSearch").combobox({
+            data:_finalFlagJson,
+            textField:'text',
+            valueField:'id',
+            panelHeight:"auto",
+            editable:false
+        });
+        $("#markSupplierFlagSearch").combobox({
+            data:_markFlagJson,
+            textField:'text',
+            valueField:'id',
+            panelHeight:"auto",
+            editable:false
+        });
+        // 首页跳转
+        if(!strIsNull($settlementStatusIndex)){
+            $("#settlementStatus").combobox('setValue', $settlementStatusIndex);
+        }
+
+        $("#businessType").combobox({
+            data:_businessTypeJson,
+            textField:'text',
+            valueField:'id',
+            panelHeight:"auto",
+            editable:false,
+            onChange: function (value){
+                if (value == "A"){
+                    $("#src_businessType").val("ZY-BB");
+                    $("#src_matchCreditFlg").val(true);
+                }else if (value == "B"){
+                    $("#src_businessType").val("ZY-BB");
+                    $("#src_matchCreditFlg").val(false);
+                }else if (value == "C"){
+                    $("#src_businessType").val("ZY-XS");
+                    $("#src_matchCreditFlg").val(false);
+                }else if(value == "T"){
+                    $("#src_businessType").val("ZY-TP");
+                    $("#src_matchCreditFlg").val(false);
+                }else{
+                    $("#src_businessType").val("");
+                    $("#src_matchCreditFlg").val("");
+                }
+            }
+        });
+
+        $('#tabDetail').window({
+            title:'提成明细',
+            modal:true,
+            closed: true,
+            collapsible : false,
+            minimizable : false,
+            maximizable : false,
+            cache:false
+        });
+        $("#tabParticulars").window({
+            title:'提成明细详情',
+            modal:true,
+            closed: true,
+            collapsible : false,
+            minimizable : false,
+            maximizable : false,
+            cache:false,
+        });
+        $('#tt').datagrid({
+            pagination:true,
+            pageSize:25,
+            rownumbers:true,
+            showFooter:true,
+            singleSelect:false,
+            selectOnCheck:true,
+            checkOnSelect:false,
+            pageList:[100,50,45,40,35,30,25],
+            url:_ctx+"/ctr/settlement/findSettlementPage?indexFlag="+$indexFlag,
+            queryParams:Convert.getJson4Form('searchForm'),
+            frozenColumns:[ [
+                {title: '全选', field: 'ck',checkbox : true, sortable: false},
+                {field:'sellContractNo',title:'合同号', width:120}
+            ] ],
+            columns:[
+                [
+                {field:'businessType', title: '业务类型', width: 80,formatter:function (value,row,index){
+                    var str = "";
+                    if (row.businessType == "ZY-BB" && row.matchCreditFlg == true){
+                        str = "赊销";
+                    }else if (row.businessType == "ZY-BB" && row.matchCreditFlg == false){
+                        str = "代采";
+                    }else if(row.businessType == "ZY-XS") {
+                        str = "自营";
+                    }else if(row.businessType == "ZY-TP") {
+                        str = '托盘';
+                    }
+                    return str;
+                }},
+                {field:'contractTime',title:'合同月份', width:120},
+                {field:'markSupplierFlag', title: '标记供应商', width: 80,formatter:function (value,row,index){
+                        var str = "";
+                        if (row.markSupplierFlag == true){
+                            str = '<span style="color:#45ad60">是</span>';
+                        } else {
+                            str = '<span style="color:red">否</span>';
+                        }
+                        return str;
+                }},
+                {field:'buyCompanyName',title:'供应商',align:"left", width:200},
+                {field:'sellCompanyName',title:'客户',align:"left", width:200},
+                {field:'sellMatchUserName',title:'销售人员',align:"left", width:80},
+                {field:'buyMatchUserName',title:'采购人员',align:"left", width:80},
+                {field:'finalFlag',title:'决算状态',align:"left", width:80,formatter:function(value, row, index){
+                    var finalStr = '';
+                        if (row.id) {
+                            if (value === true) {
+                                finalStr = '<span style="color:#45ad60">已决算</span>';
+                            } else {
+                                finalStr = '<span style="color:red">未决算</span>';
+                            }
+                        }
+                    return finalStr;
+                }},
+                {field:'settleStatus',title:'结算状态',align:"left", width:80,formatter:function(value,row,index){
+                        var res = '';
+                        if (row.id){
+                            if (value == '0'){
+                                res = '<span style="color:red">' + Convert.findValueByKey(_settlementStatusJson,"id",value,"text") + '</span>';
+                            }else if (value == '1') {
+                                res = '<span style="color:#296eb8">' + Convert.findValueByKey(_settlementStatusJson,"id",value,"text") + '</span>';
+                            }else if (value == '2') {
+                                res = '<span style="color:#ecb036">' + Convert.findValueByKey(_settlementStatusJson,"id",value,"text") + '</span>';
+                            }else if (value == '3') {
+                                res = '<span style="color:#009100">' + Convert.findValueByKey(_settlementStatusJson,"id",value,"text") + '</span>';
+                            }else{
+                                value = 0;
+                                res = '<span style="color:#45ad60">' + Convert.findValueByKey(_settlementStatusJson,"id",value,"text") + '</span>';
+                            }
+                        }
+                        return res;
+                 }   },
+                {field:'settlementDate',title:'结算日期', width:80},
+                {field:'dealNumber',title:'合同数量', align:"right", width:80,formatter:formateNumTom},
+                {field:'buyPrice',title:'采购单价', align:"right", width:100,formatter:formateNumTon},
+                {field:'sellPrice',title:'销售单价', align:"right", width:100,formatter:formateNumTon},
+                {field:'sellTotalAmount',title:'销售总额', align:"right", width:100,formatter:formateNumTon},
+                {field:'buyTotalAmount',title:'采购总额', align:"right", width:100,formatter:formateNumTon},
+                {field:'payFullTime',title:'付款日期', align:"center", width:100,formatter:forMateDate},
+                {field:'receiveDate',title:'实际收款日期', align:"center", width:100,formatter:forMateDate},
+                {field:'appointPayDate',title:'约定付款日期', align:"center", width:100,formatter:forMateDate},
+                {field:'confirmReceiptDate',title:'实际收货日期', align:"center", width:100,formatter:forMateDate},
+                {field:'financialCreditDays',title:'金融服务账期', align:"center", width:100},
+                {field:'financialServiceAmount',title:'金融服务费', align:"right", width:80,formatter:formateNumTon},
+                {field:'transportAmount',title:'运输费', align:"right", width:80,formatter:formateNumTon},
+                {field:'warehouseAmount',title:'仓储费', align:"right", width:80,formatter:formateNumTon},
+                // {field:'deliveryFee',title:'出库费', align:"right", width:80,formatter:formateNumTon},
+                {field:'steveDorageAmount',title:'装卸费', align:"right", width:80,formatter:formateNumTon},
+                {field:'breachDay',title:'逾期天数', align:"right", width:80},
+                {field:'breachAmount',title:'逾期罚息', align:"right", width:80,formatter:formateNumTon},
+                {field:'matchBreachAmount',title:'业务员逾期罚息', align:"right", width:100,formatter:formateNumTon},
+                {field:'insuranceRate',title:'保险税率', align:"right", width:80},
+                // {field:'vatSpreadAmount',title:'增值税税后差价', align:"right", width:100,formatter:formateNumTon},
+                {field:'vatAmount',title:'增值税', align:"right", width:80,formatter:formateNumTon},
+                {field:'printAmount',title:'印花税', align:"right", width:80,formatter:formateNumTon},
+                {field:'taxesSurchargesAmount',title:'税金及附加', align:"right", width:100,formatter:formateNumTon},
+                {field:'discountAmount',title:'贴现费用', align:"right", width:100,formatter:formateNumTon},
+                {field:'otherDeductionsAmount',title:'其他扣除项费用', align:"right", width:100,formatter:formateNumTon},
+                {field:'afterTaxSpreadAmount',title:'利润(税后差价收入)', align:"right", width:130,formatter:formateNumTon},
+                {field:'supplierManagerAmount',title:'供应商资源负责人分成', align:"right", width:180,formatter:formateNumTon},
+
+                {field:'sellHeadCommissionAmount',title:'销售团队负责人待结算分成', align:"right", width:150,formatter:formateNumTon1},
+                {field:'buyHeadCommissionAmount',title:'采购中心副总经理待结算分成', align:"right", width:180,formatter:formateNumTon1},
+                {field:'sellMatchAmount',title:'销售人员待结算分成', align:"right", width:130,formatter:formateNumTon1},
+                {field:'buyMatchAmount',title:'采购人员待结算分成', align:"right", width:130,formatter:formateNumTon1},
+
+                {field:'sellHeadCommissionTotalAmount',title:'销售团队负责人分成', align:"right", width:120,formatter:formateNumTon2},
+                {field:'buyHeadCommissionTotalAmount',title:'采购中心副总经理分成', align:"right", width:150,formatter:formateNumTon2},
+                {field:'sellMatchTotalAmount',title:'销售人员分成', align:"right", width:100,formatter:formateNumTon2},
+                {field:'buyMatchTotalAmount',title:'采购人员分成', align:"right", width:100,formatter:formateNumTon2},
+
+                {field:'noneSettlementAmount',title:'待结算金额', align:"right", width:100,formatter:formateNumTon1},
+                {field:'hasSettlementAmount',title:'已结算金额', align:"right", width:100,formatter:formateNumTon2},
+                {field:'options',title:'操作', align:"center", width:120,formatter:function(value, row, index){
+                    var value = '';
+                    if (row.id){
+                        value = '<span class="contract-btn contract-btn-10" onclick="openCommissionParticulars('+row.id+')">详情</span><span class="contract-btn contract-btn-1" onclick="openCommissionDetails('+row.id+')">提成明细</span>';
+                    }
+                    return value;
+                }}
+            ]
+            ],
+            onDblClickRow : function(index,row){
+                saveOtherDeductionsAmount(row);
+            }
+        });
+
+    });
+
+    function openCommissionDetails(settlementId){
+        var url = _ctx+"/ctr/settlement/findSettlementDetail/"+settlementId;
+        $('#tabDetail').window({href:url});
+        $('#tabDetail').window("open");
+    }
+
+    function openCommissionParticulars(settlementId){
+        var url = _ctx+"/ctr/settlement/findSettlementParticulars/"+settlementId;
+        $('#tabParticulars').window({href:url});
+        $('#tabParticulars').window("open");
+    }
+
+    function restForm(){
+        $('#searchForm').form('reset');
+        $("#src_businessType").val("");
+        $("#src_matchCreditFlg").val("");
+    }
+
+    function markSettlement(){
+        var checkedItems = $('#tt').datagrid('getChecked');
+        var settlementIds = [];
+        var settlementStatus = [];
+        var statusFlg = '2';
+        // $.each(checkedItems, function(index, item){
+        //     settlementIds.push(item.id);
+        //     settlementStatus.push(item.settleStatus);
+        // });
+        for (let i = 0; i < checkedItems.length; i++) {
+            let item = checkedItems[i];
+            settlementIds.push(item.id);
+            settlementStatus.push(item.settleStatus);
+            if(item.settleStatus === '3'){
+                $.messager.alert('提示','不能确认已结算过的数据！','warning');
+                return;
+            }
+            if(item.finalFlag !== true){
+                $.messager.alert('提示',  item.sellContractNo + ':未决算请联系人事决算后再确认','warning');
+                return;
+            }
+        }
+        if (!settlementStatus.includes(statusFlg)) {
+            if (settlementIds.length > 0) {
+                $.messager.confirm({
+                    width: 388,
+                    height: 170,
+                    title: '结算提示',
+                    msg: '确定要进行结算操作吗？',
+                    ok: "确定",
+                    cancel: "取消",
+                    cls: 'c9',
+                    border: 'thin',
+                    fn: function (r) {
+                        if (r) {
+                            var _settlementIds = settlementIds.join(",");
+                            var url = _ctx + "/ctr/settlement/markSettlement/" + _settlementIds;
+                            $.get(url, function (data) {
+                                var rObj = eval(data);
+                                if (rObj.success) {
+                                    $.messager.show({
+                                        title: 'Tip',
+                                        msg: '结算成功!',
+                                        timeout: 2000,
+                                        height: 120,
+                                        showType: 'show'
+                                    });
+                                    $('#tt').datagrid('reload');
+                                    $('#tt').datagrid('unselectAll');
+                                    $('#tt').datagrid('clearChecked');
+
+                                    checkedItems = [];
+                                    settlementIds = [];
+                                    settlementStatus = [];
+                                } else {
+                                    $.messager.alert('提示', rObj.failure, 'warning');
+                                }
+                            });
+                        }
+                    }
+                });
+            } else {
+                $.messager.alert('提示', '请选择结算数据！', 'warning');
+            }
+        }else{
+            $.messager.alert('提示','不能确认已审核过的数据！','warning');
+        }
+    }
+    // 审核
+    function updateSettleStatus(){
+        var checkedItems = $('#tt').datagrid('getChecked');
+        var settlementIds = [];
+        var settlementStatus = [];
+        var statusFlg = '0';
+        // $.each(checkedItems, function(index, item){
+        //     settlementIds.push(item.id);
+        //     settlementStatus.push(item.settleStatus);
+        // });
+        for (let i = 0; i < checkedItems.length; i++) {
+            let item = checkedItems[i];
+            settlementIds.push(item.id);
+            settlementStatus.push(item.settleStatus);
+            if(item.settleStatus === '3'){
+                $.messager.alert('提示','不能直接审核已结算的数据！','warning');
+                return;
+            }
+        }
+        if (!settlementStatus.includes(statusFlg) && !settlementStatus.includes('')){
+        if (settlementIds.length > 0){
+            $.messager.confirm({
+                width:388,
+                height:170,
+                title: '结算提示',
+                msg: '确定要进行审核操作吗？',
+                ok: "确定",
+                cancel: "取消",
+                cls:'c9',
+                border:'thin',
+                fn: function(r){
+                    if (r){
+                        var _settlementIds = settlementIds.join(",");
+                        var url = _ctx+"/ctr/settlement/updateSettleStatus/"+_settlementIds;
+                        $.get(url,function(data) {
+                            var rObj = eval(data);
+                            if(rObj.success){
+                                $.messager.show({
+                                    title : 'Tip',
+                                    msg : '审核成功!',
+                                    timeout : 2000,
+                                    height:120,
+                                    showType : 'show'
+                                });
+                                $('#tt').datagrid('reload');
+                                $('#tt').datagrid('unselectAll');
+                                $('#tt').datagrid('clearChecked');
+                                checkedItems = [];
+                                settlementIds = [];
+                                settlementStatus = [];
+                            }else{
+                                $.messager.alert('提示',rObj.failure,'warning');
+                            }
+                        });
+                    }
+                }
+            });
+        }else{
+            $.messager.alert('提示','请选择审核数据！','warning');
+        }
+      }else{
+         $.messager.alert('提示','不能直接审核未确认的数据！','warning');
+       }
+    }
+
+    // 结算
+    function updateSettlement(){
+        let checkedItems = $('#tt').datagrid('getChecked');
+        let checkIds = [];
+        for (let i = 0; i < checkedItems.length; i++) {
+            let item = checkedItems[i];
+            checkIds.push(item.id);
+            if(item.settleStatus !== '2' && item.settleStatus !== '3'){
+                $.messager.alert('提示','不能直接结算未审核的数据！','warning');
+                return;
+            }
+        }
+        if (checkIds.length > 0) {
+            $.messager.confirm({
+                width: 388,
+                height: 170,
+                title: '结算提示',
+                msg: '确定要进行结算操作吗？',
+                ok: "确定",
+                cancel: "取消",
+                cls: 'c9',
+                border: 'thin',
+                fn: function (r) {
+                    if (r) {
+                        var _checkIds = checkIds.join(",");
+                        var url = _ctx + "/ctr/settlement/updateSettlement/" + _checkIds;
+                        $.get(url, function (data) {
+                            var rObj = eval(data);
+                            if (rObj.success) {
+                                $.messager.show({
+                                    title: 'Tip',
+                                    msg: '结算成功!',
+                                    timeout: 2000,
+                                    height: 120,
+                                    showType: 'show'
+                                });
+                                $('#tt').datagrid('reload');
+                                $('#tt').datagrid('unselectAll');
+                                $('#tt').datagrid('clearChecked');
+                                checkedItems = [];
+                                checkIds = [];
+                            } else {
+                                $.messager.alert('提示', rObj.failure, 'warning');
+                            }
+                        });
+                    }
+                }
+            });
+        } else {
+            $.messager.alert('提示', '请选择结算数据！', 'warning');
+        }
+    }
+
+    function finalAccount(){
+        let finalAccount_date = $("#createdDate").datebox("getValue");
+        if (!finalAccount_date){
+            $.messager.alert('提示','请选择决算年月！','warning');
+            return;
+        }
+        // if (finalAccount_date < '2024-07'){
+        //     $.messager.alert('提示','决算年月需 ≥ 2024-07！','warning');
+        //     return;
+        // }
+        let finalAccount_userId = $("#sellMatchUserId").combotree("getValue");
+        let finalAccount_userName = $("#sellMatchUserName").val();
+        let str = finalAccount_userId ? '；业务员：'+ finalAccount_userName  : '';
+        $.messager.confirm({
+            width:388,
+            height:170,
+            title: '决算提示',
+            msg: '确定要决算年月：'+ finalAccount_date + str + '的数据吗？',
+            ok: "确定",
+            cancel: "取消",
+            cls:'c9',
+            border:'thin',
+            fn: function(r){
+                if (r){
+                    var url = _ctx + "/ctr/settlement/finalAccount?summaryDate=" + finalAccount_date + "&sellMatchUserId=" + finalAccount_userId + "&sellMatchUserName=" + finalAccount_userName;
+                    $.get(url, function (data) {
+                        var rObj = eval(data);
+                        if (rObj.success) {
+                            $.messager.show({
+                                title: 'Tip',
+                                msg: '决算成功!',
+                                timeout: 2000,
+                                height: 120,
+                                showType: 'show'
+                            });
+                            $('#tt').datagrid('reload');
+                            $('#tt').datagrid('unselectAll');
+                            $('#tt').datagrid('clearChecked');
+                        } else {
+                            $.messager.alert('提示', rObj.failure, 'warning');
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    function refreshSettlement(){
+        var checkedItems = $('#tt').datagrid('getChecked');
+        var settlementIds = [];
+        $.each(checkedItems, function(index, item){
+            settlementIds.push(item.id);
+        });
+        if (settlementIds.length > 0){
+            $.messager.confirm({
+                width:388,
+                height:170,
+                title: '结算提示',
+                msg: '确定要重新计算操作吗？',
+                ok: "确定",
+                cancel: "取消",
+                cls:'c9',
+                border:'thin',
+                fn: function(r){
+                    if (r){
+                        var _settlementIds = settlementIds.join(",");
+                        var url = _ctx+"/ctr/settlement/refreshSettlement/"+_settlementIds;
+                        $.get(url,function(data) {
+                            var rObj = eval(data);
+                            if(rObj.success){
+                                $.messager.show({
+                                    title : 'Tip',
+                                    msg : '刷新结算成功!',
+                                    timeout : 2000,
+                                    height:120,
+                                    showType : 'show'
+                                });
+                                $('#tt').datagrid('reload');
+                                $('#tt').datagrid('unselectAll');
+                                $('#tt').datagrid('clearChecked');
+                            }else{
+                                $.messager.alert('提示',rObj.failure,'warning');
+                            }
+                        });
+                    }
+                }
+            });
+        }else{
+            $.messager.alert('提示','请选择结算数据！','warning');
+        }
+    }
+
+    function saveOtherDeductionsAmount(row){
+        let _permissionsSettlement = $("#permissionsSettlement").val();
+        if (_permissionsSettlement == 'true'){
+            $(".settlement_dlg_div").removeClass("hide");
+            $("#settlementDlg").dialog({
+                title: '其他扣除项',
+                width: 400,
+                height:380,
+                closed: true,
+                cache: false,
+                modal: false,
+                buttons:[{
+                    width: 68,
+                    height: 28,
+                    text:'确定',
+                    handler:function(){
+                        let value = $("#otherDeductionsAmount").numberbox('getValue');
+                        if (!value){
+                            $.messager.alert('提示','请输入其他扣除项金额！','warning');
+                            return;
+                        }
+                        $.modal.loading("正在更新其他扣除项，并重新结算...");
+                        var data = {
+                            'id': row.id,
+                            'otherDeductionsAmount': value,
+                        }
+                        $.ajax({
+                            url:_ctx+"/ctr/settlement/saveOtherDeductionsAmount",
+                            async:false,
+                            type:"POST",
+                            dateType: "json",
+                            contentType: 'application/json',
+                            data: JSON.stringify(data),
+                            success:function(data){
+                                var rObj = eval(data);
+                                if(rObj.success){
+                                    $.messager.show({
+                                        title : 'Tip',
+                                        msg : '其他扣除项更新成功!',
+                                        timeout : 2000,
+                                        height:120,
+                                        showType : 'show'
+                                    });
+                                    $('#tt').datagrid('reload');
+                                    $('#tt').datagrid('unselectAll');
+                                    $('#tt').datagrid('clearChecked');
+                                }else{
+                                    $.messager.alert('提示',rObj.failure,'warning');
+                                }
+                            }
+                        })
+                        $("#settlementDlg").dialog('close');
+                        $.modal.closeLoading();
+                    }
+                },{
+                    width: 68,
+                    height: 28,
+                    text:'关闭',
+                    handler:function(){
+                        $("#settlementDlg").dialog('close');
+                    }
+                }]
+            });
+            $("#settlementDlg").dialog('open');
+            $('.panel-tool').addClass("hide");
+        }
+    }
+
+    /*  导出Excel表格 */
+    function exportExcel(){
+        $('#searchForm').form('submit', {url:_ctx+"/ctr/settlement/exportExcel"});
+    }
+
+    //格式化时间
+    function forMateDate(date){
+        let newDate=/\d{4}-\d{1,2}-\d{1,2}/g.exec(date)
+        return newDate;
+    }
+    //保留两位小数
+    function formateNumTon(num, row, index) {
+        if (num) {
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return num.join(".");
+        } else {
+            return num;
+        }
+    }
+    function formateNumTon1(num, row, index) {
+        if (num) {
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return '<span class="contract-btn contract-btn-9">' + num.join(".") + '</span>';
+        } else {
+            return '<span class="contract-btn contract-btn-9">' + 0 + '</span>';
+        }
+    }
+    function formateNumTon2(num, row, index) {
+        if (num) {
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return '<span class="contract-btn contract-btn-2">' + num.join(".") + '</span>';
+        } else {
+            return '<span class="contract-btn contract-btn-2">' + 0 + '</span>';
+        }
+    }
+    //保留三位小数
+    function formateNumTom(num, row, index) {
+        if (num) {
+            num = parseFloat(num).toFixed(3).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return num.join(".");
+        } else {
+            return num;
+        }
+    }
+
+    // 只显示年月，不显示日
+    var intiMonthBox = function(id){
+        var db = $('#'+id);
+        db.datebox({
+            onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                span.trigger('click'); //触发click事件弹出月份层
+                if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                    tds = p.find('div.calendar-menu-month-inner td');
+                    tds.click(function (e) {
+                        e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                        var year = /\d{4}/.exec(span.html())[0]//得到年份
+                            , month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+                        db.datebox('hidePanel')//隐藏日期对象
+                            .datebox('setValue', year + '-' + month); //设置日期的值
+                    });
+                }, 0);
+                yearIpt.unbind();//解绑年份输入框中任何事件
+            },
+            parser: function (s) {
+                if (!s) return new Date();
+                var arr = s.split('-');
+                return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+            },
+            formatter: function (d) {
+                var currentMonth = (d.getMonth()+1);
+                var currentMonthStr = currentMonth < 10 ? ('0' + currentMonth) : (currentMonth + '');
+                return d.getFullYear() + '-' + currentMonthStr;
+            }
+        });
+        var p = db.datebox('panel'), //日期选择对象
+            tds = false, //日期选择对象中月份
+            yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+            span = p.find('span.calendar-text'); //显示月份层的触发控件
+    }
+
+</script>
+</body>
+</html>

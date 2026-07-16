@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>赊销业务提成计算明细表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 80px;">业务类型:</label>
+				<input id="buType" name="buType" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">合同号:</label>
+				<input id="contractNo" name="contractNo" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter" >
+				<label style="width: 80px;">销售人员:</label>
+				<input type="text" id="sellMatchUserName" class="control text_padding" name="sellMatchUserName"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">采购人员:</label>
+				<input type="text" id="buyMatchUserName" class="control text_padding" name="buyMatchUserName"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">实际收款日期:</label>
+				<input  id="contractTimeStart" name="contractTimeStart" class="easyui-datebox"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">到:</label>
+				<input  id="contractTimeEnd"  name="contractTimeEnd" class="easyui-datebox" ></input>
+			</p>
+
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml10" onclick="exportExcel()">导出</a>
+
+			<input type="hidden" name="searchType" id="refreshColumns" value = "U"></input>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+</div>
+<script type="text/javascript" th:inline="none">
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/credit/findMatchUserProfit",
+			columns:[[
+				{field:'businessTypeDesc', title: '业务类型', width: 80},
+				{field:'contractNo',title:'合同号', width:120},
+				{field:'companyName',title:'合同客户', width:200},
+			    {field:'sellMatchUserName',title:'销售人员', width:80},
+				{field:'buyMatchUserName',title:'采购人员', width:80},
+				{field:'totalNumber',title:'合同数量', align:"right", width:80,formatter:formateNumTom},
+				{field:'buyPrice',title:'采购单价', align:"right", width:100,formatter:formateNumTon},
+				{field:'sellPrice',title:'销售单价', align:"right", width:100,formatter:formateNumTon},
+				{field:'sellTotalAmount',title:'销售总额', align:"right", width:100,formatter:formateNumTon},
+				{field:'buyTotalAmount',title:'采购总额', align:"right", width:100,formatter:formateNumTon},
+				{field:'payDate',title:'付款日期', align:"right", width:100,formatter:forMateDate},
+				{field:'receiveDate',title:'实际收款日期', align:"right", width:100,formatter:forMateDate},
+				{field:'appointPayDate',title:'约定付款日期', align:"right", width:100,formatter:forMateDate},
+				{field:'confirmReceiptDate',title:'实际收货日期', align:"right", width:100,formatter:forMateDate},
+				{field:'creditCycle',title:'金融服务账期', align:"right", width:100},
+				{field:'financialServiceAmount',title:'金融服务费', align:"right", width:80,formatter:formateNumTon},
+				{field:'transportAmount',title:'运输费', align:"right", width:80,formatter:formateNumTon},
+				{field:'warehouseAmount',title:'仓储费', align:"right", width:80,formatter:formateNumTon},
+				{field:'deliveryFee',title:'出库费', align:"right", width:80,formatter:formateNumTon},
+				{field:'breachDay',title:'逾期天数', align:"right", width:80},
+				{field:'breachAmount',title:'逾期罚息', align:"right", width:80,formatter:formateNumTon},
+				{field:'insuranceRate',title:'保险税率', align:"right", width:80},
+				{field:'vatSpreadAmount',title:'增值税税后差价', align:"right", width:100,formatter:formateNumTon},
+				{field:'vatAmount',title:'增值税', align:"right", width:80,formatter:formateNumTon},
+				{field:'printAmount',title:'印花税', align:"right", width:80,formatter:formateNumTon},
+				{field:'taxesSurchargesAmount',title:'税金及附加', align:"right", width:100,formatter:formateNumTon},
+				{field:'afterTaxSpreadAmount',title:'税后差价收入', align:"right", width:100,formatter:formateNumTon},
+				{field:'sellHeadCommissionAmount',title:'销售团队负责人分成', align:"right", width:120,formatter:formateNumTon},
+				{field:'buyHeadCommissionAmount',title:'采购中心副总经理', align:"right", width:120,formatter:formateNumTon},
+				{field:'sellMatchAmount',title:'销售人员分成', align:"right", width:100,formatter:formateNumTon},
+				{field:'buyMatchAmount',title:'采购人员分成', align:"right", width:100,formatter:formateNumTon},
+			]]
+		});
+
+	});
+	/*  导出Excel表格 */
+	 function exportExcel(){
+     	$('#searchForm').form('submit', {url:_ctx+"/rpt/credit/exportExcel"});
+	 }
+
+	//格式化时间
+	function forMateDate(date){
+		let newDate=/\d{4}-\d{1,2}-\d{1,2}/g.exec(date)
+		return newDate;
+	}
+	//保留两位小数
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+	//保留三位小数
+	function formateNumTom(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+
+	// 只显示年月，不显示日
+	var intiMonthBox = function(id){
+		var db = $('#'+id);
+		db.datebox({
+			onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+				span.trigger('click'); //触发click事件弹出月份层
+				if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+					tds = p.find('div.calendar-menu-month-inner td');
+					tds.click(function (e) {
+						e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+						var year = /\d{4}/.exec(span.html())[0]//得到年份
+								, month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+						db.datebox('hidePanel')//隐藏日期对象
+								.datebox('setValue', year + '-' + month); //设置日期的值
+					});
+				}, 0);
+				yearIpt.unbind();//解绑年份输入框中任何事件
+			},
+			parser: function (s) {
+				if (!s) return new Date();
+				var arr = s.split('-');
+				return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+			},
+			formatter: function (d) {
+				return d.getFullYear() + '-' + (d.getMonth() + 1);
+			}
+		});
+		var p = db.datebox('panel'), //日期选择对象
+				tds = false, //日期选择对象中月份
+				yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+				span = p.find('span.calendar-text'); //显示月份层的触发控件
+	}
+
+</script>
+</body>
+</html>

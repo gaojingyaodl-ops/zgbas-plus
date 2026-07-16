@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" style="width: 100%;height: 100%">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport">
+    <link th:href="@{/static/favicon.ico}" rel="shortcut icon" type="image/png" />
+	<link th:href="@{/static/favicon.ico}" rel="icon" type="image/png" />
+    <title>供应链核心管理平台</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/css/registLogin.css?v=3}">
+	<script th:src="@{/static/jquery/jquery.min.js}" type="text/javascript"></script>
+	<script th:src="@{/static/jquery/jquery.form.js}" type="text/javascript"></script>
+	<script th:src="@{/static/jquery/jquery-migrate-1.2.1.min.js}" type="text/javascript"></script>
+	<script th:src="@{/static/jquery-validation/1.10.0/jquery.validate.min.js}" type="text/javascript"></script>
+	<script th:src="@{/static/jquery-validation/1.10.0/messages_bs_zh.js}" type="text/javascript"></script>
+</head>
+<body>
+<div>
+<div style="text-align: center;margin-bottom:-50px;margin-top:10%;">
+    <img th:src="@{/static/images/login/loginlogonew.svg}" alt="logo" class="logo" style="width: 187px;height: 42px">
+</div>
+<div class="Login">
+	<div class="login_div">
+		<div class="login_top">
+			<span class="">[[${g_enterpriseName}]]</span>
+		</div>
+		<!--账号登录-->
+		<div class="accont_login">
+			<form id="loginForm" th:action="@{/login}" method="post" class="form-horizontal">
+				<div class="div_list clearFix">
+					<div class="span_left float_left"> <img th:src="@{/static/images/login/loginuser.png}"></div>
+					<div class="login_user float_left">
+						<input type="text" id="username" name="username"  th:value="${username}" placeholder="请输入登录名" class="input-medium required login_font"/>
+						<span class="placeholder">请输入登录名</span>
+						<!-- <span class="span_show">登录名错误</span> -->
+						<i class="i_cha" id="cha1"></i>
+					</div>
+				</div>
+				<div class="div_list clearFix">
+					<div class="span_left float_left"><div class="span_left float_left"> <img th:src="@{/static/images/login/loginpassword.png}"></div></div>
+					<div class="login_password float_left">
+						<input type="password" id="password" name="password" placeholder="请输入密码" class="input-medium required login_font"/>
+						<span class="placeholder">请输入密码</span>
+						<!-- <span class="span_show">密码错误</span> -->
+						<i class="i_cha" id="cha2"></i>
+					</div>
+				</div>
+				<div class="login_tip clearFix">
+					<div class="float_left">
+						<label class="checkbox" for="rememberMe">记住我</label>
+						<input type="checkbox" id="rememberMe" name="rememberMe" class="float_left"/>
+						<span style="color: #ff4d4d;font-size: 12px;margin-left: 5px" th:text="${info}" id="info"></span>
+					</div>
+					<!-- <span class="float_right colorLan cursor">忘记密码?</span> -->
+				</div>
+				<div class="login_button cursor"><!--可选状态添加login_on-->
+					<span>登 录</span>
+				</div>
+			</form>
+		</div>
+		<!-- <div class="login_bot">
+			<span class="cursor">去注册!</span>
+		</div> -->
+	</div>
+</div>
+</div>
+<script type="text/javascript">
+$(function(){
+	$(".login_button").on('click',function(){
+		doLogin();
+	})
+	document.onkeydown = function (event){
+	　	if (event.keyCode==13) //回车
+	　　　　	doLogin();
+	};
+	// $(".login_button").hover(
+	// 	function(){$(".login_button").removeClass('cursor').addClass('login_on');},
+	// 	function(){$(".login_button").removeClass('login_on').addClass('cursor');}
+	// )
+	$("#cha1").on('click',function(){
+		$("#username").val('');
+	})
+	$("#cha2").on('click',function(){
+		$("#password").val('');
+	})
+	$("#username,#password").bind('focus',function(){
+		$("#info").html('');
+	})
+})
+function doLogin(){
+	var _form = $("#loginForm");
+	var flag = true;
+	_form.find("input").each(function(){
+		var value = $(this).val();
+		if(value ==''){
+			flag = false;
+		}
+	})
+	if(flag){
+		_form.submit();
+	}
+}
+	// // 用户名称、密码输入框 边框样式
+	$(".div_list #username").on("focus",function () {
+		$('.div_list:first').addClass('div_list_border')
+	})
+	$(".div_list #username").on("blur",function () {
+		$('.div_list:first').removeClass('div_list_border')
+	})
+
+	$(".div_list #password").on("focus",function () {
+		$('.div_list:last').addClass('div_list_border')
+	})
+	$(".div_list #password").on("blur",function () {
+		$('.div_list:last').removeClass('div_list_border')
+	})
+</script>
+</body>
+</html>

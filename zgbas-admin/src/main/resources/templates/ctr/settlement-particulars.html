@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <style>
+        .form-section-title{
+            display: block;
+            width: 100%;
+            height: 26px;
+            margin-bottom: 15px;
+            color: #46b780;
+        }
+        .form-section-title .approve_text{
+            display: block;
+            width: 100%;
+            height: 26px;
+            line-height: 26px;
+            border-bottom: 1px solid #cbd1e0;
+        }
+    </style>
+</head>
+<div style="padding: 20px;"  region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <input type="hidden" id="settlement_id" th:value="${settlement_id}" />
+    <p class="form-section-title"><span class="approve_text">合同信息</span><i></i></p>
+    <div class="mb6">
+        <p class="yw-table-filter ">
+            <label>合同编号</label>
+            <input name="sellContractNo" id="sellContractNo" th:value="${entity.sellContractNo}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter ">
+            <label>业务类型</label>
+            <input name="mybusinessType" id="mybusinessType"  type="text" readonly/>
+        </p>
+        <p class="yw-table-filter ">
+            <label>合同日期</label>
+            <input name="contractTime" id="contractTime" th:value="${#dates.format(entity.contractTime,'yyyy-MM-dd')}"  type="text" readonly/>
+        </p>
+        <p class="yw-table-filter ">
+            <label>合同客户</label>
+            <input name="sellCompanyName" id="sellCompanyName" th:value="${entity.sellCompanyName}" type="text" readonly/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>销售人员</label>
+            <input name="sellMatchUserName" id="sellMatchUserName" th:value="${entity.sellMatchUserName}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>采购人员</label>
+            <input name="buyMatchUserName" id="buyMatchUserName" th:value="${entity.buyMatchUserName}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>结算状态</label>
+            <input name="mysettleStatus" id="mysettleStatus"  type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>结算日期</label>
+            <input name="settlementDate" id="settlementDate"  th:value="${#dates.format(entity.settlementDate,'yyyy-MM-dd')}" type="text" readonly/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>合同数量</label>
+            <input name="dealNumber" id="dealNumber" th:value="${entity.dealNumber}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>运输费</label>
+            <input name="transportAmount" id="transportAmount" th:value="${entity.transportAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>仓储费</label>
+            <input name="warehouseAmount" id="warehouseAmount" th:value="${entity.warehouseAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>装卸费</label>
+            <input name="steveDorageAmount" id="steveDorageAmount" th:value="${entity.steveDorageAmount}" type="text" readonly/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>采购单价</label>
+            <input name="buyPrice" id="buyPrice" th:value="${entity.buyPrice}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>销售单价</label>
+            <input name="sellPrice" id="sellPrice" th:value="${entity.sellPrice}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>采购总额</label>
+            <input name="buyTotalAmount" id="buyTotalAmount" th:value="${entity.buyTotalAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>销售总额</label>
+            <input name="sellTotalAmount" id="sellTotalAmount" th:value="${entity.sellTotalAmount}" type="text" readonly/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>付款日期</label>
+            <input name="payFullTime" id="payFullTime" th:value="${#dates.format(entity.payFullTime,'yyyy-MM-dd')}"  type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>实际收款日期</label>
+            <input name="receiveDate" id="receiveDate" th:value="${#dates.format(entity.receiveDate,'yyyy-MM-dd')}"  type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>约定付款日期</label>
+            <input name="appointPayDate" id="appointPayDate"  th:value="${#dates.format(entity.appointPayDate,'yyyy-MM-dd')}"  type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>实际收货日期</label>
+            <input name="confirmReceiptDate" id="confirmReceiptDate" th:value="${#dates.format(entity.confirmReceiptDate,'yyyy-MM-dd')}"  type="text" readonly/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>金融服务账期</label>
+            <input name="financialCreditDays" id="financialCreditDays" th:value="${entity.financialCreditDays}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>金融服务费</label>
+            <input name="financialServiceAmount" id="financialServiceAmount" th:value="${entity.financialServiceAmount}" type="text" readonly/>
+        </p>
+    </div>
+    <p class="form-section-title"><span class="approve_text">结算信息</span><i></i></p>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>逾期天数</label>
+            <input name="breachDay" id="breachDay" th:value="${entity.breachDay}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>逾期罚息</label>
+            <input name="breachAmount" id="breachAmount" th:value="${entity.breachAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>业务员逾期罚息</label>
+            <input name="matchBreachAmount" id="matchBreachAmount" th:value="${entity.matchBreachAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>保险税率</label>
+            <input name="insuranceRate" id="insuranceRate" th:value="${entity.insuranceRate}" type="text" readonly/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>增值税</label>
+            <input name="vatAmount" id="vatAmount" th:value="${entity.vatAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>印花税</label>
+            <input name="printAmount" id="printAmount" th:value="${entity.printAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>税金及附加</label>
+            <input name="taxesSurchargesAmount" id="taxesSurchargesAmount" th:value="${entity.taxesSurchargesAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>其他扣除项费用</label>
+            <input name="otherDeductionsAmount" id="otherDeductionsAmount" th:value="${entity.otherDeductionsAmount}" type="text" readonly/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>增值税税后差价</label>
+            <input name="vatSpreadAmount" id="vatSpreadAmount" th:value="${entity.vatSpreadAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>利润(税后差价收入)</label>
+            <input name="afterTaxSpreadAmount" id="afterTaxSpreadAmount" th:value="${entity.afterTaxSpreadAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>已结算金额</label>
+            <input name="hasSettlementAmount" id="hasSettlementAmount" th:value="${entity.hasSettlementAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>待结算金额</label>
+            <input name="noneSettlementAmount" id="noneSettlementAmount" th:value="${entity.noneSettlementAmount}" type="text" readonly/>
+        </p>
+    </div>
+    <div class="mb6 mb20">
+        <p class="yw-table-filter">
+            <label>采购人员分成</label>
+            <input name="buyMatchAmount" id="buyMatchAmount" th:value="${entity.buyMatchAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>采购团队负责人分成</label>
+            <input name="buyHeadCommissionAmount" id="buyHeadCommissionAmount" th:value="${entity.buyHeadCommissionAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>销售人员分成</label>
+            <input name="sellMatchAmount" id="sellMatchAmount" th:value="${entity.sellMatchAmount}" type="text" readonly/>
+        </p>
+        <p class="yw-table-filter">
+            <label>销售团队负责人分成</label>
+            <input name="sellHeadCommissionAmount" id="sellHeadCommissionAmount" th:value="${entity.sellHeadCommissionAmount}" type="text" readonly/>
+        </p>
+    </div>
+    <div class="yw-menu-section tbw popup-tab "  id="settlementParticulars"></div>
+</div>
+<script type="text/javascript" th:inline="javascript">
+    var entity = [[${entity}]];
+    var _settlementStatusJson = [{id:'',text:'--全部--'},{id:'0',text:'未确认'},{id:'1',text:'已确认'},{id:'2',text:'已审核'},{id:'3',text:'已结算'},];
+    $(function(){
+        var str = "";
+        if (entity.businessType == "ZY-BB" && entity.matchCreditFlg == true){
+            str = "赊销";
+        }else if (entity.businessType == "ZY-BB" && entity.matchCreditFlg == false){
+            str = "代采";
+        }else if(entity.businessType == "ZY-XS") {
+            str = "自营";
+        }
+        $("#mybusinessType").val(str)
+        var res="";
+        var seStatus =entity.settleStatus
+        if (seStatus == '0'||seStatus == '1'||seStatus == '2'||seStatus == '3'){
+            res = Convert.findValueByKey(_settlementStatusJson,"id",seStatus,"text")
+        }else{
+            seStatus = 0
+            res = Convert.findValueByKey(_settlementStatusJson,"id",seStatus,"text")
+        }
+        $("#mysettleStatus").val(res)
+        // 获取表格头部元素
+        var _url = _ctx+"/ctr/settlement/detailPage/"+entity.id;
+        $('#settlementParticulars').datagrid({
+            pageSize:50,
+            rownumbers:true,
+            url:_url,
+            pagination:false,
+            columns:[ [
+                {field:'afterTaxSpreadAmount',title:'总金额',align:'right',width:85,formatter:formateNumTon},
+                {field:'buyMatchAmount',title:'采购人员分成', align:'right', width:120,formatter:formateNumTon},
+                {field:'sellMatchAmount',title:'销售人员分成', align:'right', width:120,formatter:formateNumTon},
+                {field:'buyHeadCommissionAmount',title:'采购团队负责人分成', align:'right', width:150,formatter:formateNumTon},
+                {field:'sellHeadCommissionAmount',title:'销售团队负责人分成', align:'right', width:150,formatter:formateNumTon},
+                {field:'settlementType',title:'提成类型', width:120,align:'left',formatter:function(value, row, index){
+                        var str = "";
+                        if (row.id){
+                            if (value == '0'){
+                                str = "<span>收货款</span>";
+                            }else if (value == '1'){
+                                str = "<span>收逾期罚息</span>";
+                            }else {
+                                str = "<span>返还逾期罚息</span>";
+                            }
+                            return str;
+                        }
+                    }},
+                {field:'settlementStatus',title:'提成状态', width:100,align:'center',formatter:function(value, row, index){
+                        var str = "";
+                        if (row.id){
+                            if (value == '0'){
+                                str = "<span>未结算</span>";
+                            }else{
+                                str = "<span>已结算</span>";
+                            }
+                            return str;
+                        }
+                    }}
+            ]],
+            onLoadSuccess:function(data){
+
+            }
+        });
+
+    })
+    function formateNumTon(num, row, index) {
+        if (num) {
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return num.join(".");
+        } else {
+            return num;
+        }
+    }
+</script>

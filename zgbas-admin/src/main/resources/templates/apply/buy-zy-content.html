@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" id="inputForm" border="false" fit="true">
+	<div region="north" border="false" method="post"  style="margin-bottom:10px;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" id="entityStatus" th:value="${entity.status}" />
+		<input type="hidden" id="applyType" name="applyType" th:value="${entity.applyType}" />
+		<input type="hidden" id="businessType" name="businessType" th:value="${entity.businessType}"/>
+		<input type="hidden" id="defaultFlg" th:value="${defaultFlg}"/>
+		<div id="btn" class="add-btn" th:if="${entity.status eq 'N'}">
+			<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onClick="selectZYSell()">选择</a>
+		</div>
+		<table id="relaTable" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+	</div>
+
+	<div region="center" id="inputForm" style="position: relative;overflow:hidden;" fit="true" border="false">
+		<!--  <input type="hidden" id="canApproveEdit" th:value="${psv.canApproveEdit}"/>-->
+		<input type="hidden" id="companyId" name="companyId" th:value="${entity.companyId}"/>
+		<input type="hidden" name="status" id="status" th:value="${entity.status}"/>
+		<input type="hidden" id="contractId" th:value="${entity.contractId}"/>
+		<input type="hidden" name="sellContractId" id="sellContractId" th:value="${entity.sellContractId}"/>
+		<p class="p_text">
+			<th:block th:replace="~{tags/apply :: contractNo (${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<span class="input-colspan">
+				<label>合同总价(元):</label>
+				<input id="totalAmount" type="text" th:value="${entity.totalAmount}" readonly="readonly"/>
+			</span>
+			<span class="input-colspan">
+				<label>到货日期:</label>
+				<input name="arrivalTime" id="arrivalTime" class="easyui-datebox" required="required" th:value="${#dates.format(entity.arrivalTime,'yyyy-MM-dd')}" />
+				<input name="arrivalTimeExt" id="arrivalTimeExt" th:value="${entity.arrivalTimeExt}"/>
+			</span>
+			<span class="input-colspan hide" id="br">
+				<label>定金比例:</label>
+				<input id="bondRate" type="text" th:value="${entity.bondRate}"/>
+				<input type="hidden" name="bondRate" th:value="${entity.bondRate}"/>
+			</span>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan2">
+				<label>我方抬头:</label>
+				<input name="ourCompanyName" id="ourCompanyName" readonly="readonly" type="text" required="required" th:value="${entity.ourCompanyName}"/>
+			</span>
+			<span class="input-colspan">
+				<label>合同属性:</label>
+				<input name="contractAttr" id="contractAttr" type="text"  required="required" th:value="${entity.contractAttr}"></input>
+			</span>
+			<th:block th:replace="~{tags/apply :: deliveryType (${#maps.containsKey(psv.mapEdit, 'deliveryType')}?${psv.mapEdit['deliveryType'].require},${#maps.containsKey(psv.mapEdit, 'deliveryType')}?${psv.mapEdit['deliveryType'].edit && psv.hasEdit}:${ psv.hasEdit},${deliveryTypeJson})}"/>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>开票日期:</label>
+				<input name="invoiceDate" id="invoiceDate"  type="text" th:value="${entity.invoiceDate}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>业务类型:</label>
+				<input type="text" th:value="${business}" readonly="readonly"></input>
+			</span>
+			<span class="input-colspan">
+				<label>质量标准:</label>
+				<input name="qualityStandard" id="qualityStandard"  type="text" th:value="${entity.qualityStandard}"></input>
+			</span>
+			<th:block th:replace="~{tags/apply :: deliveryMode (${#maps.containsKey(psv.mapEdit, 'deliveryMode')}?${psv.mapEdit['deliveryMode'].require},${#maps.containsKey(psv.mapEdit, 'deliveryMode')}?${psv.mapEdit['deliveryMode'].edit && psv.hasEdit}:${ psv.hasEdit},${deliveryModeJson},'结算方式')}"/>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan4">
+				<label>付款方式:</label>
+				<input name="payKind" id="payKind"  type="text" th:value="${entity.payKind}"></input>
+				<input name="payKindCode" id="payKindCode" type="hidden" th:value="${entity.payKindCode}"></input>
+			</span>
+		</p>
+		<p class="p_text">
+		    <span class="input-colspan2">
+				<label>交货地点:</label>
+				<input required="required" name="deliveryAddr" id="deliveryAddr" type="text" th:value="${entity.deliveryAddr}"/>
+			</span>
+			<span class="input-colspan">
+				<label>定金(元):</label>
+				<input name="bondAmount" id="bondAmount" type="text" th:value="${entity.bondAmount}"/>
+			</span>
+			<span class="input-colspan">
+				<label>交货电话:</label>
+				<input name="deliveryPhone" id="deliveryPhone" type="text" th:value="${entity.deliveryPhone}"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan2">
+				<label>补充条款:</label>
+				<input name="extraTerm" type="text" id="extraTerm" th:value="${entity.extraTerm}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>运输费(元):</label>
+				<input name="transportAmount" id="transportAmount" type="text" th:value="${entity.transportAmount}"/>
+			</span>
+			<span class="input-colspan">
+				<label>仓储费(元):</label>
+				<input name="warehouseAmount" id="warehouseAmount" type="text" th:value="${entity.warehouseAmount}"/>
+			</span>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>付定金日期:</label>
+				<input name="payBondTime" id="payBondTime" class="easyui-datebox" required="required" th:value="${#dates.format(entity.payBondTime,'yyyy-MM-dd')}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>付全款日期:</label>
+				<input name="payFullTime" id="payFullTime" class="easyui-datebox" required="required" th:value="${#dates.format(entity.payFullTime,'yyyy-MM-dd')}" ></input>
+			</span>
+			<th:block th:replace="~{tags/apply :: payType (${#maps.containsKey(psv.mapEdit, 'payType')}?${psv.mapEdit['payType'].require},${#maps.containsKey(psv.mapEdit, 'payType')}?${psv.mapEdit['payType'].edit && psv.hasEdit}:${ psv.hasEdit},${payTypeJson},'')}"/>
+			<span class="input-colspan">
+				<label></label>
+				<span onchange="$(this).toggleClass('on')" th:class="${entity.longFlg} ? 'ckbox on' : 'ckbox'">
+					<input type="checkbox" th:checked="${entity.longFlg}" onchange="$('#longFlg').val($(this).attr('checked')=='checked');"/>
+            		<span>长约</span>
+           			<input type="hidden" name="longFlg" th:value="${entity.longFlg}" id="longFlg" />
+				</span>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan2">
+				<label>供货商名称:</label>
+				<input name="companyName" id="companyName" type="text" required="required" th:value="${entity.companyName}"/>
+			</span>
+			<span class="input-colspan2">
+				<label>收款银行:</label>
+				<input name="receiveBank" id="receiveBank" type="text" th:value="${entity.receiveBank}"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan2">
+				<label>联系地址:</label>
+				<input name="contactAddr" id="contactAddr" type="text" th:value="${entity.contactAddr}"/>
+			</span>
+			<span class="input-colspan2">
+				<label>收款账号:</label>
+				<input name="receiveAccount" id="receiveAccount" class="control text_padding" type="text" th:value="${entity.receiveAccount}"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>联系人:</label>
+				<input name="contactName" id="contactName" type="text" th:value="${entity.contactName}"/>
+			</span>
+			<span class="input-colspan">
+				<label>联系电话:</label>
+				<input name="contactPhone" id="contactPhone" type="text" th:value="${entity.contactPhone}"/>
+			</span>
+			<span class="input-colspan2">
+				<label>备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+			</span>
+		</p>
+	</div>
+
+	<div class="editForm">
+			<p>
+				<span class="upload-btn" id="btn_fileId">
+				 	<i></i>
+                	<span>附件上传</span>
+            	</span>
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+	<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640">
+</div>
+<script type="text/javascript" th:inline="javascript">
+var lastIndex;
+var _factoryJson = eval('[(${factoryJson})]');
+var _productTypeJson = eval('[(${productTypeJson})]');
+var _brandJson = eval('[(${brandJson})]');
+var _productTypeJson = eval('[(${productTypeJson})]');
+var _payTypeJson = eval('[(${payTypeJson})]');
+var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+var _warehouseJson = eval('[(${warehouseJson})]');
+var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+var _deliveryModeJson = eval('[(${deliveryModeJson})]');
+var _contractAttrJson= eval('[(${contractAttr})]');
+var _arrivalTimeExtJson = eval('[(${arrivalTimeExtJson})]');
+var _qualityStandardJson = eval('[(${qualityStandardJson})]');
+var _payModeJson = eval('[(${payModeJson})]');
+var _invoiceDateJson = eval('[(${invoiceDateJson})]');
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/buy/updateFileId',[[${param.hasEditFile}]]);
+var hasEdit = [[${psv.hasEdit}]];
+var maxNumberArray = [];
+var defaultFlg = [[${defaultFlg}]];
+$(function(){
+	$('.easyui-linkbutton').linkbutton();
+	_beforSaveOper = true;
+	var _curStatus = $("#entityStatus").val();
+	var _flg = defaultFlg;
+	var _url = _ctx+"/apply/productDetail/productList?search_EQS_applyType="+$("#applyType").val()+"&search_EQL_applyId="+$("#entityId").val();
+	var colums =[ [
+		{field:'productCd',title:'品名',align:'center',width:150,
+			formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_productTypeJson,"id",value,"text");
+		}},
+		{field:'brandNumber',title:'牌号',align:'center',width:150},
+		{field:'factoryId',title:'厂商',align:'center',width:180,
+			formatter:function(value,row,index){
+				return Convert.findValueByKey(_factoryJson,"id",value,"factoryName");
+		}},
+		{field:'warehouseName',title:'提货/配送仓库',align:'center',width:180},
+		{field:'warehousePos',title:'仓库所在地',align:'center',width:160,
+			formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_bsAreaJson,"id",value,"text");
+		}},
+		{field:'warehousePrice',title:'仓储费/地区单价(元)', width:100,align:'right',hidden:'hidden',editor:{type:'numberbox',options:{validType:'length[1,20]',precision:3}}},
+		{field:'wrapSpecs',title:'包装规格',align:'center',width:120,
+			formatter:function(value,row,index){
+				return Convert.findValueByKey(packingSpecificaJson,"dictCd",value,"dictName");
+		}},
+		{field:'dealNumber',title:'数量(吨)', width:100,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4}},
+			formatter: function (value, row, index) {
+                if (row != null) {
+                    return parseFloat(value).toFixed(3);
+                }
+		}},
+		{field:'dealPrice',title:'单价(元)', width:100,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2}},
+			formatter: function (value, row, index) {
+                if (row != null) {
+                    return parseFloat(value).toFixed(2);
+                }
+		}},
+		{field:'totalPrice',title:'总价(元)', width:120,align:'right',editor:{type:'numberbox',options:{required:'true' ,readonly:'true',validType:'length[1,20]',precision:2}},
+			formatter: function (value, row, index) {
+                if (row != null) {
+                    return parseFloat(value).toFixed(2);
+                }
+		}},
+		{field:'option',title:'操作', width:120,hidden:true, align:'center',formatter:function(value, row, index){
+			var str = '<img onclick="remove(\''+row.id+'\',event,this)" style="cursor:pointer;width:16px;hight:18px" src="/static/images/icon_delete.png"/>';
+	        return str;
+		}}
+	]];
+	$('#w_contract_choose').window({
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		title:"请选择质押销售"
+	});
+	if (_industry.indexOf('SL')==-1){
+		for(var i in colums[0]){
+			var col =colums[0][i];
+			if (col.field=='brandNumber' || col.field=='factoryId'){
+				if (col.editor){
+					col.editor.options.required = false;
+				}
+				col.hidden = true;
+			}
+
+		}
+	}
+
+	if($("#applyType").val()=="A"){
+		$('#btn').addClass('hide');
+	}
+
+	$('#relaTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:colums,
+		//toolbar:'#btn',
+		onBeginEdit:function(index,row){
+			//新增采购申请默认属性为在途P
+			row.productAttr = "P";
+			//预售采购设置最大值
+			if(contractId){
+				var ed_curNumber = $('#relaTable').datagrid('getEditor', {index:index,field:'dealNumber'});
+				var maxNumber = maxNumberArray[index]
+				$(ed_curNumber.target).numberbox({max:maxNumber,min:0});
+			}else{
+			};
+			curOper(index,row);
+		},
+		onDblClickRow:function(index,row,field){
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				//进入可编辑状态
+				$('#relaTable').datagrid('endEdit', lastIndex);
+				$('#relaTable').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("relaTable",field,lastIndex);
+			}
+		},
+		onClickCell:function(index,field){
+			var rows =$('#relaTable').datagrid('getData').rows;
+			var row =rows[index];
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				if (lastIndex != index){
+					$('#relaTable').datagrid('endEdit', lastIndex);
+					$('#relaTable').datagrid('beginEdit', index);
+				}
+				lastIndex = index;
+				Convert.focusEditor('relaTable',field,lastIndex);
+			}
+		},
+		onClickRow:function(index,row){
+			lastIndex = index;
+		},
+		onLoadSuccess:function(data){
+			//预售采购
+			if(contractId){
+				//newRow(contractId);
+			}else{
+				if(_curStatus && _curStatus=='N'||_curStatus=='B'){
+					if(data.total==0){
+						var new_row = {id:0};
+						$('#relaTable').datagrid('appendRow', new_row);
+						var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+						lastIndex = rowIndex;
+						$('#relaTable').datagrid('beginEdit', rowIndex);
+					}else{
+						getTotalAmount();
+					}
+				}else{
+				}
+				if (data.rows.length>0){
+
+					var _productCode = data.rows[0].productCd
+					if(_productCode && _productCode.indexOf("SL")>=0){
+//	 					$('#relaTable').datagrid('showColumn', 'brandNumber');
+//	 					$('#relaTable').datagrid('showColumn', 'factoryId');
+					}else{
+
+//	 					$('#relaTable').datagrid('hideColumn', 'brandNumber');
+//	 					$('#relaTable').datagrid('hideColumn', 'factoryId');
+					}
+
+				}
+			}
+
+	}
+
+	});
+
+	if(hasEdit){
+		$('#relaTable').datagrid('showColumn', 'option');
+		$('#productType').combobox({
+			data:_productTypeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			onLoadSuccess:function(){
+				$(this).combobox("setValue","P");
+			}
+		});
+
+
+		$('#arrivalTime').datebox({
+			 required: true,
+			 editable: false
+		});
+		$('#deliveryAddr').textbox({
+			required: true
+		});
+		$('#receiveBank,#receiveAccount').textbox({
+			required: true
+		});
+		$('#payBondTime').datebox({
+			editable:false,
+			onChange : function(newValue,oldValue){
+				var dateFullTime = strDateForDate($('#payFullTime').datebox('getValue')).getTime();
+				var dateFullTimeValue = $('#payFullTime').datebox('getValue');
+				var dateBondTime = strDateForDate(newValue).getTime();
+				 $('#payFullTime').datebox().datebox('calendar').calendar({
+						validator: function(date){
+			                return strDateForDate(newValue) <=date;//<=
+			            }
+					 });
+				 if(dateBondTime > dateFullTime){
+					 $('#payFullTime').datebox('setValue', newValue);
+				}  else {
+					$('#payFullTime').datebox('setValue', dateFullTimeValue);
+				}
+				var value1 = formattData(newValue);
+				var value2 = formattData(oldValue);
+				for(var i=0;i<_payModeJson.length;i++){
+					if(i != 1){
+						_payModeJson[i].content = _payModeJson[i].content.replace(value2, value1);
+					}
+				}
+				refreshPayKindJson();
+			}
+		});
+
+		$('#payFullTime').datebox({
+			editable:false,
+			onChange : function(newValue,oldValue){
+				var value1 = formattData(newValue);
+				var value2 = formattData(oldValue);
+				_payModeJson[1].content = _payModeJson[1].content.replace(value2, value1);
+				refreshPayKindJson();
+			}
+		});
+		//开票日期
+		$('#invoiceDate').combobox({
+			data:_invoiceDateJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false
+		});
+		//合同属性
+		$('#contractAttr').combobox({
+			data:_contractAttrJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false,
+			onLoadSuccess:function(){
+				if(!$(this).combobox('getValue')){
+					$(this).combobox("setValue","N");
+					/* var curr_time = new Date();
+					$("#arrivalTime").datebox('setValue',myformatter(curr_time)); */
+				}
+
+			}
+		});
+
+		//提货方式
+		$('#deliveryType').combobox({
+			data:_deliveryTypeJson,
+			required: true,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto"
+		});
+
+		$('#arrivalTimeExt').combobox({
+			data:_arrivalTimeExtJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false,
+			onLoadSuccess:function(){
+				var value = $(this).combobox('getValue');
+				if(!value){
+					$(this).combobox("setValue","LR");
+				}
+			},
+			onSelect:function(record){
+			 	if(record.dictCd == 'K'){
+			 		$('#arrivalTime').datebox('clear');
+			 		$('#arrivalTime').datebox({required:false});
+			 		$("#inputForm").find("input[name='arrivalTime']").parent().addClass("hide");
+
+			 		$("#deliveryMode").combobox({
+						hasDownArrow:false,
+						readonly:true,
+						onLoadSuccess:function(){
+							$(this).combobox('setValue','XKHH');
+						}
+				 	});
+			 	}else{
+			 		var _value = $('#arrivalTime').datebox('getValue');
+			 		$('#arrivalTime').datebox({required:true});
+			 		$('#arrivalTime').datebox('setValue',_value);
+			 		var deliveryMode = $('#deliveryMode').combobox('getValue');
+			 		$("#deliveryMode").combobox({
+				 		data:_deliveryModeJson,
+						hasDownArrow:true,
+						readonly:false,
+						editable:false
+				 	});
+				 	$('#deliveryMode').combobox('setValue',deliveryMode);
+			 		//$('#arrivalTime').parent().removeClass("hide");
+			 		$("#inputForm").find("input[name='arrivalTime']").parent().removeClass("hide");
+
+			 	}
+		 	}
+		});
+
+		// 质量标准
+		$('#qualityStandard').combobox({
+			data:_qualityStandardJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			readonly:true,
+			hasDownArrow:false
+			/* onLoadSuccess:function(data){
+				 var value = $(this).val();
+				if (!value){
+					$(this).combobox('setValue',data[0].dictCd);
+				}
+			} */
+		});
+
+		$('#transportAmount,#warehouseAmount').numberbox({
+		    min:0,
+		    precision:3,
+		    required:true
+		});
+
+		//自定义交货电话的验证规则
+		$.extend($.fn.validatebox.defaults.rules, {
+		    phoneRex: {
+		        validator: function(value){
+			        var rex=/^1[3-8]+\d{9}$/;
+			        var rex2=/^((0\d{2,3})-)(\d{7,8})(-(\d{3,}))?$/;
+			        if(rex.test(value)||rex2.test(value)){
+			        	return true;
+			        }else{
+			            return false;
+			        }
+		        },
+		        message: '请输入正确电话或手机格式'
+		    },
+		    bankNameRex:{
+				validator: function(value){
+					var rex =/^[\u4e00-\u9fa5]{0,}$/;
+					if(rex.test(value)){
+						return true;
+					}else{
+						return false;
+					}
+				},
+				message: '请输入正确格式的收款银行'
+			},
+			bankAccountRex:{
+				validator: function(value){
+					var flg = luhnCheck(value);
+					/* if(flg){
+						return true;
+					}else{
+						return false;
+					} */
+					return true;
+				},
+				message: '请输入正确格式的收款账号'
+			}
+		});
+
+		$('#deliveryPhone').validatebox({
+		    validType: 'phoneRex'
+		});
+		/* $('#receiveBank').validatebox({
+			validType: 'bankNameRex'
+		}); */
+		/* $('#receiveAccount').validatebox({
+			validType: 'bankAccountRex'
+		}); */
+
+		$('#bondAmount,#totalAmount').numberbox({
+		    min:0,
+		    precision:2
+		});
+		var _companyId = $('#companyId').val();
+		if(!_companyId){
+			_companyId = 0;
+		}
+		$('#payKind').combobox({
+		});
+		$('#companyName').combobox({
+			url:_ctx+"/bs/company/listMyCompany/"+ _companyId,
+			mode:'remote',
+			limitToList:true,
+			valueField:'companyName',
+			textField:'text',
+			panelHeight:300,
+			readonly:true,
+			hasDownArrow:false,
+			required:true,
+			formatter: function(row){
+				var text = row.text;
+				var myFlag = row.myFlag;
+				if (myFlag!=true){
+					text = '<span style="color:#ccc">'+text+'</span>';
+				}
+				return text;
+			},
+			onSelect : function(node){
+				//是否是我的企业
+				var myFlag = node.myFlag;
+				var bankName = node.bankName;
+				var bankAccount = node.bankAccount;
+				if (myFlag!=true){
+					setTimeout(function () { $("#companyName").combobox("clear"); }, 1)
+				}else{
+					var _id = node.id;
+					$("#companyId").val(_id);
+					var _remark = "";
+					var receiveAccount = $('#receiveAccount').textbox('getValue');
+					var receiveBank = $('#receiveBank').textbox('getValue');
+					if (!_flg){
+						bankName = receiveBank;
+						bankAccount = receiveAccount;
+						_flg = true;
+					}
+					if (bankName){
+						_remark = '('+bankName+'，账号：'+bankAccount+')';
+					}else{
+						_remark = company_remark;
+					}
+					if (node.contactName){
+						$("#contactName").val(node.contactName);
+					}else{
+						$("#contactName").val("");
+					}
+					if (node.contactPhone){
+						$("#contactPhone").val(node.contactPhone);
+					}else{
+						$("#contactPhone").val("");
+					}
+					if (node.address){
+						$("#contactAddr").val(node.address);
+					}else{
+						$("#contactAddr").val("");
+					}
+					if (node.bankName){
+						$("#receiveBank").textbox('setValue',bankName);
+					}else{
+						$("#receiveBank").textbox('setValue','');
+					}
+					if (node.bankAccount){
+						$("#receiveAccount").textbox('setValue',bankAccount);
+					}else{
+						$("#receiveAccount").textbox('setValue','');
+					}
+					//格式化付款方式
+					for(var i=0;i<_payModeJson.length;i++){
+						_payModeJson[i].content = _payModeJson[i].content.replace(/\([^\)]*\)/g, _remark);
+					}
+					refreshPayKindJson();
+				}
+			}
+		});
+		if (contract == null || contract == undefined){
+			$('#ourCompanyName').removeAttr('readOnly');
+			$('#ourCompanyName').combobox({
+				data:_ourCompanyJson,
+				valueField:'dictName',
+				textField:'dictName',
+				panelHeight:"auto",
+				readonly:true,
+				required:true,
+				hasDownArrow:false,
+				onLoadSuccess:function(){
+					/* var value = $(this).combobox('getValue');
+					var companyName;
+					if (!value){
+						$('#ourCompanyName').combobox('select', _ourCompanyJson[0].dictName);
+					} */
+				}
+			});
+
+		}
+
+
+		$('#bondAmount').numberbox('textbox').on('blur',function(){
+			 var bondAmount = Number($('#bondAmount').val());
+		     var totalAmount = Number($('#totalAmount').val());
+		     if(bondAmount>totalAmount){
+		    	 $('#bondAmount').numberbox('setValue', totalAmount);
+			  }
+		})
+
+		$('#bondAmount').numberbox({
+			 min:0,
+			 precision:2,
+			 onChange:function(newValue,oldValue){
+				var _datagrid = $('#relaTable');
+				var rows = $('#relaTable').datagrid('getRows');
+				var totalAmount = 0;
+				var _totalPrice=0;
+				for(var i=0; i<rows.length; i++){
+					var _ed_totalPrice =  _datagrid.datagrid('getEditor', {index:i,field:'totalPrice'});
+						_totalPrice=rows[i].totalPrice;
+					if(_ed_totalPrice){
+						 _totalPrice =$(_ed_totalPrice.target).numberbox('textbox').val();
+					}else{
+					}
+					totalAmount = Number(totalAmount) + Number(_totalPrice);
+				}
+
+				if(parseFloat(newValue) > parseFloat(totalAmount)){
+				   newValue = newValue = Number(totalAmount).toFixed(2);;
+			   	   $('#bondAmount').numberbox('setValue', newValue);
+				}
+			   for(var i=0;i<_payModeJson.length;i++){
+				   if (oldValue){
+					   _payModeJson[i].content = _payModeJson[i].content.replace(oldValue+'元', newValue+'元');
+				   }else{
+					   _payModeJson[i].content = _payModeJson[i].content.replace('****元', newValue+'元');
+				   }
+				}
+			   refreshPayKindJson();
+			 }
+		});
+		if (_curStatus=="B"|| _curStatus=="C"){
+			var entityBondAmount = $('#bondAmount').numberbox('getValue');
+			var bondTime = $('#payBondTime').datebox('getValue');
+			var fullTime = $('#payFullTime').datebox('getValue');
+			var beginBondTime = strDateForDate(bondTime);
+			$("#payFullTime").datebox('calendar').calendar({
+				validator:function(date){
+					return beginBondTime <= date;
+				}
+			});
+			var receiveBondTime = formattData(bondTime);
+			var receiveFullTime = formattData(fullTime);
+			var sDate=formattData(myformatter(new Date()));
+			if (entityBondAmount != null && entityBondAmount != "" && entityBondAmount != undefined){
+				for(var i=0;i<_payModeJson.length;i++){
+					 _payModeJson[i].content = _payModeJson[i].content.replace('****元', entityBondAmount+'元');
+					 if(i != 1){
+						_payModeJson[i].content = _payModeJson[i].content.replace(sDate, receiveBondTime);
+					  }
+				}
+				_payModeJson[1].content = _payModeJson[1].content.replace(sDate, receiveFullTime);
+				refreshPayKindJson();
+			}
+		}
+		$('#payKind').combobox({
+			data:_payModeJson,
+			valueField:'serialNumber',
+			textField:'content',
+			panelHeight:"auto",
+			required:true,
+			editable:false,
+			onLoadSuccess:function(){
+				var value = $(this).val();
+				if (!value){
+					$(this).combobox('select',_payModeJson[0].serialNumber);
+				}
+			},
+			onSelect : function(node){
+				var serialNumber = node.serialNumber;
+				$('#payKindCode').val(serialNumber);
+				if(serialNumber == 'DJZF'){
+					$('#bondAmount').numberbox({
+						required:true,
+						readonly:false
+					});
+				}else{
+					$('#bondAmount').numberbox({
+						required:false,
+						readonly:true
+					});
+					$('#bondAmount').numberbox('setValue',0);
+				}
+			}
+		});
+		$('#receiveBank').textbox('textbox').on('blur',function(){
+			mergePayKind();
+
+		});
+		$('#receiveAccount').textbox('textbox').on('blur',function(){
+			mergePayKind();
+		});
+		var bondTime = $('#payBondTime').datebox('getValue');
+		var fullTime = $('#payFullTime').datebox('getValue');
+		var beginBondTime = strDateForDate(bondTime);
+		$("#payFullTime").datebox('calendar').calendar({
+			validator:function(date){
+				return beginBondTime <= date;
+			}
+		});
+	} else {
+		$("#toolbar").addClass("hide");
+		$("#inputForm").find("input").not('.tags input').not("[type='button']").attr("readonly",true);
+		var _productType = $("#productType").val();
+		var _conProductType = Convert.findValueByKey(_productTypeJson,"dictCd",_productType,"dictName");
+		$("#productType").val(_conProductType);
+		var _payType = $('#payType').val();
+		var _conPayType = Convert.findValueByKey(_payTypeJson,"dictCd",_payType,"dictName");
+		$("#payType").val(_conPayType);
+
+		var _deliveryType = $('#deliveryType').val();
+		var _conDeliveryType = Convert.findValueByKey(_deliveryTypeJson,"dictCd",_deliveryType,"dictName");
+		$("#deliveryType").val(_conDeliveryType);
+
+		var _deliveryMode = $('#deliveryMode').val();
+		var _conDeliveryMode = Convert.findValueByKey(_deliveryModeJson,"dictCd",_deliveryMode,"dictName");
+		$("#deliveryMode").val(_conDeliveryMode);
+		$("#br,#ta").removeClass("hide");
+		$("#bondRate").val(toPercent($("#bondRate").val()));
+		/* var _ourCompanyName = $('#ourCompanyName').val();
+		var _conDeliveryType = Convert.findValueByKey(_ourCompanyJson,"dictCd",_ourCompanyName,"dictName");
+		$("#ourCompanyName").val(_conDeliveryType); */
+		//格式化合同总价
+		$("#totalAmount").val(Number($("#totalAmount").val()).toFixed(2));
+
+		var _contractAttr = $('#contractAttr').val();
+		var _concontractAttrMsg = Convert.findValueByKey(_contractAttrJson,"dictCd",_contractAttr,"dictName");
+		$("#contractAttr").val(_concontractAttrMsg);
+
+		//开票日期
+		var _invoiceDate = $('#invoiceDate').val();
+		var invoiceDate = Convert.findValueByKey(_invoiceDateJson,"dictCd",_invoiceDate,"dictName");
+		$("#invoiceDate").val(invoiceDate);
+
+		//到货日期
+		$("#arrivalTimeExt").attr('type','hidden');
+		var _arrivalTimeExt = $('#arrivalTimeExt').val();
+		var arrivalTimeExt = Convert.findValueByKey(_arrivalTimeExtJson,"dictCd",_arrivalTimeExt,"dictName");
+		var arrivalTime = $("#arrivalTime").val();
+		$("#arrivalTime").val(arrivalTime + arrivalTimeExt);
+
+		//质量标准
+		var _qualityStandard = $('#qualityStandard').val();
+		var qualityStandard = Convert.findValueByKey(_qualityStandardJson,"dictCd",_qualityStandard,"dictName");
+		$("#qualityStandard").val(qualityStandard);
+
+		//阻止复选框被选择
+		$("[type=checkbox]").attr('onclick','return false');
+
+	}
+
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($("#btn_fileId").length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+});
+
+//获取当前日期
+function myformatter(date){
+    var y = date.getFullYear();
+    var m = date.getMonth()+1;
+    var d = date.getDate();
+    return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+}
+
+function formattData(date){
+	var arr = date.split('-');
+	var year = arr[0]
+    var month = arr[1];
+    var day = arr[2];
+	return year + '年' + month + '月' + day + '日';
+}
+
+function insert(){
+	var changeRows = $('#relaTable').datagrid('getRows');
+	if(changeRows.length>9){
+		$.messager.alert('提示','最多只能添加10条商品记录！','info');
+		return;
+	}
+	if(!lastIndex){
+		lastIndex =1;
+	}
+	var field={id:0};
+	var row = $('#relaTable').datagrid('appendRow',field);
+
+	lastIndex = $('#relaTable').datagrid('getRows').length-1;
+	$('#relaTable').datagrid('selectRow', lastIndex);
+	$('#relaTable').datagrid('beginEdit', lastIndex);
+	Convert.focusEditor("relaTable",field,lastIndex);
+}
+function remove(id,event,target){
+	var row , index;
+	index = getRowIndex(target);
+	if(id=='0' ||id =='' || id == undefined) {
+		$('#relaTable').datagrid('deleteRow',index);
+	}else{
+		$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+			if(t){
+				$('#relaTable').datagrid('deleteRow', index);
+				var nextSelect = index > 0 ? index-1 : 0;
+				$('#relaTable').datagrid('selectRow', nextSelect);
+			}
+		});
+	}
+	grossProfit();
+	event.stopPropagation();
+}
+function remove1(index,event){
+	$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+		if(t){
+			$('#relaTable').datagrid('deleteRow', index);
+			var nextSelect=index>0?index-1:0;
+			$('#relaTable').datagrid('selectRow', nextSelect);
+		}
+	});
+	event.stopPropagation();
+}
+//计算商品总价
+function curOper(curIndex,row){
+	var _datagrid = $('#relaTable');
+	var _ed_dealPrice = _datagrid.datagrid('getEditor', {index:curIndex,field:'dealPrice'});
+	var _ed_dealNumber = _datagrid.datagrid('getEditor', {index:curIndex,field:'dealNumber'});
+	var _ed_dealAmount = _datagrid.datagrid('getEditor', {index:curIndex,field:'totalPrice'});
+	var sumAmount=function(){
+		var _dealNumber=$(_ed_dealNumber.target).numberbox('textbox').val();
+		var _dealPrice= $(_ed_dealPrice.target).numberbox('textbox').val();
+		if(_dealPrice &&_dealNumber){
+			$(_ed_dealAmount.target).numberbox('setValue', _dealPrice*_dealNumber);
+		}
+	}
+	var totalAmount = function(){
+		var rows = $('#relaTable').datagrid('getRows');
+		var totalAmount = 0;
+		var _totalPrice=0;
+		for(var i=0; i<rows.length; i++){
+			var _ed_totalPrice =  _datagrid.datagrid('getEditor', {index:i,field:'totalPrice'});
+				_totalPrice=rows[i].totalPrice;
+			if(_ed_totalPrice){
+				 _totalPrice =$(_ed_totalPrice.target).numberbox('textbox').val();
+			}else{
+			}
+			totalAmount = Number(totalAmount) + Number(_totalPrice);
+		}
+		$("#totalAmount").numberbox('setValue', totalAmount);
+	}
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',sumAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',sumAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',sumAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',sumAmount);
+
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',totalAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',totalAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',totalAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',totalAmount);
+
+	$(_ed_dealAmount.target).numberbox('textbox').on("keyup",function(){
+		var _dealAmount = $(this).val();
+		$(_ed_dealAmount.target).numberbox('setValue', _dealAmount);
+	})
+
+}
+
+//发起申请前操作
+function beforSaveOper(){
+	var changeRows = $('#relaTable').datagrid('getRows');
+	var notStart = false;
+	var index = 0;
+	var number = 0;
+	for(var i=0;i<changeRows.length;i++){
+		var rowIndex=$('#relaTable').datagrid('getRowIndex',changeRows[i]);
+		flag=$('#relaTable').datagrid('validateRow',rowIndex);
+		if (!flag){
+			$('#relaTable').datagrid('selectRow',rowIndex);
+			$('#relaTable').datagrid('beginEdit', rowIndex);
+			break;
+		}else{
+			/* ;
+			var ed_warehouseName = $('#relaTable').datagrid('getEditor', {index:i,field:'warehouseName'});
+				if(ed_warehouseName){
+				var warehouseName = $(ed_warehouseName.target).combobox('textbox').val();
+				$(ed_warehouseName.target).combobox('setValue',warehouseName);
+			} */
+			$('#relaTable').datagrid('endEdit', rowIndex);
+		}
+	}
+    Convert.setChildren2Form("inputFormApprove","relaTable");
+    return true;
+}
+//将小数转为百分数
+function toPercent(point){
+    var str=Number(point*100).toFixed(2);
+    str+="%";
+    return str;
+}
+function getTotalAmount(){
+	var totalAmount = 0;
+	var changeRows = $('#relaTable').datagrid('getRows');
+	for(var i=0;i<changeRows.length;i++){
+		var row = changeRows[i];
+		var rowIndex=$('#relaTable').datagrid('getRowIndex',row);
+		totalAmount += Number(row.totalPrice);
+	}
+	$("#totalAmount").numberbox('setValue',totalAmount);
+}
+function strDateForDate(str){
+	var strDate = str.split(" ");
+	var strDatepart = strDate[0].split("-");
+	var dtDate = new Date(strDatepart[0],strDatepart[1]-1,strDatepart[2]);
+	return dtDate;
+}
+function mergePayKind(){
+	var receive_name = $('#receiveBank').textbox('getValue');
+	var receive_account = $('#receiveAccount').textbox('getValue');
+	var p1 = /[\|\~|\`|\!|\@|\#|\$|\%|\^|\&|\.|\^|\*|\【|\】\、|\。|\，|\,|\？|\“|\”|\；|\：|\￥|\！|\…|\—|\《|\》|\-|\_|\+|\=|\||\\|\[|\]|\{|\}|\;|\:|\"|\'|\,|\<|\.|\>|\/|\?]/g;
+    var p2 = /[0-9]/g;
+    receive_name = receive_name.replace(p1,"");
+	receive_name = receive_name.replace(p2,"");
+	receive_name = receive_name.replace(/\s*/g,"");
+    $('#receiveBank').textbox('setValue',receive_name);
+    receive_account = receive_account.replace(p1,"");
+    $('#receiveAccount').textbox('setValue',receive_account);
+    $('#receiveAccount').textbox('textbox').validatebox({
+		validType: 'bankAccountRex'
+	});
+	receive_name = receive_name == '' ? '账号未知' : receive_name;
+	receive_account = receive_account == '' ? '等待启用后填入' : receive_account;
+	var message = '('+receive_name+'，账号：'+receive_account+')';
+	for(var i=0;i<_payModeJson.length;i++){
+		_payModeJson[i].content = _payModeJson[i].content.replace(/\([^\)]*\)/g, message);
+	}
+	refreshPayKindJson();
+}
+function refreshPayKindJson(){
+	var payKind = $('#payKindCode').val();
+	$('#payKind').combobox('loadData',_payModeJson);
+	$('#payKind').combobox('select',payKind);
+}
+//银行卡号码检测
+function luhnCheck(bankno) {
+    var lastNum = bankno.substr(bankno.length - 1, 1); //取出最后一位（与luhn进行比较）
+    var first15Num = bankno.substr(0, bankno.length - 1); //前15或18位
+    var newArr = new Array();
+    for (var i = first15Num.length - 1; i > -1; i--) { //前15或18位倒序存进数组
+        newArr.push(first15Num.substr(i, 1));
+    }
+    var arrJiShu = new Array(); //奇数位*2的积 <9
+    var arrJiShu2 = new Array(); //奇数位*2的积 >9
+    var arrOuShu = new Array(); //偶数位数组
+    for (var j = 0; j < newArr.length; j++) {
+        if ((j + 1) % 2 == 1) { //奇数位
+            if (parseInt(newArr[j]) * 2 < 9) arrJiShu.push(parseInt(newArr[j]) * 2);
+            else arrJiShu2.push(parseInt(newArr[j]) * 2);
+        } else //偶数位
+        arrOuShu.push(newArr[j]);
+    }
+
+    var jishu_child1 = new Array(); //奇数位*2 >9 的分割之后的数组个位数
+    var jishu_child2 = new Array(); //奇数位*2 >9 的分割之后的数组十位数
+    for (var h = 0; h < arrJiShu2.length; h++) {
+        jishu_child1.push(parseInt(arrJiShu2[h]) % 10);
+        jishu_child2.push(parseInt(arrJiShu2[h]) / 10);
+    }
+
+    var sumJiShu = 0; //奇数位*2 < 9 的数组之和
+    var sumOuShu = 0; //偶数位数组之和
+    var sumJiShuChild1 = 0; //奇数位*2 >9 的分割之后的数组个位数之和
+    var sumJiShuChild2 = 0; //奇数位*2 >9 的分割之后的数组十位数之和
+    var sumTotal = 0;
+    for (var m = 0; m < arrJiShu.length; m++) {
+        sumJiShu = sumJiShu + parseInt(arrJiShu[m]);
+    }
+
+    for (var n = 0; n < arrOuShu.length; n++) {
+        sumOuShu = sumOuShu + parseInt(arrOuShu[n]);
+    }
+
+    for (var p = 0; p < jishu_child1.length; p++) {
+        sumJiShuChild1 = sumJiShuChild1 + parseInt(jishu_child1[p]);
+        sumJiShuChild2 = sumJiShuChild2 + parseInt(jishu_child2[p]);
+    }
+    //计算总和
+    sumTotal = parseInt(sumJiShu) + parseInt(sumOuShu) + parseInt(sumJiShuChild1) + parseInt(sumJiShuChild2);
+
+    //计算luhn值
+    var k = parseInt(sumTotal) % 10 == 0 ? 10 : parseInt(sumTotal) % 10;
+    var luhn = 10 - k;
+
+    if (lastNum == luhn) {
+        $("#banknoInfo").html("luhn验证通过");
+        return true;
+    } else {
+        $("#banknoInfo").html("银行卡号必须符合luhn校验");
+        return false;
+    }
+}
+function selectZYSell(){
+	var contractStatus = ["C","B"];
+	url=_ctx+"/ctr/contract/choose2?contractType=S&businessType=SY-XS&contractStatus="+contractStatus;
+	$('#w_contract_choose').attr('callbackExec', 'chooseCallback');
+	$('#w_contract_choose').window({href:url});
+	$('#w_contract_choose').window("open");
+	$('#differPrice').numberbox('clear');
+	$('#grossProfit').numberbox('clear');
+	$('#costProfit').numberbox('clear');
+}
+function chooseCallback(contractRows){
+	var rows = $('#relaTable').datagrid('getRows');
+	var length =rows.length;
+	for(var i=0;i<length;i++){
+		$('#relaTable').datagrid('deleteRow',0);
+	}
+	var contract = contractRows[0];
+	byContract(contract);
+}
+function byContract(contract){
+	if (contract!=undefined){
+		//relate
+		//根据合同编号获取table表数据
+		var contractId = contract.id;
+		$.ajax({
+	    url:_ctx+"/apply/sell/findByContractId",
+	    async:false,
+	    type:"POST",
+	    data:{"contractId":contractId},
+	    success:function(data){
+	    	var realOurCompanyName = data.realOurCompanyName;
+	    	var companyId = data.companyId;
+	    	var companyName = data.companyName;
+	    	var qualityStandard = data.qualityStandard;
+	    	$('#ourCompanyName').combobox('setValue',realOurCompanyName);
+	    	$('#companyId').val(companyId);
+	    	$('#companyName').combobox('setValue',companyName);
+	    	$('#sellContractId').val(contractId);
+	    	$('#qualityStandard').combobox('setValue',qualityStandard);
+	    }
+		});
+		if(contractId!=undefined&&contractId!=0){
+			var _url = _ctx+"/ctr/product/findProductList?ctrContractId="+contractId;
+			$.getJSON(_url ,function(data){
+				prouctDetailJson = data;
+				for(var i in data.rows){
+					var row =data.rows[i];
+					var new_row = {
+							id:0,
+							productCd:row.productCd,
+							productName:row.productName,
+							brandNumber:row.brandNumber,
+							factoryId:row.factoryId,
+							factoryName:row.factoryName,
+							dealNumber:row.dealNumber,
+							dealPrice:row.dealPrice,
+							totalPrice:row.totalPrice,
+							warehouseNumber:row.warehouseNumber,
+							productAttr:'P',
+							wrapSpecs:row.wrapSpecs,
+							warehousePos:row.warehousePos,
+							warehouseName:row.warehouseName,
+							warehousePrice:row.warehousePrice
+					};
+					$('#relaTable').datagrid('appendRow', new_row);
+					var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+					_lastIndex = rowIndex;
+					$('#relaTable').datagrid('beginEdit', rowIndex);
+				}
+			});
+			grossProfit();
+		}
+	}
+}
+/* function chooseCallback(stockRows){
+	var rows = $('#relaTable').datagrid('getRows');
+	var length =rows.length;
+	for(var i=0;i<length;i++){
+		$('#relaTable').datagrid('deleteRow',0);
+	}
+	if(stockRows){
+		var _curProductCd = "";
+		var _ctrContractId = "";
+		var total_amount = 0;
+		var companyName = "";
+		for(var i=0;i<stockRows.length;i++){
+			var row = stockRows[i];
+			_ctrContractId = stockRows[i].contractId;
+			var maxNumber = row.presellNumber-row.approveBuyNumber-row.buyedNumber;
+			var totalPrice = maxNumber*row.dealPrice;
+			var new_row = {
+					id:0,
+					productCd:row.productCd,
+					productName:row.productName,
+					brandNumber:row.brandNumber,
+					factoryId:row.factoryId,
+					warehouseName:row.warehouseName,
+					factoryName:row.factoryName,
+					warehouseId:row.warehouseId,
+					maxNumber:maxNumber,
+					dealNumber:maxNumber,
+					productAttr:row.productAttr,
+					stockDetailId:row.id,
+					dealPrice:row.dealPrice,
+					otherDealPrice:row.dealPrice,
+					totalPrice:totalPrice,
+					applyType:"A",
+					linkContractId:row.id,
+					ctrProductId:row.ctrProductId,
+					warehousePos:row.warehousePos,
+					wrapSpecs:row.wrapSpecs,
+					warehousePrice:row.warehousePrice
+			};
+			total_amount += new_row.totalPrice;
+			_curProductCd = row.productCd;
+			$('#relaTable').datagrid('appendRow', new_row);
+			var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+			$('#relaTable').datagrid('beginEdit', rowIndex);
+			companyName = row.ourCompanyName;
+		}
+		$('#ourCompanyName').combobox('setValue',companyName);
+		$("#totalAmount").numberbox('setValue', total_amount);
+		var qualityValue = Convert.findValueByKey(_qualityStandardJson,"dictCd",row.qualityStandard,"dictName");
+		if (row.qualityStandard){
+			$('#qualityStandard').combobox('setValue',row.qualityStandard);
+		}
+		grossProfit();
+	}
+} */
+function grossProfit(){
+	var _datagrid = $('#relaTable');
+	var rows = $('#relaTable').datagrid('getRows');
+	var grossProfit = 0;
+	var _dealPrice = 0;
+	var _otherDealPrice = 0;
+	var _dealNumber = 0;
+	var _grossProfit = 0;
+	for(var i=0; i<rows.length; i++){
+		var _ed_dealPrice =  _datagrid.datagrid('getEditor', {index:i,field:'dealPrice'});
+		var _ed_dealNumber =  _datagrid.datagrid('getEditor', {index:i,field:'dealNumber'});
+			_otherDealPrice=rows[i].otherDealPrice;
+			_dealNumber=rows[i].dealNumber;
+		if(_ed_dealPrice != null && _ed_dealPrice != undefined && _ed_dealNumber != null && _ed_dealNumber != undefined){
+			var deal_price = Number($(_ed_dealPrice.target).numberbox('textbox').val());
+			var deal_number = Number($(_ed_dealNumber.target).numberbox('textbox').val());
+			if (deal_price > 0 && deal_number > 0){
+				_dealPrice = deal_price - Number(_otherDealPrice);
+				_grossProfit = deal_number * Number(_dealPrice);
+				grossProfit = Number(grossProfit) + Number(_grossProfit);
+			}
+		}
+	}
+	$("#grossProfit").numberbox('setValue', grossProfit);
+	var transAmount = $('#transportAmount').numberbox('getValue');
+	var warehouseAmunt = $('#warehouseAmount').numberbox('getValue');
+	var _costProfit = Number(grossProfit)-Number(transAmount)-Number(warehouseAmunt);
+	$("#costProfit").numberbox('setValue',_costProfit);
+}
+</script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>

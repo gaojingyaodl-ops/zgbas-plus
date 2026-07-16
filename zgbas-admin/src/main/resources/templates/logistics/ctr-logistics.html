@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>物流单据</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<span class="yw-table-filter">
+				<label style="width: 60px;">合同编号:</label>
+				<input  class="control" type="text" name="search_LIKES_logisticsNo"/>
+			</span>
+			<span class="yw-table-filter">
+				<label style="width: 60px;">供应商:</label>
+				<input  class="control" type="text" name="search_LIKES_supplierName"/>
+			</span>
+			<span class="yw-table-filter">
+				<label style="width: 60px;">客户:</label>
+				<input  class="control" type="text" name="search_LIKES_companyName"/>
+			</span>
+			<p class="yw-table-filter">
+				<label>交货方式</label>
+				<input type="text" id="sellDeliveryType" class="control text_padding" name="search_EQS_sellDeliveryType"/>
+			</p>
+			<p class="yw-table-filter">
+				<label >业务部门:</label>
+				<input type="text" id="deptId" name="search_EQS_deptId"/>
+			</p>
+			<span class="btn-group">
+				<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" class="easyui-linkbutton btn-empty btn64" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w_loading"  title="生成提货单" data-options="width:1045,height:420"></div>
+<script type="text/javascript">
+	//提货方式
+	var _deliveryTypeJson =eval('[(${deliveryTypeJson})]');
+	var deptJson=eval('[(${deptJson})]');
+	_deliveryTypeJson = _deliveryTypeJson.filter(function (a) {
+		return a.dictCd != 'P';
+	});
+	$(function(){
+
+		$("#sellDeliveryType").combobox({
+			data:_deliveryTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:true
+		});
+
+		$('#deptId').combobox({
+			data : deptJson,
+			textField:'deptName',
+			valueField:'deptId',
+			panelHeight:"250"
+		});
+
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/ctr/logistics/findAllLogisticsLoading",
+			columns:[ [
+				{field:'logisticsNo',title:'合同编号',align:'left',width:100},
+				{field:'productNames', title:'货名',align:'left',width:150},
+				{field:'dealNumber',title:'数量(吨)',align:'right',width:120,formatter:formateNum},
+				{field:'logisticsNumber',title:'已提货数量',align:'right',width:120,formatter:formateNum},
+				{field:'logisticsDeliveryNum',title:'提货次数',align:'right',width:80},
+				{field:'supplierName',title:'供应商',align:'left',width:200},
+				{field:'companyName',title:'客户',align:'left',width:200},
+				{field:'matchUserName',title:'业务员',align:'left',width:100},
+				{field:'sellDeliveryType',title:'交货方式',align:'left',width:150,formatter : function(value, row, index) {
+						return Convert.findValueByKey(_deliveryTypeJson, "dictCd",value, "dictName");
+					}
+				},
+				{field:'deptId',title:'业务部门',align:'left',width:150,formatter : function(value, row, index) {
+					debugger;
+						return Convert.findValueByKey(deptJson, "deptId",value, "deptName");
+					}
+				},
+				{field:'logisticsDate',title:'提货日期',align:'center', width:130},
+				{field:'buyDeliveryDate',title:'交货日期',align:'center', width:130},
+				{field:'buyTotalAmount',title:'采购总价(元)',align:'right',width:130,formatter:formateMoneyNum},
+				{field:'sellTotalAmount',title:'销售总价(元)',align:'right',width:130,formatter:formateMoneyNum},
+				{
+					field: 'option', title: '操作', align: 'center', width: 120, formatter: function (value, row, index) {
+						var str = "";
+						if (row.id) {
+							str += '<span onclick="editData(' + row.id + ',' + row.logisticsNo + ')" class="contract-btn contract-btn-1"">编辑</span>';
+							return str;
+						}
+					}
+				},
+			]],
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+
+			},
+			onDblClickCell : function(index, field) {
+				var row = $('#tt').datagrid('getSelected');
+				editData(row.id, row.logisticsNo);
+			},
+		});
+
+		$('#w_loading').window({
+			title: '生成提货单',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+	});
+
+	//查看附件
+	function showFile(contractId) {
+		$.post(_ctx + "/ctr/loading/getByFileId?fileId=" + contractId, function (result) {
+			window.open(result, "_blank")
+		});
+	}
+
+
+	function editData(id,logisticsNo) {
+		var url = _ctx + "/ctr/logistics/getLogisticsLoading/" + id;
+		window.parent.addTab('物流单据-'+logisticsNo,url);
+	}
+
+	function formateNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(4).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+	function formateMoneyNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+	
+</script>
+</body>
+</html>

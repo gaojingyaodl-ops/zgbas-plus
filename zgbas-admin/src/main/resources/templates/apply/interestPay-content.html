@@ -1,0 +1,133 @@
+<!--中游付息申请-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+</head>
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" style="margin-bottom:20px">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" name="contractIds" id="contractIds" th:value="${entity.contractIds}" />
+		<input type="hidden" name="status" id="entityStatus" th:value="${entity.status}" />
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label for="receiveCompanyName"  class="control-label">收款方:</label>
+				<input name="receiveCompanyName" id="receiveCompanyName" type="text" required="required" th:value="${entity.receiveCompanyName}" readonly/>
+			</p>
+			<p class="yw-table-filter">
+				<label for="payAmount"  class="control-label">金额:</label>
+				<input type="text" name="payAmount" id="payAmount" th:value="${entity.payAmount}" readonly/>
+			</p>
+			<p class="yw-table-filter">
+				<label for="costMode"  class="control-label">费用类别:</label>
+				<input type="text" name="costMode" id="costMode" th:value="${entity.costMode}" readonly/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label for="receiveBankName"  class="control-label">收款方开户行:</label>
+				<input name="receiveBankName" id="receiveBankName" type="text" th:value="${entity.receiveBankName}" readonly/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label for="receiveBankAccount"  class="control-label">收款方账号:</label>
+				<input name="receiveBankAccount" id="receiveBankAccount" type="text" th:value="${entity.receiveBankAccount}" readonly/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label for="ourCompanyName"  class="control-label">我司抬头:</label>
+				<input name="ourCompanyName" id="ourCompanyName" type="text" th:value="${entity.ourCompanyName}" readonly/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label for="remark"  class="control-label">备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}" readonly/>
+			</p>
+		</div>
+		<div class="mb6">
+			<div class="easyui-tabs pt5 popup-tab">
+				<table id="interestTable" title="" iconCls="icon-edit" singleSelect="true" idField="id" style="width: 665px;"></table>
+			</div>
+		</div>
+		<div class="mb6">
+			<div class="yw-table-filter w2">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+				<p class="controls showImg fileId" id="span_fileId"></p>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640">
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js?v=1}" type="text/javascript"></script>
+<script type="text/javascript">
+	var _curStatus = $("#entityStatus").val();
+	var imgShowUrl =_filePath+'/view/small/';
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/interestPay/updateFileId', true);
+	$(function(){
+		$('.easyui-linkbutton').linkbutton();
+
+		$('#interestTable').datagrid({
+			pagination:false,
+			pageSize:500,
+			rownumbers:true,
+			url: _ctx + "/apply/dcsx/list?count=-1&rows=500&search_INL_id="+ $("#contractIds").val(),
+			columns:[ [
+				{
+					field: 'contractNo',
+					title: '合同号',
+					align: 'center',
+					width: 130
+				},
+				{
+					field: 'totalAmount',
+					title: '合同金额（元）',
+					align: 'left',
+					width: 125,
+					formatter: function (value, row, index) {
+						return Number(value).toFixed(2);
+					}
+				},
+				{
+					field: 'overdueInterest',
+					title: '应收资方金额（元）',
+					align: 'left',
+					width: 120,
+					formatter: function (value, row, index) {
+						let _value = (Math.round(row.overdueInterest * 100) / 100) + (Math.round(row.extraCost * 100) / 100) + (Math.round(row.acceptDiscountCost * 100) / 100);
+						return Number(_value).toFixed(2);
+					}
+				},
+				{field: 'receiveOverdueInterest', title: '已付资方金额（元）', align: 'left', width: 140},
+				{
+					field: 'v1',
+					title: '应付资方金额（元）',
+					align: 'left',
+					width: 120,
+					formatter: function (value, row, index) {
+						let _value = (Math.round(row.overdueInterest * 100) / 100) + (Math.round(row.extraCost * 100) / 100) + (Math.round(row.acceptDiscountCost * 100) / 100) - (Math.round(row.receiveOverdueInterest * 100) / 100);
+						return Number(_value).toFixed(2);
+					}
+				},
+			]],
+			onLoadSuccess:function(data){
+
+			}
+		});
+
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+
+		setTimeout(function () {
+			$('#interestTable').datagrid('reload');
+			$('#interestTable').datagrid('resize');
+		}, 100);
+	});
+</script>

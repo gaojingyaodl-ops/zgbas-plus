@@ -1,0 +1,317 @@
+		<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>应收/应付统计表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+	 	<input type="hidden" id="type" name="search_EQS_contractType" th:value="${type}"/>
+	 	<input type="hidden" name="orverdurStatus" value="orverdurStatus"/>
+	 	<div class="mb6">
+	 		<p class="yw-table-filter">
+	 			<label style="width: 60px;">业务类型:</label>
+				<input type="text" id="businessType" name="businessType"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>合同编号:</label>
+				<input  class="control" type="text" name="contractNo"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>我方抬头:</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"></input>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label style="width: 100px">对方企业名称:</label>
+				<input  class="control" type="text" name="companyName"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>合同状态:</label>
+				<input  class="control" id="contractStatus" type="text" name="contractStatus"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>业务员:</label>
+				<input type="text" id="matchUserName" class="control text_padding" name="matchUserName"></input>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>货名:</label>
+				<input  class="control" type="text" name="productsName"/>
+	 		</p>
+	 	</div>
+	 	<div class="mb6">
+	 		<p class="yw-table-filter">
+	 			<label>合同时间:</label>
+				<input  id="srh_contractTime_from" name="contractTimeGTED" class="easyui-datebox"/>
+	 		</p>
+	 		<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+	 		<p class="yw-table-filter">
+				<input  id="srh_contractTime_to"  name="contractTimeLTD" class="easyui-datebox" />
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>付款类型:</label>
+				<input  class="control" type="text" name="shouldPayType" id="shouldPayType"/>
+	 		</p>
+	 		<p class="yw-table-filter">
+	 			<label>付款日期:</label>
+				<input id="srh_contractTime_from" name="beginTime" class="easyui-datebox"/>
+	 		</p>
+	 		<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+	 		<p class="yw-table-filter">
+				<input id="srh_contractTime_to"  name="endTime" class="easyui-datebox" />
+	 		</p>
+	 		<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6 btn-export" style="position: fixed;right:20px;top:85px;" onclick="exportExcel()">导出</a>
+	 	</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<script type="text/javascript">
+	var lastIndex=0;
+	var canNotify = '[(${canNotify})]';
+	var companyJson =eval('[(${companyJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var productTypeJson = eval('[(${productTypeJson})]');
+	var deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+	var applyTypeJson = eval('[(${applyTypeJson})]');
+	var processListJson = eval('[(${processListJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var sellAndBuyStatusJson = eval('[(${sellAndBuyStatusJson})]');
+	var deliveryModeJson =eval('[(${deliveryModeJson})]');
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	var businessTypeJson=eval('[(${businessTypeJson})]');
+	var shouldPayJson=eval('[(${shouldPayJson})]');
+	var sourceModeJson = [{id:'ZY-XS',text:'自营销售'},{id:'ZY-BB',text:'背靠背'},{id:'SY-XS',text:'质押销售'},{id:'SX-SX',text:'赊销'},
+		 {id:'SX-HK',text:'货到付款'},{id:'DL-KZ',text:'代理开证'},{id:'DL-DC',text:'国企代采'}];
+	 $(function(){
+		 	/* $("#deliveryMode").combobox({
+				data:deliveryModeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				panelHeight:"auto",
+				editable:true
+			}); */
+			$("#shouldPayType").combobox({
+				data:[{id:'',text:'全部'},{id:'D',text:'定金'},{id:'A',text:'全款'},{id:'W',text:'违约'}],
+				textField:'text',
+				valueField:'id',
+				panelHeight:'auto',
+				editable:false
+			});
+			//合同状态
+			$("#contractStatus").combobox({
+				data:contractStatusJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				panelHeight:150,
+				editable:true
+			});
+			$("#sellAndBuyStatusJson").combobox({
+				data:sellAndBuyStatusJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				panelHeight:"auto",
+				editable:true
+			});
+			$('#matchUserName').combotree({
+				data: matchUserNameTreeJson,
+				multiple : false,
+				editable : true,
+				//required:true,
+				formatter:function(node){
+					var enableFlg = node.attributes.enableFlg;
+					if (enableFlg==false){
+						return '<span style="color:red;">'+node.text+'(无效)</span>';
+					}
+					return node.text;
+				},
+				onSelect : function(node){
+					if(node.children.length!=0){
+						$('#matchUserName').combotree('clear');
+					}else{
+
+						$('#matchUserName').combotree('setValue',node.text);
+					}
+				}
+			});
+			$('#ourCompanyName').combobox({
+				data:_ourCompanyJson,
+				valueField:'dictName',
+				textField:'dictName',
+				//panelWidth:'220px',
+				panelHeight:"auto"
+			});
+		var type=$("#type").val();
+		var _$dealedAmount='已收金额(元)';
+		var _$billedAmount='开票金额(元)';
+		var _$shouldAmount='应收金额(元)';
+// 		var _$payBondTime='定金时间';
+// 		var _$payFullTime='全款时间';
+		var _url = _ctx+"/rpt/payandreceivestatistics/findReceive";
+		//业务类型(销售类)
+		var _source = [{id:'MS',text:'撮合销售'},{id:'S',text:'销售'},{id:'RS',text:'进口销售'},{id:'L',text:'预售'}];
+		if(type=='B'){
+			_$dealedAmount='已付金额(元)';
+			_$billedAmount='收票金额(元)';
+			_$shouldAmount='应付金额(元)';
+			//业务类型(采购类)
+			 _source =[{id:'MB',text:'撮合采购'},{id:'B',text:'采购'},{id:'RB',text:'进口采购'},{id:'A',text:'预售采购'},{id:'F',text:'内部交易'}];
+// 			_$payBondTime='定金时间';
+// 			_$payFullTime='全款时间';
+			_url = _ctx+"/rpt/payandreceivestatistics/findPay";
+		}
+
+		//业务类型
+		$("#businessType").combobox({
+			data:sourceModeJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_url,
+			columns:[ [
+				{field:'businessType',title:'业务类型',align:'left', width:70,formatter:function(value,row,index){
+					return Convert.findValueByKey(businessTypeJson,"dictCd",value,"dictName");
+				}},
+				/* {field:'businessType',title:'业务类型', width:70,formatter:function(value,row,index){
+					return Convert.findValueByKey(_businessType,"id",value,"text");
+				}}, */
+				{field:'contractNo', title:'合同编号', width:128,
+					formatter:function(value,row,index){
+						if(value){
+							return '<span class="c_blue_b yw-menu-section">'+value+'</span>';
+						}
+					}
+				},
+				{field:'productsName',title:'货名', width:120,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					    return content;
+					}
+			        }} ,
+		        /* {field:'ourCompanyName',title:'我方抬头', width:200,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="tip">' + value + '</p>';
+					    return content;
+					}
+			        }} , */
+				{field:'companyName',title:'对方企业名称', width:120,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					    return content;
+					}
+			        }} ,
+			    {field:'deliveryMode',title:'结算方式', width:70,formatter:function(value,row,index){
+					return Convert.findValueByKey(deliveryModeJson,"dictCd",value,"dictName");
+				}},
+				{field:'totalNumber',title:'合同数量(吨)',align:"right", width:90,formatter:formateNumTon},
+				{field:'totalAmount',title:'合同总价(元)', align:"right", width:100,formatter:formateNum},
+				{field:'dealedAmount',title:_$dealedAmount,align:"right", width:90,formatter:formateNum},
+				/* {field:'shouldAmount',title:_$shouldAmount,align:"right", width:90}, */
+				{field:'contractStatus', title: '合同状态', width: 80,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+				}},
+
+				{field:'warehouseNumber',title:'发货(吨)', width:80} ,
+				{field:'realWarehoseDate',title:'最后发货时间', width:100,align:'center'} ,
+				{field:'confirmReceiveNumber',title:'收货确认(吨)',align:"right"},
+				{field:'confirmDate',title:'最后收货确认时间',align:"center", width:130},
+				{field:'receiveAmount',title:'收款(元)',align:"right", width:80},
+				{field:'receiveDate',title:'最后收款时间',align:"center", width:100},
+				{field:'payFullTime',title:'全款时间', width:100} ,
+			    {field:'payBondTime',title:'定金时间', width:100} ,
+			    {field:'contractTime',title:'合同时间', width:130,align:'center'} ,
+			    {field:'shouldAmount',title:'应付金额(元)', width:90} ,
+			    {field:'shouldPayType',title:'应付款类型', width:90,formatter:function(value,row,index){
+					return Convert.findValueByKey(shouldPayJson,"dictCd",value,"dictName");
+				}} ,
+			    {field:'shouldPayDate',title:'应付款日期', width:90} ,
+				{field:'matchUserName',title:'业务员',align:"center", width:55},
+			]],
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				 $(".tip").tooltip(
+				            {
+				                onShow: function(){
+				                    $(this).tooltip('tip').css({
+				                        width:'400',
+				                        boxShadow: '1px 1px 3px #292929'
+				                 });
+				             }
+				         }
+				 );
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+				if(type=='B'){
+					 $("#tt").datagrid("hideColumn", "deliveryMode");
+					 $("#tt").datagrid("hideColumn", "warehouseNumber");
+					 $("#tt").datagrid("hideColumn", "realWarehoseDate");
+					 $("#tt").datagrid("hideColumn", "confirmReceiveNumber");
+					 $("#tt").datagrid("hideColumn", "confirmDate");
+					 $("#tt").datagrid("hideColumn", "receiveDate");
+					 $("#tt").datagrid("hideColumn", "receiveAmount");
+					 //$("#tt").datagrid("hideColumn", "shouldAmount");
+				} else {
+					 $("#tt").datagrid("hideColumn", "payFullTime");
+					 $("#tt").datagrid("hideColumn", "payBondTime");
+					 $("#tt").datagrid("hideColumn", "contractTime");
+					 $("#tt").datagrid("hideColumn", "shouldPayType");
+					 $("#tt").datagrid("hideColumn", "shouldPayDate");
+				}
+			}
+		});
+
+	});
+	 function formateNum(num,row,index) {
+			if (num){
+				num = parseFloat(num).toFixed(2).toString().split(".");
+				num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+				return num.join(".");
+			}else{
+				return num;
+			}
+	}
+	function formateNumTon(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+	function exportExcel() {
+		$('#searchForm').form('submit', {
+			url : _ctx + "/rpt/payandreceivestatistics/exportExcel"
+		});
+	}
+</script>
+</body>
+</html>

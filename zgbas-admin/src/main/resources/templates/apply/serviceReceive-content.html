@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+
+</head>
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-bottom:20px">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" name="contractId" id="contractId" th:value="${entity.contractId}" />
+		<input type="hidden" id="entityStatus" th:value="${entity.status}" />
+		<input type="hidden" id="bondAmount" th:value="${contract?.bondAmount}" />
+		<input type="hidden" id="hashEdit" th:value="${psv.hasEdit}"/>
+		<input type="hidden" id="receiveInterestAmount"/>
+		<input type="hidden" id="applyAmount"/>
+		<input type="hidden" id="serviceContractId" name = "serviceContractId" th:value = "${entity.serviceContractId}">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>收款编号:</label>
+				<input name="applyNo" id="applyNo" class="chooseBtnStyle" readonly type="text" th:value="${entity.applyNo}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同编号:</label>
+				<input name="serviceContractNo" id="serviceContractNo" class="chooseBtnStyle" readonly type="text" th:value="${entity.serviceContractNo}"></input>
+			</p>
+			<!--<a id="addBtn" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-detail'" onClick="contractDetail()">合同详情</a>-->
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同总价(元):</label>
+				<input name="totalAmount" id="totalAmount" readonly type="text"  th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>已收金额(元):</label>
+				<input name="receivedAmount" id="receivedAmount" readonly type="text" th:value="${#numbers.formatDecimal(entity.receivedAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>未收金额(元):</label>
+				<input name="unReceivedAmount" id="unReceivedAmount" readonly type="text" th:value="${#numbers.formatDecimal(entity.unReceivedAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>逾期罚息(元):</label>
+				<input name="breachAmount" id="breachAmount" readonly type="text" th:value="${#numbers.formatDecimal(entity.breachAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>已收逾期罚息(元):</label>
+				<input name="receiveBreachAmount" id="receiveBreachAmount" readonly type="text" th:value="${#numbers.formatDecimal(entity.receiveBreachAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>我方:</label>
+				<input name="ourCompanyName" id="ourCompanyName" type="text" required="required" th:value="${entity.ourCompanyName}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>付款方:</label>
+				<input name="companyId" type="hidden" id="companyId" th:value="${entity.companyId}"></input>
+				<input type="text" name="companyName" readonly="readonly" id="companyName" th:value="${entity.companyName}"></input>
+			</p>
+		</div>
+		<!-- <hr class="editor_hr"></hr> -->
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label><i>*</i>收款方式:</label>
+				<input name="receiveMode" id="receiveMode" type="text" th:value="${entity.receiveMode}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label><i>*</i>收款金额(元):</label>
+				<input name="receiveAmount" id="receiveAmount"  type="text" th:value="${#numbers.formatDecimal(entity.receiveAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label><i>*</i>收款日期:</label>
+				<input name="receiveDate" id="receiveDate" class="easyui-datebox" required="required"  th:value="${#dates.format(entity.receiveDate,'yyyy-MM-dd')}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>票证期限:</label>
+				<input name="billDueTime" id="billDueTime" class="easyui-datebox" th:value="${#dates.format(entity.billDueTime,'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>到期时间:</label>
+				<input name="dueTime" id="dueTime" class="easyui-datebox" th:value="${#dates.format(entity.dueTime,'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+			</p>
+		</div>
+	</div>
+	<div class="editForm">
+		<p style="width:240px">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+		</p>
+		<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640"></div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+	var imgShowUrl =_filePath+'/view/small/';
+	var companyJson =eval('[(${companyJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var receiveModeJson =eval('[(${receiveModeJson})]');
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/serviceReceive/updateFileId',[[${param.hasEditFile}]]);
+	$(function(){
+		$('.easyui-linkbutton').linkbutton();
+		var _curStatus = $("#entityStatus").val();
+		var _entityId = $("#entityId").val();
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+			$("#receiveMode").combobox({
+				data:receiveModeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				required: true,
+				panelHeight:"auto",
+				editable:false,
+				onSelect:function(record){
+					var receiveMode = record.dictCd;
+					if(receiveMode == 'P'){
+						$('#dueTime,#billDueTime').datebox({
+							required: true
+						});
+					}else{
+						$('#dueTime,#billDueTime').datebox({
+							required: false
+						});
+					}
+				},
+				onHidePanel:function(){
+					BasCombobox.onHidePanel(this);
+				}
+			});
+			$('#receiveAmount,#totalAmount,#receivedAmount,#unReceivedAmount').numberbox({
+	 		    required: true,
+	 		    precision:2,
+	 		    min:0,
+				parser: function(val) {
+					// 解析时去除千分位分隔符
+					if(val) {
+						return parseFloat(String(val).replace(/,/g, ''));
+					} else {
+						if(isNaN(val)) {
+							return '';
+						} else {
+							return val;
+						}
+					}
+				},
+				formatter: function(val) {
+					if (val || val === 0) {
+						val = parseFloat(val).toFixed(2).toString().split(".");
+						val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+						return val.join(".");
+					} else {
+						if(isNaN(val)){
+							return ""
+						} else {
+							return val;
+						}
+					}
+				}
+	 		});
+
+	 		$('#dueTime,#billDueTime,#receiveDate').datebox({
+				editable:false
+			 });
+	 		//我方抬头
+			$('#ourCompanyName').combobox({
+				data:_ourCompanyJson,
+				valueField:'dictName',
+				textField:'dictName',
+				panelHeight:"auto",
+				editable:false,
+				hasDownArrow:false,
+				readonly:true,
+				onHidePanel:function(){
+					BasCombobox.onHidePanel(this);
+				}
+			});
+			var _ourcompanyName = $('#ourCompanyName').val();
+			if(_ourcompanyName == ''){
+				$('#ourCompanyName').combobox('select', _ourCompanyJson[0].dictName);
+			}
+	 		applyLoadSucess();
+		}
+		if(_curStatus&&(_curStatus=='A'||_curStatus=='D')){
+			$(".chooseBtn").hide();
+			var _receiveMode = $("#receiveMode").val();
+			var ConvertReceiveMode = Convert.findValueByKey(receiveModeJson,"dictCd",_receiveMode,"dictName");
+			$("#receiveMode").val(ConvertReceiveMode);
+			 $("#inputForm").find("input").not("[type='button']").attr("readonly",true);
+
+		}
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+		var $contract_id = $("#contractId").val();
+		getServiceContractDetail($contract_id);
+		});
+	//选择合同
+ 	function openChoose(){
+		var url=_ctx+"/ctr/contract/choose?contractType=S&contractStatus=C&fondFlg=0&type=R";
+		$('#w_contract_choose').attr('callbackExec', 'chooseCallback');
+		$('#w_contract_choose').window({href:url});
+		$('#w_contract_choose').window("open");
+	}
+
+	function chooseCallback(contractRows){
+		var contract = contractRows[0];
+		byContract(contract);
+	}
+	function byContract(contract){
+		if (contract!=undefined){
+			$("#contractId").val(contract.id);
+			var total_amount = parseFloat(contract.serviceAmount);//合同总价
+			var received_amount = parseFloat(contract.receiveServiceAmount);//已收金额
+			var apply_amount = parseFloat(contract.applyServiceAmount);
+			var un_received_amount = parseFloat(total_amount - received_amount).toFixed(2);
+			var receive_amount = parseFloat(total_amount - apply_amount).toFixed(2);
+
+			$("#totalAmount").numberbox('setValue',total_amount);
+			$("#receivedAmount").numberbox('setValue',received_amount);
+			$("#unReceivedAmount").numberbox('setValue',un_received_amount);
+			$("#receiveAmount").numberbox('setValue',receive_amount);
+
+			$("#breachAmount").val(contract.breachAmount);
+			$("#receiveBreachAmount").val(contract.receiveBreachAmount);
+		}
+	}
+	function getServiceContractDetail(contractId){
+		if (contractId){
+			$.ajax({
+				url:_ctx+"/ctr/contract/findServiceByContractId?contractId="+contractId,
+				type:"post",
+				async:false,
+				success:function(contract){
+					if (contract != null && contract != undefined){
+						$("#serviceContractNo").val(contract.serviceContractNo);
+						$("#ourCompanyName").val(contract.ourCompanyName);
+						$("#companyId").val(contract.companyId);
+						$("#companyName").val(contract.companyName);
+						$("#serviceContractId").val(contract.id);
+					}
+				}
+			});
+		}
+	}
+</script>
+</html>

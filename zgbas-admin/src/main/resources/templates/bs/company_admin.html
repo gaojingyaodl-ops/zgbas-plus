@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout" fit="true">
+	<div id="tt"></div>
+<script>
+
+var id='[[${id}]]';
+
+$(function(){
+
+
+	$('#tt').tabs({
+	    border:false,
+	    onSelect:function(title){
+
+	    }
+	});
+	 $('#tt').tabs('add',{
+			title:'企业详情',
+			//height: "auto",
+		    content:'<iframe scrolling="auto" frameborder="0"  src="'+_ctx+'/bs/companyAdmin/detail/'+id+'" style="width:100%;height:99%;"></iframe>',
+		    closable:false
+		});
+
+	var content = '<iframe scrolling="auto" frameborder="0"  src="'+_ctx+'/bs/companyContacts?id='+id+'" style="width:100%;height:99%;"></iframe>';
+	$('#tt').tabs('add',{
+		title:'联系人',
+		//height: "auto",
+	    content:content,
+	    //href:_ctx+'/bs/company',
+	    closable:false/* ,
+	    tools:[{
+	        iconCls:'icon-mini-refresh',
+	        handler:function(){
+	            alert('refresh');
+	        }
+	    }]   */
+		  });
+	  $('#tt').tabs('add',{
+			title:'评分记录',
+		    content:'<iframe scrolling="auto" frameborder="0"  src="'+_ctx+'/bs/companyEvaluate?id='+id+'" style="width:100%;height:99%;"></iframe>',
+		    closable:false
+		});
+
+	  $('#tt').tabs('add',{
+			title:'跟进记录',
+		    content:'<iframe scrolling="auto" frameborder="0"  src="'+_ctx+'/bs/companyFollow?id='+id+'" style="width:100%;height:99%;"></iframe>',
+		    closable:false
+		});
+
+	   $('#tt').tabs('resize',{
+		  plain : false,
+		  boder : false,
+		  width:"auto",
+		  height:380
+		});
+
+
+
+
+	  $("#tt").tabs("select",0)
+});
+
+
+</script>
+</body>
+</html>

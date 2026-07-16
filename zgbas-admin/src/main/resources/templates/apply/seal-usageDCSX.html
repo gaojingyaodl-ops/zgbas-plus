@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<input type="hidden" id="contractTextUrl" th:value="${contractTextUrl}"/>
+	<input type="hidden" id="contractId" th:value="${ctrContractId}"/>
+	<input type="hidden" id="businessType" th:value="${entity.businessType}"/>
+	<div region="center" border="false">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>印章类型:</label>
+				<input name="sealType" id="sealType" type="text" th:value="${entity.sealType}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>盖章日期:</label>
+				<input name="sealDate" id="sealDate" type="text" th:value="${#dates.format(entity.sealDate,'yyyy-MM-dd')}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>公司名称:</label>
+				<input name="companyName" id="companyName" type="text" th:value="${entity.companyName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同编号:</label>
+				<input name="contractNo" id="contractNo" type="text" th:value="${entity.contractNo}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label id="customerName_Label">客户:</label>
+				<input name="customerName" id="customerName" type="text" th:value="${entity.customerName}"></input>
+				<label class="customer_combobox hide"><input id="customerName_combox" type="text" th:value="${entity.customerName}"></input></label>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同总额(元):</label>
+				<input name="totalAmount" id="totalAmount" type="text" th:value="${entity.totalAmount}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>文件名称:</label>
+				<input name="fileName" id="fileName" type="text" th:value="${entity.fileName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>文件类型:</label>
+				<input name="fileType" id="fileType" type="text" th:value="${entity.fileType}"></input>
+			</p>
+		<div class="mb6">
+		<p class="p_text">
+			<th:block th:replace="~{tags/apply :: remark(${#maps.containsKey(psv.mapEdit, 'remark')}?${psv.mapEdit['remark'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<a th:if="${not #strings.isEmpty(contractTextUrl) || not #strings.isEmpty(ctrContractId)}" href="#" class="easyui-linkbutton addBtn btn64" onclick="openContractText();" style="margin-left: 12px">下载合同</a>
+		</p>
+
+		<div class="editForm">
+			<p style="width:240px">
+				<span class="upload-btn" id="btn_fileId">
+	               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+		</div>
+		<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640"></div>
+		</div>
+		</div>
+	</div>
+</div>
+</div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+//印章-印章类型
+var _sealTypeJson = eval('[(${sealTypeJson})]');
+//印章-公司名称
+var _customerNameJson = eval('[(${customerNameJson})]');
+//印章外借-物品类型
+var _itemTypeJson = eval('[(${itemTypeJson})]');
+//印章外借-印章状态
+var _sealStatusJson = eval('[(${sealStatusJson})]');
+//印章-文件类型
+var _sealFileTypeJson = eval('[(${sealFileTypeJson})]');
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/sealUsage/updateFileId',[[${param.hasEditFile}]]);
+//var _curStatus = $("#entityStatus").val();
+var _curStatus = '[[${status}]]';
+var canApproveEdit = '[[${psv.canApproveEdit}]]' === 'true';
+var hasApprove =  '[[${psv.hasApprove}]]' === 'true';
+console.log("canApproveEdit:" + canApproveEdit);
+// console.table("psv:" + '[[${psv}]]');
+$(function(){
+	//$('#addBtn').linkbutton();
+	$('.easyui-linkbutton').linkbutton();
+	if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+		/* $('#sealType').combobox({
+			data:_sealTypeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			editable:false,
+			required:true,
+			panelHeight:'auto',
+			onSelect:function(node){
+				var dictCd = node.dictCd;
+				if (dictCd == "TS"){
+					$('.sealUsage_content').removeClass('hide');
+					$('#customerName_Label').text("客户");
+				}else{
+					$('.sealUsage_content').addClass('hide');
+					$('#customerName_Label').text("提供方");
+					$('#contractNo').val("");
+					$('#totalAmount').val("");
+				}
+			},
+			onLoadSuccess:function(data){
+				var value = $(this).val();
+				if (!value){
+					$(this).combobox('setValue',data[0].dictCd);
+				}
+			}
+		}); */
+
+		$("#sealType").combobox({
+			data:_sealTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			multiple:true,
+			required:true,
+			panelHeight:170,
+		    formatter: function (row) {
+	            var opts = $(this).combobox('options');
+	            return '<input style="margin-right:10px;" type="checkbox" class="combobox-checkbox ckbox">' + row[opts.textField]
+	        },
+	        onShowPanel: function () {
+	            var opts = $(this).combobox('options');
+	            var target = this;
+	            var values = $(target).combobox('getValues');
+	            $.map(values, function (value) {
+	                var el = opts.finder.getEl(target, value);
+	                el.find('input.combobox-checkbox')._propAttr('checked', true);
+	            })
+	        },
+	        onLoadSuccess: function () {
+	            var opts = $(this).combobox('options');
+	            var target = this;
+	            var values = $(target).combobox('getValues');
+	            $.map(values, function (value) {
+	                var el = opts.finder.getEl(target, value);
+	                el.find('input.combobox-checkbox')._propAttr('checked', true);
+	            })
+	        },
+	        onSelect: function (row) {
+	            var opts = $(this).combobox('options');
+	            var el = opts.finder.getEl(this, row[opts.valueField]);
+	            el.find('input.combobox-checkbox')._propAttr('checked', true);
+	        },
+	        onUnselect: function (row) {
+	            var opts = $(this).combobox('options');
+	            var el = opts.finder.getEl(this, row[opts.valueField]);
+	            el.find('input.combobox-checkbox')._propAttr('checked', false);
+	        }
+		});
+
+		$('#companyName').combobox({
+			data:_customerNameJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			editable:false,
+			required:true,
+			multiple:true,
+			panelHeight:275,
+			formatter: function (row) {
+	            var opts = $(this).combobox('options');
+	            return '<input style="margin-right:10px;" type="checkbox" class="combobox-checkbox ckbox">' + row[opts.textField]
+	        },
+	        onShowPanel: function () {
+	            var opts = $(this).combobox('options');
+	            var target = this;
+	            var values = $(target).combobox('getValues');
+	            $.map(values, function (value) {
+	                var el = opts.finder.getEl(target, value);
+	                el.find('input.combobox-checkbox')._propAttr('checked', true);
+	            })
+	        },
+	        onLoadSuccess: function () {
+	            var opts = $(this).combobox('options');
+	            var target = this;
+	            var values = $(target).combobox('getValues');
+	            $.map(values, function (value) {
+	                var el = opts.finder.getEl(target, value);
+	                el.find('input.combobox-checkbox')._propAttr('checked', true);
+	            })
+	        },
+	        onSelect: function (row) {
+	            var opts = $(this).combobox('options');
+	            var el = opts.finder.getEl(this, row[opts.valueField]);
+	            el.find('input.combobox-checkbox')._propAttr('checked', true);
+	        },
+	        onUnselect: function (row) {
+	            var opts = $(this).combobox('options');
+	            var el = opts.finder.getEl(this, row[opts.valueField]);
+	            el.find('input.combobox-checkbox')._propAttr('checked', false);
+	        }
+		});
+
+		$('#customerName_combox').combobox({
+			url:_ctx+"/bs/company/listMyCompany/0",
+			mode:'remote',
+			limitToList:true,
+			valueField:'companyName',
+			textField:'text',
+			panelHeight:300,
+			required:true,
+			formatter: function(row){
+				var text = row.text;
+				var myFlag = row.myFlag;
+				if (myFlag!=true){
+					text = '<span style="color:#ccc">'+text+'</span>';
+				}
+				return text;
+			},
+			onSelect : function(node){
+				//是否是我的企业
+				var myFlag = node.myFlag;
+				if (myFlag!=true){
+					setTimeout(function () { $("#customerName_combox").combobox("clear"); }, 1)
+				}else{
+					$("#customerName").val(node.companyName);
+				}
+			}
+		});
+
+		$('#fileType').combobox({
+			data:_sealFileTypeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			editable:false,
+			required:true,
+			panelHeight:200,
+			onSelect : function(node){
+				var value = node.dictCd;
+				if (value == "BS"){
+					$("#customerName_combox").combobox('options').required = true;
+					$("#customerName_combox").combobox('textbox').validatebox('options').required = true;
+					$("#customerName").addClass("hide");
+					/* $("#customerName").removeAttr("name");
+					$("#customerName_combox").attr("name","customerName"); */
+					$(".customer_combobox").removeClass("hide");
+				}else{
+					$("#customerName_combox").combobox('textbox').validatebox('options').required = false;
+					$("#customerName").removeClass("hide");
+					/* $("#customerName_combox").removeAttr("name");
+					$("#customerName").attr("name","customerName"); */
+					$(".customer_combobox").addClass("hide");
+				}
+			}
+		});
+		$('#sealDate').datebox({editable:false});
+		$('#totalAmount').numberbox({precision:2});
+	} else if(_curStatus&&(_curStatus=='A'||_curStatus=='D')){
+
+		$("#toolbar").addClass("hide");
+		$("#inputForm").find("input").not("#remark").not('.tags input').not("[type='button']").attr("readonly",true);
+		//印章类型
+		/* var _sealType = $('#sealType').val();
+		var sealType = Convert.findValueByKey(_sealTypeJson,"dictCd",_sealType,"dictName");
+		$("#sealType").val(sealType); */
+
+		var _sealType = $('#sealType').val();
+		var sealType = "";
+		if (_sealType){
+			var arr = _sealType.split(",");
+			for(var i=0; i<arr.length;i++){
+				sealType += Convert.findValueByKey(_sealTypeJson,"dictCd",arr[i],"dictName") + ",";
+			}
+			if (sealType){
+				sealType = sealType.substring(0,sealType.length-1);
+			}
+		}else{
+			var sealType = Convert.findValueByKey(_sealTypeJson,"dictCd",_sealType,"dictName");
+		}
+		$("#sealType").val(sealType);
+
+		//公司名称
+		var _companyName = $('#companyName').val();
+		var companyName = "";
+		if (_companyName){
+			var arr = _companyName.split(",");
+			for(var i=0; i<arr.length;i++){
+				companyName += Convert.findValueByKey(_customerNameJson,"dictCd",arr[i],"dictName") + ",";
+			}
+			if (companyName){
+				companyName = companyName.substring(0,companyName.length-1);
+			}
+		}else{
+			var companyName = Convert.findValueByKey(_customerNameJson,"dictCd",_companyName,"dictName");
+		}
+		$("#companyName").val(companyName);
+
+
+		//文件类型
+		var _fileType = $('#fileType').val();
+		var fileType = Convert.findValueByKey(_sealFileTypeJson,"dictCd",_fileType,"dictName");
+		$("#fileType").val(fileType);
+
+		/* if (_sealType == "TS"){
+			$('.sealUsage_content').removeClass('hide');
+			$('#customerName_Label').text("客户");
+		}else{
+			$('.sealUsage_content').addClass('hide');
+			$('#customerName_Label').text("提供方");
+		} */
+
+	}
+	$('#w_contract').window({
+		title: '电子合同',
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		maximizable : false,
+		cache:false
+	});
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+
+	// 状态不是完成 且 是当前审批人时 文件可以上传
+	if (("D" != _curStatus && hasApprove) || _curStatus == "N") {
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+	}
+});
+function openContractText(){
+	var contractTextUrl = $("#contractTextUrl").val();
+	var businessType = $("#businessType").val();
+	var contractId = $("#contractId").val();
+	if (contractTextUrl){
+		window.open(contractTextUrl, "_blank");
+	}else{
+		if (businessType=="F"){
+			printServiceContract(contractId);
+		}else{
+			printContract(contractId);
+		}
+	}
+}
+//合同预览
+function printContract(contractId){
+	if(contractId){
+		var url = _ctx+"/ctr/contractText/getBycontractId/"+contractId;
+		$('#w_contract').window({href:url});
+		$('#w_contract').window("open");
+	}
+}
+//服务合同预览
+function printServiceContract(contractId){
+	if(contractId){
+		var url = _ctx+"/ctr/contractText/getServiceText/"+contractId;
+		$('#w_contract').window({href:url});
+		$('#w_contract').window("open");
+	}
+}
+</script>

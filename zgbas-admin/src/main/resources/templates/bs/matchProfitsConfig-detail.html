@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl80 pr20 pb15 ofh" border="false">
+        <form id="inputForms" method="post"  class="from-input-layout" >
+            <input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="matchUserId"  class="control-label">业务员:</label>
+                    <input name="matchUserId" id="matchUserId" required="required"  type="text" th:value="${entity.matchUserId}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="buyCommissionRate"  class="control-label">采购提成比率:</label>
+                    <input type="text" name="buyCommissionRate" class="easyui-validatebox easyui-numberbox" data-options="min:0,precision:2"
+                           required="true" id="buyCommissionRate" th:value="${entity.buyCommissionRate}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="sellCommissionRate"  class="control-label">销售提成比率:</label>
+                    <input name="sellCommissionRate" class="easyui-validatebox easyui-numberbox" data-options="min:0,precision:2"
+                           required="true" id="sellCommissionRate" type="text" th:value="${entity.sellCommissionRate}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="marketingRate"  class="control-label">营销留存比率:</label>
+                    <input type="text" name="marketingRate" class="easyui-validatebox easyui-numberbox" data-options="min:0,precision:2"
+                           required="true" id="marketingRate"  th:value="${entity.marketingRate}"/>
+                </p>
+            </div>
+
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="companyRate"  class="control-label">公司净比率:</label>
+                    <input name="companyRate" id="companyRate" class="easyui-validatebox easyui-numberbox" data-options="min:0,precision:2"
+                           required="true" type="text" th:value="${entity.companyRate}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="buyHeadCommissionRate"  class="control-label">采购团队负责人提成比率:</label>
+                    <input type="text" name="buyHeadCommissionRate" class="easyui-validatebox easyui-numberbox" data-options="min:0,precision:2"
+                           required="true" id="buyHeadCommissionRate" th:value="${entity.buyHeadCommissionRate}"/>
+                </p>
+            </div>
+
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="sellHeadCommissionRate"  class="control-label">销售团队负责人提成比率:</label>
+                    <input name="sellHeadCommissionRate" class="easyui-validatebox easyui-numberbox" data-options="min:0,precision:2"
+                           required="true" id="sellHeadCommissionRate" th:value="${entity.sellHeadCommissionRate}"/>
+                </p>
+            </div>
+        </form>
+    </div>
+
+
+    <div region="south" border="false" style="overflow: hidden;height: 60px;margin-left:  280px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="submit();">保存</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //var entityId=$("#id").val();
+    var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+    $(function(){
+        $('#matchUserId').combotree({
+            data : matchUserNameTreeJson,
+            multiple : false,
+            editable : true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#matchUserId').combotree('clear');
+                }
+            }
+        })
+    });
+    //保存
+    function submit(){
+        let buyCommissionRateVal = $("#buyCommissionRate").val();
+        let sellCommissionRateVal = $("#sellCommissionRate").val();
+        let marketingRateVal = $("#marketingRate").val();
+        let companyRateVal = $("#companyRate").val();
+        let buyHeadCommissionRateVal = $("#buyHeadCommissionRate").val();
+        let sellHeadCommissionRateVal = $("#sellHeadCommissionRate").val();
+        var sum = parseFloat(buyCommissionRateVal)+parseFloat(sellCommissionRateVal)+parseFloat(marketingRateVal)
+            +parseFloat(companyRateVal)+parseFloat(buyHeadCommissionRateVal)+parseFloat(sellHeadCommissionRateVal);
+        var res = sum.toFixed(3);
+
+        if (res  == 1){
+            var entityId = $("#id").val();
+            if (entityId != null  && entityId !=0 && entityId != ""){//判断是否有id值，有则修改，无则添加
+                Edit();//修改方法
+            }else{
+                save();//添加方法
+            }
+        }else{
+            $.messager.alert('error', "比例分配不等于1，请重新分配", 'warning');
+        }
+
+
+
+
+    }
+    /* 修改方法 */
+    function Edit(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: 'match/updateConfig',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '修改成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#matchProfitsConfig_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+    /* 添加方法 */
+    function save(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: 'match/save',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '添加成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#matchProfitsConfig_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+
+</script>

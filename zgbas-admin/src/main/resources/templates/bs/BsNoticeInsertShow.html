@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>公告内容</title>
+</head>
+<body class="easyui-layout" fit="true">
+<div class="wrapper wrapper-content animated fadeInRight">
+	<form id="inputForm" method="post" class="editForm">
+		<input name="content" th:value="${entity.content}" type="hidden" id="content"/>
+		<div class="row">
+			<div class="col-sm-12">
+				<div class="ibox float-e-margins" >
+					<div class="ibox-title">
+						<h5>公告内容</h5>
+					</div>
+					<div class="ibox-content" style="width: 775px" id="eg">
+						<div class="click2edit wrapper"    id="nr">
+
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+	</div>
+<script type="text/javascript">
+	$(document).ready(function () {
+		$('.click2edit').summernote({
+			lang: 'zh-CN',
+			height: 300,
+			width:918
+	});
+	});
+	// 判断是否为空
+	function isBlank(val) {
+		if (val == undefined
+				|| val == ''
+				|| val == null
+				|| val == "") {
+			return true;
+		}
+		return false;
+	}
+	$(function(){
+		var html=$("#content").val();
+		if(isBlank(html)==false){
+			$('.click2edit').summernote('code',html);
+		}
+		$("#eg").removeClass("no-padding");
+		$('.click2edit').summernote('destroy');
+	});
+</script>
+</body>
+</html>

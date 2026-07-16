@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>花旗开票信息</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>花旗订单编号</label>
+                <input  class="control"  type="text" name="search_LIKES_outOrderNo"/>
+            </p>
+            <span class="btn-group">
+				<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+
+<script type="text/javascript">
+
+    $(function(){
+        $('#tt').datagrid({
+            pagination:true,
+            pageSize:30,
+            rownumbers:true,
+            showFooter:true,
+            queryParams:Convert.getJson4Form('searchForm'),
+            pageList:[500,200,100,50,30,20],
+            url:_ctx+"/hq/externalInvoiceInfo/findAllExternalInvoiceInfoLoading",
+            columns:[ [
+                {field:'outOrderNo',title:'花旗商品订单编号',align:'left',width:200},
+                {field:'companyName', title:'抬头名称',align:'center',width:150},
+                {field:'invoiceType', title:'发票类型',align:'center',width:100},
+                {field:'invoiceContent', title:'发票内容',align:'center',width:100},
+                {field:'companyTaxNo', title:'单位税号',align:'center',width:100},
+                {field:'registerAddress', title:'注册地址',align:'center',width:100},
+                {field:'registerPhone', title:'注册电话',align:'center',width:100},
+                {field:'bankName', title:'开户行',align:'center',width:100},
+                {field:'bankAccountNo', title:'开户账号',align:'center',width:100},
+
+            ]],
+            onClickRow:function(index,row){
+                lastIndex = index;
+            },
+            onLoadSuccess:function(data){
+
+            }
+        });
+    });
+
+</script>
+</body>
+</html>

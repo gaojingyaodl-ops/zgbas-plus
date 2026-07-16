@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>货物交割信息</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 105px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>合同状态:</label>
+				<input type="text" id="srh_status" name="search_EQS_status"/>
+			</span>
+			<span class="input-colspan">
+				<label>业务编号:</label>
+				<input type="text" name="search_EQS_businessNo"/>
+			</span>
+			<span class="input-colspan">
+				<label>商品名称:</label>
+				<input type="text" name="search_LIKES_productName"/>
+			</span>			
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>企业名称:</label>
+				<input type="text" name="search_LIKES_companyName"/>
+			</span>
+			<span class="input-colspan">
+					<label>交货日期:</label>
+					<input  id="srh_date_from" name="search_GTED_deliveryDate" class="easyui-datebox"/>
+			</span>	
+			<span class="input-colspan">
+					<label>到:</label>
+					<input id="srh_date_to" name="search_LTD_deliveryDate" class="easyui-datebox"   />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w" class="easyui-window" style="width:700px;height:491px;"></div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var companyJson =eval('[(${companyJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	$(function(){
+		$("#srh_status").combobox({
+			data:approveStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		});
+		
+/* 		$('#srh_date_from,#srh_date_to').datebox({
+			width:150,
+			height:30
+		});
+		 */
+		var toolbar =[{
+			text:'编辑',
+			iconCls:'',
+			handler:function(){
+				var row = $('#tt').datagrid('getSelected'); 
+				if (row!=undefined){
+					editrow(row.id);
+				}
+			}
+		},'-'];
+		
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/bas/delivery/list",
+			columns:[ [
+				
+				{field:'businessNo',title:'业务编号', width:120},
+				{field:'status',title:'状态', width:70,formatter:function(value,row,index){
+					var status =  Convert.findValueByKey(approveStatusJson,"dictCd",value,"dictName");
+					var a = '';
+					if(value=="A"){
+						a="<span class='colorA'>"+status+"</span>";
+					}else if(value=="D"){
+						a="<span class='colorD'>"+status+"</span>";
+					}else if(value=="B"){
+						a="<span class='colorB'>"+status+"</span>";
+					}else if(value=="N"){
+						a="<span class='colorN'>"+status+"</span>";
+					}
+					return a;
+				}},
+				{field:'deliveryDate',title:'交货日期', width:80},
+				{field:'companyName',title:'企业名称', width:140},
+				{field:'productName',title:'商品名称', width:70},
+				{field:'dealPrice',title:'单价', width:70},
+				{field:'dealNumber',title:'数量', width:70,},
+				{field:'numberUnit',title:'单位', width:70},			
+				{field:'warehouse',title:'仓库', width:100},
+				{field:'warehouseAddress',title:'仓库地址', width:100},
+				{field:'deliveryMode',title:'提货方式', width:100},
+				{field:'deliveryNo',title:'交割凭证号', width:140},
+				{field:'remark',title:'备注', width:90},
+				{field:'updatedDate',title:'更新时间',width:140}
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+		
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:"icon-save",
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		
+	});
+	function editrow(id){
+		var url=_ctx+"/bas/delivery/detail/"+id;
+		var title="详情";
+		if (id ==0){
+			title="新增";
+		}
+		var headerCls = 'myPanelHead';
+		$('#w').window({href:url,title:title,headerCls:headerCls});
+		$('#w').window("open");
+	}
+	
+</script>
+</body>
+</html>

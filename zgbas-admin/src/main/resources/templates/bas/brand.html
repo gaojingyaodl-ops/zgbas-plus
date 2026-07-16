@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>牌号管理</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post" >
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>品名:</label>
+				<input id="productCd_query" name="search_EQS_productCd" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>牌号:</label>
+				<input type="text" name="search_LIKES_brandNumber"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>牌号分类:</label>
+				<input type="text" name="search_LIKES_brandSort" id="brandSort"/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		  <a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="insert()">新增</a>
+		  <a  href="#" class="easyui-linkbutton btn64 btn-info-empty ml10" onclick="saveEdit()">保存</a>
+		  <!-- <a  href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-excelUpload'" onclick="openDialog()" id="uploadBtn">上传</a> -->
+	</div>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<div id="dlg" data-options="width:350,height: 240,border:'thin',collapsible: false,minimizable: false,cls:'c9'">
+	<form id="uploadForm" enctype="multipart/form-data">
+    	<div class="uploadDiv">
+    		<input type="file" name="file" id="uploadExcelFile">
+    	</div>
+    </form>
+</div>
+
+<script type="text/javascript">
+	var lastIndex;
+	var productTypeJson=eval('[(${productTypeJson})]');
+	var productJson=eval('[(${productJson})]');
+	var brandSortJson =eval('[(${brandSortJson})]');
+
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:20,
+			rownumbers:true,
+			pageList:[50,40,30,20,10],
+			url:_ctx+"/bas/brand/list",
+			columns:[ [
+				{field:'productCd',title:'品名', width:100,editor:{type:'combotree',options:{required:'true',panelWidth:150,data:productTypeJson}},
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(productJson,"typeCode",value,"typeName");
+				}},
+				{field:'brandNumber',editor:{type:'validatebox',options:{required:'true',validType:'length[1,20]'}},title:'牌号', width:100},
+				{field:'createdDate',title:'创建时间',  width:150},
+				{field:'updatedDate',title:'更新时间', width:150},
+				{field:'operate',title:'操作', width:120,align:'center',formatter:function(value, row, index){
+			        var str = '<img onclick="remove('+row.id+')" style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>';
+			        return str;
+				}}
+			]],
+			toolbar:'#toolbar',
+			onDblClickCell:function(index,field){
+				$('#tt').datagrid('endEdit', lastIndex);
+				$('#tt').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("tt",field,lastIndex);
+			},
+
+		});
+		//品名下拉
+	    $('#productCd_query').combotree({
+			data:productTypeJson,
+			valueField:'typeCode',
+			textField:'typeName',
+			onSelect:function(data){
+				$('#productCd_query').val(data.typeName);
+			}
+		});
+           debugger
+		$("#brandSort").combobox({
+			data:brandSortJson,
+			textField:'brandNumber',
+			valueField:'brandNumber',
+			onSelect:function(data){
+				$('#brandSort').val(data.brandNumber);
+			}
+			});
+
+	    $("#dlg").dialog({
+        	title: 'EXCEL表格数据导入',
+            width: 400,
+            height:220,
+            closed: true,
+            cache: false,
+            modal: false,
+            buttons:[{
+            		width: 68,
+    				height: 28,
+            		text:'上传',
+					handler:function(){
+						uploadExcel();
+						}
+					},{
+					width: 68,
+					height: 28,
+					text:'取消',
+					handler:function(){
+						$("#dlg").dialog('close');
+					}
+			}]
+
+        });
+
+	});
+
+	/*function ajaxPost(param){
+ 		$.post(_ctx+"/bas/brand/saveBatch",{param:param},function(data){
+			var rObj = eval(data);
+ 			if(rObj.success){
+ 				$('#tt').datagrid('reload');
+			}else{
+				 $.messager.alert("提示","一个牌号只属于一个品类");
+ 				 $('#tt').datagrid('reload');
+ 			}
+ 		});
+ 	}	*/
+
+ 	/*function endEdit(){
+ 		var rows=$("#tt").datagrid('getRows');
+ 		for(var i=0;i<rows.length;i++){
+ 			//验证没通过 不关闭编辑器
+ 			if($("#tt").datagrid("validateRow",i)){
+ 				$("#tt").datagrid("endEdit",i);
+ 			}
+ 		}
+ 	}*/
+	function insert(){
+		$("#tt").datagrid("appendRow",{productCd:'',brandNumber:''});
+		var rows=$("#tt").datagrid('getRows');
+		$("#tt").datagrid('beginEdit', rows.length - 1);
+	}
+
+	function saveEdit(){
+		var flag=true;
+		var row = $('#tt').datagrid('getSelected');
+		if (row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			$('#tt').datagrid('endEdit', index);
+		}
+		var changeRows=[];
+		var inserted = $('#tt').datagrid('getChanges','inserted');
+		var updated = $('#tt').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#tt').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#tt').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#tt').datagrid('selectRow',index);
+    			$('#tt').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#tt').datagrid('endEdit', index);
+    		}
+		}
+		if (flag){
+
+		$.post(_ctx+"/bas/brand/saveBatch",Convert.ToSaveParam("tt") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+
+ 	/*function save(){
+ 		endEdit();
+ 		var val=$("#tt").datagrid("getChanges");
+ 		for(i=0;i<val.length;i++){
+			var index=$('#tt').datagrid("getRowIndex",val[i]);
+ 			if(!$("#tt").datagrid("validateRow",index)){
+ 				$.messager.alert("提示","请填写完整!","error");
+				return ;
+ 			}
+ 		}
+ 		if($.isEmptyObject(val)){return false}
+		var param=JSON.stringify(val);
+ 		ajaxPost(param);
+ 	}*/
+	function remove(id){
+ 	    $('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		if(row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			if (row.id==undefined){
+				$('#tt').datagrid('deleteRow',index);
+			}else{
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+		                if (r){
+		                	//TODO:如果该记录被引用,是否强制不允许删除?
+							$.post(_ctx+"/bas/brand/delete/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									$('#tt').datagrid('reload');
+									$('#tt').datagrid('clearSelections');
+								}else{
+									 $.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+		                }
+		            }
+		        });
+			}
+		}
+	}
+
+	function openDialog(){
+		$("#dlg").dialog('open');
+	}
+
+	function uploadExcel(){
+		$('#uploadForm').ajaxSubmit({
+			url: '/bas/brand/uploadBrandExcel',
+			type:'POST',
+			beforeSubmit: function(){
+				var uploadExcelFile = $("#uploadExcelFile").val();
+		        if(uploadExcelFile == ''){
+		        	$.messager.alert({
+						width:300,
+						height:170,
+						title: '提示',
+						msg: '请先选择excel文件,再上传!',
+						ok: "确定",
+						icon: "info",
+						cls:'c9',
+						border:'thin',
+						fn: function(r){
+
+			            }
+			        });
+		            //alert("请先选择excel文件,再上传");
+		            return false;
+		        }else if(uploadExcelFile.lastIndexOf(".xls")<0){//可判断以.xls和.xlsx结尾的excel
+		        	$.messager.alert({
+						width:300,
+						height:170,
+						title: '提示',
+						msg: '只能上传Excel文件!',
+						ok: "确定",
+						icon: "info",
+						cls:'c9',
+						border:'thin',
+						fn: function(r){
+
+			            }
+			        });
+		            //alert("只能上传Excel文件");
+		            return false;
+		        }else{
+		        	return true;
+		        }
+			},
+			success: function (result) {
+          		//var result = JSON.parse(data);
+                if("success"==result.message){
+                	$.messager.alert({
+						width:300,
+						height:170,
+						title: '提示',
+						msg: '上传成功!',
+						ok: "确定",
+						icon: "info",
+						cls:'c9',
+						border:'thin',
+						fn: function(r){
+			       			if(r){
+			       				result.data;
+			       				$('#tt').datagrid('reload');
+			                    $("#uploadExcelFile").val('');
+			       			}
+			            }
+			        });
+                    /*$.messager.alert('上传成功',result.data,'info');
+                    $('#tt').datagrid('reload');
+                    $("#uploadExcelFile").val('');*/
+                }else{
+                	$.messager.alert({
+						width:300,
+						height:170,
+						title: '提示',
+						msg: '上传失败!',
+						ok: "确定",
+						icon: "info",
+						cls:'c9',
+						border:'thin',
+						fn: function(r){
+
+			            }
+			        });
+                }
+            }
+     	})
+     	return false;
+	}
+</script>
+</body>
+</html>

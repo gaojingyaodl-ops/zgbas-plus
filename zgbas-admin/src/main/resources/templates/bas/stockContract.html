@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>合同库存查询</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<form id="searchForm" class="form-search from-input-layout" method="post" >
+		<!-- <input type="hidden" name="search_GTM_availableNumber" th:value="${param.availableNumber}"/>
+		<input type="hidden" name="search_NEQS_source" th:value="${param.source}"/>
+		<input type="hidden" name="search_EQS_productAttr" th:value="${param.productAttr}"/> -->
+		
+		<!-- <input type="hidden" th:value="${param.type}" id = "typeParam"/> -->
+		
+		<!-- <input type="hidden" name="search_LIKES_bizUserName" th:value="${@shiroUtil.getCurrentUserName()}" id="typeInput"/> -->
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同编号:</label>
+				<input class="control" name="contractNo" type="text"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>品名:</label>
+				<input id="productCd_query" name="productCd" type="text"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>牌号:</label>
+				<input type="text" name="brandNumber"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>厂商:</label>
+				<input type="text" name="factoryName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>仓库:</label>
+				<input type="text" name="warehouseName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>业务员:</label>
+				<input id="matchUserName" type="text" name="bizUserName"/>
+			</p>
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6 btn-export" style="position: fixed;right:20px;top:35px;" onclick="exportExcel()">导出</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<div id="w_hisDetail" title="流水信息" class="easyui-window" data-options="width:972,height:400"></div>
+<script type="text/javascript">
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]')
+	var productTypeJson=eval('[(${productTypeJson})]');
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[50,40,30,20],
+			url:_ctx+"/stock/stockContract/findPage",
+			columns:[ [
+				/* {field:'buyContractId',title:'采购合同编号',width:150}, */
+				{field:'contractNo',title:'采购合同编号',width:150/* ,
+					formatter:function(value,row,index){
+						if(value){
+							return '<span class="c_blue_b yw-menu-section">'+value+'</span>';
+						}
+					} */
+				},
+				{field:'productName',title:'品名',align:'left', width:100},
+				{field:'brandNumber',title:'牌号', align:'left',width:100},
+				{field:'factoryName',title:'厂商名称',align:'left', width:150},
+				{field:'warehouseName',title:'仓库',align:'left',width:150},
+				{field:'dealPrice',title:'采购单价(元)', width:100,align:'right'},
+				/* {field:'warehouseAmount',title:'仓储费(吨)',width:100,align:'right'}, */
+				{field:'buyNumber',title:'采购数量(吨)',width:100,align:'right'},
+				{field:'sellingNumber',title:'销售中数量(吨)',width:110,align:'right'},
+				{field:'sellNumber',title:'销售数量(吨)',width:100,align:'right'},
+				{field:'deliveryInNumber',title:'入库数量(吨)',width:100,align:'right'},
+				{field:'deliveryOutNumber',title:'出库数量(吨)',width:100,align:'right'},
+				{field:'contractDifTime',title:'合同时长(天)',width:100,align:'right'},
+				{
+					field : 'action',
+					title : '流水信息',
+					width : 100,
+					align : 'center',
+					formatter : function(value, row, index) {
+						if (row.id) {
+							var str = "";
+							str = '<span onclick="queryStockDetailHis('+row.id+')" class="contract-btn contract-btn-10">查看流水</span>';
+							return str;
+						}
+					}
+				},
+				{field:'bizUserName',title:'业务员',width:100,align:'center'}
+			]],
+			toolbar:'#toolbar',
+			
+		});
+		
+		//品名下拉
+	    $('#productCd_query').combotree({
+			data:productTypeJson, 
+			valueField:'typeCode',
+			textField:'typeName',
+			editable:'false',
+			onSelect:function(data){
+				$('#productCd_query').val(data.typeName);
+			}
+		});
+	    //业务员下拉 
+	    $('#matchUserName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			//required:true,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#matchUserName').combotree('clear'); 
+				}else{
+				
+					$('#matchUserName').combotree('setValue',node.text);	
+				}
+			} 
+		});
+	    $('#w_hisDetail').window({
+			title : '流水信息',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			iconCls : ""
+		});
+	});
+	function queryStockDetailHis(id) {
+		if (id) {
+			var url = _ctx + "/bas/stockContract/detailHis/" + id;
+			$('#w_hisDetail').window({
+				href : url
+			});
+			$('#w_hisDetail').window("open");
+		}
+	}
+	function exportExcel() {
+		$('#searchForm').form('submit', {url : _ctx + "/stock/stockContract/exportExcel"});
+	}
+	
+	//计算两个日期的天数差
+	function dateDiff(firstDate,secondDate){
+		var firstDate = new Date(firstDate);
+		var secondDate = new Date(secondDate);
+		var diff = Math.abs(firstDate.getTime() - secondDate.getTime())
+		var result = parseInt(diff / (1000 * 60 * 60 * 24));
+		return result
+	}
+	
+	//字符串转日期   saw:是否可以这里指定格式
+	function strDateForDate(str){
+		// var date=new Date().format('yyyy/MM/dd');
+		if(str){
+			var strDate = str.split(" ");
+			var strDatepart = strDate[0].split("-");
+			// var dtDate =date(strDatepart[0],strDatepart[1]-1,strDatepart[2]);
+			var dtDate =new Date(strDatepart[0],strDatepart[1]-1,strDatepart[2]);
+			return dtDate;
+		}
+
+	}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>客户销售额省份分布图</title>
+    <th:block th:include="include :: header('人员成本图表')" />
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <th:block th:include="include :: echarts-js" />
+    <script th:src="@{/static/ruoyi/js/common.js?v=4.7.3}"></script>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <div class="mb6">
+            <p class="yw-table-filter mobile-display-none">
+                <label>年月</label>
+                <input  id="monthBegin" name="monthBegin" class="easyui-validatebox" th:value="${monthBegin}"/>
+            </p>
+            <span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+            <p class="yw-table-filter mobile-display-none">
+                <input  id="monthEnd"  name="monthEnd" class="easyui-validatebox" th:value="${monthEnd}"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>区域</label>
+                <input type="text" id="deptId" class="control text_padding" name="deptId"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>业务类型</label>
+                <input type="text" id="matchCreditFlg" class="control text_padding" name="matchCreditFlg"/>
+            </p>
+            <a class="easyui-linkbutton addBtn btn110" id="businessLicenseC" onclick="initGrossProfitMarginEcharts()" style="margin-left: 60px;">查询</a>
+            <a href="#"class="easyui-linkbutton btn-empty btn64 ml10 btn110" onclick="$('#searchForm').form('reset');">清空</a>
+        </div>
+    </form>
+</div>
+
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+
+    <div class="col-xs-12" id="grossProfitMarginDiv" style="height: 100%;">
+        <div class="ibox" style="margin-left: -5px;height: 100%;">
+            <div class="ibox-title">
+                <h5>客户销售额省份分布图</h5>
+            </div>
+            <div class="imbox-content hgt90-bfb echarts" id="personCostChart" style="padding-right:30px;" >
+            </div>
+        </div>
+    </div>
+
+</div>
+</div>
+
+<script type="text/javascript">
+    var lastIndex=0;
+    var _deptJson =eval('[(${deptJson})]');
+    var _matchCreditFlgJson =[{dictName: '赊销',dictCd: '1'},{dictName: '代采',dictCd: '0'}]
+    _deptJson.unshift({dictName: '全部',dictCd: 'all'})
+    $(function(){
+        $('#monthBegin').datebox({
+            editable:false
+        });
+        intiMonthBox('monthBegin');
+        $('#monthEnd').datebox({
+            editable:false
+        });
+        intiMonthBox('monthEnd');
+        $("#deptId").combobox({
+            data:_deptJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:"auto",
+            editable:false
+        });
+        $("#matchCreditFlg").combobox({
+            data:_matchCreditFlgJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:"auto",
+            editable:false
+        });
+        initGrossProfitMarginEcharts();
+    });
+    function initGrossProfitMarginEcharts() {
+        var $personCostChart = document.getElementById('personCostChart');
+        var myChart = echarts.init($personCostChart);
+        var option;
+        $.ajax({
+            type: 'post',
+            async: false,
+            url: _ctx+'/province/customer/sales/getProvinceCustomerSales',
+            data: Convert.getJson4Form('searchForm'),
+            success: function (response) {
+                console.log(response,777)
+                if(response.length!=0){
+                    var seriesData = response
+                    option = {
+                        tooltip: {
+                            trigger: 'item'
+                        },
+                        legend: {
+                            top: 'bottom'
+                        },
+                        series: [
+                            {
+                                type: 'pie',
+                                radius: '60%',
+                                data:seriesData,
+                                emphasis: {
+                                    itemStyle: {
+                                        shadowBlur: 10,
+                                        shadowOffsetX: 0,
+                                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                    }
+                                },
+                                label: {
+                                    show: true,
+                                    position: 'outside',
+                                    formatter: '{b}: {c}%'  // 格式化标签内容
+                                },
+                            }
+                        ]
+                    }
+                    myChart.clear();
+                    myChart.setOption(option);
+                    window.addEventListener("resize",function(){
+                        myChart.resize();
+                    });
+                } else {
+                    myChart.dispose();
+                }
+            },
+            error: function () {
+                console.log("出错了！")
+            }
+        });
+    }
+    function intiMonthBox(id){
+        var db = $('#'+id);
+        db.datebox({
+            onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                span.trigger('click'); //触发click事件弹出月份层
+                if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                    tds = p.find('div.calendar-menu-month-inner td');
+                    tds.click(function (e) {
+                        e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                        var year = /\d{4}/.exec(span.html())[0]//得到年份
+                            , month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+                        db.datebox('hidePanel')//隐藏日期对象
+                            .datebox('setValue', year + '-' + month); //设置日期的值
+                    });
+                }, 0);
+                yearIpt.unbind();//解绑年份输入框中任何事件
+            },
+            parser: function (s) {
+                if (!s) return new Date();
+                var arr = s.split('-');
+                return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+            },
+            formatter: function (d) {
+                let year = d.getFullYear();
+                let month = d.getMonth() + 1;
+                if (month < 10) {
+                    month = '0' + month;
+                }
+                return year + '-' + month;
+            }
+        });
+        var p = db.datebox('panel'), //日期选择对象
+            tds = false, //日期选择对象中月份
+            yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+            span = p.find('span.calendar-text'); //显示月份层的触发控件
+    }
+
+</script>
+<style scoped>
+
+</style>
+</body>
+</html>

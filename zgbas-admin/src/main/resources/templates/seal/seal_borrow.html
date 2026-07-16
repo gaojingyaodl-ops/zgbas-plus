@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>印章外借查询</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<form id="searchForm" class="form-search from-input-layout" method="post" >
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>印章类型:</label>
+				<input id="itemType" type="text" name="search_LIKES_itemType"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>印章状态:</label>
+				<input id="sealStatus" type="text" name="search_EQS_sealStatus"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>公司名称:</label>
+				<input id="companyName" type="text" name="search_EQS_companyName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>保管人:</label>
+				<input id="KeepUserName" type="text" name="search_EQS_keepUserName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>申请人:</label>
+				<input id="applyUserName" type="text" name="search_EQS_applyUserName"/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<!-- <a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6 btn-export" style="position: fixed;right:20px;top:38px;" onclick="exportExcel()">导出</a> -->
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<div id="w_seal_borrow_ophis" title="流水信息" class="easyui-window" data-options="width:690,height:372"></div>
+<div id="w_return_seal" title="印章外借归还" class="easyui-window" data-options="width:440,height:420"></div>
+<script type="text/javascript">
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]')
+	var customerNameJson = eval('[(${customerNameJson})]');
+	var itemTypeJson = eval('[(${itemTypeJson})]');
+	var sealStatusJson = eval('[(${sealStatusJson})]');
+	var returnSealFlg = [[${returnSealFlg}]];
+	console.log("returnSealFlg "+returnSealFlg);
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[30,40,50,100,200],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/apply/sealBorrow/findBorrowPage",
+			columns:[ [
+				{field:'itemType',title:'印章类型',width:160,align:'left',formatter:function(value,row,index){
+					if (value){
+						var text_array=[];
+						if(value && value.length > 0){
+							var itemTypes = value.split(",");
+							for(var i in itemTypes){
+								if (itemTypes[i]==''){
+									continue;
+								}
+								var item_type  = itemTypes[i];
+								var itemTypeStr = Convert.findValueByKey(itemTypeJson,"dictCd",item_type,"dictName");
+								text_array.push(itemTypeStr);
+							}
+						}
+						return text_array.join(' ');
+					}
+				}},
+				{field:'companyName',title:'公司名称', width:270,align:'left',formatter:function(value,row,index){
+					return Convert.findValueByKey(customerNameJson,"dictCd",value,"dictName");
+				}},
+				{field:'keepUserName',title:'保管人', width:70,align:'left'},
+				{field:'applyUserName',title:'申请人', width:70,align:'left'},
+				{field:'reason',title:'外借原因',width:150,align:'left'},
+				{field:'address',title:'外借地点',width:150,align:'left'},
+				{field:'sealStatus',title:'印章状态', width:70,align:'center',formatter:function(value,row,index){
+					var str = "";
+					var status = "";
+					if (value){
+						status = Convert.findValueByKey(sealStatusJson,"dictCd",value,"dictName");
+						if(value == 'D') {
+							str = '<span style="color:#9f00ff">' + status + '</span>';
+						} else if(value == 'R') {
+							str = '<span style="color:#009100">' + status + '</span>';
+						} else if (value == 'L'){
+							str = '<span style="color:red">' + status + '</span>';
+						}
+					}
+					return str;
+				}},
+				{field:'startDate',title:'借出日期',width:110,align:'center'},
+				{field:'endDate',title:'归还日期',width:110,align:'center'},
+				{field:'returnDate',title:'实际归还日期',width:110,align:'center'},
+				{field:'options',title:'操作',align:'center',width:70,formatter:function(value, row, index){
+					var str = "";
+					if (row && row.sealStatus != 'R' && returnSealFlg){
+						str += '<span onclick="returnSeal('+row.id+')" class="contract-btn contract-btn-7">归还</span>';
+					}
+					return str;
+				}}
+			]],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				detail(row.id);
+			}
+			
+		});
+	    //业务员下拉 
+	    $('#KeepUserName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			//required:true,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#KeepUserName').combotree('clear'); 
+				}else{
+				
+					$('#KeepUserName').combotree('setValue',node.text);	
+				}
+			} 
+		});
+	    $('#applyUserName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			//required:true,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#applyUserName').combotree('clear'); 
+				}else{
+				
+					$('#applyUserName').combotree('setValue',node.text);	
+				}
+			} 
+		});
+		$("#itemType").combobox({
+			data:itemTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:false
+		});
+		$("#companyName").combobox({
+			data:customerNameJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:200,
+			panelWidth:320,
+			editable:false
+		});
+		$("#sealStatus").combobox({
+			data:sealStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:false
+		});
+	    $('#w_return_seal').window({
+			title : '印章外借归还',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			iconCls : ""
+		});
+	    $('#w_seal_borrow_ophis').window({
+			title : '操作记录',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			iconCls : ""
+		});
+	});
+	//归还
+	function returnSeal(id){
+		if (id) {
+			var url = _ctx + "/apply/sealBorrow/toReturnSeal?id=" + id;
+			$('#w_return_seal').window({
+				href : url
+			});
+			$('#w_return_seal').window("open");
+		}
+		/* $.messager.confirm('提示','确定要归还该印章么?',function(t){
+			if(t){
+				if(id){
+					$.post(_ctx + "/apply/sealBorrow/returnSeal",
+						{"id":id}, function(result) {
+							var rObj = eval(result);
+							if (rObj.success) {
+								$.messager.show({title:'Tip',msg:'操作成功',timeout:2000,showType:'show'});
+								$('#tt').datagrid('reload');
+							} else {
+								$.messager.alert('error',rObj.failure,'warning');
+							}
+						}
+					)
+				}
+			}
+		}); */
+	}
+	function detail(id){
+		if (id) {
+			var url = _ctx + "/apply/sealBorrowOphis?id=" + id;
+			$('#w_seal_borrow_ophis').window({
+				href : url
+			});
+			$('#w_seal_borrow_ophis').window("open");
+		}	
+	}
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/apply/sealBorrow/exportExcel"});
+	}
+	
+</script>
+</body>
+</html>

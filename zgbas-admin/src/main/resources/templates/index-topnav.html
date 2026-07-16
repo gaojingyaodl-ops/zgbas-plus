@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<style>
+		.wait-done-badge {
+			position: absolute;
+			left: 85px;
+			top: 6px;
+			background-color: #f56c6c;
+			border-radius: 10px;
+			color: #fff;
+			display: inline-block;
+			font-size: 12px;
+			height: 18px;
+			line-height: 18px;
+			padding: 0 6px;
+			text-align: center;
+			white-space: nowrap;
+			border: 1px solid #fff;
+		}
+		.lockCls{
+			padding-left: 5px;
+		}
+	</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <title>供应链核心管理平台</title>
+    <!-- 避免IE使用兼容模式 -->
+ 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link th:href="@{/static/favicon.ico}" rel="shortcut icon"/>
+    <link th:href="@{/static/css/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/static/css/jquery.contextMenu.min.css}" rel="stylesheet"/>
+    <link th:href="@{/static/css/font-awesome.min.css}" rel="stylesheet"/>
+    <link th:href="@{/static/css/animate.min.css}" rel="stylesheet"/>
+    <link th:href="@{/static/css/style.css}" rel="stylesheet"/>
+    <link th:href="@{/static/css/skins.css?v=20200902}" rel="stylesheet"/>
+    <link th:href="@{/static/ruoyi/css/ry-ui.css?v=4.7.3}" rel="stylesheet"/>
+	<th:block th:replace="~{layouts/include :: include-constants}"></th:block>
+</head>
+<body class="fixed-sidebar full-height-layout gray-bg" th:classappend="${isMobile} ? 'canvas-menu'" style="overflow: hidden">
+<div id="wrapper">
+
+    <!--左侧导航开始-->
+    <nav class="navbar-default navbar-static-side" role="navigation">
+        <div class="nav-close">
+            <i class="fa fa-times-circle"></i>
+        </div>
+        <a th:href="@{/index}">
+            <li class="logo hidden-xs">
+				<img alt="logoImg" id="logoImg" class="logoImg" style="height: 33px">
+<!--				<img th:src="@{/static/new-version/images/logo.png}" alt="logoImg" class="logoImg">-->
+<!--                <span class="logo-lg">浙江网塑</span>-->
+            </li>
+         </a>
+        <div class="sidebar-collapse tab-content" id="side-menu">
+			<div class="user-panel">
+				<a class="menuItem noactive" title="个人中心" th:href="@{/system/user/profile}">
+					<div class="hide" th:text="个人中心"></div>
+					<div class="pull-left image">
+						<img th:src="(${#strings.isEmpty(user.avatar)}) ? @{/static/img/profile.jpg} : @{${g_filePath}+'/view/show/'+${user.avatar}}" class="img-circle" alt="User Image">
+					</div>
+				</a>
+				<div class="pull-left info">
+				  <p>[[${user.nickName}]]</p>
+				  <a href="#"><i class="fa fa-circle text-success"></i> 在线</a>
+				  <a th:href="@{logout}" style="padding-left:5px;"><i class="fa fa-sign-out text-danger"></i> 注销</a>
+				</div>
+			</div>
+
+            <!-- 左侧菜单 -->
+			<th:block th:each="menu : ${menus}">
+			<div class="tab-pane fade height-full" th:id="|menu_${menu.id}|">
+			  <ul class="nav">
+                <li th:each="cmenu : ${menu.children}">
+			      <a class="menu-content" th:if="${#lists.isEmpty(cmenu.children)}" th:href="@{${cmenu.attributes.url}}" th:classappend="${#strings.isEmpty(cmenu.attributes.target)} ? |menuItem| : ${cmenu.attributes.target}" th:data-refresh="${cmenu.attributes.isRefresh == '0'}">
+			        <i th:class="${cmenu.iconCls} + ' fa-fw'"></i> <span class="nav-label">[[${cmenu.text}]]</span>
+			      </a>
+			      <a class="menu-content" th:if="${not #lists.isEmpty(cmenu.children)}" href="#">
+			        <i th:class="${cmenu.iconCls} + ' fa-fw'"></i>
+			        <span class="nav-label">[[${cmenu.text}]]</span>
+			        <span class="fa arrow"></span>
+                  </a>
+				  <ul th:if="${not #lists.isEmpty(cmenu.children)}" class="nav nav-second-level collapse">
+				    <li th:each="emenu : ${cmenu.children}">
+				      <a th:if="${#lists.isEmpty(emenu.children)}" th:href="@{${emenu.attributes.url}}" th:class="${#strings.isEmpty(emenu.attributes.target)} ? |menuItem| : ${emenu.attributes.target}" th:data-refresh="${emenu.attributes.isRefresh == '0'}">
+				        <i th:class="${emenu.iconCls} + ' fa-fw'"></i>
+				        [[${emenu.text}]]
+				      </a>
+				      <a th:if="${not #lists.isEmpty(emenu.children)}" href="#">
+				        <i th:class="${emenu.iconCls} + ' fa-fw'"></i>
+				        [[${emenu.text}]]
+				        <span class="fa arrow"></span>
+				      </a>
+				      <ul th:if="${not #lists.isEmpty(emenu.children)}" class="nav nav-third-level collapse">
+				        <li th:each="fmenu : ${emenu.children}"><a th:if="${#lists.isEmpty(fmenu.children)}" th:class="${#strings.isEmpty(fmenu.attributes.target)} ? |menuItem| : ${fmenu.attributes.target}"  th:href="@{${fmenu.attributes.url}}" th:data-refresh="${fmenu.attributes.isRefresh == '0'}">[[${fmenu.text}]]</a></li>
+				      </ul>
+				    </li>
+				  </ul>
+                </li>
+			  </ul>
+			</div>
+			</th:block>
+
+			<!-- 首页菜单 -->
+			<div class="tab-pane fade height-full" id="index">
+				<ul class="nav">
+					<li th:if="${approveProcessMenuViewFlag}">
+						<a class="menuItem" th:href="@{/my/index}">
+							<i class="fa fa-home"></i> <span class="nav-label">工作台</span></a>
+					</li>
+					<li th:if="${approveProcessMenuViewFlag}">
+						<a class="menuItem" th:href="@{/pm/approve}">
+							<i class="fa fa-home"></i> <span class="nav-label">审批流程</span></a>
+					</li>
+				</ul>
+			</div>
+
+            <!-- 实例演示菜单 -->
+			<div class="tab-pane fade height-full" id="demo" th:if="${demoEnabled}">
+			  <ul class="nav">
+			    <li>
+			      <a href="#"><i class="fa fa-edit"></i> <span class="nav-label">表单</span><span class="fa arrow"></span></a>
+			      <ul class="nav nav-second-level collapse">
+					<li><a class="menuItem" th:href="@{/demo/form/button}">按钮</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/grid}">栅格</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/select}">下拉框</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/timeline}">时间轴</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/basic}">基本表单</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/cards}">卡片列表</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/jasny}">功能扩展</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/sortable}">拖动排序</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/invoice}">单据打印</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/labels_tips}">标签 & 提示</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/tabs_panels}">选项卡 & 面板</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/validate}">表单校验</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/wizard}">表单向导</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/upload}">文件上传</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/datetime}">日期和时间</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/summernote}">富文本编辑器</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/duallistbox}">左右互选组件</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/autocomplete}">搜索自动补全</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/cxselect}">多级联动下拉</a></li>
+					<li><a class="menuItem" th:href="@{/demo/form/localrefresh}">Ajax局部刷新</a></li>
+			      </ul>
+			    </li>
+			    <li>
+			      <a href="#"><i class="fa fa-table"></i> <span class="nav-label">表格</span><span class="fa arrow"></span></a>
+			      <ul class="nav nav-second-level collapse">
+					<li><a class="menuItem" th:href="@{/demo/table/search}">查询条件</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/footer}">数据汇总</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/groupHeader}">组合表头</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/export}">表格导出</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/exportSelected}">导出选择列</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/remember}">翻页记住选择</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/pageGo}">跳转至指定页</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/params}">自定义查询参数</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/multi}">初始多表格</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/button}">点击按钮加载表格</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/data}">直接加载表格数据</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/fixedColumns}">表格冻结列</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/event}">自定义触发事件</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/headerStyle}">表格标题格式化</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/detail}">表格细节视图</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/child}">表格父子视图</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/image}">表格图片预览</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/curd}">动态增删改查</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/reorderRows}">表格行拖拽操作</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/reorderColumns}">表格列拖拽操作</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/resizable}">表格列宽拖动</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/editable}">表格行内编辑</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/subdata}">主子表提交</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/refresh}">表格自动刷新</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/print}">表格打印配置</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/dynamicColumns}">表格动态列</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/customView}">自定义视图分页</a></li>
+					<li><a class="menuItem" th:href="@{/demo/table/other}">表格其他操作</a></li>
+			      </ul>
+			    </li>
+			    <li>
+			      <a href="#"><i class="fa fa-flask"></i> <span class="nav-label">弹框</span><span class="fa arrow"></span></a>
+			      <ul class="nav nav-second-level collapse">
+					<li><a class="menuItem" th:href="@{/demo/modal/dialog}">模态窗口</a></li>
+					<li><a class="menuItem" th:href="@{/demo/modal/layer}">弹层组件</a></li>
+					<li><a class="menuItem" th:href="@{/demo/modal/table}">弹层表格</a></li>
+			      </ul>
+			    </li>
+			    <li>
+			      <a href="#"><i class="fa fa-wpforms"></i> <span class="nav-label">操作</span><span class="fa arrow"></span></a>
+			      <ul class="nav nav-second-level collapse">
+					<li><a class="menuItem" th:href="@{/demo/operate/table}">表格</a></li>
+					<li><a class="menuItem" th:href="@{/demo/operate/other}">其他</a></li>
+			      </ul>
+			    </li>
+			    <li>
+			      <a href="#"><i class="fa fa-bar-chart-o"></i> <span class="nav-label">报表</span><span class="fa arrow"></span></a>
+			      <ul class="nav nav-second-level collapse">
+					<li><a class="menuItem" th:href="@{/demo/report/echarts}">百度ECharts</a></li>
+					<li><a class="menuItem" th:href="@{/demo/report/peity}">peity</a></li>
+					<li><a class="menuItem" th:href="@{/demo/report/sparkline}">sparkline</a></li>
+					<li><a class="menuItem" th:href="@{/demo/report/metrics}">图表组合</a></li>
+			      </ul>
+			    </li>
+			    <li>
+			      <a href="#"><i class="fa fa-book"></i> <span class="nav-label">图标</span><span class="fa arrow"></span></a>
+			      <ul class="nav nav-second-level collapse">
+					<li><a class="menuItem" th:href="@{/demo/icon/fontawesome}">Font Awesome</a></li>
+					<li><a class="menuItem" th:href="@{/demo/icon/glyphicons}">Glyphicons</a></li>
+			      </ul>
+			    </li>
+			    <li>
+			      <a href="#"><i class="fa fa-navicon"></i> <span class="nav-label">四层菜单</span><span class="fa arrow"></span></a>
+			      <ul class="nav nav-second-level collapse">
+					<li>
+						<a href="#" id="damian">三级菜单1<span class="fa arrow"></span></a>
+						<ul class="nav nav-third-level collapse">
+							<li>
+								<a href="#">四级菜单1</a>
+							</li>
+							<li>
+								<a href="#">四级菜单2</a>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">三级菜单2</a></li>
+			      </ul>
+			    </li>
+			  </ul>
+			</div>
+        </div>
+    </nav>
+    <!--左侧导航结束-->
+
+    <!--右侧部分开始-->
+    <div id="page-wrapper" class="gray-bg dashbard-1">
+        <div class="row border-bottom">
+            <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+                <div class="navbar-header">
+                    <a class="navbar-minimalize minimalize-styl-2" style="color:#FFF;" href="#" title="收起菜单">
+<!--                    	<i class="fa fa-bars"></i>-->
+						<img alt="" th:src="@{/static/images/icons/open-menu.svg}" class="open-menu" style="display: none; ">
+						<img alt="" th:src="@{/static/images/icons/close-menu.svg}" class="close-menu" >
+                    </a>
+                </div>
+                <!-- 顶部栏 -->
+                <div id="navMenu">
+                  <ul class="nav navbar-toolbar nav-tabs navbar-left hidden-xs">
+
+                    <!-- 顶部菜单列表 -->
+	                <th:block th:each="menu : ${menus}">
+               	    <li role="presentation" th:id="|tab_${menu.id}|">
+               	        <a th:if="${#lists.isEmpty(menu.children)}" data-toggle="tab" th:class="@{${!#strings.isEmpty(menu.attributes.target) && menu.target == 'menuBlank'} ? 'menuBlank' : 'menuItem noactive'}" th:href="@{${menu.attributes.url}}">
+                            <i th:class="${menu.iconCls}"></i> <span>[[${menu.text}]]</span>
+                        </a>
+                        <a th:if="${not #lists.isEmpty(menu.children)}" data-toggle="tab" th:class="@{${!#strings.isEmpty(menu.attributes.target) && menu.target == 'menuBlank'} ? 'menuBlank'}" th:href="@{${!#strings.isEmpty(menu.attributes.target) && menu.attributes.target == 'menuBlank'} ? @{${menu.attributes.url}} : |#menu_${menu.id}|}">
+                            <i th:class="${menu.iconCls}"></i> <span>[[${menu.text}]]</span>
+                        </a>
+                    </li>
+	                </th:block>
+
+	                <li role="presentation" id="tab_index">
+                      <a data-toggle="tab" href="#index">
+                        <i class="fa fa-area-chart"></i> <span>统计报表</span>
+                      </a>
+                    </li>
+
+                    <li role="presentation" id="tab_demo" th:if="${demoEnabled}">
+                      <a data-toggle="tab" href="#demo">
+                        <i class="fa fa-desktop"></i> <span>实例演示</span>
+                      </a>
+                    </li>
+				  </ul>
+				</div>
+                <!-- 右侧栏 -->
+                <ul class="nav navbar-top-links navbar-right welcome-message">
+					<li th:if="${fundCompanyFlg == true}"><a data-toggle="tooltip" data-trigger="hover" data-placement="bottom" th:title="${fundCompanyName + '余额'}" href="#" onclick="openFundFlow();"><i class="fa fa-cny"></i>[[${#strings.defaultString(fundAmount, '')}]]</a></li>
+					<li th:if="${businessOverviewPerm == true}"><a data-toggle="tooltip" data-trigger="hover" data-placement="bottom" title="业务总览" href="#" onclick="openBusinessOverview();"><i class="fa fa-clipboard"></i> 业务总览</a></li>
+					<li><a data-toggle="tooltip" data-trigger="hover" data-placement="bottom" title="业务查询" href="#" onclick="openConfigMessage();"><i class="fa fa-battery-half"></i> 业务查询</a></li>
+<!--					<li><a data-toggle="tooltip" data-trigger="hover" data-placement="bottom" title="用户手册" href="#" onclick="openManual();"><i class="fa fa-book"></i> 用户手册</a></li>-->
+					<li>
+						<a data-toggle="tooltip" data-trigger="hover" data-placement="bottom" title="待办事项" href="#" onclick="openWaitDeal(0)">
+							<i class="fa fa-bell"></i>
+							待办事项<span class="wait-done-badge badgeNum">[[${waitDealNum}]]</span>
+						</a>
+					</li>
+					<li class="lockCls"><a data-toggle="tooltip" data-trigger="hover" data-placement="bottom" title="锁定屏幕" href="#" id="lockScreen"><i class="fa fa-lock"></i> 锁屏</a></li>
+	                <li><a data-toggle="tooltip" data-trigger="hover" data-placement="bottom" title="全屏显示" href="#" id="fullScreen"><i class="fa fa-arrows-alt"></i> 全屏</a></li>
+
+                    <li class="dropdown user-menu">
+						<a href="javascript:void(0)" class="dropdown-toggle" data-hover="dropdown">
+							<img th:src="(${#strings.isEmpty(user.avatar)}) ? @{/static/img/profile.jpg} : @{${g_filePath}+'/view/show/'+${user.avatar}}" class="user-image">
+							<span class="hidden-xs">[[${#strings.defaultString(user.nickName, '-')}]]</span>
+						</a>
+						<ul class="dropdown-menu">
+							<li class="mt5">
+								<a th:href="@{/system/user/profile}" class="menuItem noactive">
+								<i class="fa fa-user"></i> 个人中心</a>
+							</li>
+							<li>
+								<a onclick="resetPwd()">
+								<i class="fa fa-key"></i> 修改密码</a>
+							</li>
+							<li>
+								<a onclick="switchSkin()">
+								<i class="fa fa-dashboard"></i> 切换主题</a>
+							</li>
+							<li>
+								<a onclick="toggleMenu()">
+								<i class="fa fa-toggle-off"></i> 左侧菜单</a>
+							</li>
+							<li class="divider"></li>
+							<li>
+								<a th:href="@{logout}">
+								<i class="fa fa-sign-out"></i> 退出登录</a>
+							</li>
+						</ul>
+					</li>
+                </ul>
+            </nav>
+        </div>
+        <div class="row content-tabs" th:classappend="${#bools.isFalse(tagsView)} ? |hide|">
+            <button class="roll-nav roll-left tabLeft">
+                <i class="fa fa-backward"></i>
+            </button>
+            <nav class="page-tabs menuTabs">
+                <div class="page-tabs-content">
+                    <a href="javascript:;" class="active menuTab" th:data-id="@{/my/index}">工作台</a>
+                    <a href="javascript:;" class="noactive menuTab" th:data-id="@{/pm/approve}">审批流程</a>
+                </div>
+            </nav>
+            <button class="roll-nav roll-right tabRight">
+                <i class="fa fa-forward"></i>
+            </button>
+            <a href="javascript:void(0);" class="roll-nav roll-right tabReload"><i class="fa fa-refresh"></i> 刷新</a>
+        </div>
+
+        <a id="ax_close_max" class="ax_close_max" href="#" title="关闭全屏"> <i class="fa fa-times-circle-o"></i> </a>
+
+        <div class="row mainContent" id="content-main" th:classappend="${mainClass}">
+            <iframe class="RuoYi_iframe" name="iframe0" width="100%" height="100%" th:data-id="@{/my/index}" th:src="@{/my/index}" frameborder="0" seamless></iframe>
+            <iframe class="RuoYi_iframe" name="iframe1" width="100%" height="100%" th:data-id="@{/pm/approve}" th:src="@{/pm/approve}" frameborder="0" seamless></iframe>
+        </div>
+    </div>
+    <!--右侧部分结束-->
+</div>
+<!-- 全局js -->
+<script th:src="@{/static/js/jquery.min.js}"></script>
+<script th:src="@{/static/js/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/plugins/metisMenu/jquery.metisMenu.js}"></script>
+<script th:src="@{/static/js/plugins/slimscroll/jquery.slimscroll.min.js}"></script>
+<script th:src="@{/static/js/jquery.contextMenu.min.js}"></script>
+<script th:src="@{/static/ajax/libs/blockUI/jquery.blockUI.js}"></script>
+<script th:src="@{/static/ajax/libs/layer/layer.min.js}"></script>
+<script th:src="@{/static/ruoyi/js/ry-ui.js?v=4.7.2}"></script>
+<script th:src="@{/static/ruoyi/js/common.js?v=4.7.2}"></script>
+<script th:src="@{/static/ruoyi/index.js?v=20201208}"></script>
+<script th:src="@{/static/js/admin/index.action.js?v=202204252}"></script>
+<script th:src="@{/static/ajax/libs/fullscreen/jquery.fullscreen.js}"></script>
+<script th:src="@{/static/js/resize-tabs.js}"></script>
+<script th:src="@{/static/js/admin/indexWs.js}"></script>
+<script th:inline="javascript">
+window.history.forward(1);
+var ctx = [[@{/}]];
+var lockscreen = [[${session.lockscreen}]];
+if(lockscreen){window.top.location=ctx+"lockscreen";}
+// 皮肤缓存
+var skin = storage.get("skin");
+var _waitDealNum = [[${waitDealNum}]];
+// history（表示去掉地址的#）否则地址以"#"形式展示
+var mode = "history";
+// 历史访问路径缓存
+var historyPath = storage.get("historyPath");
+// 是否页签与菜单联动
+var isLinkage = true;
+
+// 本地主题优先，未设置取系统配置
+if($.common.isNotEmpty(skin)){
+	$("body").addClass(skin.split('|')[0]);
+	$("body").addClass(skin.split('|')[1]);
+} else {
+	$("body").addClass([[${sideTheme}]]);
+	$("body").addClass([[${skinName}]]);
+}
+var _callbackMethod={};
+
+function refreshTabContent(title){
+	var callback=_callbackMethod[title]
+	if (callback){
+		callback();
+	}
+}
+$('.menuTabs .page-tabs-content .menuTab').click(function (){
+	var title = $(this).text();
+	if(title == "审批流程"){
+		refreshTabContent(title);
+	}
+});
+/* 用户管理-重置密码 */
+function resetPwd() {
+    var url = ctx + 'system/user/profile/resetPwd';
+    $.modal.open("重置密码", url, '770', '380');
+}
+function toMyIndex(){
+	addTab('我的首页',_ctx+'/my/index')
+}
+
+function toApporve(){
+	addTab('审批流程',_ctx+'/pm/approve')
+}
+/* 切换主题 */
+function switchSkin() {
+    layer.open({
+		type : 2,
+		shadeClose : true,
+		title : "切换主题",
+		area : ["530px", "150px"],
+		content : [ctx + "system/switchSkin", 'no']
+	})
+}
+
+/* 切换菜单 */
+function toggleMenu() {
+	$.modal.confirm("确认要切换成左侧菜单吗？", function() {
+		$.get(ctx + 'system/menuStyle/default', function(result) {
+            window.location.reload();
+	    });
+	})
+}
+
+/** 刷新时访问路径页签 */
+function applyPath(url) {
+	var $dataObj = $('a[href$="' + decodeURI(url) + '"]');
+	$dataObj.click();
+	if (!$dataObj.hasClass("noactive")) {
+	    $dataObj.parent("li").addClass("selected").parents("li").removeClass("noactive").parents("li").addClass("active").end().parents("ul").addClass("in");
+	}
+	// 顶部菜单同步处理
+    var tabStr = $dataObj.parents(".tab-pane").attr("id");
+    if ($.common.isNotEmpty(tabStr)) {
+        var sepIndex = tabStr.lastIndexOf('_');
+        var menuId = tabStr.substring(sepIndex + 1, tabStr.length);
+        $("#tab_" + menuId + " a").click();
+    }
+}
+
+function addTab(subtitle,url,icon){
+	$.modal.openTab(subtitle, url);
+}
+
+$(function() {
+	var lockPath = storage.get('lockPath');
+	if($.common.equals("history", mode) && window.performance.navigation.type == 1) {
+		var url = storage.get('publicPath');
+	    if ($.common.isNotEmpty(url)) {
+	    	applyPath(url);
+			if (url == '/pm/approve'){
+				toApporve();
+			}
+	    } else {
+	    	$(".navbar-toolbar li a").eq(0).click();
+	    }
+	} else if($.common.isNotEmpty(lockPath)) {
+	    applyPath(lockPath);
+	    storage.remove('lockPath');
+	} else {
+		var hash = location.hash;
+	    if ($.common.isNotEmpty(hash)) {
+	        var url = hash.substring(1, hash.length);
+	        applyPath(url);
+	    } else {
+	    	if($.common.equals("history", mode)) {
+	    		storage.set('publicPath', "");
+	    	}
+	    	$(".navbar-toolbar li a").eq(0).click();
+	    }
+	}
+
+	/* 初始密码提示 */
+	if([[${isDefaultModifyPwd}]]) {
+		layer.confirm("您的密码还是初始密码，请修改密码！", {
+			icon: 0,
+			title: "安全提示",
+			btn: ['确认'	, '取消'],
+			offset: ['30%']
+		}, function (index) {
+			resetPwd();
+			layer.close(index);
+		});
+	}
+
+	/* 过期密码提示 */
+	if([[${isPasswordExpired}]]) {
+		layer.confirm("您的密码已过期，请尽快修改密码！", {
+			icon: 0,
+			title: "安全提示",
+			btn: ['确认'	, '取消'],
+			offset: ['30%']
+		}, function (index) {
+			resetPwd();
+			layer.close(index);
+		});
+	}
+
+	if (!_waitDealNum){
+		const badgeElement = document.querySelector('.wait-done-badge');
+		if (badgeElement){
+			badgeElement.style.display = 'none';
+		}
+	}
+	$("[data-toggle='tooltip']").tooltip();
+	convertToSkin();
+});
+function convertToSkin() {
+	var _skinClass = "";
+	var _skin = window.localStorage.getItem("skin");
+	if (_skin) {
+		_skinClass = _skin.split('|')[0];
+	} else {
+		_skinClass = [[${skinName}]];
+	}
+
+	var newSrc = "/static/images/login/logo.svg"
+	var imgElement = document.getElementById('logoImg');
+	if (_skinClass == "skin-blue") {
+		newSrc = "/static/images/login/logo.svg"
+		$('.icon-blue').show();
+	} else if (_skinClass == "skin-green") {
+		newSrc = "/static/images/login/logo.svg"
+		$('.icon-green').show();
+	} else if (_skinClass == "dark-blue") {
+		newSrc = "/static/images/login/logo-write.svg"
+		$('.icon-dark').show();
+	}
+	imgElement.src = newSrc;
+}
+</script>
+</body>
+</html>

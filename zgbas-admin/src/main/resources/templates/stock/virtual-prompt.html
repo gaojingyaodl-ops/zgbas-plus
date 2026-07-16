@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>请选择模式</title>
+    <style>
+        .virtual-prompt-ul{
+            padding-left: 5px;
+        }
+
+        .virtual-prompt-ul li {
+            list-style-type: disc;
+            overflow: inherit;
+            font-size: 14px;
+            line-height: 2;
+            padding-left: 2px;
+        }
+        .btv{
+            width: 100px;
+            height: 25px;
+        }
+    </style>
+</head>
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <div style="margin: 5px">
+        <ul class="a virtual-prompt-ul">
+            <li>从采购中选择：导入其他业务员已录入的采购报价；</li>
+<!--            <li>从销售中选择：导入其他业务员已录入的销售报价；</li>-->
+            <li th:if="${virtualBuyFlg}">手动输入：采购销售业务员都是我，手动输入全部信息；</li>
+        </ul>
+    </div>
+    <div class="mt15 pl10" style="display: flex; justify-content: center;">
+        <a href="#" class="easyui-linkbutton btn-info-empty ml10 btv" style="font-size: 14px"  onclick="openChooseStockVirtual('B');">从采购中选择</a>
+<!--        <a href="#" class="easyui-linkbutton btn-info-empty ml10 btv"  style="font-size: 14px" onclick="openChooseStockVirtual('S');">从销售中选择</a>-->
+        <a th:if="${virtualBuyFlg}" href="#" class="easyui-linkbutton btn-info-empty btn64 ml10 btv"  style="font-size: 14px" onclick="closeVirtualTab();"> 手动输入 </a>
+        <a href="#" class="easyui-linkbutton btn-empty btn64 ml10 btv"  style="font-size: 14px" onclick="doClose();"> 取 消 </a>
+    </div>
+</div>
+<script type="text/javascript">
+    var _virtualType = [[${virtualType}]];
+    $(function(){
+        $(".panel-tool-close").css("display","none");
+    })
+    function closeVirtualTab(){
+        $('#w_stockVirtual_prompt').window('close');
+    }
+
+    function openChooseStockVirtual(type){
+        var _window_title = (type == 'B') ? '采购报价选择' : '销售报价选择';
+        $('#w_stockVirtual_prompt').window('close');
+        $('#w_stockVirtual_choose').window({title: _window_title});
+        var url=_ctx+"/stock/virtual/choose?type="+type+"&virtualType="+_virtualType;
+        $('#w_stockVirtual_choose').attr('callbackExec', 'StockVirtual.chooseVirtualCallback');
+        $('#w_stockVirtual_choose').window({href:url});
+        $('#w_stockVirtual_choose').window("open");
+    }
+</script>
+</html>

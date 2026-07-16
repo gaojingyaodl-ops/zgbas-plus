@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html  lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit">
+    <title>主题选择</title>
+    <!--[if lt IE 9]>
+    <meta http-equiv="refresh" content="0;ie.html"/>
+    <![endif]-->
+    <link rel="shortcut icon" href="../static/favicon.ico" th:href="@{favicon.ico}"/>
+    <link th:href="@{/static/css/bootstrap.min.css}" rel="stylesheet"/>
+    <link th:href="@{/static/css/style.min.css}" rel="stylesheet"/>
+    <style type="text/css">
+		.list-unstyled{margin:10px;}
+		.full-opacity-hover{opacity:1;filter:alpha(opacity=1);border:1px solid #fff}
+		.full-opacity-hover:hover{border:1px solid #f00;}
+	</style>
+</head>
+<body class="gray-bg">
+<ul class="list-unstyled clearfix">
+	<li style="float:left; width: 33.33333%; padding: 5px;">
+		<a href="javascript:" data-skin="skin-blue|theme-light" style="display: block; box-shadow: 0 0 3px rgba(0,0,0,0.4)" class="clearfix full-opacity-hover">
+			<span style="width: 20%; float: left; height: 13px; background: #3183f6"></span>
+			<span style="width: 80%; float: left; height: 13px; background: #1BA3FF"></span>
+			<span style="width: 20%; float: left; height: 30px; background: #f9fafc"></span>
+			<span style="width: 80%; float: left; height: 30px; background: #f4f5f7"></span>
+		</a>
+		<p class="text-center">天蓝</p>
+	</li>
+	
+	<li style="float:left; width: 33.33333%; padding: 5px;">
+		<a href="javascript:" data-skin="skin-green|theme-light" style="display: block; box-shadow: 0 0 3px rgba(0,0,0,0.4)" class="clearfix full-opacity-hover">
+			<span style="width: 20%; float: left; height: 13px; background: #008d4c"></span>
+			<span style="width: 80%; float: left; height: 13px; background: #00a65a"></span>
+			<span style="width: 20%; float: left; height: 30px; background: #f9fafc"></span>
+			<span style="width: 80%; float: left; height: 30px; background: #f4f5f7"></span>
+		</a>
+		<p class="text-center">翠绿</p>
+	</li>
+	
+	<li style="float:left; width: 33.33333%; padding: 5px;">
+		<a href="javascript:" data-skin="dark-blue|theme-light" style="display: block; box-shadow: 0 0 3px rgba(0,0,0,0.4)" class="clearfix full-opacity-hover">
+			<span style="width: 20%; float: left; height: 13px; background: #19203D"></span>
+			<span style="width: 80%; float: left; height: 13px; background: #19203D"></span>
+			<span style="width: 20%; float: left; height: 30px; background: #f9fafc"></span>
+			<span style="width: 80%; float: left; height: 30px; background: #f4f5f7"></span>
+		</a>
+		<p class="text-center">深蓝</p>
+	</li>
+</ul>
+</body>
+<script th:src="@{/static/js/jquery.min.js}"></script>
+<script th:src="@{/static/ruoyi/js/common.js?v=4.7.2}"></script>
+<script type="text/javascript">
+//皮肤样式列表
+var skins = ["skin-blue", "skin-green", "skin-purple", "skin-red", "skin-yellow"];
+
+// 主题样式列表
+var themes = ["theme-dark", "theme-light", "theme-blue"];
+
+$("[data-skin]").on('click',
+function(e) {
+    var skin = $(this).data('skin');
+    $.each(skins, function(i) {
+        parent.$("body").removeClass(skins[i]);
+    });
+    $.each(themes, function(i) {
+        parent.$("body").removeClass(themes[i]);
+    });
+    parent.$("body").addClass(skin.split('|')[0]);
+    parent.$("body").addClass(skin.split('|')[1]);
+    storage.set('skin', skin);
+	document.documentElement.style.setProperty('--skin-color', convertSkin(skin));
+	document.documentElement.style.setProperty('--skin-tab-first-color', '#EAEEF2');
+	document.documentElement.style.setProperty('--skin-select-color', lightenColor(convertSkin(skin), 40));
+	document.documentElement.style.setProperty('--skin-over-color', lightenColor(convertSkin(skin), 60));
+	// 重新加载当前页面
+	window.top.location.reload();
+	// window.history.go(-1);
+});
+function convertSkin(skin) {
+	var skinClass = skin.split('|')[0];
+	if (skinClass == "skin-blue") {
+		return "#1BA3FF"
+	} else if (skinClass == "skin-green") {
+		return "#45b681";
+	} else if (skinClass == "dark-blue") {
+		return "#19203D";
+	} else if (skinClass == "skin-purple") {
+		return "#605ca8";
+	} else if (skinClass == "skin-red") {
+		return "#dd4b39";
+	} else if (skinClass == "skin-yellow") {
+		return "#f39c12";
+	} else {
+		return "#43b77f";
+	}
+}
+
+function lightenColor(hex, percent) {
+	hex = hex.replace(/^#/, '');
+	let r = parseInt(hex.substring(0, 2), 16);
+	let g = parseInt(hex.substring(2, 4), 16);
+	let b = parseInt(hex.substring(4, 6), 16);
+
+	r = Math.min(255, Math.floor(r + (255 - r) * percent / 100));
+	g = Math.min(255, Math.floor(g + (255 - g) * percent / 100));
+	b = Math.min(255, Math.floor(b + (255 - b) * percent / 100));
+
+	r = r.toString(16).padStart(2, '0');
+	g = g.toString(16).padStart(2, '0');
+	b = b.toString(16).padStart(2, '0');
+	return `#${r}${g}${b}`;
+}
+</script>
+</html>

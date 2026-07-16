@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+
+        <div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden" name="companyId" id="companyId" th:value="${company.id}" />
+<!--            <input type="hidden" name="companyName" id="companyName" th:value="${company.companyName}" />-->
+
+            <div th:if="${entity.id != 0}">
+                <div th:fragment="company" region="center" border="false" >
+                    <div class="mb6">
+                        <p class="yw-table-filter  w2">
+                            <label>企业名称</label>
+                            <input id="companyName" readonly type="text" th:value="${company.companyName}">
+                        </p>
+                        <p class="yw-table-filter">
+                            <label>公司类型</label>
+                            <input id="companyGrade" type="text" name="companyGrade" th:value="${company.companyGrade}"/>
+                        </p>
+                        <p class="yw-table-filter">
+                            <label>法人</label>
+                            <input id="legalRepresent" readonly type="text" th:value="${company.legalRepresent}">
+                        </p>
+                    </div>
+                    <div class="mb6">
+                        <p class="yw-table-filter  w2">
+                            <label>营业执照</label>
+                            <input id="companyCreditNo" readonly type="text" th:value="${company.companyCreditNo}">
+                        </p>
+                        <p class="yw-table-filter  w2">
+                            <label>企业地址</label>
+                            <input id="address" readonly type="text" th:value="${company.address}">
+                        </p>
+                    </div>
+                    <div class="mb6">
+                        <p class="yw-table-filter">
+                            <label>联系人</label>
+                            <input id="contactName" readonly type="text" th:value="${company.contactName}">
+                        </p>
+                        <p class="yw-table-filter">
+                            <label>联系电话</label>
+                            <input id="contactPhone" readonly type="text" th:value="${company.contactPhone}">
+                        </p>
+                        <p class="yw-table-filter">
+                            <label>注册资本</label>
+                            <input id="registerCapital" readonly type="text" th:value="${company.registerCapital}">
+                        </p>
+                        <p class="yw-table-filter">
+                            <label>成立日期</label>
+                            <input id="registerDate" readonly type="text"
+                                   th:value="${#dates.format(company.registerDate,'yyyy-MM-dd')}">
+                        </p>
+                    </div>
+                    <div class="mb6">
+                        <p class="yw-table-filter">
+                            <label>企业类型</label>
+                            <input id="companyType" type="text" name="companyType" th:value="${company.companyType}"/>
+                        </p>
+                        <p class="yw-table-filter">
+                            <label>企业性质</label>
+                            <input id="companyCategory" type="text" name="companyCategory"  th:value="${company.companyCategory}"/>
+                        </p>
+                        <p class="yw-table-filter">
+                            <label>录入日期</label>
+                            <input id="createdDate" readonly type="text" th:value="${#dates.format(company.createdDate,'yyyy-MM-dd')}">
+                        </p>
+                        <p class="yw-table-filter">
+                            <label>业务员</label>
+                            <input id="matchUser" readonly type="text" th:value="${matchUser}">
+                        </p>
+                    </div>
+                    <div class="mb6">
+                        <p class="yw-table-filter w4">
+                            <label>经营范围</label>
+                            <input id="scope" readonly type="text" th:value="${company.scope}">
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+<!--            <div id="companyDiv"></div>-->
+        <!-- <p class="form-section-title"><span class="approve_text">申请内容</span><i></i></p> -->
+        <p class="form-section-title"><span class="approve_text">风控评估信息</span><i></i></p>
+<!--        <div id="pm_content_div"></div>-->
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <lable>评价等级</lable>
+            <input name="creditRating" type="text" id="creditRating"  />
+        </p>
+        <p class="yw-table-filter">
+            <lable>企业性质</lable>
+            <input name="companyCategory" type="text" id="companyCategoryRisk" th:value="${entity.companyCategory}"/>
+        </p>
+        <span th:if="${entity.id != 0}">
+            <p class="yw-table-filter w2">
+            <lable>备注</lable>
+            <input id="approvalRemark" readonly type="text" th:value="${company.approvalRemark}">
+            </p>
+        </span>
+    </div>
+
+
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    var creditRatingJson = eval('[(${creditRatingJson})]');
+    var companyCategoryJson = eval('[(${companyCategoryJson})]');
+    var companyTypeJson = eval('[(${companyTypeJson})]');
+    var companyGradeJson = eval('[(${companyGradeJson})]');
+    var entity = [[${entity}]];
+    var permission = [[${psv}]];
+    console.log("permission:" + permission);
+
+    //信用等级
+    $("#creditRating").combobox({
+        data:creditRatingJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        editable: false,
+        readonly: !permission.hasEdit && !permission.canApproveEdit
+    });
+    //企业分类
+    $("#companyType").combobox({
+        data:companyTypeJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        required: false,
+        editable:false,
+        readonly: true
+    });
+    //企业性质
+    $("#companyCategory").combobox({
+        data:companyCategoryJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        required: false,
+        editable:false,
+        readonly: true
+    });
+    //企业性质
+    $("#companyCategoryRisk").combobox({
+        data:companyCategoryJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        required: false,
+        editable:false,
+        readonly: true
+    });
+    // 公司类型
+    $("#companyGrade").combobox({
+        data:companyGradeJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        editable:false,
+        readonly: true
+    });
+
+    if (entity.id == 0){
+        $("#creditRating").combobox('setValue', [[${company.creditRating}]]);
+    }else{
+        $("#creditRating").combobox('setValue', [[${entity.creditRating}]]);
+    }
+</script>

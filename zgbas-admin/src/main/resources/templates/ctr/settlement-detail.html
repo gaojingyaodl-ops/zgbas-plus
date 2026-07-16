@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<div style="height:100px;" class="tbw down-mb15">
+  <input type="hidden" id="settlement_id" th:value="${settlement_id}" />
+  <table id="settlementDetailTable" style="height: 200px;" border="0"
+         title="" iconCls="icon-edit" singleSelect="true"
+         idField="id">
+  </table>
+</div>
+<script type="text/javascript">
+  $(function(){
+    var settlement_id = $("#settlement_id").val();
+    var _url = _ctx+"/ctr/settlement/detailPage/"+settlement_id;
+    $('#settlementDetailTable').datagrid({
+      pageSize:50,
+      rownumbers:true,
+      url:_url,
+      pagination:false,
+      columns:[ [
+        {field:'contractNo',title:'合同编号',align:'center',width:110},
+        {field:'afterTaxSpreadAmount',title:'总金额',align:'right',width:85,formatter:formateNumTon},
+        {field:'buyMatchAmount',title:'采购人员分成', align:'right', width:95,formatter:function (value, row, index){
+            if (row.buyCommission){
+              return formateNumTon(value, row, index) + "(" + (row.buyCommission * 100).toFixed() + "%)";
+            }
+            return formateNumTon(value, row, index);
+          }},
+        {field:'sellMatchAmount',title:'销售人员分成', align:'right', width:95,formatter:function (value, row, index){
+            if (row.sellCommission){
+              return formateNumTon(value, row, index) + "(" + (row.sellCommission * 100).toFixed() + "%)";
+            }
+            return formateNumTon(value, row, index);
+          }},
+        {field:'buyHeadCommissionAmount',title:'采购中心副总经理', align:'right', width:120,formatter:function (value, row, index){
+            if (row.buyHeadCommission){
+              return formateNumTon(value, row, index) + "(" + (row.buyHeadCommission * 100).toFixed() + "%)";
+            }
+            return formateNumTon(value, row, index);
+          }},
+        {field:'sellHeadCommissionAmount',title:'销售团队负责人分成', align:'right', width:120,formatter:function (value, row, index){
+            if (row.sellHeadCommission){
+              return formateNumTon(value, row, index) + "(" + (row.sellHeadCommission * 100).toFixed() + "%)";
+            }
+            return formateNumTon(value, row, index);
+          }},
+        {field:'sellMatchUserName',title:'销售业务员', align:'center', width:80},
+        {field:'buyMatchUserName',title:'采购业务员', align:'center', width:80},
+        {field:'settlementType',title:'提成类型', width:70,align:'center',formatter:function(value, row, index){
+            var str = "";
+            if (row.id){
+              if (value == '0'){
+                str = "<div class='contract-btn contract-btn-3'><span>收货款</span></div>";
+              }else if (value == '1'){
+                str = "<div class='contract-btn contract-btn-5'><span>收逾期罚息</span></div>";
+              }else {
+                str = "<div class='contract-btn contract-btn-7'><span>返还逾期罚息</span></div>";
+              }
+              return str;
+            }
+        }},
+        {field:'settlementStatus',title:'提成状态', width:70,align:'center',formatter:function(value, row, index){
+            var str = "";
+            if (row.id){
+              if (value == '0'){
+                str = "<div class='contract-btn contract-btn-2'><span>未结算</span></div>";
+              }else{
+                str = "<div class='contract-btn contract-btn-6'><span>已结算</span></div>";
+              }
+              return str;
+            }
+          }}
+      ]],
+      onLoadSuccess:function(data){
+
+      }
+    });
+  })
+  function formateNumTon(num, row, index) {
+    if (num) {
+      num = parseFloat(num).toFixed(2).toString().split(".");
+      num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+      return num.join(".");
+    } else {
+      return num;
+    }
+  }
+</script>

@@ -1,0 +1,128 @@
+<!-- 作废申请 2021-04-24 -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" border="false" fit="true">
+   <div region="north" border="false" id="inputForm" method="post"  style="margin-bottom:10px;">
+	   <input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+	   <input type="hidden" id="entityStatus" th:value="${entity.status}" />
+	   <input type="hidden" id="matchApproveId" th:value="${entity.matchApproveId}" />
+       <div class="mb6">
+           <p class="yw-table-filter w2">
+               <lable>我方：</lable>
+               <input type="text" name="ourCompanyName" readonly th:value="${entity.ourCompanyName}"/>
+           </p>
+       </div>
+       <div class="mb6">
+           <p class="yw-table-filter w2">
+               <lable>供方：</lable>
+               <input type="text" readonly name="buyCompanyName" th:value="${entity.buyCompanyName}"/>
+           </p>
+           <p class="yw-table-filter">
+               <lable>合同编号：</lable>
+               <input type="text" readonly name="buyContractNo" th:value="${entity.buyContractNo}"/>
+           </p>
+           <p class="yw-table-filter">
+               <lable>业务员：</lable>
+               <input type="text" readonly name="buyMatchUserName" th:value="${entity.buyMatchUserName}"/>
+           </p>
+       </div>
+       <div class="mb6">
+           <p class="yw-table-filter w2">
+               <lable>需方：</lable>
+               <input type="text" readonly name="sellCompanyName" th:value="${entity.sellCompanyName}"/>
+           </p>
+           <p class="yw-table-filter">
+               <lable>合同编号：</lable>
+               <input type="text" readonly name="sellContractNo" th:value="${entity.sellContractNo}"/>
+           </p>
+           <p class="yw-table-filter">
+               <lable>业务员：</lable>
+               <input type="text" readonly name="sellMatchUserName" th:value="${entity.sellMatchUserName}"/>
+           </p>
+       </div>
+       <div class="mb6">
+           <p class="yw-table-filter w2">
+               <lable>作废原因：</lable>
+               <input type="text" id="remark" name="remark" th:value="${entity.remark}"/>
+           </p>
+       </div>
+       <div class="mb6">
+           <p class="yw-table-filter">
+               <lable>附件类型：</lable>
+               <input type="text" id="fileTypeId" name="fileTypeId" th:value="${entity.fileTypeId}"/>
+           </p>
+       </div>
+       <div class="mb6">
+           <div class="yw-table-filter w2">
+				<span class="upload-btn" id="btn_fileId">
+	               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+               <input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+               <p class="controls showImg fileId" id="span_fileId"></p>
+           </div>
+       </div>
+   </div>
+</div>
+<script th:src="@{/static/js/ConvertUtil.js?v=1}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/cancel2/updateFileId',[[${param.hasEditFile}]]);
+
+$(function(){
+	var entity = [[${entity}]];
+	var psv = [[${psv}]];
+    var fileTypeJson=eval('[(${fileTypeJson})]');
+
+    _beforSaveOper = true;
+
+    //加载附件列表
+    filePlugin.load($('#fileId').val(),'#span_fileId');
+    if ($("#btn_fileId").length>0){
+        fileUpload("btn_fileId", "fileId");
+    }
+
+	// 新建
+	if (entity.id == 0) {
+        $("#remark,#fileTypeId").validatebox({
+            required: true,
+        })
+        // 附件类型列表
+        $("#fileTypeId").combobox({
+            data:fileTypeJson,
+            valueField:'fileTypeId',
+            textField:'fileTypeName',
+            panelHeight:'auto',
+            editable:true,
+            required:false,
+            limitToList: true,
+            onLoadSuccess:function(){
+                var value = $(this).val();
+                if (!value){
+                    $(this).combobox('setValue',fileTypeJson[0].fileTypeId);
+                }
+            },
+        })
+        $("#fileTypeId").combobox('setValue',null);
+	}else{
+        $("#remark,#fileTypeId").validatebox({
+            required: true,
+            readonly:true
+        })
+
+    }
+
+
+
+});
+
+//发起申请前操作
+function beforSaveOper() {
+    if (isBlank($("#fileId").val())) {
+        $.messager.alert('提示', '必须上传附件', 'info');
+        return false;
+    }
+    return true;
+}
+
+
+</script>
+</html>

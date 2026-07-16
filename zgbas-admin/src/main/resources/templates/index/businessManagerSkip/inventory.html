@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>库存查询</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <div style="height: 450px">
+        <table id="list" fit="true"
+               title="" iconCls="icon-edit" singleSelect="true"
+               idField="id">
+        </table>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var _bsConfigList = eval('[(${bsConfigList})]');//业务数据
+    $(function(){
+        var lastIndex;
+        $('#list').datagrid({
+            pagination:true,
+            pageSize:10,
+            height: 450,
+            rownumbers:true,
+            pageList:[10,20,30,40,50],
+            queryParams: {
+                // (数量-释放数量)库存数量大于0，且销售指导价不为空,且状态不失效R
+                search_NEQS_inventoryStatus: 'C',
+                search_GTM_minSellPrice: 0
+            },
+            url:_ctx+"/inventory/stockVirtual/findInventoryVirtualPage",
+            columns:[ [
+                {field:'productName',title:'品种',align:'center', width:90},
+                {field:'brandNumber',title:'牌号',align:'center',width:130},
+                {field:'factoryName',title:'厂商',align:'center',width:80},
+                {field:'deliveryAddr',title:'提货地址',align:'center', width:200},
+                {field:'deliveryDate',title:'交货日期(左右)',align:'center',width: 100},
+                {field:'minSellPrice',title:'单价(元/吨)',align:'right',width: 90,formatter:formateNum},
+                {field:'dealNumber',title:'库存数量(吨)',align:'center',width: 90,formatter:function (value,row,index){
+                        let releaseNumber =  row.releaseNumber == null ?0:row.releaseNumber
+                        return formateNum(Number(row.dealNumber-releaseNumber));
+                    }},
+            ]],
+        });
+    });
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+</script>
+</body>
+</html>

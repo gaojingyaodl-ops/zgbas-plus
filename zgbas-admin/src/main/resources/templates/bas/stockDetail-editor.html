@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body>
+<div class="easyui-layout" fit="true" id="tab">	
+	<div region="center" border="false">
+	<form id="stockDetail_Form" class="from-input-layout" method="post" style="margin:20px 10px;">
+		<input type="hidden" name="id" th:value="${entity.id}">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label for="productName">品名:</label>
+				<input name="productName" id="productName" readonly="readonly"  type="text" th:value="${entity.productName}"></input>
+			</span>
+			<span class="input-colspan">
+				<label for="brandNumber">牌号:</label>
+					<input name="brandNumber" id="brandNumber" type="text" readonly="readonly" th:value="${entity.brandNumber}"></input>
+			</span>
+			<span class="input-colspan">
+					<label for="factoryName">厂商:</label>
+					<input name="factoryName" id="factoryName" readonly type="text"  th:value="${entity.factoryName}"></input>
+			</span>
+		 </p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label for="buyCompanyName">供货商:</label>
+					<input name="buyCompanyName" id="buyCompanyName" type="text" readonly="readonly" th:value="${entity.buyCompanyName}"></input>
+			</span>
+			<span class="input-colspan">
+					<label for="warehouseName">仓库名称:</label>
+					<input name="warehouseName" id="warehouseName" readonly type="text"  th:value="${entity.warehouseName}"></input>
+			</span>
+			<span class="input-colspan">
+				<label for="dealPrice">单价:</label>
+				<input name="dealPrice" id="dealPrice" readonly="readonly"  type="text" th:value="${entity.dealPrice}"></input>
+			</span>
+		 </p>
+		  <p class="p_text">
+		 	<span class="input-colspan">
+					<label for="deliveryInNumber">入库数量:</label>
+					<input name="deliveryInNumber" id="deliveryInNumber" readonly="readonly" type="text" th:value="${entity.deliveryInNumber}"></input>
+			</span>
+			<span class="input-colspan">
+					<label for="deliveryOutNumber">出库数量:</label>
+					<input name="deliveryOutNumber" id="deliveryOutNumber" readonly="readonly" type="text" th:value="${entity.deliveryOutNumber}"></input>
+			</span>
+			<span class="input-colspan">
+					<label for="availableNumber">可用数量:</label>
+					<input name="availableNumber" id="availableNumber" readonly="readonly" type="text" th:value="${entity.availableNumber}"></input>
+			</span>
+		 	
+		 </p>
+		 <p class="p_text">
+		 	<span class="input-colspan">
+				<label for="frozenNumber">冻结数量:</label>
+					<input name="frozenNumber" id="frozenNumber" readonly type="text"  th:value="${entity.frozenNumber}"></input>
+			</span>
+			<span class="input-colspan"> 
+					<label for="stockType">库存类型:</label>
+					<input name="stockType" id="stockType" type="text" th:value="${entity.stockType}"></input>
+			</span> 
+			<span class="input-colspan hide">
+					<label for="spotType">现货货权:</label>
+					<input id="spotType" name="spotType"  type="text" th:value="${entity.spotType}"></input>
+			</span> 
+		</p>
+	</form>
+	<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveEditor();">保存</a>
+		<a href="#" class="easyui-linkbutton btn-danger-empty" data-options="iconCls:'icon-no'" onclick="$('#w_editor').window('close')">关闭</a>
+	</div>
+	</div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+var canNotify = '[(${canNotify})]';
+var _stockTypeJson = eval('[(${stockTypeJson})]');
+var _spotTypeJson = eval('[(${spotTypeJson})]');
+$(function(){
+	$('#stockType').combobox({
+		data:_stockTypeJson, 
+		required: false,
+		valueField:'dictCd',
+		textField:'dictName',
+		panelHeight:"auto",
+		onSelect:function(record){
+			if("XH"==record.dictCd){
+				$("#spotType").parent().removeClass("hide");
+			}else{
+				$("#spotType").parent().addClass("hide");
+			}				
+		},
+		onLoadSuccess:function(){
+			var value =$(this).combobox('getValue');
+			if("XH"==value){
+				$("#spotType").parent().removeClass("hide");
+			}else{
+				$("#spotType").parent().addClass("hide");
+				$("#spotType").val("");
+			}
+		}
+	});
+	$('#spotType').combobox({
+		data:_spotTypeJson, 
+		valueField:'dictCd',
+		textField:'dictName',
+		required: false,
+		panelHeight:"auto",
+		onHidePanel:function(){
+			BasCombobox.onHidePanel(this);
+		},
+		onLoadSuccess:function(){
+			$("#spotType").combobox('select',_spotTypeJson[0].dictCd);
+		}
+	});
+})
+function saveEditor(){
+	var url = _ctx+"/bas/stockDetail/saveEditor";
+	var options={
+			url:url,
+			onSubmit: function(){
+				var flag=true;
+				if(!$("#stockDetail_Form").form('validate'))
+					flag=false;
+				if(!flag){
+					$.messager.alert('提示','保存失败，请联系管理员!','warning');
+				}
+				return flag;
+			},
+	};
+	$("#stockDetail_Form").form('submit',options);
+	$('#w_editor').window('close');
+	//$('#tt').datagrid('reload');
+	window.location.reload();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="detail-content">
+
+    <div class="mb6">
+        <input type="hidden" id="repaymentDetailListStr" name="repaymentDetailListStr" th:value="${content.repaymentDetailListStr}"/>
+        <p class="yw-table-filter w2">
+            <label>甲方:</label>
+            <input name="ourCompanyName" id="ourCompanyName" th:value="${content.ourCompanyName}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>统一社会信用代码:</label>
+            <input name="ourCompanyNo" id="ourCompanyNo" th:value="${content.ourCompanyNo}" type="text"/>
+        </p>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>乙方:</label>
+            <input name="targetCompanyName" id="targetCompanyName" th:value="${content.targetCompanyName}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>统一社会信用代码:</label>
+            <input name="targetCompanyNameNo" id="targetCompanyNameNo" th:value="${content.targetCompanyNameNo}"
+                   type="text"/>
+        </p>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>丙方:</label>
+            <input name="party" id="party" th:value="${content.party}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>联系电话:</label>
+            <input name="partyPhone" id="partyPhone" th:value="${content.partyPhone}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>身份证号:</label>
+            <input name="partyCardNo" id="partyCardNo" th:value="${content.partyCardNo}" type="text"/>
+        </p>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>债务日期:</label>
+            <input name="agreementDate" id="agreementDate" th:value="${content.agreementDate}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>截止日期:</label>
+            <input name="cutOffDate" id="cutOffDate" th:value="${content.cutOffDate}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>债务金额（大写）:</label>
+            <input name="agreementAmountCN" id="agreementAmountCN" th:value="${content.agreementAmountCN}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>债务金额（元）:</label>
+            <input name="agreementAmount" id="agreementAmount" th:value="${content.agreementAmount}" type="text"/>
+        </p>
+    </div>
+    <div class="mb6 rep-view" style="margin-top: 10px">
+        <a  href="#" class="easyui-linkbutton-self mb10 mt20 " id="addTable"  onclick="applyProtocolDocRepayment.insertRepTableRow()">新增</a>
+        <a  href="#" class="easyui-linkbutton-self mb10 mt20 ml10" id="removeTable"    onclick="applyProtocolDocRepayment.removeRepTableRow()">删除</a>
+        <table id="repTable" ></table>
+    </div>
+</div>
+</body>
+</html>

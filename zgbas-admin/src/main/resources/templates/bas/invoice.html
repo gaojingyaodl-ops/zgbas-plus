@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>开票信息</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 105px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>合同状态:</label>
+				<input type="text" id="srh_status" name="search_EQS_status"/>
+			</span>
+			<span class="input-colspan">
+				<label>业务编号:</label>
+				<input type="text" name="search_EQS_businessNo"/>
+			</span>
+			<span class="input-colspan">
+				<label>商品名称:</label>
+				<input type="text" name="search_LIKES_productName"/>
+			</span>			
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>企业名称:</label>
+				<input type="text" name="search_LIKES_companyName"/>
+			</span>
+			<span class="input-colspan">
+					<label>开票日期:</label>
+					<input id="srh_date_from"  name="search_GTED_invoiceDate" class="easyui-datebox" />					
+			</span>	
+			<span class="input-colspan">
+					<label>到:</label>
+					<input id="srh_date_to"  name="search_LTD_invoiceDate" class="easyui-datebox" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w" class="easyui-window" style="width:750px;height:520px;"></div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var companyJson =eval('[(${companyJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	$(function(){
+		$("#srh_status").combobox({
+			data:approveStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		});
+	/* 	$('#srh_date_from,#srh_date_to').datebox({
+			width:150,
+			height:30
+		}); */
+		
+		var toolbar =[{
+			text:'编辑',
+			handler:function(){
+				var row = $('#tt').datagrid('getSelected');  
+				editrow(row.id);
+			}
+		},'-'];
+		
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/bas/invoice/list",
+			columns:[ [
+				{field:'status',title:'状态', width:60,formatter:function(value,row,index){
+					var status =  Convert.findValueByKey(approveStatusJson,"dictCd",value,"dictName");
+					var a = '';
+					if(value=="A"){
+						a="<span class='colorA'>"+status+"</span>";
+					}else if(value=="D"){
+						a="<span class='colorD'>"+status+"</span>";
+					}else if(value=="B"){
+						a="<span class='colorB'>"+status+"</span>";
+					}else if(value=="N"){
+						a="<span class='colorN'>"+status+"</span>";
+					}
+					return a;
+				}},
+				{field:'businessNo',title:'业务编号', width:110},
+				{field:'invoiceDate',title:'开票日期', width:100},
+				{field:'companyName',title:'开票抬头', width:100},
+				{field:'productName',title:'商品名称', width:90},
+				{field:'dealPrice',title:'单价', width:70},
+				{field:'dealNumber',title:'数量', width:50},
+				{field:'numberUnit',title:'单位', width:40},
+				{field:'dealAmount',title:'合同总价', width:70},
+				{field:'taxAmount',title:'销项税', width:70},
+				{field:'dealAmountNotax',title:'不含税价', width:80},
+				{field:'bankName',title:'开户银行', width:100},
+				{field:'bankAccount',title:'银行账号', width:140},
+				{field:'taxNo',title:'税号', width:100},
+				{field:'address',title:'公司地址', width:200},
+				{field:'companyPhone',title:'公司电话', width:100},
+				{field:'invoiceNo',title:'发票号码', width:100},
+				{field:'billNo',title:'记账凭证号', width:80},
+				{field:'receiveDate',title:'收款日期', width:70},
+				{field:'receiveAmount',title:'收款金额', width:70},
+				{field:'payCompanyName',title:'付款抬头', width:110},
+				{field:'receiveBillNo',title:'收款凭证号', width:70},
+				{field:'remark',title:'备注', width:70},
+				{field:'updatedDate',title:'更新时间',width:140}
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+		
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			height:650,
+			iconCls:"",
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		
+	});
+	function editrow(id){
+		var url=_ctx+"/bas/invoice/detail/"+id;
+		var title="详情";
+		if (id ==0){
+			title="新增";
+		}
+		var headerCls = 'myPanelHead';
+		$('#w').window({href:url,title:title,headerCls:headerCls});
+		$('#w').window("open");
+	}
+	
+</script>
+</body>
+</html>

@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" >
+<head>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+<script th:src="@{/static/jquery/jquery.jqprint-0.3.js}" type="text/javascript"></script>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css?v=5565}" type="text/css" rel="stylesheet" />
+<style>
+.down-mb15{margin-bottom: 60px;}
+.max-height{height:calc(99vh - 34px)!important;border:none;background: #f5f6f8;}
+.fo{
+	background: #D52B2B!important;
+}
+.CH{
+	background: #D5912B!important;
+}
+#hidediv {
+	position:absolute;left:0px;top:0px;
+	background-color:#000;
+	width:100%;
+	height: 100%;
+	filter:alpha(opacity=60);
+	opacity:0.3;
+	display:none;
+	z-Index:3;
+}
+/* 自定义 tooltip 样式 */
+.remark-tooltip {
+	cursor: pointer;
+	color: #333;
+}
+#remark-tooltip-box {
+	position: fixed;
+	z-index: 99999;
+	max-width: 400px;
+	padding: 10px 14px;
+	background: #fff;
+	border: 1px solid #e0e0e0;
+	border-radius: 6px;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+	font-size: 13px;
+	color: #333;
+	line-height: 1.6;
+	word-break: break-all;
+	white-space: normal;
+	display: none;
+}
+</style>
+</head>
+<div id="hidediv"></div>
+<div id="remark-tooltip-box"></div>
+<div class="easyui-layout panel-bar" fit="true" >
+	<div data-options="region:'center'" id="pageHeight">
+		<form id="inputFormApprove" method="post" class="from-input-layout new-purchase hide">
+			<input type="hidden" name="approveId" id="approveId" th:value="${approve.id}" />
+			<input type="hidden" id="processCode" th:value="${processCode}" />
+			<input type="hidden" name="processId" id="processId" th:value="${approve.processId}"/>
+			<input type="hidden" name="bizId" id="bizId" th:value="${approve.bizId}" />
+			<input type="hidden" name="deptAbbr" id="deptAbbr" th:value="${deptAbbr}" />
+			<input type="hidden" id="industry" th:value="${industry}" />
+			<input type="hidden" id="approveStatusValue" th:value="${approveStatusValue}"/>
+			<input type="hidden" id="isMobile" th:value="${isMobile}"/>
+			<input type="hidden" name="mode" id="mode" th:value="S" />
+			<input type="hidden" id="_batchPayApply" th:value="${hasPayBatchApply}"/>
+			<input type="hidden" name="batchPayApply" id="applyBatchType" value="false"/>
+			<input type="hidden" id="lastApproveStepFlg" th:value="${lastApproveStepFlg}"/>
+			<input type=hidden id="isFromContract" th:value="${isFromContract}"/>
+			<input type=hidden id="isFromBkb" th:value="${isFromBkb}"/>
+			<input type=hidden id="pid"  th:value="${pid}"/>
+			<!--  服务费开票使用	-->
+			<input type=hidden id="isServiceInvoice" th:value="${isServiceInvoice}"/>
+
+			<div class="form-section">
+                 <p class="form-section-title"><span class="approve_text">预算概况</span><i></i></p>
+                 <p class="yw-table-filter">
+                     <label>业务类型</label>
+                     <input id="processName" class='readonly' readonly type="text" th:value="${approve.processName}">
+                 </p>
+                 <p class="yw-table-filter">
+                     <label>申请人</label>
+                     <input id="createUserName" readonly type="text" th:value="${approve.createUserName}">
+                 </p>
+                 <p class="yw-table-filter">
+                     <!-- <label>审批编号</label> -->
+                     <label>预算编号</label>
+                     <input id="approveNo" readonly type="text" value="" th:value="${approve.approveNo}">
+                 </p>
+                 <p class="yw-table-filter">
+                     <label>申请时间</label>
+                    <input id="createUserDate" readonly type="text" th:value="${#dates.format(approve.startDate,'yyyy/MM/dd HH:mm')}">
+                 </p>
+                 <p class="yw-table-filter">
+                     <label>状态</label>
+                     <input id="approveStatus" class='readonly' readonly type="text" th:value="${approve.status}">
+                 </p>
+             </div>
+
+			<div class="form-section editt">
+                <p class="form-section-title"><span class="approve_text">标的物信息</span><i></i></p>
+				<div id="pm_content_div"></div>
+			</div>
+
+			<div class="form-section tbw down-mb15" id="history">
+				<p class="form-section-title"><span class="approve_text">审批步骤</span><i></i></p>
+				<div style="margin-bottom:20px;">
+					<table id="tt_his" iconCls="icon-edit" singleSelect="true" idField="id" style="max-height:500px;width: 100%; max-width: 970px;"></table>
+				</div>
+			</div>
+		</form>
+	</div>
+
+	<!-- <div region="south" border="false" class="yw-bottom" id="btnArea"> -->
+	<div region="south" border="false" style="overflow: hidden;height: 50px; padding-top:10px;border-top: 1px solid var(--skin-color);padding-left: 20px;">
+	 	<th:block th:if="${hasEdit}">
+			<a href="#" id="btn_save" class="easyui-linkbutton btn-empty btn64 ml6">保存</a>
+			<a href="#" id="btn_apply" class="easyui-linkbutton btn-solid btn64 ml6">申请</a>
+			<th:block th:if="${hasPayBatchApply}">
+				<a href="#" id="btn_batch_apply" class="easyui-linkbutton btn-solid btn64 ml6 hide">批量申请</a>
+			</th:block>
+		</th:block>
+		<th:block th:if="${hasApprove}">
+			<a href="#" class="easyui-linkbutton btn-solid btn64 ml6" onclick="doAgree();">同意</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6" onclick="doDeny();">驳回</a>
+		</th:block>
+		<th:block th:if="${backEditFlg}">
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6" onclick="doRetrieve();">追回</a>
+		</th:block>
+		<th:block th:if="${hasWithdraw}">
+			<a href="#"  class="easyui-linkbutton btn-empty btn64 ml6" onclick="doWithdraw();">撤回</a>
+		</th:block>
+		<th:block th:if="${hasInvalid}">
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6" id="btn_draw" onclick="doWithdraw()">作废</a>
+		</th:block>
+		<th:block th:if="${existTemp}">
+			<a  href="#" id ="downApplyContentBtn" class="easyui-linkbutton btn-empty btn64 ml6" onclick="downApplyContent()">下载</a>
+		</th:block>
+		<span class="approveBtn hide">
+			<a href="#" id="printBtn" class="easyui-linkbutton btn-empty btn64 ml6 hide" onclick="doPrint();">打印</a>
+		</span>
+		<span class="approveBtn2 hide">
+				<a href="#"  class="easyui-linkbutton btn-empty btn64 ml6" onclick="approvePrint();">打印</a>
+		</span>
+		<a href="#" class="easyui-linkbutton btn-solid btn64 ml6" onclick="closeCurrentWin('0');">关闭</a>
+	</div>
+</div>
+<div id="dlg"  data-options="width:350,height: 240,border:'thin',collapsible: false,minimizable: false,cls:'c9'">
+		<form id="frm_appvoe_step" class="editForm from-input-layout" method="post">
+		<input type="hidden" name="approveId" th:value="${approve.id}" />
+		<input type="hidden" name="approveStepId" id="approveStepId" />
+		<div style="margin-top: 35px;margin-left: 50px">
+			<p class="p_text" style="margin-left: -28px; margin-top: -28px">
+				<span class="H hide" type="hidden">
+					<label for="approveOpinion"></label>
+					<input id="approveOpinion" name="approveOpinion" type="hidden">
+					<input type="hidden" class="easyui-switchbutton" id="sb" data-options="onText:'同意',offText:'驳回'">
+				</span>
+				<span class="input-colspan dlg_div hide">
+					<label  for="createUserName"  class="control-label">请输入审批意见:</label><br>
+					<textarea  id="approveRemark" style="border: 1px solid #cacaca;width: 350px; height: 110px;margin-top: 3px;" class="mid" name="approveRemark" ></textarea >
+				</span>
+			</p>
+		</div>
+		</form>
+</div>
+<div id="startDlg"  data-options="width:350,height: 240,border:'thin',collapsible: false,minimizable: false,cls:'c9'">
+	<div style="margin-top: 35px;margin-left: 50px">
+		<p style="font-size: 15px;" class="hide" id="blMessage"></p>
+	</div>
+</div>
+<div id="CH"  data-options="width:350,height: 240,border:'thin',collapsible: false,minimizable: false,cls:'c9'">
+	<div style="margin-top: 35px;margin-left: 50px;height: 95px">
+		<p class="p_text" style="margin-left: -28px; padding-top: 20px" >
+				<span class="input-colspan dlg_div hide">
+					<label style="font-size: 20px;margin-top: 100px;margin-left: 85px"  for="createUserName"  class="control-label">确定要撤回该流程吗？</label><br>
+				</span>
+		</p>
+	</div>
+</div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+<div id="printWin" title="审批单打印" data-options="width:1200,height:920"></div>
+<div id="showContractList" class="easyui-window" title="合同预览" data-options="width:920,height:400"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/jquery/FileSaver.js}" type="text/javascript"></script>
+<script th:src="@{/static/jquery/jquery.wordexport.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/areaJson.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+var approveStatusJson =eval('[(${approveStatusJson})]');
+var approveOpinionJson =eval('[(${approveOpinionJson})]');
+var stepListJson = eval('[(${stepListJson})]');
+var packingSpecificaJson = eval('[(${packingSpecificaJson})]');
+var _beforSaveOper = false;
+var _special_befor_flg = false;
+// 这里的contract由PmApproveController.newFlow带出，付款、收款可能会用到
+
+var contract=JSON.parse([[${contract}]]);
+var contractId = [[${contractId}]];
+var companyId = [[${companyId}]];
+var waybillCode = [[${waybillCode}]];
+var _$_logistics_id = [[${logisticsId}]];
+var _$_logistics_delivery_id = [[${logisticsDeliveryId}]];
+var _bsAreaJson = areaJson;
+var _riskApprove = false;
+var _colorFlg = true;
+//审批流程
+var approveId = $('#approveId').val();
+var company_remark = '(账号未知，等待启用后填入)';
+var bl_message = [[${blMessage}]];
+var tips = [[${tips}]];
+var litigationCaseId = [[${litigationCaseId}]];
+var feeType = [[${feeType}]];
+function applyLoadSucess(){
+	//setValue
+
+	setValueByContractId(contract);
+
+	// setValueByCompanyId(contract);
+}
+	$(function(){
+		// tooltip 事件委托
+		$(document).on('mouseenter', '.remark-tooltip', function(e){
+			var content = $(this).attr('data-content');
+			if(content){
+				var $box = $('#remark-tooltip-box');
+				$box.text(content).show();
+				var x = e.pageX + 10;
+				var y = e.pageY + 10;
+				// 防止超出屏幕右边
+				var boxWidth = $box.outerWidth();
+				var winWidth = $(window).width();
+				if(x + boxWidth > winWidth - 20){
+					x = winWidth - boxWidth - 20;
+				}
+				// 防止超出屏幕底部
+				var boxHeight = $box.outerHeight();
+				var winHeight = $(window).height();
+				if(y + boxHeight > winHeight - 20){
+					y = e.pageY - boxHeight - 10;
+				}
+				$box.css({left: x, top: y});
+			}
+		});
+		$(document).on('mouseleave', '.remark-tooltip', function(){
+			$('#remark-tooltip-box').hide();
+		});
+		// 鼠标移动时更新位置
+		$(document).on('mousemove', '.remark-tooltip', function(e){
+			var $box = $('#remark-tooltip-box');
+			if($box.is(':visible')){
+				var x = e.pageX + 10;
+				var y = e.pageY + 10;
+				var boxWidth = $box.outerWidth();
+				var winWidth = $(window).width();
+				if(x + boxWidth > winWidth - 20){
+					x = winWidth - boxWidth - 20;
+				}
+				var boxHeight = $box.outerHeight();
+				var winHeight = $(window).height();
+				if(y + boxHeight > winHeight - 20){
+					y = e.pageY - boxHeight - 10;
+				}
+				$box.css({left: x, top: y});
+			}
+		});
+
+		var isMobiles = $("#isMobile").val();
+		if(isMobiles=="false"){
+			$('.approveBtn2').removeClass('hide');
+		}
+		var isBiz = $('#bizId').val();
+		if (isBiz == 0){//如果是第一次申请
+			$('#history').hide();
+		}
+		$('#btn_save').bind("click",doSave);
+		$('#btn_apply').bind("click",doApply);
+		$('#btn_batch_apply').bind("click",doBatchApply);
+		$("#btn_close").bind("click",doClose);
+		//$("#btn_draw").bind("click",doWithdraw);
+		var processCode = $("#processCode").val();
+		var approveStatusValue = $("#approveStatusValue").val();
+		var isFromContract = $("#isFromContract").val();
+		var isFromBkb = $("#isFromBkb").val();
+		var isServiceInvoice = $("#isServiceInvoice").val();
+
+		if (isFromContract == null || isFromContract == "" || isFromContract == 'undefined'){
+			isFromContract = "false";
+		}
+		if (isBlank(isFromBkb)){
+			isFromBkb = "false";
+		}
+		if (isBlank(isServiceInvoice)){
+			isServiceInvoice = "false";
+		}
+		if((processCode=="APPLY_BUY"||processCode=="APPLY_SELL"||processCode=="APPLY_MATCH"||processCode=="APPLY_HKSELL")&&(approveId!="0")){
+			$("#printBtn").show();
+			$("#downApplyContentBtn").show();
+		}else{
+			$("#printBtn").hide();
+			$("#downApplyContentBtn").hide();
+
+		}
+
+		//合同预览
+		if ((processCode=="APPLY_BUY"||processCode=="APPLY_SELL"||processCode=="APPLY_PRESELL"||processCode=="APPLY_IMPORTBUY"||processCode=="APPLY_SXSELL"||processCode=="APPLY_HKSELL"||processCode=="APPLY_PRE_SX_SELL"||processCode=="APPLY_PRE_HK_SELL"||processCode=="APPLY_PRESELL_BUY")&&approveStatusValue=="D"){
+			$("#printContract").show();
+		}else{
+			$("#printContract").hide();
+		}
+		if ((processCode=="APPLY_MATCH"||processCode=="APPLY_IMPORT"||processCode=="APPLY_DCMATCH")&&approveStatusValue=="D"){
+			$("#mlPrintContract").show();
+		}else{
+			$("#mlPrintContract").hide();
+		}
+
+		if (processCode=="APPLY_IMPORTBUY"||processCode=="APPLY_SXSELL"||processCode=="APPLY_HKSELL"||processCode=="APPLY_PRE_SX_SELL"||processCode=="APPLY_PRE_HK_SELL"||processCode=="APPLY_PRESELL_BUY"||processCode=="APPLY_IMPORT"||processCode=="APPLY_DCMATCH"){
+			_riskApprove = true;
+		}
+
+		if (approveStatusValue == "D"||approveStatusValue == "C"){
+			$('#currApproverUserId').parent().addClass('hide');
+			$('#currStepName').parent().addClass('hide');
+		}
+
+		$.ajaxSetup({
+
+		cache:false
+
+		});
+		//审批内容
+
+		var  pid=$("#pid").val();
+		if (pid==null){
+			pid=0;
+		}
+		var contentUrl = _ctx+[[${contentUrl}]]+$('#bizId').val();
+		console.log("contentUrl:" + contentUrl);
+		contentUrl = contentUrl + "?hasEditFile=[[${hasEditFile}]]&hasEdit=[[${hasEdit}]]&hasApprove=[[${hasApprove}]]&processCode=" + processCode +
+				"&isFromContract=" + isFromContract + "&companyId=" + companyId + "&isFromBkb=" + isFromBkb + "&isServiceInvoice=" + isServiceInvoice +
+				"&contractId=" + contractId + "&pid=" + pid + "&logisticsId=" + _$_logistics_id + "&logisticsDeliveryId=" + _$_logistics_delivery_id+'&litigationCaseId='+litigationCaseId+"&feeType="+feeType;
+		$.get(contentUrl,function(data){
+			$('#pm_content_div').html(data);
+			$('#inputFormApprove').removeClass('hide');
+			$('.approveBtn').removeClass('hide');
+			$('#frm_appvoe_step').removeClass('hide');
+			$("#relaTable").datagrid("resize");
+			$(".relaTable").datagrid("resize");
+			$('#tt_his').datagrid("resize");
+			$('#inTable').datagrid("resize");
+			$('#outTable').datagrid("resize");
+			$('#optoductDetail').datagrid("resize");
+			$('#nptoductDetail').datagrid("resize");
+		});
+
+
+        $('#sb').switchbutton({
+            checked: true,
+            value:'A',
+            onChange: function(checked){
+            	if (checked){
+            		$('#approveOpinion').val('A');
+            		$('#approveRemark').val('同意');
+            	}else{
+            		$('#approveOpinion').val('D');
+            		$('#approveRemark').val('不同意');
+            	}
+                console.log(checked);
+            }
+        })
+		$("#startDlg").dialog({
+			title: '保理业务',
+			width: 700,
+			height:350,
+			closed: true,
+			cache: false,
+			modal: false,
+			buttons:[{
+				width: 68,
+				height: 28,
+				text:'确定',
+				handler:function(){
+					saveApprove('A',function(){
+						$('#btn_apply').bind("click",doApply);
+					});
+				}
+			},{
+				width: 68,
+				height: 28,
+				text:'关闭',
+				handler:function(){
+					$("#blMessage").addClass("hide");
+					$("#startDlg").dialog('close');
+				}
+			}]
+
+		});
+
+        [# th:if="${!hasBack}"]
+        	$('#sb').switchbutton('readonly');
+        [/]
+
+		//审批历史
+		$('#tt_his').datagrid({
+			rownumbers:true,
+			url:_ctx+"/pm/approve/approveStep/"+$('#approveId').val()+"?processId="+$('#processId').val(),
+			columns:[ [
+				{field:'stepName',title:'审批步骤', width:150,align:'left'},
+				{field:'approveUserName',title:'责任人',align:'left', width:120},
+				{field:'approveOpinion',title:'审批意见', width:120,align:'left',formatter:function(value,row,index){
+					if (row.updatedDate != null && value == null){
+						return "--";
+					}else{
+						return Convert.findValueByKey(approveOpinionJson,"dictCd",value,"dictName");
+					}
+				}},
+				{field:'approveRemark',title:'备注',align:'left',width: 422,formatter:function(value,row,index){
+					if (row.updatedDate != null && value == null){
+						return "--";
+					}else{
+						if(value && value.length > 35){
+							var escapedValue = value.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+							return '<span class="remark-tooltip" data-content="' + escapedValue + '">' + value.substring(0, 35) + '...</span>';
+						}
+						return value;
+					}
+				}},
+				{field:'updatedDate',title:'时间', width:130, align:'center'}
+			]],
+			rowStyler:function(index,row){
+				if (row.approveOpinion=="D"){
+					_colorFlg = false;
+					return 'background-color:#ffe5f2;color:black;';
+		        } else if(row.stepName=="追回"&&_colorFlg){
+					_colorFlg = false;
+					return 'background-color:#ffffb3;color:black;';
+			    } else if ((row.updatedDate==null||row.updateDate=='')&&_colorFlg){
+			    	_colorFlg = false;
+	                return 'background-color:#ffffb3;color:black;';
+	            }
+
+			}
+		});
+
+		$('#printWin').window({
+			title:'审批单打印',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			onClose:function(){
+				$('#approveText').html('');
+			}
+		});
+		$('#w_contract').window({
+			title: '电子合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false
+		});
+		$('#showContractList').window({
+			title:'合同预览',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false
+		});
+
+		// 如果没有提示 不弹出窗口
+		if (!isBlank(tips)) {
+			// 弹窗提示
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '提示',
+				msg: tips,
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				closable:false,
+				fn: function(r){
+					if(!r){
+						doClose()
+					}
+				}
+			});
+		}
+
+	});
+    function showH(){
+		hidediv.style.display="block";
+    }
+    function hideH(){
+	document.getElementById("hidediv").style.display = "none";
+    }
+	function doSave(){
+		$(this).unbind("click");
+		saveApprove('S',function(){
+			$('#btn_save').bind("click", doSave);
+		});
+	}
+
+	function doBatchApply(){
+		$(this).unbind("click");
+		$.messager.confirm({
+			width:388,
+			height:170,
+			title: '提示',
+			msg: "确认批量发起付款申请？",
+			ok: "确定",
+			cancel: "取消",
+			cls:'c9',
+			border:'thin',
+			closable:false,
+			fn: function(r){
+				if(r){
+					$("#applyBatchType").val(true);
+					saveApprove('A',function(){
+						$('#btn_batch_apply').bind("click",doBatchApply);
+					});
+				}else{
+					$("#applyBatchType").val(false);
+					$('#btn_batch_apply').bind("click",doBatchApply);
+				}
+			}
+		});
+	}
+
+	function doApply(){
+		var _contractModel = $("#contractModel").val();
+		if (_contractModel == "BL" || _contractModel == "DCSXBL"){
+			$("#blMessage").removeClass("hide");
+			$("#blMessage").html(bl_message);
+			$("#startDlg").dialog('open');
+		}else{
+			$(this).unbind("click");
+			saveApprove('A',function(){
+				$('#btn_apply').bind("click",doApply);
+			});
+		}
+	}
+	function doClose(){
+		$(this).unbind("click");
+		closeCurrentWin('0');
+	}
+	function saveApprove(mode,callback){
+		$('#mode').val(mode);
+		if(_beforSaveOper){
+			_befValidate = beforSaveOper();
+			if(!_befValidate){
+				if (typeof(callback) == "function"){
+    				callback();
+    			}
+				return false;
+			}
+		}
+		var url =_ctx+'/pm/approve/save';
+		var options={
+		        url:url,
+		        onSubmit: function(){
+		        	var flag=true;
+		        	if(!$("#inputFormApprove").form('validate'))
+		        		flag=false;
+		        	if (!flag){
+		        		if (typeof(callback) == "function"){
+	        				callback();
+	        			}
+		        		$.messager.alert('提示','保存失败，输入项有误！','warning');
+		        	}
+		        	return flag;
+		        },
+		        success:function(data){
+		        	if (typeof(callback) == "function"){
+        				callback();
+        			}
+					console.log("approve - save : ", data);
+					var rObj = eval('('+data+')');
+					if(rObj.success){
+						var rtnEntity = eval('('+rObj.success+')');
+						if (mode!='P'){
+			        		 $.messager.show({
+			                     title:'Tip',
+			                     msg:'操作成功',
+			                     timeout:2000,
+			                     cls:'c9',
+			                     border:'thin',
+			                     showType:'show'
+			                 });
+				        	closeCurrentWin("1");
+						}
+		        	}else{
+		        		$.messager.alert({
+		        	          width:388,
+		        	          height:170,
+		        	          title: 'error',
+							  msg: `<div style="word-wrap: break-word; word-break: break-all;">${rObj.failure}</div>`,
+							  ok: "确定",
+		        	          cls:'c9',
+		        	          icon :'warning',
+		        	          border:'thin'
+		        	    });
+		        	}
+		        }
+			};
+		$('#inputFormApprove').form('submit', options);
+	}
+
+	function doAgree(){
+		if (_special_befor_flg && _beforSaveOper){
+			_befValidate = beforSaveOper();
+			if(!_befValidate){
+				if (typeof(callback) == "function"){
+					callback();
+				}
+				return false;
+			}
+		}
+		$('#sb').switchbutton('check');
+		$('#approveOpinion').val('A');
+		$('#approveRemark').val('同意');
+		$(".dlg_div").removeClass("hide");
+		$("#dlg").dialog({
+			title: '同意',
+			width: 400,
+			height:380,
+			closed: true,
+			cache: false,
+			modal: false,
+			buttons:[{
+				width: 68,
+				height: 28,
+				text:'确定',
+				handler:function(){
+					doStep();
+				}
+			},{
+				width: 68,
+				height: 28,
+				text:'关闭',
+				handler:function(){
+					$("#dlg").dialog('close');
+					hideH();
+				}
+			}]
+		});
+		$("#dlg").dialog('open');
+		$('.panel-tool').addClass("hide");
+		showH();
+	}
+	function doDeny(){
+		$('#sb').switchbutton('uncheck');
+		$('#approveOpinion').val('D');
+		$('#approveRemark').val('不同意');
+		$(".dlg_div").removeClass("hide");
+		$("#dlg").dialog({
+			title: '驳回',
+			width: 400,
+			height:380,
+			closed: true,
+			cache: false,
+			modal: false,
+			buttons:[{
+				width: 68,
+				height: 28,
+				text:'确定',
+				handler:function(){
+					doStep();
+				}
+			},{
+				width: 68,
+				height: 28,
+				text:'关闭',
+				handler:function(){
+					$("#dlg").dialog('close');
+					$("#dlg").prev().removeClass("fo");
+					hideH();
+				}
+			}]
+		});
+		$("#dlg").dialog('open');
+		$("#dlg").prev().addClass("fo");
+		$('.panel-tool').addClass("hide");
+		showH();
+	}
+	function doWithdraw(){
+		$(this).unbind("click");
+		$("#CH").dialog({
+			title: '撤回',
+			width: 400,
+			height: 600,
+			closed: true,
+			cache: false,
+			modal: false,
+			buttons:[{
+				width: 68,
+				height: 28,
+				text:'确定',
+				handler:function(){
+					var url =_ctx+'/pm/approve/doWithdraw';
+					doSubmit(url);
+				}
+			},{
+				width: 68,
+				height: 28,
+				text:'关闭',
+				handler:function(){
+					$("#CH").dialog('close');
+					$("#CH").prev().removeClass("CH");
+					hideH();
+				}
+			}]
+		});
+		$("#CH").dialog('open');
+		$("#CH").prev().addClass("CH");
+		$(".dlg_div").removeClass("hide");
+		$('.panel-tool').addClass("hide");
+		showH();
+	}
+
+	function doRetrieve(){
+		$(this).unbind("click");
+		$.messager.confirm({
+	          width:388,
+	          height:170,
+	          title: '提示',
+	          msg: '确定要追回改申请么?',
+	          ok: "确定",
+	          cancel: "取消",
+	          cls:'c9',
+	          border:'thin',
+	          fn: function(r){
+	        	  if(r){
+	  				var url =_ctx+'/pm/approve/doRetrieve';
+	  				doSubmit(url);
+	  				}
+	          }
+	    });
+	}
+
+	function doStep(){
+		$.messager.progress({msg:'处理中，请稍候...'});
+		var sb = $('#approveOpinion').val();
+		var url =_ctx+'/pm/approve/doStep';
+		if (sb=='A'){
+			var canApproveEdit =$('#canApproveEdit').val();
+			if (canApproveEdit=='true'){
+				saveApprove('P',function(){
+					doSubmit(url);
+				});
+			}else{
+	 			doSubmit(url);
+			}
+		}else{
+			doSubmit(url);
+		}
+
+	}
+	function doSubmit(url){
+		var options={
+		        url:url,
+		        onSubmit: function(){
+		        	var flag=true;
+		        	if(!$("#frm_appvoe_step").form('validate'))
+		        		flag=false;
+		        	if (!flag){
+			        	$.messager.progress('close');
+		        		$.messager.alert('提示','保存失败，请输入必输项！','warning');
+		        	}
+		        	return flag;
+		        },
+		        success:function(data){
+		        	$.messager.progress('close');
+		        	var rObj = eval('('+data+')');
+					if(rObj.success){
+		        		 $.messager.show({
+		                     title:'Tip',
+		                     msg:'操作成功',
+		                     timeout:2000,
+		                     showType:'show'
+		                 });
+		        		 closeCurrentWin("1");
+		        	}else{
+						$.messager.alert({
+							title: '提示',
+							msg: rObj.failure,
+							type: 'info',
+							width:450
+						});
+		        	}
+		        }
+			};
+		$('#frm_appvoe_step').form('submit', options);
+	}
+	function closeCurrentWin(flg){
+		var _approveOpn = $("#approveOpinion").val();
+		var _lastApproveStepFlg = $("#lastApproveStepFlg").val();
+		if(flg=="1"&&_riskApprove&&_approveOpn=="A"&&_lastApproveStepFlg=="true"){
+			$("#dlg").dialog('close');
+			location.reload();
+		}else if(flg=="1"){
+			window.parent.tabCloseCurrent();
+			parent.reloadTabGrid('审批流程');
+			window.parent.tabCloseCurrent();
+		}else if(flg=="0"){
+			window.parent.tabCloseCurrent();
+		}
+	}
+
+	function setValueByContractId(contract){
+		 if(contract==null){
+			return false;
+		}
+
+		var arr=new Array();
+		arr.push(contract);
+		if(typeof chooseCallback === "function"){
+			chooseCallback(arr);
+		}
+	}
+	function doPrint(){
+		var contentUrl = [[${contentUrl}]];
+		var printUrl =contentUrl.substring(0,contentUrl.length-9);
+		printUrl = printUrl+"/print/";
+		var url = _ctx+printUrl+$('#bizId').val();
+		window.parent.addTab("打印预览",url);
+	}
+	//下载审批内容
+	function downApplyContent(){
+		_url= _ctx+"/pm/approve/downLoadContract?bizId="+$('#bizId').val()+"&processCode="+$("#processCode").val();
+		window.location.href =_url;
+	}
+	function getRowIndex(target){
+		var tr = $(target).closest('tr.datagrid-row');
+		return parseInt(tr.attr('datagrid-row-index'));
+	}
+	//合同预览
+	function printContract(){
+		var contractId = $("#contractId").val();
+		if(contractId){
+			var url = _ctx+"/ctr/contractText/getBycontractId/"+contractId;
+			$('#w_contract').window({href:url});
+			$('#w_contract').window("open");
+		}
+	}
+	function mlTabContract(){
+		var approveId = $("#approveId").val();
+		var url = _ctx+"/ctr/contract/findMlOpponent/"+approveId;
+		$('#showContractList').window({href:url});
+		$('#showContractList').window("open");
+	}
+	function printContractText(contractId){
+		if(contractId){
+			var url = _ctx+"/ctr/contractText/getBycontractId/"+contractId;
+			$('#w_contract').window({href:url});
+			$('#w_contract').window("open");
+		}
+	}
+	// 判断是否为空
+	function isBlank(val) {
+		if (val == undefined
+		|| val == ''
+		|| val == null) {
+			return true;
+		}
+		return false;
+	}
+
+	// 审批打印 jQuery.print.js
+	function approvePrint(){
+		var approveNo = $("#approveNo").val();
+		var createUserName = $("#createUserName").val();
+		var createUserDate = $("#createUserDate").val();
+		var approveStatus = $("#approveStatus").val();
+		var _history_html = document.getElementById("history");
+		var printCount = 0;
+		// let printName ='';
+		$.ajax({
+			type: 'get',
+			async: false,
+			url: _ctx + "/pm/approve/addPrintHistory?approveNo=" + approveNo,
+			success: function (response) {
+				if (response.code === 200) {
+					printCount = response.printCount;
+					// printName = response.printName;
+				}
+			},
+			error: function () {
+				console.log("出错了！")
+			}
+		});
+		console.log("printCount="+printCount)
+		$("#pm_content_div").print({
+			globalStyles: true,
+			mediaPrint: true,
+			noPrintSelector: ".no-print",
+			iframe: true,
+			append: _history_html,//将内容添加到打印内容的后面
+			prepend: '<span>审批单号：'+ approveNo +'</span>' + '<span class="prs">发起人：'+ createUserName +'</span>' + '<span class="prs">申请时间：'+ createUserDate +'</span>' +
+					'<span class="prs">状态：'+ approveStatus +'</span>' + '<span class="prs">打印次数：'+ printCount +'</span>' + '<h2>' + $("#processName").val()+ '</h2>',
+			deferred: callBackPrint()
+		});
+	}
+
+	function callBackPrint(){
+		// alert("打印成功!");
+		// TODO 记录打印次数
+	}
+</script>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-bottom:20px">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<div class="mb6 sealUsage_content">
+			<p class="yw-table-filter">
+				<label>保管人:</label>
+				<input name="keepUserId" id="keepUserId" type="hidden" th:value="${entity.keepUserId}"></input>
+				<input name="keepUserName" id="keepUserName" type="text" th:value="${entity.keepUserName}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>物品类型:</label>
+				<input name="itemType" id="itemType" type="text" th:value="${entity.itemType}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>借出日期:</label>
+				<input name="startDate" id="startDate" type="text" th:value="${#dates.format(entity.startDate,'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>归还日期:</label>
+				<input name="endDate" id="endDate" type="text" th:value="${#dates.format(entity.endDate,'yyyy-MM-dd')}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>公司名称:</label>
+				<input name="companyName" id="companyName" type="text" th:value="${entity.companyName}"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>外借原因:</label>
+				<input name="reason" id="reason" type="text" th:value="${entity.reason}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>外借地点:</label>
+				<input name="address" id="address" type="text" th:value="${entity.address}"></input>
+			</p>
+			<th:block th:replace="~{tags/apply :: remark(${#maps.containsKey(psv.mapEdit, 'remark')}?${psv.mapEdit['remark'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+		</div>
+
+		<div class="editForm">
+			<p style="width:240px">
+				<span class="upload-btn" id="btn_fileId">
+	               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+		</div>
+		<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640"></div>
+		</div>
+	</div>
+</div>
+<!-- <script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script> -->
+<!-- <script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script> -->
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+//印章-公司名称
+var _customerNameJson = eval('[(${customerNameJson})]');
+//印章外借-物品类型
+var _itemTypeJson = eval('[(${itemTypeJson})]');
+//业务员
+var _matchUserNameTree = eval('[(${matchUserNameTree})]');
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/sealBorrow/updateFileId',[[${param.hasEditFile}]]);
+//var _curStatus = $("#entityStatus").val();
+var _curStatus = '[[${status}]]';
+$(function(){
+	//$('#addBtn').linkbutton();
+	$('.easyui-linkbutton').linkbutton();
+	if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+		/* $('#itemType').combobox({
+			data:_itemTypeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			editable:false,
+			required:true,
+			panelHeight:'auto'
+		}); */
+		$("#itemType").combobox({
+			data:_itemTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			multiple:true,
+			required:true,
+		    formatter: function (row) {
+	            var opts = $(this).combobox('options');
+	            return '<input style="margin-right:10px;" type="checkbox" class="combobox-checkbox ckbox">' + row[opts.textField]
+	        },
+	        onShowPanel: function () {
+	            var opts = $(this).combobox('options');
+	            var target = this;
+	            var values = $(target).combobox('getValues');
+	            $.map(values, function (value) {
+	                var el = opts.finder.getEl(target, value);
+	                el.find('input.combobox-checkbox')._propAttr('checked', true);
+	            })
+	        },
+	        onLoadSuccess: function () {
+	            var opts = $(this).combobox('options');
+	            var target = this;
+	            var values = $(target).combobox('getValues');
+	            $.map(values, function (value) {
+	                var el = opts.finder.getEl(target, value);
+	                el.find('input.combobox-checkbox')._propAttr('checked', true);
+	            })
+	        },
+	        onSelect: function (row) {
+	            var opts = $(this).combobox('options');
+	            var el = opts.finder.getEl(this, row[opts.valueField]);
+	            el.find('input.combobox-checkbox')._propAttr('checked', true);
+	        },
+	        onUnselect: function (row) {
+	            var opts = $(this).combobox('options');
+	            var el = opts.finder.getEl(this, row[opts.valueField]);
+	            el.find('input.combobox-checkbox')._propAttr('checked', false);
+	        }
+		});
+
+
+		$('#companyName').combobox({
+			data:_customerNameJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			editable:false,
+			required:true,
+			panelWidth:'auto',
+			panelHeight:'auto'
+		});
+		$('#keepUserName').combotree({
+			data: _matchUserNameTree,
+			multiple : false,
+			editable : false,
+			required:true,
+			panelHeight:275,
+			panelWidth:200,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#keepUserName').combotree('clear');
+				}else{
+					$('#keepUserName').combotree('setValue',node.text);
+					$('#keepUserId').val(node.id.replace("user",""));
+				}
+			}
+		});
+		$('#startDate,#endDate').datebox({editable:false});
+		$('#reason,#address').textbox({required:true});
+	} else if(_curStatus&&(_curStatus=='A'||_curStatus=='D')){
+
+		$("#toolbar").addClass("hide");
+		$("#inputForm").find("input").not("#remark").not('.tags input').not("[type='button']").attr("readonly",true);
+		//物品类型
+		var _itemType = $('#itemType').val();
+		var itemType = "";
+		if (_itemType){
+			var arr = _itemType.split(",");
+			for(var i=0; i<arr.length;i++){
+				itemType += Convert.findValueByKey(_itemTypeJson,"dictCd",arr[i],"dictName") + ",";
+			}
+			if (itemType){
+				itemType = itemType.substring(0,itemType.length-1);
+			}
+		}else{
+			var itemType = Convert.findValueByKey(_itemTypeJson,"dictCd",_itemType,"dictName");
+		}
+		$("#itemType").val(itemType);
+		//公司名称
+		var _companyName = $('#companyName').val();
+		var companyName = Convert.findValueByKey(_customerNameJson,"dictCd",_companyName,"dictName");
+		$("#companyName").val(companyName);
+	}
+
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($('#btn_fileId').length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+});
+</script>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>权益知情书</title>
+  <th:block th:replace="~{layouts/include :: include}"></th:block>
+  <th:block th:include="include :: header('Summernote富文本编辑器')" />
+  <th:block th:include="include :: summernote-css" />
+  <script th:src="@{/static/js/bootstrap.min.js?v=3.3.7}"></script>
+  <th:block th:include="include :: summernote-js" />
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+  <form id="searchForm" class="form-search from-input-layout" method="post" style="margin-left: 2px">
+    <div class="mb6">
+      <input name="search_EQS_textType" id="textType" type="hidden" th:value="noticeInterest" />
+    </div>
+    <div class="mb6 mobile-display-none">
+      <p class="yw-table-filter">
+        <a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="editrow(0)">新增</a>
+      </p>
+    </div>
+  </form>
+</div>
+<div region="center" border="false" class="panel_padding" style="margin-top: -32px;padding-left: 0px">
+  <table id="tt" fit="true"
+         title="" iconCls="icon-edit" singleSelect="true"
+         th:url="@{/text/content/list}">
+  </table>
+</div>
+<div id="noticeInterest_detail" title="权益知情书管理" class="easyui-window" data-options="width:850,height:650">
+</div>
+<script type="text/javascript">
+  var lastIndex=0;
+  var enableFlgs =eval('[(${enableFlgs})]');
+  $(function(){
+    init();
+    $("#enableFlg_srh").combobox({
+      data:enableFlgs,
+      textField:'dictName',
+      valueField:'dictCd',
+      panelHeight:"auto"
+    });
+  });
+  function init(){
+    $('#tt').datagrid({
+      pagination:true,
+      pageSize:50,
+      pageList:[50,40,30,20,10],
+      queryParams:Convert.getJson4Form('searchForm'),
+      url:_ctx+"/text/content/textContentList",
+      columns:[ [
+        {field:'typeName',title:'文件类型', width:100,align:'left',editor: { type: 'validatebox',options:{required:true}}},
+        {field:'version',title:'版本', width:100,align:'left',editor: { type: 'validatebox',options:{required:true}}},
+        {field:'enableFlg',title:'是否有效',width:70,align:'center',formatter:function(value,row,index){
+            if(value === true){
+              return'是';
+            }else{
+              return'否';
+            }
+          }},
+        {field:'createdDate',title:'创建时间', width:160,align:'left',editor: { type: 'validatebox',options:{required:true}}},
+        {field:'updatedDate',title:'修改时间',align:'left', width:160,editor: { type: 'validatebox',options:{required:true}}},
+        {field:'operate',title:'操作',width: 120,align:'center',formatter:function(value, row, index){
+            var str = "";
+            str += '<span onclick="editrow('+row.id+')" class="contract-btn contract-btn-10">编辑</span>';
+            str += '<span onclick="deleteTextContent('+row.id+')" class="contract-btn contract-btn-4">删除</span>';
+            return str;
+          }
+        }
+      ] ],
+      toolbar:'#toolbar',
+      onDblClickRow:function(index,row){
+        lastIndex = index;
+        editrow(row.id);
+      },
+      onClickRow:function(index,row){
+        lastIndex = index;
+      },
+      onLoadSuccess:function(data){
+        var total =$('#tt').datagrid('getData').total;
+        if (lastIndex >total-1){
+          lastIndex=total-1;
+        }
+        $('#tt').datagrid('selectRow', lastIndex);
+      }
+    });
+    $('#noticeInterest_detail').window({
+      title: '权益知情书管理',
+      modal:true,
+      closed: true,
+      collapsible : false,
+      minimizable : false,
+      maximizable : false,
+      cache:false,
+      onClose:function(){
+        $('#tt').datagrid('reload');
+      }
+    });
+  }
+  function deleteTextContent(id){
+    $('#tt').datagrid('selectRecord',id);
+    var row = $('#tt').datagrid('getSelected');
+    if(row){
+      var index = $('#tt').datagrid('getRowIndex', row);
+      var lastIndex=index;
+      if (row.id==undefined){
+        $('#tt').datagrid('deleteRow',index);
+        $('#noticeInterest_detail').window("close");
+        lastIndex=index>0?index-1:0;
+        $('#tt').datagrid('selectRow', nextSelect);
+      }else{
+        $.messager.confirm({
+          width:388,
+          height:170,
+          title: '删除提示',
+          msg: '确定要删除该信息吗？',
+          ok: "确定",
+          cancel: "取消",
+          cls:'c9',
+          border:'thin',
+          fn: function(r){
+            if (r){
+              lastIndex=index>0?index-1:0;
+              //TODO:如果该记录被引用,是否强制不允许删除?
+              $.post(_ctx+"/text/content/delete/"+row.id,function(result) {
+                var rObj = eval(result);
+                if(rObj.success){
+                  $('#tt').datagrid('reload');
+                  $('#noticeInterest_detail').window("close");
+                }else{
+                  alert(rObj.failure);
+                }
+              });
+            }
+          }
+        });
+      }
+    }
+  }
+  function editrow(id){
+    var url=_ctx+"/text/content/detail/"+id;
+    $('#noticeInterest_detail').window({href:url});
+    $('#noticeInterest_detail').window("open");
+  }
+
+  function queryParams(params) {
+    var search = $.table.queryParams(params);
+    search.textType = $("#textType_search").val();
+    return search;
+  }
+</script>
+</body>
+</html>

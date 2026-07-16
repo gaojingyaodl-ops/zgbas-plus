@@ -1,0 +1,537 @@
+<!--代采赊销盖章申请-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+		<input type="hidden" id="contractTextUrl" th:value="${contractTextUrl}"/>
+		<input type="hidden" id="contractId" th:value="${ctrContractId}"/>
+		<input type="hidden" id="businessType" th:value="${entity.businessType}"/>
+		<input type="hidden" id="buyPrice" th:value="${entity.buyPrice}"/>
+		<input type="hidden" id="approveId" name="approveId" th:value="${entity.approveId}"/>
+		<input type="hidden" name="canApproveEdit" id="canApproveEdit" th:value="${psv.canApproveEdit}" />
+
+	<div region="center" border="false">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<div class="mb6">
+
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>盖章日期</label>
+				<input name="sealDate" id="sealDate" type="text" th:value="${#dates.format(entity.sealDate,'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>品种</label>
+				<input name="productBrand" id="productBrand" type="text" th:value="${entity.productBrand}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>牌号</label>
+				<input name="productNum" id="productNum" type="text" th:value="${entity.productNum}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>数量</label>
+				<input name="totalNumber" id="totalNumber" type="text" th:value="${entity.totalNumber}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>厂商</label>
+				<input name="factoryName" id="factoryName" type="text" th:value="${entity.factoryName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>包装规格</label>
+				<input name="wrapSpecs" id="wrapSpecs" type="text" th:value="${entity.wrapSpecs}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>质量标准</label>
+				<input name="qualityStandard" id="qualityStandard" type="text" th:value="${entity.qualityStandard}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>代采购方</label>
+				<input name="companyName" id="companyName" th:value="${entity.companyName}" type="text" ></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>我方</label>
+				<input name="ourCompanyName" id="ourCompanyName" th:value="${entity.ourCompanyName}" type="text" ></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>开户行</label>
+				<input name="ourBankName" id="ourBankName" th:value="${entity.ourBankName}" type="text" ></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>开户账号</label>
+				<input name="ourBankAccount" id="ourBankAccount" th:value="${entity.ourBankAccount}" type="text" ></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同编号</label>
+				<input name="contractNo" id="contractNo" type="text" th:value="${entity.contractNo}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>采购单价</label>
+				<input name="dealPrice" id="dealPrice" type="text" th:value="${#numbers.formatDecimal(entity.dealPrice,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同总额(元)</label>
+				<input name="totalAmount" id="totalAmount" type="text" th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>回款周期</label>
+				<input name="creditDays" id="creditDays" type="text" th:value="${entity.creditDays}"></input>
+			</p>
+		</div>
+			<div class="mb6">
+				<p class="yw-table-filter" th:if="${sugxFlg == true}">
+					<label>上游付款日期</label>
+					<input name="buyPayFullTime" id="buyPayFullTime" th:value="${#dates.format(entity.buyPayFullTime,'yyyy-MM-dd')}" type="text" ></input>
+				</p>
+				<p class="yw-table-filter" th:if="${sugxFlg == true}">
+					<label>下游交货日期</label>
+					<input name="sellDeliveryDate" id="sellDeliveryDate" th:value="${#dates.format(entity.sellDeliveryDate,'yyyy-MM-dd')}" type="text" ></input>
+				</p>
+				<p class="yw-table-filter" th:if="${sugxFlg != true}">
+					<label>付款日期</label>
+					<th:block th:if="${not #strings.isEmpty(entity.lastPayDate)}">
+						<input name="lastPayDate" id="lastPayDate" th:value="${#dates.format(entity.lastPayDate,'yyyy-MM-dd')}" type="text" ></input>
+					</th:block>
+					<th:block th:if="${#strings.isEmpty(entity.lastPayDate)}">
+						<input name="lastPayDate" id="lastPayDate" th:value="${#dates.format(entity.payFullTime,'yyyy-MM-dd')}" type="text" ></input>
+					</th:block>
+
+				</p>
+				<p class="yw-table-filter" th:if="${sugxFlg != true}">
+					<label>交货日期</label>
+					<input name="deliveryDate" id="deliveryDate" th:value="${#dates.format(entity.deliveryDate,'yyyy-MM-dd')}" type="text" ></input>
+				</p>
+<!--				<p class="yw-table-filter">-->
+<!--					<label>交货日期</label>-->
+<!--					<input id="deliveryDateStr" th:value="${#dates.format(entity.deliveryDate,'yyyy-MM-dd')}" type="text" ></input>-->
+<!--				</p>-->
+				<p class="yw-table-filter">
+					<label>运输方式</label>
+					<input name="deliveryType" id="deliveryType" type="text" th:value="${entity.deliveryType}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<label>交货地点</label>
+					<input name="deliveryAddr" id="deliveryAddr" type="text" th:value="${entity.deliveryAddr}"></input>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter w2">
+					<label>补充条款</label>
+					<input name="extraTerm" id="extraTerm" type="text" th:value="${entity.extraTerm}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<a href="#" id="contractPreview" class="easyui-linkbutton btn-empty btn64">合同预览</a>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter w2">
+					<label for="remark">备注:</label>
+<!--					<textarea readonly style="height:30px;width: 315px" name="remark" id="remark"  th:text="${entity.remark}"></textarea>-->
+					 <textarea name="remark" id="remark" readonly th:text="${entity.remark}" style="resize:none;vertical-align: middle;height:60px;width: 315px;"></textarea>
+				</p>
+				<p class="yw-table-filter" th:if="${entity.status == 'A'}">
+					<a href="#" class="easyui-linkbutton btn-empty" onclick="showImportCreditReport()">替换签署原文件</a>
+				</p>
+			</div>
+
+		<div class="mb6">
+		<div class="mb6">
+		<div class="editForm">
+			<p style="width:240px">
+				<span class="upload-btn" id="btn_fileId">
+	               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+							<input class="control" id="fileId" name="fileId" type="hidden"  th:value="${entity.fileId}"/>
+						</p>
+						<p class="controls showImg fileId" id="span_fileId"></p>
+					</div>
+					<!--		<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640"></div>-->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+<div id="w_replace_sign_file_pdf" title="替换签署原文件" class="easyui-window" data-options="width:400,height:250">
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+	//品名列表
+	var _productTypeJson = eval('[(${productTypeJson})]');
+	var _packingSpecificaJson = eval('[(${packingSpecificaJson})]');
+	//印章-公司名称
+	var _customerNameJson = eval('[(${customerNameJson})]');
+	//牌号名称
+	var _brandJson = eval('[(${brandJson})]');
+	//质量标准
+	var _qualityStandardJson = eval('[(${qualityStandardJson})]');
+	var _brandJson = eval('[(${brandJson})]');
+	var hasApprove =  '[[${psv.hasApprove}]]' === 'true';
+	//印章外借-物品类型
+	var _itemTypeJson = eval('[(${itemTypeJson})]');
+	//印章外借-印章状态
+	var _sealStatusJson = eval('[(${sealStatusJson})]');
+	//印章-文件类型
+	var _sealFileTypeJson = eval('[(${sealFileTypeJson})]');
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/sealUsageDCSX/updateFileId',[[${param.hasEditFile}]]);
+	var _curStatus = '[[${status}]]';
+
+	console.log("curStatus:" + _curStatus);
+
+	_beforSaveOper = true;
+
+	//var _deliveryTypeJson = [{'dictCd': '需方自提', 'dictName': '需方自提'}, {'dictCd': '供方配送', 'dictName': '供方配送'}];
+	var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+	_deliveryTypeJson = _deliveryTypeJson.filter(function (a) {
+		return a.dictCd != 'P';
+	});
+	//交货方式
+	$("#deliveryType").combobox({
+		data:_deliveryTypeJson,
+		valueField:'dictCd',
+		textField:'dictName',
+		panelHeight:"auto",
+		editable:false,
+		required:true
+	})
+
+	$(function(){
+		$('#w_replace_sign_file_pdf').window({
+			title: '替换签署原文件',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		//$('#addBtn').linkbutton();
+		$('.easyui-linkbutton').linkbutton();
+		// $('#dealPrice').numberbox({precision:2});
+		$("#dealPrice").numberbox({
+			precision:2,
+			readonly: false,
+			onChange: function (value) {
+				getPrice();
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		})
+		$("#totalAmount").numberbox({
+			precision:2,
+			editable: true,
+			readonly: false,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		})
+		$("#deliveryDate").datebox({});
+
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='C')){
+
+			$('#fileType').combobox({
+				data:_sealFileTypeJson,
+				valueField:'dictCd',
+				textField:'dictName',
+				editable:false,
+				required:true,
+				panelHeight:200,
+				onSelect : function(node){
+					var value = node.dictCd;
+					if (value == "BS"){
+						$("#customerName").addClass("hide");
+						$(".customer_combobox").removeClass("hide");
+					}else{
+						$("#customerName").removeClass("hide");
+						$(".customer_combobox").addClass("hide");
+					}
+				}
+			});
+			$('#sealDate').datebox({editable:false});
+			$('#totalAmount').numberbox({precision:2});
+		} else if(_curStatus&&(_curStatus=='A'||_curStatus=='D'||_curStatus=='B'||_curStatus=='E')){
+			$("#toolbar").addClass("hide");
+			$("#inputForm").find("input").not("#remark").not('.tags input').not("[type='button']").attr("readonly",true);
+			//加载附件列表
+			filePlugin.load($('#fileId').val(),'#span_fileId');
+			if (("D" != _curStatus && hasApprove) || _curStatus == "N"||_curStatus=='B'||_curStatus=='E') {
+				if ($('#btn_fileId').length > 0) {
+					fileUpload("btn_fileId", "fileId");
+				}
+				$("#productNum").attr("readonly", false);
+				$("#wrapSpecs").attr("readonly", false);
+				$("#qualityStandard").attr("readonly", false);
+				$("#extraTerm").attr("readonly", false);
+				$("#deliveryAddr").attr("readonly", false);
+				$("#ourBankName").attr("readonly", false);
+				$("#ourBankAccount").attr("readonly", false);
+
+				$("#lastPayDate").datebox({
+					height:30,
+					required:true,
+					editable:false,
+					readonly:false
+				});
+				
+				$("#buyPayFullTime").datebox({
+					height:30,
+					required:true,
+					editable:false,
+					readonly:false
+				});
+				
+				$("#sellDeliveryDate").datebox({
+					height:30,
+					required:true,
+					editable:false,
+					readonly:false
+				});
+
+				$("#deliveryDate").datebox({
+					height:30,
+					required:true
+				});
+
+				$("#creditDays").numberbox({
+					required:true,
+					validType:'length[1,20]',
+					precision:0,
+					editable:true,
+					readonly: false,
+				});
+
+				$("#deliveryDate").attr("readonly", false);
+
+				$("#factoryName").attr("readonly",false);
+
+				$("#dealPrice").numberbox({
+					precision:2,
+					editable: true,
+					readonly: false,
+					onChange: function (value) {
+						getPrice();
+					},
+					parser: function(val) {
+						// 解析时去除千分位分隔符
+						if(val) {
+							return parseFloat(String(val).replace(/,/g, ''));
+						} else {
+							if(isNaN(val)) {
+								return '';
+							} else {
+								return val;
+							}
+						}
+					},
+					formatter: function(val) {
+						if (val || val === 0) {
+							val = parseFloat(val).toFixed(2).toString().split(".");
+							val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+							return val.join(".");
+						} else {
+							if(isNaN(val)){
+								return ""
+							} else {
+								return val;
+							}
+						}
+					}
+				})
+			}
+		}
+
+		$("#contractPreview").on("click",function () {
+			var content = _ctx + "/ctr/contractText/getDcsxTemplateContractNew";
+			// 合同号
+			var contractNo = $("#contractNo").val();
+			// 签订时间
+			var sealDate = $('#sealDate').val();
+			// 货品名称
+			var productName = $("#productBrand").val();
+			// 牌号
+			var brandNumber = $("#productNum").val();
+			// 	工厂
+			var factoryName = $("#factoryName").val();
+			// 包装规格
+			var wrapSpecs = $("#wrapSpecs").val();
+			// 数量
+			var totalNumber = $("#totalNumber").val();
+			// 单价
+			var dealPrice = $("#dealPrice").val();
+			// 总价
+			var totalAmount = $("#totalAmount").val();
+			// 交货地点
+			var deliveryAddr = isBlank($("#deliveryAddr").val()) ? '' : $("#deliveryAddr").val();
+			// 开户行
+			var ourBankName = isBlank($("#ourBankName").val()) ? '' : $("#ourBankName").val();
+			// 开户账号
+			var ourBankAccount = isBlank($("#ourBankAccount").val()) ? '' : $("#ourBankAccount").val();
+			// 交货日期
+			// var deliveryDate = $("#deliveryDate").val();
+			var deliveryDate = $("#deliveryDate").val();
+			if(!deliveryDate) {
+				deliveryDate = '';
+			}
+			// 付全款日期
+			var lastPayDate = $("#lastPayDate").val();
+			if(!lastPayDate) {
+				lastPayDate = '';
+			}
+			var buyPayFullTime = $("#buyPayFullTime").val();
+			if(!buyPayFullTime) {
+				buyPayFullTime = '';
+			}
+			var sellDeliveryDate = $("#sellDeliveryDate").val();
+			if(!sellDeliveryDate) {
+				sellDeliveryDate = '';
+			}
+			// 运输方式
+			var deliveryType = $("#deliveryType").val();
+			// 我方抬头
+			var ourCompanyName = $("#ourCompanyName").val();
+			// 代采购方
+			var companyName = $("#companyName").val();
+			content += "?contractNo=" + contractNo + "&contractTimeStr=" + sealDate + "&productName=" + productName;
+			content += "&wrapSpecs=" + wrapSpecs;
+			content += "&brandNumber=" + brandNumber + "&factoryName="+factoryName+"&dealNumber="+totalNumber;
+			content += "&dealPrice="+dealPrice+"&totalAmount="+totalAmount+"&deliveryAddr="+deliveryAddr;
+			content += "&deliveryDate=" + deliveryDate + "&deliveryType=" + deliveryType+"&lastPayDate="+lastPayDate;
+			content += "&buyPayFullTime=" + buyPayFullTime;
+			content += "&sellDeliveryDate=" + sellDeliveryDate;
+			content += "&ourCompanyName=" + ourCompanyName;
+			content += "&companyName=" + companyName;
+			content += "&ourBankName=" + ourBankName;
+			content += "&ourBankAccount=" + ourBankAccount;
+			content += "&contractId=" + contractId;
+			content += "&windowId=w_contract";
+			var url = content;
+			$('#w_contract').window({href:url, collapsible : false, minimizable : false, maximizable : false});
+			// 手机端默认最大化
+			if (window.innerWidth <= 768) {
+				$('#w_contract').window('maximize');
+			}
+			$('#w_contract').window("open");
+		})
+
+		$('#w_contract').window({
+			title: '电子合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+
+	});
+
+	function getPrice() {
+		// 采购单价
+		var dealPrice = $("#dealPrice").val();
+		var totalNumber = $("#totalNumber").val();
+		var totalAmount = Convert.accMul(dealPrice, totalNumber);
+		$("#totalAmount").numberbox('setValue', Convert.basToFixed(totalAmount, 2));
+	}
+
+	/** 替换签署原文件 */
+	function showImportCreditReport(){
+		var url=_ctx+"/apply/sealUsageDCSX/showReplaceSignFile";
+		$('#w_replace_sign_file_pdf').window({href:url});
+		$('#w_replace_sign_file_pdf').window("open");
+	}
+	//合同预览
+	function printContract(contractId){
+		if(contractId){
+			var url = _ctx+"/ctr/contractText/getByContractIdNew/"+contractId + "?windowId=w_contract";
+			$('#w_contract').window({href:url, collapsible : false, minimizable : false, maximizable : false});
+			// 手机端默认最大化
+			if (window.innerWidth <= 768) {
+				$('#w_contract').window('maximize');
+			}
+			$('#w_contract').window("open");
+		}
+	}
+	//服务合同预览
+	function printServiceContract(contractId){
+		if(contractId){
+			var url = _ctx+"/ctr/contractText/getServiceTextNew/"+contractId + "?windowId=w_contract";
+			$('#w_contract').window({href:url, collapsible : false, minimizable : false, maximizable : false});
+			// 手机端默认最大化
+			if (window.innerWidth <= 768) {
+				$('#w_contract').window('maximize');
+			}
+			$('#w_contract').window("open");
+		}
+	}
+	//发起申请前操作
+	function beforSaveOper(){
+		return true;
+	}
+
+	function getDay(beginDate, days) {
+		var millSeconds = Math.abs(beginDate) + (days * 24 * 60 * 60 * 1000);
+		var rDate = new Date(millSeconds);
+		var year = rDate.getFullYear();
+		var month = rDate.getMonth() + 1;
+		if (month < 10) month = "0" + month;
+		var date = rDate.getDate();
+		if (date < 10) date = "0" + date;
+		return (year + "-" + month + "-" + date);
+	}
+</script>

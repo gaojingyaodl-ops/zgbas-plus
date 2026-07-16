@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true" >
+	 <div region="north" border="false">
+		<div style="padding:10px 10px 0px 10px;height:100px;">
+				 <table id="td" style="height:100px;"
+					title="" iconCls="icon-edit" singleSelect="true"
+					idField="id">
+				</table>
+		</div>
+	</div>
+	<div region="center" border="false" class="from-input-layout" style="padding:20px 10px 0px 10px;">
+		<form id="moveStockForm" method="post">
+			<input type="hidden" th:value="${entity.id}" id="entityId" name = "originalDetailId">
+			<!-- <input type="hidden" th:value="${entity.warehouseName}" id="oldWarehouseName"> -->
+			<input type="hidden" th:value="${entity.availableNumber}" id="oldAvailable">
+			<!-- <input type="hidden" th:value="${entity.frozenNumber}" id="oldFrozen"> -->
+			<p class="p_text">
+				<span class="input-colspan">
+					<label>移至仓库:</label>
+					<input type="text" id="targetWarehouse" name="targetWarehouseId"/>
+				</span>
+				<span class="input-colspan">
+					<label>仓库地址:</label>
+					<input type="text" id="warehouseAddrs" name="warehouseAddrs"/>
+				</span>
+				<th:block th:if="${entity.availableNumber} gt 0">
+					<span class="input-colspan">
+						<label>移动可用数量:</label>
+						<input type="text" th:value="${entity.availableNumber}" id="moveRealNumber" name="moveRealNumber"/>
+					</span>
+				</th:block>
+				<!-- <th:block th:if="${entity.frozenNumber} gt 0">
+					<span class="input-colspan">
+						<label>移动冻结数量:</label>
+						<input type="text" th:value="${entity.frozenNumber}" id="moveFrozen"/>
+					</span>
+				</th:block> -->
+			</p>
+			<p class="p_text">
+				<span class="input-colspan">
+					<label>提单号:</label>
+					<input type="text" id="applyNo" name="applyNo"/>
+				</span>
+				<span class="input-colspan">
+					<label>现货货权:</label>
+					<input type="text" id="spotType" name="spotType"/>
+				</span>
+				<span class="input-colspan">
+					<label>移库方式:</label>
+					<input type="text" id="moveType" name="moveType"/>
+				</span>
+			</p>
+			<p class="p_text">
+				<span class="input-colspan">
+					<label>移库日期:</label>
+					<input type="text" id="moveDate" name="moveDate"/>
+				</span>
+				<span class="input-colspan2">
+					<label>备注:</label>
+					<input type="text" id="remark" name="remark"/>
+				</span>
+			</p>
+		</form>
+	</div>
+
+</div>
+<div region="south" border="true">
+	<div style="padding:10px 10px 0px 10px;height:50px;">
+		<a href="#" class="easyui-linkbutton btn-cancel-contract" style="width: 70px;height: 30px" onclick="moveToOtherWarehouse();">确定</a>
+	</div>
+</div>
+<script type="text/javascript">
+	var warehouseJson = eval('[(${warehouseJson})]');
+	var _spotTypeJson = eval('[(${spotTypeJson})]');
+	var _deliveryInTypeJson = eval('[(${deliveryInTypeJson})]');
+	var warehouseAddrsJson;
+	var id = $("#entityId").val();
+	$(function(){
+		var url = _ctx+"/bas/stockDetail/listVo?id="+id;
+		$('#td').datagrid({
+			url:url,
+			columns:[ [
+				{field:'productName',title:'品名', width:99,sortable:false},
+				{field:'brandNumber',title:'牌号', width:80,formatter:function(value, row, index){
+					if(value=="OT9999"){
+						return "";
+					}else{
+						return value;
+					}
+					}},
+				{field:'factoryName',title:'厂商名称', width:100,},
+				{field:'warehouseName',title:'仓库名称', width:100},
+				{field:'deliveryInNumber',title:'入库数量', width:80,align:'right'},
+				{field:'availableNumber',title:'可用数量', width:80,align:'right'},
+				{field:'frozenNumber',title:'冻结数量', width:80,align:'right'},
+				{field:'dealPrice',title:'单价(元)', width:80,align:'right'},
+				{field:'bizUserName',title:'业务员',width:80,align:'center'},
+				{field:'buyCompanyName',title:'供货商',width:100},
+			]]
+		});
+		$("#warehouseAddrs").combobox({
+			data:warehouseAddrsJson,
+			textField:'warehouseAddr',
+			valueField:'warehouseAddr'
+		});
+		$("#targetWarehouse").combobox({
+			data:warehouseJson,
+			textField:'warehouseName',
+			valueField:'id',
+			height:30,
+			editable:true,
+			required:true,
+			onSelect:function(node){
+				var warehouseId = node.id;
+				getWarehouseAddrs(warehouseId);
+			}
+		});
+		$('#spotType').combobox({
+			data:_spotTypeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			required: false,
+			panelHeight:"auto",
+			editable:false,
+			onSelect:function(record){
+				if("W"==record.dictCd){
+					$("#moveType").parent().removeClass("hide");
+					$('#moveType').combobox({required:true});
+				}else{
+					$("#moveType").parent().addClass("hide");
+					$("#moveType").combobox("clear");
+					$('#warehouseInType').combobox({required:false});
+				}
+			}
+		});
+		$('#moveType').combobox({
+			data:_deliveryInTypeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false
+		});
+		$("#moveDate").datebox({editable:false});
+
+		var oldAvailable = $("#oldAvailable").val();
+		$('#moveRealNumber').numberbox({
+		    min:0,
+		    max:Number(oldAvailable),
+		    precision:4
+		    //readonly:true
+		});
+
+		/* var oldFrozen = $("#oldFrozen").val();
+		$('#moveFrozen').numberbox({
+		    min:0,
+		    max:Number(oldFrozen),
+		    precision:2
+		   // readonly:true
+		}); */
+	})
+
+	function moveToOtherWarehouse(){
+		/* var warehouseName_old = $("#oldWarehouseName").val();
+		var warehouseName_move = $("#targetWarehouse").val();
+		if(warehouseName_old == warehouseName_move || warehouseName_move ==""){
+			$.messager.alert('Tips','请选择将要转移的仓库!','info');
+			return;
+		}
+		var moveAvailable = $('#moveRealNumber').val();
+		var moveFrozen = $('#moveFrozen').val();
+		if(typeof(moveAvailable)==="undefined"){
+			moveAvailable = 0;
+		}
+		if(typeof(moveFrozen)==="undefined"){
+			moveFrozen = 0;
+		}
+		var _url = _ctx+"/bas/stockDetail/changeWarehouse";
+		$.post( _url,{entityId:id,warehouseName:warehouseName_move,moveAvailableNumber:moveAvailable,moveFrozenNumber:moveFrozen},
+		     function(data){
+				if(data.success){
+					$.messager.show({title:'Tip',msg:'操作成功',timeout:2000,showType:'show'});
+					window.location.reload();
+				}else{
+					var failure = eval("("+data.failure+")");
+					$.messager.alert('error',failure.message,'warning');
+				}}); */
+		var _url = _ctx+"/bas/stockDetail/changeWarehouse";
+		var options={
+		        url:_url,
+		        onSubmit: function(){
+
+		        },
+		        success:function(data){
+		        	var rObj = eval('('+data+')');
+		        	if(rObj.success){
+						$.messager.show({title:'Tip',msg:'操作成功',timeout:2000,showType:'show'});
+						window.location.reload();
+					}else{
+						var failure = eval("("+rObj.failure+")");
+						$.messager.alert('error',failure.message,'warning');
+					}
+		        }
+			};
+		$('#moveStockForm').form('submit', options);
+	}
+	function getWarehouseAddrs(warehouseId){
+		if (warehouseId){
+			$.post(_ctx+"/apply/deliveryIn/findWarehouseAddrDesc?id="+warehouseId,function(data){
+				$("#warehouseAddrs").combobox('clear');
+				$("#warehouseAddrs").combobox('loadData',data);
+			});
+		}
+	}
+</script>
+</html>

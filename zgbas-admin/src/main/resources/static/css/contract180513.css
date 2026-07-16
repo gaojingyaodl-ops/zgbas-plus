@@ -1,0 +1,114 @@
+@charset "utf-8";
+body{margin:0;padding:0;font-size: 12px;font-family:"Lantinghei SC", "Open Sans", Arial, "Hiragino Sans GB", "Microsoft YaHei", "Î¢ÈíÑÅºÚ", "STHeiti", "WenQuanYi Micro Hei", SimSun, sans-serif;}
+img,input{vertical-align:middle;}
+ul{margin:0;padding: 0;}
+/* li{list-style: none;overflow: hidden;white-space: nowrap;text-overflow:ellipsis;} */
+li{list-style: none;white-space: normal;}
+.companyStyle{text-align: left;border-bottom: 1px solid #2d2d2d;box-sizing: border-box;margin-left: -10px;margin-right: -10px;margin-top: -3px;}
+.companyStyles{text-align: left;height:28px;padding-top:7px;border-bottom: 1px solid #2d2d2d;width: 103%}
+.companyli{height:28px;padding-top:7px;}
+.textRed{color:red}
+i{font-style: normal;}
+.contract p{text-indent: 2em;margin-top: 0;margin-bottom: 0;line-height: 20px;}
+.contract_zy p {font-size: 14px;text-indent: 2em;margin-top: 3px !important;margin-bottom: 3px !important;line-height: 19px !important;}
+.contract p i{text-indent: initial;color: #2d2d2d}
+.contract p i.goods-type{color: #999}
+i.bank, i.account{min-width: 100px;}
+i.address{width: 150px;}
+.clearFix:after{ content:""; display:block; clear:both;}
+.contract{margin: 20px auto; width: 800px; font-size: 12px;}
+.contract > img{width: 100%;}
+.contract h3{text-align: center; font-size: 20px; font-weight: normal; padding-top: 0px; padding-bottom: 20px; }
+.contract .con-tit{padding-left: 2em;}
+.contract .con-tit li{float: right; clear: right; width: 200px; height: 25px; line-height: 25px;}
+.contract .con-tit .con-tit-l{float: left; width: 400px;}
+.contract .con-tit .con-tit-l1{float: left; width: 400px;margin-top: auto}
+.contract .con-tit .con-tit-r1{float: right; width: 400px;margin-top:-225px;margin-right: 20px;}
+.contract .con-tit .con-tit-r2{float: right; width: 400px;margin-top:-200px;margin-right: 20px;}
+.contract .con-tit .con-tit-r3{float: right; width: 400px;margin-top:-175px;margin-right: 20px;}
+.contract .con-tit .con-tit-r4{float: right; width: 400px;margin-top:-150px;margin-right: 20px;}
+.contract .con-tit .con-tit-r5{float: right; width: 400px;margin-top:-125px;margin-right: 20px;}
+.contract .con-tit .con-tit-r6{float: right; width: 400px;margin-top:-100px;margin-right: 20px;}
+.contract .con-tit .con-tit-r7{float: right; width: 400px;margin-top:-75px;margin-right: 20px;}
+.contract .con-tit .con-tit-r8{float: right; width: 400px;margin-top:-50px;margin-right: 20px;}
+.contract .con-tit .con-tit-r9{float: right; width: 400px;margin-top:-25px;margin-right: 20px;}
+.contract .con-tit .con-tit-r10{float: right; width: 400px;margin-top:-0px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-1{float: right; width: 400px;margin-top:-224px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-2{float: right; width: 400px;margin-top:-197px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-3{float: right; width: 400px;margin-top:-172px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-4{float: right; width: 400px;margin-top:-147px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-5{float: right; width: 400px;margin-top:-122px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-6{float: right; width: 400px;margin-top:-97px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-7{float: right; width: 400px;margin-top:-72px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-8{float: right; width: 400px;margin-top:-47px;margin-right: 20px;}
+.contract .con-tit .con-tit-rx-9{float: right; width: 400px;margin-top:-22px;margin-right: 20px;}
+.contract .con-context{margin-top: 13px;}
+.con-context .table-box {margin-left: 2em;margin-bottom: 15px;}
+.con-context .table {width: 99%; display: table; border-top: 1px solid #2d2d2d; border-left: 1px solid #2d2d2d; text-align: center; font-size: 12px; color: #2d2d2d;position: relative;}
+.con-context .table-row{display: table-row; height: 24px; line-height: 24px;white-space: normal;}
+.con-context .table-row:first-child {height: 25px;line-height: 25px;}
+.con-context .table-row span{display: table-cell; colspan:"3"; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-right: 1px solid #2d2d2d; border-bottom: 1px solid #2d2d2d;}
+.con-context .table-row .cell1{width: 11px;max-width: 70px;}
+.con-context .table-row .cell2{width: 11px;max-width: 70px;}
+.con-context .table-row .cell3{width: 14px;max-width: 70px;}
+.con-context .table-row .cell3-3{width: 42px;max-width: 70px;colspan:"3"}
+.con-context .table-row .cell4{width: 14px;max-width: 84px;}
+.con-context .table-row .cell5{width: 16px;max-width: 90px;}
+.con-context .table-row .cell6{width: 17px;max-width: 104px;}
+.con-context .table-row .cell7{width: 17px;max-width: 122px;}
+.con-context .table-row .cell10{text-align:left;width: 50%;max-width: 300px;padding-left: 1em;white-space: normal;}
+.con-context .table-row .cell9{position: absolute; right: 0;text-align:left ;width: 60%;}
+.con-context .table-row .t-btm1{width: 100%;position: absolute; text-align: left; border-right: 1px solid #2d2d2d;padding-left: 15px;box-sizing: border-box;}
+.con-context .table-row .t-btm2 {position: absolute; right: 0; text-align: left;width: 70.3%;}
+.con-context .table-row .t-btm3{width: 84px;border-bottom: 1px solid #2d2d2d;}
+.contract .con-chapter{border: 1px solid #2d2d2d; margin-top: 10px;line-height: 25px;}
+.contract .con-chapter ul{box-sizing: border-box;width: 50%; padding: 5px 10px; float: left;}
+.contract .con-chapter ul.con-chap-right{border-left: 1px solid #2d2d2d;}
+.background-nb-signature{background-image: url(../../static/images/bg_nb_signature.png);background-size: 48% 103%;background-repeat: no-repeat;background-position: 15% 50%;z-index: 2;}
+.background-sh-signature{background-image: url(../../static/images/bg_sh_signature.png);background-size: 48% 103%;background-repeat: no-repeat;background-position: 15% 50%;z-index: 2;}
+.background-zw-signature{background-image: url(../../static/images/bg_zw_signature.png);background-size: 48% 103%;background-repeat: no-repeat;background-position: 15% 50%;z-index: 2;}
+.con-context .table-box table {width: 99%; border-top: 1px solid #2d2d2d; border-left: 1px solid #2d2d2d; text-align: center; font-size: 12px; color: #2d2d2d;position: relative;}
+.con-context .table-box table th {height: 24px; line-height: 24px;}
+.con-context .table-box table td {height: 24px; line-height: 24px;width: 14px;max-width: 70px;overflow: hidden; white-space: nowrap; text-overflow: ellipsis; border-right: 1px solid #2d2d2d; border-bottom: 1px solid #2d2d2d;}
+/* 特别为产品名称列设置固定宽度 */
+.con-context .table-box table td:first-child {
+    width: 100px !important; /* 设置固定宽度 */
+    min-width: 100px !important; /* 最小宽度 */
+    max-width: 100px !important; /* 最大宽度 */
+}
+/* 表头单元格样式 - 不允许换行 */
+.con-context .table-box table tr:first-child td {
+    white-space: nowrap;  /* 不换行 */
+    overflow: visible;
+    text-overflow: inherit;
+    padding: 1px;
+}
+
+/* 数据行单元格通用样式 - 默认不允许换行 */
+.con-context .table-box table tr:not(:first-child) td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 1px;
+}
+
+/* 特别为数据行的产品名称列(第一列)设置自动换行 */
+.con-context .table-box table tr:not(:first-child) td:first-child {
+    white-space: normal;  /* 允许换行 */
+    word-wrap: break-word; /* 允许单词内断行 */
+    height: auto;        /* 高度自适应 */
+    min-height: 24px;    /* 最小高度 */
+    line-height: 24px;
+    width: 100px;       /* 固定宽度 */
+    max-width: 100px;
+}
+
+.con-context .table-box table tr:not(:first-child) td:nth-child(2) {
+    white-space: normal;  /* 允许换行 */
+    word-wrap: break-word; /* 允许单词内断行 */
+    overflow: visible;     /* 溢出内容可见，不隐藏 */
+    text-overflow: clip;   /* 不使用省略号 */
+    height: auto;         /* 高度自适应 */
+    min-height: 24px;     /* 最小高度 */
+    line-height: 24px;
+}

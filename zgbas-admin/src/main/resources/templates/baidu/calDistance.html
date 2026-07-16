@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--<html lang="zh-CN">-->
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="utf-8">
+    <title>距离测算</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <style>
+        body,
+        html,
+        #container {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            /*margin: 10px;*/
+            font-family: "微软雅黑";
+        }
+    </style>
+    <script type="text/javascript"
+            src="//mapopen.bj.bcebos.com/github/BMapGLLib/TrackAnimation/src/TrackAnimation.min.js"></script>
+    <script type="text/javascript"
+            src="https://api.map.baidu.com/api?v=1.0&type=webgl&ak=zFP4hlOd5QY8YY45HM6wrnRuj1tbmO9q"></script>
+    <!--    <script src="//api.map.baidu.com/api?type=webgl&v=1.0&ak=zFP4hlOd5QY8YY45HM6wrnRuj1tbmO9q"></script>-->
+</head>
+<body>
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" style="height: 100%;" border="false">
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>出发地</label>
+            <input id="departure" name="departure" type="text"/>
+<!--            <input id="departureLat" name="departureLat" type="hidden"/>-->
+<!--            <input id="departureLng" name="departureLng" type="hidden"/>-->
+        </p>
+        <p class="yw-table-filter w2">
+            <label>目的地</label>
+            <input id="destination" name="destination" type="text"/>
+<!--            <input id="destinationLat" name="destinationLat" type="hidden"/>-->
+<!--            <input id="destinationLng" name="destinationLng" type="hidden"/>-->
+        </p>
+    </div>
+    <div class="mb6 mt20">
+        <a id="add" href="#" class="easyui-linkbutton" onclick="calDistance()">距离测算</a>
+        <span id="distance" style="margin-left: 10px"></span>
+    </div>
+    <div id="container"></div>
+</div>
+
+
+</body>
+</html>
+
+<script type="text/javascript">
+    var map = new BMapGL.Map("container");          // 创建地图实例
+    map.centerAndZoom(new BMapGL.Point(116.404, 39.915), 15);
+    map.enableScrollWheelZoom(true);
+
+    // var departureInput = new BMapGL.Autocomplete({"input": "departure", "location": map});
+    var departureInput = new BMapGL.Autocomplete({"location": map});
+    // var destinationInput = new BMapGL.Autocomplete({"input": "destination", "location": map});
+    var destinationInput = new BMapGL.Autocomplete({"location": map});
+
+    // 计算距离
+    function calDistance() {
+
+        var driving = new BMapGL.DrivingRoute(map, {
+            renderOptions: {
+                map: map,
+                autoViewport: true
+            }
+        });
+        const startAddress = $('#departure').val();
+        const endAddress = $('#destination').val();
+        $.ajax({
+            type: 'get',
+            async: false,
+            url: _ctx + '/baiduMap/getTwoDistance?start=' + startAddress + '&end=' + endAddress,
+            success: function (res) {
+                if(res && res.status === 0){
+                    $('#distance').text(res.result.routes[0].distance/1000 + '公里');
+                    var start = new BMapGL.Point(res.result.origin.lng, res.result.origin.lat);
+                    var end = new BMapGL.Point(res.result.destination.lng, res.result.destination.lat);
+                    driving.search(start, end);
+                }else{
+                    $.messager.alert('警告','距离测量失败，请输入详细地址！');
+                }
+            },
+            error: function () {
+                $.messager.alert('警告','距离测量失败，请输入详细地址！');
+            }
+        });
+    }
+
+    // 百度地图API功能
+    function G(id) {
+        return document.getElementById(id);
+    }
+
+</script>

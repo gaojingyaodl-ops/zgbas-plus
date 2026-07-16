@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+ <div class="yw-menu-section tbw">
+   <input type="hidden" id="currentUserId" th:value = "${@shiroUtil.getCurrentUserId()}">
+   <input type="hidden" id="currentUserName" th:value = "${@shiroUtil.getCurrentUserName()}">
+   <input type="hidden" id="enterpriseId" th:value = "${enterpriseId}">
+   <input type="hidden" id="sealUsageId" th:value="${sealUsageId}">
+   <table id="sealUsageOphis" 
+		title="" iconCls="icon-edit" singleSelect="true"
+		idField="id" style="height:320px;">
+	</table>
+	<div region="south">
+		<a  href="#" class="easyui-linkbutton mb6 ml10" data-options="iconCls:'icon-add'," onclick="insert()">新增</a>
+		<a href="#" class="easyui-linkbutton btn-info-empty mb6 ml10" data-options="iconCls:'icon-save'" onclick="saveEdit()">保存</a>
+	</div>
+</div>
+<script type="text/javascript">
+var lastIndex;
+var currentUserId = $("#currentUserId").val();
+var currentUserName = $("#currentUserName").val();
+var _sealUsageId = $("#sealUsageId").val();
+var _enterpriseId = $("#enterpriseId").val();
+$(function(){
+	var sealUsageId = $("#sealUsageId").val();
+	var _url = _ctx+"/apply/sealUsageOphis/findUsageOphisPage?search_EQL_sealUsageId="+sealUsageId;
+	$('#sealUsageOphis').datagrid({
+		//pagination:true,
+		pageSize:50,
+		rownumbers:true,
+		//pageList:[50,40,30,20,10], 
+		url:_url,
+		columns:[ [
+			{field:'sealHisDate',title:'加盖日期', width:140,align:'center',editor:{type:'datebox',options:{required:'true'}}},
+			{field:'remark',title:'加盖备注',width:323,align:'left',editor:{type:'validatebox',options:{required:'true',validType:'length[1,200]'}}},
+			{field:'sealUsageId',title:'sealUsageId',align:'center',width:100,hidden:true,formatter:function(){
+				return _sealUsageId;
+			}},
+			{field:'enterpriseId',title:'企业账套ID',align:'center',width:100,hidden:true,formatter:function(){
+				return enterpriseId;
+			}},
+			{field:'opUserId',title:'业务员ID',align:'center',width:100,hidden:true,formatter:function(){
+				return currentUserId;
+			}},
+			{field:'opUserName',title:'业务员',align:'center',width:100,formatter:function(){
+				return currentUserName;
+			}},
+			{field:'operate',title:'操作', width:100,align:'center',formatter:function(value, row, index){  
+				 var str = ""
+				 //if(!id){
+		         	var str = '<img onclick="remove(\''+index+'\',event,this)" style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>'; 
+				 //}
+				 return str;
+			}}
+		]]
+		});
+	});
+
+	function insert(){
+		$("#sealUsageOphis").datagrid("appendRow",{id:0,sealHisDate:'',remark:'',sealUsageId:_sealUsageId,enterpriseId:_enterpriseId,opUserId:currentUserId,opUserName:currentUserName});
+		var rows=$("#sealUsageOphis").datagrid('getRows');					
+		$("#sealUsageOphis").datagrid('beginEdit', rows.length - 1);
+	}
+
+	function remove(index,event,target){
+		$('#sealUsageOphis').datagrid('selectRow', index);
+		var row = $('#sealUsageOphis').datagrid('getSelected');
+		var id = row.id;
+		if(id=='0' ||id =='' || id == undefined) {
+			$('#sealUsageOphis').datagrid('deleteRow',index);
+		}else{
+			$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+				if(t){
+					$.post(_ctx+"/apply/sealUsageOphis/delete/"+id,function(result) {
+						var rObj = eval(result);
+						if(rObj.success){
+							$('#sealUsageOphis').datagrid('reload');
+							$('#sealUsageOphis').datagrid('clearSelections');
+						}else{
+							 $.messager.alert('error',rObj.failure,'warning');
+						}
+					});
+				}
+			});
+		}
+	}
+		
+
+	function saveEdit(){
+		var flag = true;
+		var row = $('#sealUsageOphis').datagrid('getSelected');
+		if (row){
+			var index = $('#sealUsageOphis').datagrid('getRowIndex', row);
+			$('#sealUsageOphis').datagrid('endEdit', index);
+		}
+		var changeRows=[];
+		var inserted = $('#sealUsageOphis').datagrid('getChanges','inserted');
+		var updated = $('#sealUsageOphis').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#sealUsageOphis').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#sealUsageOphis').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#sealUsageOphis').datagrid('selectRow',index);
+    			$('#sealUsageOphis').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#sealUsageOphis').datagrid('endEdit', index);
+    		}
+		}
+		if (flag){
+		$.post(_ctx+"/apply/sealUsageOphis/saveBatch",Convert.ToSaveParam("sealUsageOphis") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#sealUsageOphis').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+</script>

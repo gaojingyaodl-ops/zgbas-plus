@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>诉讼管理</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同编号</label>
+				<input  class="control" id="contractNo" type="text" name="contractNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>企业名称</label>
+				<input  class="control" id="companyName" type="text" name="companyName"/>
+			</p>
+
+			<p class="yw-table-filter">
+				<label>我方抬头</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"></input>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>履约状态</label>
+				<input id="performanceStatus" name="performanceStatus" class="easyui-numberbox"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>产品类型</label>
+				<input type="text" id="productType" class="control text_padding" name="productType"/>
+			</p>
+			<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6"  onclick="exportExcel()">导出</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+		   title="" iconCls="icon-edit" singleSelect="true"
+		   idField="id">
+	</table>
+</div>
+
+<script type="text/javascript">
+	var lastIndex=0;
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	var processListJson = eval('[(${processListJson})]');
+	var _productType_business = '[[${productType}]]';
+	var performanceStatusJson = eval('[(${performanceStatusJson})]');
+	var deptJson = eval('[(${deptJson})]');
+	var _performanceStatus_index = '[[${performanceStatus}]]';
+	$(function(){
+		$("#productType").combobox({
+			data:[{id:'',text:'--全部--'},{id:'HG',text:'化工'},{id:'NHG',text:'非化工'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			onLoadSuccess:function(){
+			}
+		});
+		if(!strIsNull(_productType_business)){
+			$("#productType").combobox('setValue',_productType_business);
+		}
+		//我方抬头
+		$('#ourCompanyName').combobox({
+			data:_ourCompanyJson,
+			valueField:'dictName',
+			textField:'dictName',
+			panelWidth:'auto',
+			panelHeight:"auto"
+		});
+		// 履约状态
+		$('#performanceStatus').combobox({
+			data:performanceStatusJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelWidth:'150px',
+			panelHeight:"auto",
+			editable:false
+		});
+		// 首页跳转的时候使用
+		if(!strIsNull(_performanceStatus_index)){
+			$("#performanceStatus").combobox('setValue',_performanceStatus_index);
+		}
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:false,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/order/litigation/findByLitigation",
+			columns: [ [
+				{field:'contractNo', title:'合同编号', width:140 , formatter:function(value,row,index){
+						if (row.id) {
+							if (row.breachDays > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+				}  },
+				{field:'productsName',title:'货名', width:140,align:'left',formatter:function(value,row){
+						if (value){
+							var content = '<p title="' + value + '" class="note">' + value + '</p>';
+							return content;
+						}
+					}} ,
+				// {field: 'businessTypeDcsx', title: '业务类型',align: "left", width: 140, formatter: function (value, row, index) {
+				// 		if (row.id) {
+				// 			if (row.matchCreditFlg == "true") {
+				// 				if (value == "DCSXBL") {
+				// 					return "代采赊销保理";
+				// 				}
+				// 				if (value == "DCSX") {
+				// 					return "代采赊销预算";
+				// 				}
+				// 				if (value == "BL") {
+				// 					return "保理赊销预算";
+				// 				}
+				// 				if (value == "PT") {
+				// 					return "普通赊销预算";
+				// 				}
+				// 				if (value == "DCSXHDFK") {
+				// 					return "代采赊销货到付款";
+				// 				}
+				// 				if (value == "HDFK") {
+				// 					return "货到付款赊销预算";
+				// 				}
+				// 				if (value == "" || value == null) {
+				// 					return "普通赊销预算";
+				// 				}
+				// 			} else {
+				// 				return "代采预算";
+				// 			}
+				// 		}
+				// }   },
+				{field:'companyName',title:'对方企业名称',align:'left', width:150,formatter:function(value,row){
+						if (value){
+							var s_str = value.split("有限公司");
+							if (s_str) {
+								value = s_str[0];
+							}
+							var content = '<p title="' + value + '" class="note">' + value + '</p>';
+							return content;
+						}
+					}},
+				{field:'ourCompanyName',title:'我方',align:'left', width:150,formatter:function(value,row){
+						if (value){
+							var s_str = value.split("有限公司");
+							if (s_str) {
+								value = s_str[0];
+							}
+							var content = '<p title="' + value + '" class="note">' + value + '</p>';
+							return content;
+						}
+					}},
+				{field:'totalAmount',title:'合同总价(元)', align:"right", width:90,formatter:formateNum},
+				{field:'dealedAmount',title:'已收款金额(元)',align:"right", width:110,formatter:formateNumTon},
+				{field:'receivablePrincipal',title:'待收本金(元)',align:"right", width:110,formatter:function(value,row,index){
+						return getReceivableAmount(value, row);
+					}},
+				{
+					field: 'breachDays',
+					title: '逾期天数（天）',
+					align: "right",
+					width: 100
+				},
+				{field:'breachAmount',title:'逾期罚息(元)',align:"right", width:100,formatter:formateNum},
+				{field:'matchUserName',title:'业务员',align:"center", width:80},
+				{field:'deptId',title:'区域',align:"center", width:100,formatter:function (value, row, index) {
+						return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+					} },
+				{field:'appointPayFullTime',title:'约定付款日期',align:"center", width:100},
+				{field:'confirmReceiveNumber',title:'确认收货数量',align:"right", width:100},
+				{field:'confirmDate',title:'确认收货日期',align:"center", width:120,formatter:function (value,row,index) {
+						if (value != null && value != ''){
+							var dt;
+							dt = new Date(value);
+							return dt.format("yyyy-MM-dd");
+						}
+				}  },
+				{field:'creditCycle',title:'账期',align:"center", width:40},
+				{field:'performanceStatus',title:'履约状态',align:"center", width:80,formatter:function (value,row,index){
+						var res = '';
+						if (value == 'P'){
+							res = '<span style="color:#FF0000">' + Convert.findValueByKey(performanceStatusJson,"dictCd",value,"dictName") + '</span>';
+						}else if (value == 'S') {
+							res = '<span style="color:#ecb036">' + Convert.findValueByKey(performanceStatusJson,"dictCd",value,"dictName") + '</span>';
+						}
+						return res;
+				}  },
+				{field:'litigationFees',title:'诉讼费',align:"center", width:110,formatter:formateNumTon},
+				{field:'securityFees',title:'保全费',align:"center", width:110,formatter:formateNumTon},
+				{field:'legalFees',title:'律师费',align:"center", width:110,formatter:formateNumTon},
+				{field:'options',title:'业务操作',align:'left',formatter:function(value, row, index){
+					var str = "";
+					if (row.performanceStatus == "S"){
+						str += '<span onclick="updateStatus('+row.id+')" class="contract-btn contract-btn-4">诉讼</span>';
+					}
+						str += '<span onclick="doStamp('+row.id+')" class="contract-btn contract-btn-10">盖章</span>';
+						// str += '<span onclick="doCostCreate('+row.id+')" class="contract-btn contract-btn-1">费用申请</span>';
+					return str;
+				}}
+			]],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				approveDetail(row);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+			}
+		});
+
+	});
+
+	// 逾期，修改履约状态
+	function updateStatus(contractId) {
+		$.messager.confirm('提示','确定要更新履约状态为违约吗?', function(t){
+			if(t){
+				if(contractId){
+					$.post(_ctx + "/order/litigation/updatePerformanceStatus/"+contractId, function(result) {
+						var rObj = eval(result);
+						if (rObj.success) {
+							$.messager.show({title:'Tip',msg:'更新履约状态成功!!',timeout:2000,showType:'show'});
+							$('#tt').datagrid('reload');
+						} else {
+							$.messager.alert('error',rObj.failure,'warning');
+						}
+					})
+				}
+			}
+		});
+	}
+	// 盖章申请
+	function doStamp(contractId) {
+		var title ='新建:盖章申请';
+		var processCode = "APPLY_SEAL_USAGE";
+		doRedirect(title,processCode,contractId);
+	}
+	//费用申请
+	function doCostCreate(contractId) {
+		var title ='新建:经营费用申请';
+		var processCode = "APPLY_OPERATING_BUSINESS_PAY";
+		doRedirect(title,processCode,contractId);
+	}
+
+
+
+	function doRedirect(title,processCode,contractId){
+		var processId = Convert.findValueByKey(processListJson,"processCode",processCode,"id");
+		window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+processId+'?contractId='+contractId);
+	}
+
+	function exportExcel(){
+		$('#searchForm').form('submit', {url:_ctx+"/order/litigation/exportExcel"});
+	}
+
+	//字符串转日期
+	function strDateForDate(str){
+		var strDate = str.split(" ");
+		var strDatepart = strDate[0].split("-");
+		var dtDate = new Date(strDatepart[0],strDatepart[1]-1,strDatepart[2]);
+		return dtDate;
+	}
+
+	//计算两个日期的天数差
+	function dateDiff(firstDate,secondDate){
+		var firstDate = new Date(firstDate);
+		var secondDate = new Date(secondDate);
+		var diff = Math.abs(firstDate.getTime() - secondDate.getTime())
+		var result = parseInt(diff / (1000 * 60 * 60 * 24));
+		return result
+	}
+
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+
+	function formateNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+
+	function getReceivableAmount(value, row) {
+		var receivableAmount = Number(row.totalAmount) - Number(row.dealedAmount);
+		return formateNum(receivableAmount)
+	}
+
+	// 判断是否为空
+	function isBlank(val) {
+		if (val == undefined
+				|| val == ''
+				|| val == null) {
+			return true;
+		}
+		return false;
+	}
+	//预算详情
+	function approveDetail(row){
+		var  approveId=row.approveId;
+		var title = "预算详情" + ':' +approveId;
+		window.parent.addTab(title,_ctx+'/bs/matchDetail/content2/'+approveId);
+	}
+	// 获取一个日期和现在相差天数
+	function getDay(data){
+		var minutes=1000*60;
+		var hours=minutes*60;
+		var days=hours*24;
+
+		var d=new Date();
+		var t=d.getTime();
+		var x=new Date(data).getTime()
+		var y=Math.round((t-x)/days);
+		return y;
+	}
+
+</script>
+
+</body>
+</html>

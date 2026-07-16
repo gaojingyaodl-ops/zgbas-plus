@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>文件签署</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<input type="hidden" id="currentUserName" th:value="${@shiroUtil.getCurrentUserName()}"/>
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input type="hidden" name="search_EQS_signType" id="signType" value="2"/>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>文件名称:</label>
+				<input name="search_LIKES_fileName" type="text"/>
+			</p>
+			<p class="yw-table-filter">
+				<lable>签署状态:</lable>
+				<input name="search_EQS_signStatus" type="text" id="status"/>
+			</p>
+			<p class="yw-table-filter">
+				<lable>创建人:</lable>
+				<input name="search_LIKES_creator" type="text"/>
+			</p>
+			<p class="yw-table-filter">
+				<lable>是否有效:</lable>
+				<input name="search_EQB_enableFlg" type="text" id="signEnableFlg" value="true"/>
+			</p>
+			<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+	<div id="btn" class="add-btn">
+		  <a  href="#" class="easyui-linkbutton btn64" onclick="detail(0,'/documents/autoSign/detail/')">新增</a>
+	</div>
+</div>
+
+
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<div id="win" data-options="width:1210,height:500" class="easyui-window">
+<script type="text/javascript">
+	var lastIndex;
+	//我方企业抬头
+	var _curr_user_name = $("#currentUserName").val();
+	$(function(){
+		$("#status").combobox({
+			data : [ {
+				id : 'N',
+				text : '未签署'
+			}, {
+				id : 'D',
+				text : '已签署'
+			},{
+				id : '',
+				text : '全部'
+			}],
+			textField : 'text',
+			valueField : 'id',
+			panelHeight : "auto",
+		});
+		$("#signEnableFlg").combobox({
+			data : [ {
+				id : 'true',
+				text : '有效'
+			}, {
+				id : 'false',
+				text : '无效'
+			}, {
+				id : '',
+				text : '全部'
+			}],
+			textField : 'text',
+			valueField : 'id',
+			panelHeight : "auto",
+			onLoadSuccess: function () {
+				$("#signEnableFlg").combobox('setValue', 'true');
+			}
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[50,40,30,20,10],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/documents/sign/findPageSignFile",
+			columns:[ [
+				{field: 'fileName', title: '文件名称', align: 'left', width: 400},
+				{field: 'companyNames', title: '签署公司', align: 'left', width: 400},
+				{
+					field: 'signStatus', title: '状态', width: 70, align: 'left',
+					formatter: function (value) {
+						if (value == 'P') {
+							return '<span class="contract-btn contract-btn-1"">部分签署</span>';
+						} else if (value == 'D') {
+							return '<span class="contract-btn contract-btn-3"">已签署</span>';
+						} else {
+							return '<span class="contract-btn contract-btn-10"">未签署</span>';
+						}
+					}
+				},
+				{field: 'signDate', title: '签署日期', width: 130, align: 'center'},
+				{field: 'createdDate', title: '创建日期', width: 130, align: 'center'},
+				{field: 'creator', title: '创建人', align: 'left', width: 100},
+				{
+					field: 'operate',
+					title: '操作',
+					width: 180,
+					align: 'left',
+					formatter: function (value, row, index) {
+						var str = "";
+						if (row.fileId){
+							str += '<span class="contract-btn contract-btn-2" onclick="getFileIdPath(\'' + row.fileId + '\')">查看附件</span>';
+						}
+						if (row.cfcaContractNo && row.signStatus != 'D'){
+							str += '<span onclick="refreshSignFile(\''+row.cfcaContractNo+'\')" class="contract-btn contract-btn-3"">刷新状态</span>';
+						}
+						if (_curr_user_name == row.creator && row.enableFlg){
+							str += '<span onclick="invalidSignFile(\''+row.id+'\')" class="contract-btn contract-btn-6"">作废</span>';
+						}
+						return str;
+					}
+				}
+			]],
+			toolbar:"#toolbar",
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				detail(row.id,"/documents/autoSign/detail/");
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			}
+		});
+		$('#win').window({
+			title: '文件自动签署',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+	});
+
+	function detail(id,url){
+		var _href = url+id
+		$('#win').window({href:_href});
+		$('#win').window('open');
+	}
+
+   // 查看附件
+	function getFileIdPath(fileId) {
+        $.post(_ctx+"/ctr/loading/getByFileId?fileId="+Convert.getFileId(fileId),function(result) {
+            window.open(result, "_blank")
+        });
+    }
+
+	//刷新状态
+	function refreshSignFile(cfcaContractNo){
+		var url = _ctx+"/documentsUser/sign/refreshSignFile/"+cfcaContractNo;
+		$.get(url,function(data) {
+			var rObj = eval(data);
+			if(rObj.success){
+				$.messager.show({
+					title : 'Tip',
+					msg : '刷新状态成功!',
+					timeout : 2000,
+					height:120,
+					showType : 'show'
+				});
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+
+	//作废
+	function invalidSignFile(id){
+		if (id){
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '删除提示',
+				msg: '确定要作废该文件签署吗？',
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				fn: function(r){
+					if (r){
+						var url = _ctx+"/documentsUser/sign/invalidSignFile/"+id;
+						$.get(url,function(data) {
+							var rObj = eval(data);
+							if(rObj.success){
+								$.messager.show({
+									title : 'Tip',
+									msg : '作废成功!',
+									timeout : 2000,
+									height:120,
+									showType : 'show'
+								});
+								$('#tt').datagrid('reload');
+							}else{
+								$.messager.alert('error',rObj.failure,'warning');
+							}
+						});
+					}
+				}
+			});
+		}
+	}
+</script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+		<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>收款明细表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 100px">
+	<form id="receiveMoneySearchForm" class="form-search from-input-layout" method="post">
+	 	<input type="hidden" id="type" name="search_EQS_contractType" th:value="${type}"/>
+	 	<input type="hidden" name="orverdurStatus" value="orverdurStatus"/>
+		<p class="p_text">
+			<span class="input-colspan" >
+				<label style="width: 80px;">是否作废:</label>
+				<input  type="text" id="isCancel"name="isCancel"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">业务类型:</label>
+				<input type="text" id="source" name="source"/>
+			</span>
+			<span class="input-colspan" >
+				<label>合同编号:</label>
+				<input  class="control" type="text" name="contractNo"/>
+			</span>
+			<span class="input-colspan">
+				<label>我方抬头:</label>
+				<input  class="control" type="text" name="ourCompanyName"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 80px;">对方企业名:</label>
+				<input  class="control" type="text" name="companyName"/>
+			</span>
+			<span class="input-colspan">
+					<label>收款时间:</label>
+					<input  id="srh_receiveTime_from" name="receiveTimeGTED" class="easyui-datebox"/>
+			</span>
+			<span class="input-colspan">
+					<label>到:</label>
+					<input  id="srh_receiveTime_to"  name="receiveTimeLTD" class="easyui-datebox" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('receiveMoneySearchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#receiveMoneySearchForm').form('reset');">清空</a>
+				<!-- <a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcel()">导出</a> -->
+			</span>
+
+		</p>
+
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+<script type="text/javascript">
+	var lastIndex=0;
+	//var companyJson =eval('[(${companyJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var applyTypeJson = eval('[(${applyTypeJson})]'); //业务类型
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	//是否作废
+	var _isCancel=[{
+		cancelTag:"",cancelName:"不限"},{
+		cancelTag:"N",cancelName:"否"},{
+		cancelTag:"Y",cancelName:"是"
+	}]//0未作废
+
+	//业务类型(销售类)
+	/* var _businessType = [{id:'ZY-XS',text:'自营销售'},{id:'ZY-BB',text:'背靠背'},{id:'SY-XS',text:'质押销售'},{id:'SX-SX',text:'赊销'},
+						 {id:'SX-HK',text:'货到付款'},{id:'DL-KZ',text:'代理开证'},{id:'DL-DC',text:'国企代采'}]; */
+	var _source = [{id:'MS',text:'撮合销售'},{id:'S',text:'销售'},{id:'RS',text:'进口销售'},{id:'L',text:'预售'}];
+	console.log(applyTypeJson.dictCd);
+	 $(function(){
+			$('#ourCompanyName').combobox({
+				data:_ourCompanyJson,
+				valueField:'dictName',
+				textField:'dictName',
+				//panelWidth:'220px',
+				panelHeight:"auto"
+			});
+			$("#isCancel").combobox({
+				data:_isCancel,
+				textField:'cancelName',
+				valueField:'cancelTag',
+				height:30,
+				//editable:false,
+				panelHeight:"auto"
+
+			});
+			$("#source").combobox({
+				data:_source,
+				textField:'text',
+				valueField:'id',
+				height:30,
+				//editable:false,
+				panelHeight:"auto"
+
+			});
+		var _url = _ctx+"/rpt/receiveMoney/findReceiveDetail";
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('receiveMoneySearchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_url,
+			columns:[ [
+				{field:'source',title:'业务类型', width:70,formatter:function(value,row,index){
+					return Convert.findValueByKey(_source,"id",value,"text");
+				}},
+				{field:'contractNo', title:'合同编号', width:128},
+				{field:'productsName',title:'货名', width:120,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="tip">' + value + '</p>';
+					    return content;
+					}
+			        }} ,
+		       /*  {field:'ourCompanyName',title:'我方抬头', width:200,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="tip">' + value + '</p>';
+					    return content;
+					}
+			        }} , */
+				{field:'companyName',title:'对方企业名称', width:120,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="tip">' + value + '</p>';
+					    return content;
+					}
+			        }} ,
+				{field:'totalNumber',title:'合同数量(吨)',align:"right", width:90},
+				{field:'warehouseNumber',title:'出库数量(吨)',align:"right", width:90},
+				{field:'totalAmount',title:'合同总价(元)', align:"right", width:100},
+				{field:'billedAmount',title:'已收金额(元)',align:"right", width:90},
+				{field:'dealAmount',title:'开票金额(元)',align:"right", width:90},
+				{field:'overdueAmount',title:'逾期金额(元)',align:"right", width:90},
+				{field:'contractTime',title:'合同时间', width:120,align:'center'} ,
+				{field:'contractStatus', title: '合同状态', width: 80,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+				}},
+				{field:'receiveAmount',title:'收款金额(元)',align:"right", width:90},	 //收款金额
+				/* {field:'payFullTime',title:'全款时间', width:100} ,
+			    {field:'payBondTime',title:'定金时间', width:100} , */
+			    {field:'receiveDate',title:'收款日期', width:100} ,
+				{field:'matchUserName',title:'业务员',align:"center", width:55},
+				{field:'deptName',title:'事业部',align:"center", width:65},
+				{field:'option',title:'操作',align:'center',width:100,formatter:function(value, row, index){
+					if (row.exitContractText){
+						var str = '<span onclick="printContract('+row.id+')" class="contract-btn">合同预览</span>';
+						return str;
+					}
+				}}
+			]],
+			onLoadSuccess:function(data){
+				 $(".tip").tooltip(
+				            {
+				                onShow: function(){
+				                    $(this).tooltip('tip').css({
+				                        width:'400',
+				                        boxShadow: '1px 1px 3px #292929'
+				                 });
+				             }
+				         }
+				 );
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+
+		//合同预览
+		$('#w_contract').window({
+			title: '电子合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false
+		});
+	});
+	//合同预览
+		function printContract(contractId){
+			if(contractId){
+				var url = _ctx+"/ctr/contractText/getBycontractId/"+contractId;
+				$('#w_contract').window({href:url});
+				$('#w_contract').window("open");
+			}
+		}
+</script>
+</body>
+</html>

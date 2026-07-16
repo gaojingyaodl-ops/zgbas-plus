@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <th:block th:include="include :: header('我的首页')" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <script type="text/javascript">	_ctx='[[${#request.getContextPath()}]]';</script>
+</head>
+<body class="gray-bg">
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+        
+        <div class="col-xs-12" th:if="${grossProfitMarginViewPerm == true}" id="grossProfitMarginDiv">
+            <div class="ibox" style="margin-left: -5px;">
+
+                <div class="ibox-title">
+                    <h5>业务总览</h5>
+                </div>
+                <div class="imbox-content hgt265">
+                    <div class="row  m-t-sm idx-row" onclick="buyNoBill()">
+                        <span class="col-xs-2 text-left  mpl" >状态</span>
+                        <span class="col-xs-2 text-left  mpl" >采购</span>
+                        <span class="col-xs-2 text-left  mpl" >中游</span>
+                        <span class="col-xs-2 text-left  mpl" >销售</span>
+                        <span class="col-xs-4 text-left  mpl" >逻辑说明</span>
+                    </div>
+                    <div class="row  m-t-sm idx-row" onclick="sellNoBill()">
+                        <span class="col-xs-2 text-left  mpl" >待确认收货</span>
+                        <span class="col-xs-2 text-left  mpl" >采购</span>
+                        <span class="col-xs-2 text-left  mpl" >中游</span>
+                        <span class="col-xs-2 text-left  mpl" >销售</span>
+                        <span class="col-xs-4 text-left  mpl" >已出库、未确认收货</span>
+                    </div>
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="include :: echarts-js" />
+<script type="text/javascript" th:inline="javascript">
+
+    var _pcSide = true;
+    
+    // ------------------jQuery初始化函数------------
+    $(function() {
+        // 识别手机与PC段
+        _pcSide = browserRedirect();
+        
+        if(_pcSide) {
+            
+        }
+       
+        // 初始化毛利率折线图,有权限才加载
+        if($('#grossProfitMarginDiv').length > 0){
+            initGrossProfitMarginEchars();
+        }
+    });
+    
+
+    function browserRedirect() {
+        var sUserAgent = navigator.userAgent.toLowerCase();
+        var bIsIpad = sUserAgent.match(/ipad/i) == "ipad";
+        var bIsIphoneOs = sUserAgent.match(/iphone os/i) == "iphone os";
+        var bIsMidp = sUserAgent.match(/midp/i) == "midp";
+        var bIsUc7 = sUserAgent.match(/rv:1.2.3.4/i) == "rv:1.2.3.4";
+        var bIsUc = sUserAgent.match(/ucweb/i) == "ucweb";
+        var bIsAndroid = sUserAgent.match(/android/i) == "android";
+        var bIsCE = sUserAgent.match(/windows ce/i) == "windows ce";
+        var bIsWM = sUserAgent.match(/windows mobile/i) == "windows mobile";
+        if (bIsIpad || bIsIphoneOs || bIsMidp || bIsUc7 || bIsUc || bIsAndroid || bIsCE || bIsWM){
+            return false;
+        }
+        return true;
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<div region="center" border="false">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<div class="editForm">
+				<p style="width:240px">
+					<span class="upload-btn" id="btn_fileId">
+						 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+					</span>
+					<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+				</p>
+				<p class="controls showImg fileId" id="span_fileId"></p>
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/sealUsage/updateFileId',[[${param.hasEditFile}]]);
+//var _curStatus = $("#entityStatus").val();
+var _curStatus = '[[${status}]]';
+$(function(){
+	//$('#addBtn').linkbutton();
+	$('.easyui-linkbutton').linkbutton();
+	$("input[name='file']").attr("readonly", true);
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($('#btn_fileId').length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+});
+
+</script>

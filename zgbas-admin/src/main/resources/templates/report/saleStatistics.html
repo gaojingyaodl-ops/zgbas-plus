@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>进销存统计</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>品名:</label>
+				<input class="control" type="text" name="productName" id="productName" />
+			</p>
+			<p class="yw-table-filter">
+				<label>供方单位:</label>
+				<input class="control" type="text" name="companyName" />
+			</p>
+			<p class="yw-table-filter">
+				<label>业务员:</label>
+				<input id="matchUserName" class="control text_padding" type="text" name="matchUserName" />
+			</p>
+			<p class="yw-table-filter">
+				<label>事务部:</label>
+				<input type="text" id="deptId" class="control text_padding" name="deptId" />
+			</p>
+			<p class="yw-table-filter">
+				<label>采购日期:</label>
+				<input name="contractTimeGTED" id="contractTimeGTED" class="easyui-datebox" />
+			</p>
+			<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter">
+				<input name="contractTimeLTD"  id="contractTimeLTD" class="easyui-datebox" />
+			</p>
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a> 
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6 btn-export" style="position: fixed;right:20px;top:45px;" onclick="exportExcel()">导出</a>
+		</div>
+		</form>
+	</div>
+	<div region="center" border="false" class="panel_padding" style="padding-right: 20px;padding-left:20px;">
+		<table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+	</div>
+	<div id="w" title="销售明细" data-options="width:1080,height:350">
+		<div class="easyui-layout" fit="true">
+			<div region="center" border="false" class="panel_padding">
+				<table id="t1" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+			</div>
+		</div>
+	</div>
+<script type="text/javascript">
+	var lastIndex = 0;
+	var deptJson = eval('[(${deptJson})]');
+	var userJson = eval('[(${userJson})]');
+	var productTypeJson = eval('[(${productTypeJson})]');// 品名树
+	var contractAttrJson = eval('[(${contractAttrJson})]');// 合同类型
+	var deliveryModeJson = eval('[(${deliveryModeJson})]');// 交货方式
+	var deliveryTypeJson = eval('[(${deliveryTypeJson})]');// 提货方式
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');// 业务员树
+	var billFlgJson = [{key:"true",value:'已开'},{key:"false",value:'未开'}];// 发票状态
+	$(function() {
+		$('#matchUserName').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			height : 30,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#matchUserName').combotree('clear');
+				} else {
+					$('#matchUserName').combotree('setValue', node.text);
+				}
+			}
+		});
+		//品名下拉
+	    $('#productName').combotree({
+			data:productTypeJson, 
+			multiple : false,
+			editable : true,
+			onSelect:function(data){
+				$('#productName').val(data.typeName);
+			}
+		});
+		$('#deptId').combobox({
+			data : deptJson,
+			textField:'deptName',
+			valueField:'deptId',
+			panelHeight:"auto",
+		});
+		$('#tt').datagrid({// 加载进销存统计表
+			rownumbers : true,
+			pagination : true,
+			showFooter : true,
+			pageSize : 30,
+			pageList : [ 500, 200, 100, 50, 30, 20 ],
+			url : _ctx + "/rpt/buyandsell/findContractRela",
+			columns : [ [
+				{field:'contractNo', title:'采购合同编号', width:140,align:'center',
+					formatter:function(value,row,index){
+						if(value){
+							return '<span class="c_blue_b yw-menu-section">'+value+'</span>';
+						}
+					}
+				},
+				{field:'buyDate', title:'采购日期', width:120},
+				{field:'contractAttr', title:'类型', width:50, align:'center', formatter:function(value, row, index){
+					return Convert.findValueByKey(contractAttrJson,"dictCd",value,"dictName");
+				}},
+				{field:'productName', title:'品名', align:'left',width:100, formatter:function(value, row, index){
+					if(row.productName){
+						var str = row.productName+'/'+row.brandNumber+'/'+row.factoryName;
+						if (_industry.indexOf('SL')==-1){
+							//不是塑料行业主要显示品名
+							str = row.productName;
+						}
+						return str;
+					}
+				}},
+				{field:'companyName', title:'供方单位', width:120, align:'left'},
+				{field:'warehouseAddr', title:'仓库', width:100, align:'left'},
+				{field:'dealNumber', title:'采购数量(吨)', width:90, align:'right',formatter:formateNumTon},
+				{field:'dealPrice', title:'采购单价(元)', width:90, align:'right', formatter:function(value, row, index){
+					if(row.dealPrice){
+						var reg=/\d{1,3}(?=(\d{3})+$)/g;   
+						return (value + '').replace(reg, '$&,');
+					}
+				}},
+				{field:'payTime', title:'付款日期', width:90},
+				{field:'salesNumber', title:'已销数量(吨)', width:90, align:'right',formatter:formateNumTon},
+				{field:'remainNumber', title:'剩余数量(吨)', width:90, align:'right',formatter:formateNumTon},
+				{field:'inWarehouseHours', title:'在库时长(小时)', sortable : true, width:120, align:'right', formatter:function(value, row, index){
+					if(row.inWarehouseHours <= 0){
+						return 0;
+					}else{
+						return row.inWarehouseHours;
+					}	
+				}},
+				{field:'overplusPrice', title:'剩余货值(元)', width:120, align:'right', formatter:function(value, row, index){
+					if(row.overplusPrice==0){
+						return row.overplusPrice;
+					} else {
+						var reg=/\d{1,3}(?=(\d{3})+$)/g;   
+						return (value + '').replace(reg, '$&,');
+					}
+				}},
+				{field:'occupation',title:'资金占用(元)',width:100,align:'right', formatter:function(value, row, index){
+					if(row.occupation==0){
+						return row.occupation;
+					}else{
+						var reg=/\d{1,3}(?=(\d{3})+$)/g;   
+						return (value + '').replace(reg, '$&,');
+					}
+				}},
+				{field:'matchUserName', title:'业务员', width:60, align:'center'},
+				/* {field:'leaderId', title:'小组负责人', width:90, align:'center'}, */
+				{field:'deptId', title:'所属事务部', width:90, align:'center', formatter:function(value, row, index){
+					return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+				}}
+			] ],
+			onDblClickRow : function(index, row) {// 双击单行进入对应销售详情
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onLoadSuccess : function(data) {
+				var total = $('#tt').datagrid('getData').total;
+				if (lastIndex > total - 1) {
+					lastIndex = total - 1;
+				}
+				if (lastIndex) {
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+
+		$('#w').window({
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false
+		});
+	});
+	
+	function editrow(id){
+		if(id){
+			$('#w').window("open");
+			$('#t1').datagrid({// 加载销售明细表
+				url: _ctx + "/rpt/buyandsell/findSaleContract",
+				method: 'post',
+				queryParams: {id:id},
+				rownumbers : true,
+				pagination : false,
+				pageSize : 30,
+				columns : [ [
+					{field:'contractNo', title:'销售合同', width:120},
+					{field:'matchUserName', title:'业务员', width:60, align:'center'},
+					{field:'companyName', title:'需方单位', width:100},
+					{field:'salesNumber', title:'销售数量(吨)', width:80, align:'right'},
+					{field:'dealPrice', title:'销售单价(元)', width:80, align:'right'},
+					{field:'totalPrice', title:'销售金额(元)', width:80, align:'right'},
+					{field:'remainNumber', title:'剩余数量(吨)', width:80, align:'right'},
+					{field:'deliveryDateFrom', title:'应收时间', width:90},
+					{field:'deliveryDateTo', title:'交货时间', width:90},
+					{field:'deliveryMode', title:'交货方式', width:80, align:'center', formatter:function(value, row, index){
+						return Convert.findValueByKey(deliveryModeJson,"dictCd",value,"dictName");
+					}},
+					{field:'deliveryType', title:'提货方式', width:80, align:'center', formatter:function(value, row, index){
+						return Convert.findValueByKey(deliveryTypeJson,"dictCd",value,"dictName");
+					}},
+					{field:'transportAmount', title:'运输费(元)', width:80, align:'right'},
+					{field:'billFlg', title:'发票', width:40, align:'center', formatter:function(value, row, index){
+						return Convert.findValueByKey(billFlgJson,"key",value,"value");
+					}}
+				] ],
+				onLoadSuccess : function(data) {
+					var total = $('#t1').datagrid('getData').total;
+					if (lastIndex > total - 1) {
+						lastIndex = total - 1;
+					}
+					if (lastIndex) {
+						$('#t1').datagrid('selectRow', lastIndex);
+					}
+				}
+			});
+		}
+	}
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/buyandsell/exportExcel"});
+	}
+	function formateNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+
+
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+</script>
+</body>
+</html>

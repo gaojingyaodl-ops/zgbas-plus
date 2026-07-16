@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl80 pr20 pb15 ofh" border="false">
+        <form id="inputForms" method="post"  class="from-input-layout" >
+            <input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="evaluateGroup"  class="control-label">考核项目:</label>
+                    <input name="evaluateGroup" id="evaluateGroup"  type="text" th:value="${entity.evaluateGroup}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="evaluateMetrics"  class="control-label">考核指标:</label>
+                    <input type="text" name="evaluateMetrics" id="evaluateMetrics" th:value="${entity.evaluateMetrics}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="weight"  class="control-label">权重(分):</label>
+                    <input type="text" name="weight" id="weight" th:value="${entity.weight}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="evaluateDept"  class="control-label">评分部门:</label>
+                    <input name="evaluateDept" id="evaluateDept"  type="text" th:value="${entity.evaluateDept}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="dispOrderNo"  class="control-label">序号:</label>
+                    <input type="text" name="dispOrderNo" id="dispOrderNo" th:value="${entity.dispOrderNo}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w3">
+                    <label for="metricsContent" class="control-label">指标定义:</label>
+                    <textarea id="metricsContent" name="metricsContent" style="height: 70px;width: 500px" class="control large">[[${entity.metricsContent}]]</textarea>
+                </p>
+            </div>
+        </form>
+    </div>
+
+
+    <div region="south" border="false" style="overflow: hidden;height: 60px;margin-left:  280px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="submit();">保存</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var _evaluateGroupJson = eval('[(${evaluateGroupJson})]');
+    var _evaluateMetricsJson = eval('[(${evaluateMetricsJson})]');
+    var _evaluateDeptJson = eval('[(${evaluateDeptJson})]');
+    $(function(){
+        /* 考核项目 */
+        $("#evaluateGroup").combobox({
+            data : _evaluateGroupJson,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            width : 150,
+            height : 30,
+        });
+        /* 考核指标 */
+        $("#evaluateMetrics").combobox({
+            data : _evaluateMetricsJson,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            width : 150,
+            height : 30,
+        });
+        /* 考核指标 */
+        $("#evaluateDept").combobox({
+            data : _evaluateDeptJson,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            width : 150,
+            height : 30,
+        });
+        /* 可用额度 */
+        $('#balance').numberbox({
+            min: 0,
+            precision: 2,
+            required: true
+        });
+    });
+
+    //保存
+    function submit(){
+        var entityId = $("#id").val();
+        if (entityId != null  && entityId !=0 && entityId != ""){//判断是否有id值，有则修改，无则添加
+            Edit();//修改方法
+        }else{
+            save();//添加方法
+        }
+    }
+    /* 修改方法 */
+    function Edit(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: '/evaluate/item/update',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '修改成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#evaluate_item_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+    /* 添加方法 */
+    function save(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: '/evaluate/item/save',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '添加成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#evaluate_item_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+
+</script>

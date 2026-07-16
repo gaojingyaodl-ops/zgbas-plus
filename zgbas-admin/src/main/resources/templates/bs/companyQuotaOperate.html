@@ -1,0 +1,92 @@
+<!--额度浮动审批-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="center" border="false">
+        <div id="inputForm" method="post" class="editForm_approve content_div"
+             style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden" name="companyId" id="companyId" th:value="${company.id}"/>
+            <input type="hidden" name="companyName" id="companyName" th:value="${company.companyName}"/>
+            <input type="hidden" name="canApproveEdit" id="canApproveEdit" th:value="${psv.canApproveEdit}"/>
+            <input type="hidden" name="floatingGear" id="floatingGear" th:value="${entity.floatingGear}"/>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <lable>公司：</lable>
+                    <input type="text" readonly th:value="${company.companyName}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <lable>有效期至：</lable>
+                    <input type="text" readonly th:value="${#dates.format(effectiveDate,'yyyy/MM/dd HH:mm')}"/>
+                </p>
+            </div>
+            <!--            <div class="mb6">-->
+            <!--                <p class="yw-table-filter">-->
+            <!--                    <lable>白条额度(元)</lable>-->
+            <!--                    <input name="totalCreditAmount" type="text" id="totalCreditAmount"  th:value="${entity.totalCreditAmount}"/>-->
+            <!--                </p>-->
+
+            <!--                <p class="yw-table-filter">-->
+            <!--                    <lable>现货额度(元)</lable>-->
+            <!--                    <input name="totalSpotAmount" type="text" id="totalSpotAmount"  th:value="${entity.totalSpotAmount}"/>-->
+            <!--                </p>-->
+
+            <!--                <p class="yw-table-filter">-->
+            <!--                    <lable>期货额度(元)</lable>-->
+            <!--                    <input name="totalFuturesAmount" type="text" id="totalFuturesAmount"  th:value="${entity.totalFuturesAmount}" />-->
+            <!--                </p>-->
+            <!--            </div>-->
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>上浮比率</lable>
+                    <input name="floatingRate" type="text" id="floatingRate" th:value="${entity.floatingRate}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>上浮的最高限额</lable>
+                    <input name="floatingMaxAmount" type="text" id="floatingMaxAmount"
+                           th:value="${entity.floatingMaxAmount}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>基准赊销额度</lable>
+                    <input name="baseQuota" type="text" id="baseQuota" th:value="${company.baseQuota}" disabled="true"
+                           　readOnly="true"/>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    var entity = [[${entity}]];
+    var psv = [[${psv}]];
+    if (entity.id != 0) {
+        console.log("companyQuotaOperate : ", entity);
+        // console.table("psv : ", psv);
+
+        $("#totalCreditAmount").val(entity.totalCreditAmount);
+        $("#totalSpotAmount").val(entity.totalSpotAmount);
+        $("#totalFuturesAmount").val(entity.totalFuturesAmount);
+        if (psv.hasEdit) {
+            $("#totalCreditAmount").attr("readonly", false);
+            $("#totalSpotAmount").attr("readonly", false);
+            $("#totalFuturesAmount").attr("readonly", false);
+        } else {
+            if (psv.canApproveEdit && psv.mapEdit && psv.mapEdit.totalCreditAmount && psv.mapEdit.totalCreditAmount.edit) {
+                $("#totalCreditAmount").attr("readonly", false);
+            } else {
+                $("#totalCreditAmount").attr("readonly", "readonly");
+            }
+            if (psv.canApproveEdit && psv.mapEdit && psv.mapEdit.totalSpotAmount && psv.mapEdit.totalSpotAmount.edit) {
+                $("#totalSpotAmount").attr("readonly", false);
+            } else {
+                $("#totalSpotAmount").attr("readonly", "readonly");
+            }
+            if (psv.canApproveEdit && psv.mapEdit && psv.mapEdit.totalFuturesAmount && psv.mapEdit.totalFuturesAmount.edit) {
+                $("#totalFuturesAmount").attr("readonly", false);
+            } else {
+                $("#totalFuturesAmount").attr("readonly", "readonly");
+            }
+        }
+    }
+</script>

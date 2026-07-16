@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>供应商分析表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 80px;">客户名称:</label>
+				<input id="companyName" name="companyName" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">区域:</label>
+				<input id="deptId" name="deptId" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter mobile-display-none" id="columns_user">
+				<label style="width: 80px;">业务员:</label>
+				<input type="text" id="matchUserName" class="control text_padding" name="matchUserId"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label style="width: 80px;">交易总价:</label>
+				<input id="sellTotalAmountStart" name="sellTotalAmountStart" type="text" value=""/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+				<label> ~ </label>
+			</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input id="sellTotalAmountEnd" name="sellTotalAmountEnd" type="text" value=""/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<span class="" th:if="${permReportSupplierAnalyseExport == true}">
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="exportExcel()">导出</a>
+			</span>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+</div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var deptJson=eval('[(${deptJson})]');
+	var creditRating = eval('[(${creditRating})]');
+	var supplierLevelJson = eval('[(${supplierLevelJson})]');
+	var companyGrade = eval('[(${companyGrade})]');
+	var companyType = eval('[(${companyType})]');
+	var onLineFlg = eval('[(${onLineFlg})]');
+	var userJson = eval('[(${userJson})]');
+	var areaJson = eval('[(${areaJson})]');
+	var matchUserJson = eval('[(${matchUserNameTree})]');
+	$(function(){
+		$("#sellTotalAmountStart,#sellTotalAmountEnd").numberbox({
+			required:false,
+			validType:'length[1,20]',
+			precision:3
+		});
+
+		findByDept();//查询业务部门
+		$('#matchUserName').combotree({
+			data : matchUserJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#matchUserName').combotree('clear');
+				}
+			}
+		});
+
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/supplierReport/findRptSupplierPage",
+			frozenColumns:[ [
+				{
+					field : 'companyName',
+					title : '企业名称',
+					sortable : false,
+					width : 200,
+					align: 'left',
+					formatter : function(value, row, index) {
+						if(row.id) {
+							if(row.supplierRating == "W"){
+								return '<p title="' + row.companyName + '" class="note" style="color:green">' + value + '</p>';
+							}else if(row.supplierRating == "G"){
+								return '<p title="' + row.companyName + '" class="note" style="color:#ccc">' + value + '</p>'
+							}else{
+								return '<p title="' + row.companyName + '" class="note" style="color:red">' + value + '</p>'
+							}
+						}
+
+					}
+				}
+			] ],
+			columns:[ [
+				{field:'provinceCode',title:'区位（市/省）', width:120,formatter:function (value,row,index) {
+					return getProvinceName(value);
+				}},
+				{field:'registerCapital',title:'注册资本',align:"right",width:120},
+				{field:'supplierRating',title:'供应商等级', width:80,formatter : function(value, row, index) {
+					return Convert.findValueByKey(creditRating, "dictCd",value, "dictName");
+				}},
+				// {field:'supplierLevel',title:'供应商级别', width:120,formatter : function(value, row, index) {
+				// 	return Convert.findValueByKey(supplierLevelJson, "dictCd",value, "dictName");
+				// }},
+				{field:'supplierGrade',title:'供应商级别', width:80},
+				{field:'supplierDelivery',title:'供应商配送', width:80,align:'center',formatter:function(value,row,index){
+					if(row.id){
+						if(value == '1'){
+							return '是';
+						}else{
+							return '否';
+						}
+					}
+				}},
+				{field:'createdDate',title:'系统录入时间',align:"center", width:180},	
+				{field:'commonBrandNumber',title:'常用牌号',align:"left", width:150},	
+				{field:'tradeCount',title:'交易单数',align:"right", width:80},	
+				{field:'tradeTonnes',title:'交易吨数',align:"right", width:120,formatter:formateNumTon},	
+				{field:'buyUnitPrice',title:'交易单价',align:"right", width:120,formatter:formateNumTon},	
+				{field:'buyTotalAmount',title:'交易总价',align:"right", width:140,formatter:formateNumTon},	
+				{field:'premium',title:'下游加价',align:"right", width:120,formatter:formateNumTon},
+				{field:'lastContractTime',title:'最近成交时间',align:"center", width:180},
+				{field:'deptId',title:'业务区域',align:"left", width:120,formatter:function(value,row,index){
+					return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+				}},
+				{field:'matchUserName',title:'业务员',align:"left", width:100}
+			]]
+
+		});
+	});
+	/*  导出Excel表格 */
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/supplierReport/supplierAnalyseexportExcel"});
+	}
+
+
+	/*  获取事业部列表 */
+	function findByDept(){
+		$.ajax({
+			type: 'POST',
+			url: _ctx+'/rpt/contractReport/findProfitByDeptId',
+			data: Convert.getJson4Form('searchForm'),
+			success: function (result) {
+				var sc  = eval('('+result+')');//由Json字符串转换成Javascript对象
+				var deptByIdJson = sc.rows;
+				$('#deptId').combobox({
+					data : deptByIdJson,
+					textField:'deptName',
+					valueField:'deptId',
+					panelHeight:"auto",
+					editable:false
+				});
+			},
+		});
+	}
+
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(3).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+	// 只显示年月，不显示日
+	var intiMonthBox = function(id){
+		var db = $('#'+id);
+		db.datebox({
+			onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+				span.trigger('click'); //触发click事件弹出月份层
+				if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+					tds = p.find('div.calendar-menu-month-inner td');
+					tds.click(function (e) {
+						e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+						var year = /\d{4}/.exec(span.html())[0]//得到年份
+								, month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+						db.datebox('hidePanel')//隐藏日期对象
+								.datebox('setValue', year + '-' + month); //设置日期的值
+					});
+				}, 0);
+				yearIpt.unbind();//解绑年份输入框中任何事件
+			},
+			parser: function (s) {
+				if (!s) return new Date();
+				var arr = s.split('-');
+				return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+			},
+			formatter: function (d) {
+				return d.getFullYear() + '-' + (d.getMonth() + 1);
+			}
+		});
+		var p = db.datebox('panel'), //日期选择对象
+				tds = false, //日期选择对象中月份
+				yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+				span = p.find('span.calendar-text'); //显示月份层的触发控件
+	}
+
+</script>
+</body>
+</html>

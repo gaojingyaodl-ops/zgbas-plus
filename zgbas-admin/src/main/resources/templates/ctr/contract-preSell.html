@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>预售未采购明细表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 100px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan" >
+				<label>合同编号:</label>
+				<input  class="control" type="text" name="contractNo"/>
+			</span>
+			<span class="input-colspan">
+				<label>业务类型:</label>
+				<input  class="control" type="text" name="businessType" id="businessType"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>业务员:</label>
+				<input type="text" id="matchUserName" class="control text_padding" name="matchUserName"></input>
+			</span>
+			<span class="input-colspan"> 
+				<label>部门:</label>
+				<input type="text" id="deptId" class="control text_padding" name="deptId" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+				<a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcel()">导出</a>
+			</span>
+		</p>
+		
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+</div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var businessTypeJson=eval('[(${businessTypeJson})]');
+	var deptJson=eval('[(${deptJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	$(function(){
+		$('#matchUserName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#matchUserName').combotree('clear'); 
+				}else{
+				
+					$('#matchUserName').combotree('setValue',node.text);	
+				}
+			} 
+		});
+		$('#deptId').combobox({
+			data : deptJson,
+			textField:'deptName',
+			valueField:'deptId',
+			panelHeight:"auto",
+			editable:false
+		});
+		$('#businessType').combobox({
+			data:[{id:'ZY-XS',text:'自营销售'},{id:'SX-SX',text:'赊销'},{id:'SX-HK',text:'货到付款'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			editable:false
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:false,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/contractReport/preSellList",
+			columns:[ [
+				{field:'contractNo', title:'合同编号', width:128},
+				{field:'businessType',title:'业务类型', width:70,formatter:function(value,row,index){
+					return Convert.findValueByKey(businessTypeJson,"dictCd",value,"dictName");
+				}}, 
+				{field:'ourCompanyName',title:'我方抬头', width:210},
+				{field:'companyName',title:'对方企业名称', width:210,formatter:function(value,row){
+					if (value){
+					    var content = '<p title="' + value + '" class="tip">' + value + '</p>';
+					    return content;
+					}
+			    }},
+			    {field:'totalAmount',title:'合同总价(元)', align:"right", width:100},
+			    {field:'contractTime',title:'合同时间', width:100,align:"center"},
+			    {field:'matchUserName',title:'业务员',align:"center", width:70},
+				{field:'deptId',title:'事业部',align:'center',width:80, formatter:function(value, row, index){
+					return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+				}}
+			]],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id,row.contractNo);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				 $(".tip").tooltip(
+			            {
+			                onShow: function(){
+			                    $(this).tooltip('tip').css({
+			                        width:'400',
+			                        boxShadow: '1px 1px 3px #292929'
+			                 });
+			             }
+			         }
+				 );
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+	});
+	function editrow(id,contractNo){
+		var url=_ctx+"/ctr/contract/detail/"+id;
+		var title=contractNo;
+		window.parent.addTab(title,url);
+	}
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/contractReport/preSellExportExcel"});
+	}
+</script>
+</body>
+</html>

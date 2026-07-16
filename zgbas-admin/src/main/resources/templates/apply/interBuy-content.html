@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+
+	<div id="inputForm" method="post" class="editForm_approve firstDiv">
+	 	<input id="entityStatus" type="hidden"  th:value="${entity.status}"></input>
+	 	<input id="entityId" type="hidden"  th:value="${entity.id}" name="id"></input>
+	 	<input id="stockDetailId" type="hidden" name="stockDetailId" th:value="${odetail==null} ? '0' : ${odetail.stockDetailId}"></input>
+	 	<p class="p_text">
+	 	  <th:block th:replace="~{tags/apply :: contractNo (${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+<!-- 	 		<span class="input-colspan"> -->
+<!-- 				<label for="contractNo">合同编号:</label> -->
+<!-- 				<input id="contractNo" type="text" name="contractNo" readonly="readonly" th:value="${entity.contractNo}"></input> -->
+<!-- 			</span> -->
+			<span class="input-colspan">
+				<label for="totalAmount">交易总价:</label>
+				<input id="totalAmount" type="text" name="totalAmount" readonly="readonly" th:value="${entity.totalAmount}"></input>
+			</span>
+			<span class="input-colspan">
+				<label for="totalNumber">交易数量:</label>
+				<input id="totalNumber" readonly="readonly" name="totalNumber" type="text" th:value="${entity.totalNumber}"></input>
+			</span>
+			<span id="btn" class="add-btn" th:if="${entity.status eq 'B' or entity.status eq 'N'}" style="margin-left: 20px">
+				<a id="chooseBtn" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onclick="openChooseData()">选择</a>
+			</span>
+		</p>
+		 <input id="odetailId" type="hidden"  th:value="${odetail==null} ? '0' : ${odetail.id}"></input>
+		 <input id="ndetailId" type="hidden"  th:value="${ndetail==null} ? '0' : ${ndetail.id}"></input>
+		 <fieldset class="form-section" style="padding: 35px 30px 10px 20px;">
+		 	<legend class="form-section-title"><span class="approve_text">原库存</span><i></i></legend>
+			<table id="ostockDetail" style="height:100px" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+		 </fieldset>
+
+		 <fieldset class="form-section" style="padding: 35px 30px 10px 20px;">
+		 	<legend class="form-section-title"><span class="approve_text">内部交易</span><i></i></legend>
+			<table id="nstockDetail" style="height:100px" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+		 </fieldset>
+	</div>
+</div>
+<div id="w_stock_choose" class="easyui-window" title="库存明细选择" data-options="width:1100,height:540"></div>
+<script type="text/javascript">
+$('#chooseBtn').linkbutton();
+var lastIndex;
+var _curStatus = $('#entityStatus').val();
+var _productType = eval('[(${productType})]');
+var _maxNumber = 0;
+$(function(){
+	var _odetailId = $("#odetailId").val();
+	var _ndetailId = $("#ndetailId").val();
+	_beforSaveOper = true;
+
+	var _ourl = _ctx+"/apply/productDetail/productList?search_EQS_applyType=F&search_EQL_applyId="+_odetailId;
+	$('#ostockDetail').datagrid({
+		pageSize:50,
+		url:_ourl,
+		rownumbers:true,
+		pagination:false,
+		columns:[ [
+			{field:'productName',title:'品名',align:'center',width:120},
+			{field:'brandNumber',title:'牌号',align:'center',width:120},
+			{field:'factoryName',title:'厂商',align:'center',width:130},
+			{field:'warehouseName',title:'仓库',align:'center',width:160},
+			{field:'productAttr',title:'属性',align:'center',width:160,formatter:function(value,row,index){
+				return Convert.findValueByKey(_productType,"dictCd",value,"dictName");}},
+			{field:'dealNumber',title:'数量(吨)', align:'center', width:120},
+			{field:'dealPrice',title:'单价(元)',align:'center',  width:120}
+		]]
+	});
+
+	var _nurl = _ctx+"/apply/productDetail/productList?search_EQS_applyType=F&search_EQL_applyId="+_ndetailId;
+	$('#nstockDetail').datagrid({
+		pageSize:50,
+		url:_nurl,
+		rownumbers:true,
+		pagination:false,
+		columns:[ [
+			{field:'productName',title:'品名',align:'center',width:120},
+			{field:'brandNumber',title:'牌号',align:'center',width:120},
+			{field:'factoryName',title:'厂商',align:'center',width:130},
+			{field:'warehouseName',title:'仓库',align:'center',width:160},
+			{field:'productAttr',title:'属性',align:'center',width:160,formatter:function(value,row,index){
+				return Convert.findValueByKey(_productType,"dictCd",value,"dictName");}},
+			{field:'dealNumber',title:'数量(吨)', align:'center', width:120,editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4}}},
+			{field:'dealPrice',title:'单价(元)',align:'center',  width:120,editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2}}}
+
+		]],
+		onBeginEdit:function(index,row){
+			//设置取值范围
+		   var ed_dealNumber = $('#nstockDetail').datagrid('getEditor', {index:index,field:'dealNumber'});
+		   var rows = $("#ostockDetail").datagrid("getRows");
+			for(var i=0;i<rows.length;i++)
+			{
+			 _maxNumber = rows[i].dealNumber;
+			}
+			$(ed_dealNumber.target).numberbox({min:0,max:_maxNumber});
+			curOper(index,row);
+			lastIndex = index;
+
+		},
+		onDblClickRow:function(index,row){
+			if (_curStatus=='N'||_curStatus=='B'){
+				//进入可编辑状态
+				$('#nstockDetail').datagrid('endEdit', lastIndex);
+				$('#nstockDetail').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("nstockDetail",field,lastIndex);
+			}
+		},
+	});
+
+	$('#w_stock_choose').window({
+		title: '请选择明细',
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false
+	});
+})
+
+function openChooseData(){
+	var url=_ctx+"/bas/stockDetail/choose?availableNumber=0&source=F&productAttr=N";
+	$('#w_stock_choose').attr('callbackExec', 'chooseCallback');
+	$('#w_stock_choose').window({href:url});
+	$('#w_stock_choose').window("open");
+}
+
+function chooseCallback(stockRows){
+	deleteOldData();
+
+	if(stockRows){
+		var stockDetail = stockRows[0];
+		var stockDetailId = stockDetail.id;
+		/* var canApply = canStartApply(stockDetailId);
+		if(canApply){ */
+		var dealNumber = stockDetail.availableNumber;
+		var dealPrice = stockDetail.dealPrice;
+		_maxNumber = dealNumber;
+		var new_row = {
+			id:0,
+			productCd:stockDetail.productCd,
+			productName:stockDetail.productName,
+			brandNumber:stockDetail.brandNumber,
+			factoryId:stockDetail.factoryId,
+			warehouseName:stockDetail.warehouseName,
+			factoryName:stockDetail.factoryName,
+			warehouseId:stockDetail.warehouseId,
+			dealNumber:dealNumber,
+			dealPrice:dealPrice,
+			productAttr:stockDetail.productAttr
+		};
+		$('#nstockDetail').datagrid('appendRow', new_row);
+		$('#ostockDetail').datagrid('appendRow', new_row);
+		var rowIndex=$('#nstockDetail').datagrid('getRowIndex',new_row);
+		$('#nstockDetail').datagrid('beginEdit', rowIndex);
+
+		$("#totalAmount").val(Number(dealNumber)*Number(dealPrice));
+		$("#totalNumber").val(dealNumber);
+		$("#stockDetailId").val(stockDetail.id);
+		/* }else{
+			$.messager.alert('提示','选择的明细是内部交易产生的明细，不能再次内部转让！','info');
+		} */
+	}
+}
+
+//从新选择删除原数据
+function deleteOldData(){
+	var rows = $('#nstockDetail').datagrid('getRows');
+	var length =rows.length;
+	if(length>0){
+		for(var i=0;i<length;i++){
+			$('#nstockDetail').datagrid('deleteRow',i);
+			$('#ostockDetail').datagrid('deleteRow',i);
+		}
+	}
+	$("#totalAmount").val("");
+	$("#totalNumber").val("");
+}
+
+//判断选择的库存明细是否是内部交易产生的明细，若是，则不能再次发起
+function canStartApply(stockDetailId){
+	var canstart = true;
+	$.ajaxSettings.async = false;
+    $.post(_ctx +"/apply/internalBuy/findDetailByStockDetailId",{'stockDetailId':stockDetailId},function(detail) {
+		if(detail!=""){
+			canstart = false;
+		}
+    });
+    return canstart;
+}
+
+//计算商品总价
+function curOper(curIndex,row){
+	var _datagrid = $('#nstockDetail');
+	var _ed_dealPrice = _datagrid.datagrid('getEditor', {index:curIndex,field:'dealPrice'});
+	var _ed_dealNumber = _datagrid.datagrid('getEditor', {index:curIndex,field:'dealNumber'});
+
+	var sumAmount=function(){
+		var _dealNumber=$(_ed_dealNumber.target).numberbox('textbox').val();
+		var _dealPrice= $(_ed_dealPrice.target).numberbox('textbox').val();
+		if(_dealPrice &&_dealNumber){
+			$("#totalAmount").val(_dealPrice*_dealNumber);
+		}
+	}
+	var totalNumber = function(){
+		var _dealNumber=$(_ed_dealNumber.target).numberbox('textbox').val();
+		$("#totalNumber").val(_dealNumber);
+	}
+
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',sumAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',sumAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',sumAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',sumAmount);
+
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',totalNumber);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',totalNumber);
+
+}
+
+//发起申请前操作
+function beforSaveOper(){
+	var _flag = true;
+	var changeRows = $('#nstockDetail').datagrid('getRows');
+	var oldRows = $('#ostockDetail').datagrid('getRows');
+	for(var i=0;i<changeRows.length;i++){
+		var rowIndex=$('#nstockDetail').datagrid('getRowIndex',changeRows[i]);
+		var row=changeRows[i];
+		_flag=$('#nstockDetail').datagrid('validateRow',rowIndex);
+		if (!_flag){
+			$('#nstockDetail').datagrid('selectRow',rowIndex);
+			$('#nstockDetail').datagrid('beginEdit', rowIndex);
+			break;
+		}else{
+			$('#nstockDetail').datagrid('endEdit', rowIndex);
+		}
+	}
+    Convert.setChildren2Form("inputFormApprove","nstockDetail");
+    return _flag;
+}
+</script>
+</html>

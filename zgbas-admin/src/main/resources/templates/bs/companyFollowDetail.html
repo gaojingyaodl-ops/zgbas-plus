@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<form id="inputForms" method="post"  class="from-input-layout" >
+			<input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+			<input type="hidden" name="companyId" id="companyId" th:value="${companyId}" />
+			<div class="mb6">
+				<p class="yw-table-filter w2">
+					<label for="followType"  class="control-label" style="margin-left: 10px;">跟进类型:</label>
+					<input name="followType" id="followType" style="width: 600px;" class="required" required="required" type="text" th:value="${entity.followType}"></input>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label for="content"  class="control-label" style="margin-left: 10px;">内容:</label>
+					<textarea name="content" id="content" style="width:650px;" class="form-control" rows="17" required="required" th:text="${entity.content}"></textarea>
+				</p>
+			</div>
+		</form>
+	</div>
+
+
+	<div region="south" border="false" style="overflow: hidden;height: 60px;margin-left:  300px;">
+		<div class="actions_bar">
+			<span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" id="submitBtn" onclick="saveFollow();">保存</span>
+		</div>
+	</div>
+</div>
+<script>
+	var followTypeJson = eval('[(${followTypeJson})]');
+	var companyId = $("#companyId").val();
+$(function(){
+	$("#followType").combobox({
+		data:followTypeJson,
+		textField:'dictName',
+		valueField:'dictCd',
+		//readonly: true,
+		editable:false,
+		width: 650,
+		panelHeight : "auto"
+	});
+});
+	
+function saveFollow(){
+	$("#serviceRate,#insuranceRate,#overdueRate").numberbox({
+		precision:4,
+		required: true
+	});
+	var options={
+	        url:_ctx+'/bs/companyFollow/saveFollow',
+	        onSubmit: function(){
+	        	var flag=true;
+	        	if(!$("#inputForms").form('validate'))
+	        		flag=false;
+	        	return flag;
+	        },
+	        success:function(data){
+				if(data.indexOf("success")>=0){
+	        		 $.messager.show({
+	                     title:'Tip',
+	                     msg:'保存成功',
+	                     timeout:2000,
+	                     showType:'show'
+	                 });
+					$('#tt_bs_company_follow').datagrid('reload');
+					$('#w_gjjl').window("close");
+	        	}else{
+	        		$.messager.alert('error',data.failure,'warning');
+	        	}
+	        }
+		};
+	$('#inputForms').form('submit', options);
+}
+		
+</script>
+
+</html>

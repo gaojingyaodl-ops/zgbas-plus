@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<style>
+    .datagrid-cell-check{height: 26px;}
+    .datagrid-header-check{height: 26px;}
+    .cell-margin {
+        margin:0 2px; /* 设置外边距，根据需要进行调整 */
+        background-color: #95efec;
+        color: #0000FF;
+        height: 100%;
+        line-height: 35px;
+        cursor: pointer;
+        font-size: 18px;
+    }
+    .cell-margin_no_color {
+        margin:0 2px; /* 设置外边距，根据需要进行调整 */
+        background-color: #95efec;
+        height: 100%;
+        line-height: 35px;
+    }
+    .cell-margin_no_color_value {
+        margin:0 2px; /* 设置外边距，根据需要进行调整 */
+        background-color: #95efec;
+        height: 100%;
+        line-height: 35px;
+        font-size: 18px;
+    }
+</style>
+<body class="easyui-layout">
+<div data-options="region:'center',border:false" style="padding:15px 15px 10px;box-shadow: 0px 1px 8px 0px rgba(104, 104, 104, 0.5);">
+    <div data-options="region:'north'" style="line-height: 30px;margin-bottom:15px;">
+        <input type="hidden" id="current_userId" th:value = "${@shiroUtil.getCurrentUserId()}">
+        <form id="searchForm" class="form-search from-input-layout" method="post">
+            <div class="mb6">
+                <p class="yw-table-filter mobile-display-none">
+                    <label>我方抬头:</label>
+                    <input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"/>
+<!--                    <input  class="control" name="ourCompanyName" onkeyup="value=value.replace(/\s+/g,'')" id="ourCompanyName" type="text" value=""/>-->
+                </p>
+                <p class="yw-table-filter mobile-display-none">
+                    <label>客户名称:</label>
+                    <input  class="control" name="companyName" onkeyup="value=value.replace(/\s+/g,'')" id="companyName" type="text" value=""/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>业务类型</label>
+                    <input type="text" id="businessType" class="control text_padding" name="businessType"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter mobile-display-none">
+                    <label>合同成交时间:</label>
+                    <input id="contractDateBegin" name="contractDateBegin" class="easyui-datebox"/>
+                </p>
+                <span style="margin-left: -15px;" class="mobile-display-none">
+						<label>~</label>
+					</span>
+                <p class="yw-table-filter mobile-display-none">
+                    <input  id="contractDateEnd"  name="contractDateEnd" class="easyui-datebox" />
+                </p>
+                <a href="#" id="todayBtn" class="easyui-linkbutton" data-options="">今日</a>
+                <a href="#" id="thisWeekBtn" class="easyui-linkbutton" data-options="">本周</a>
+                <a href="#" id="thisMonthBtn" class="easyui-linkbutton" data-options="">本月</a>
+                <a href="#" id="lastMonthBtn" class="easyui-linkbutton" data-options="">上月</a>
+                <a href="#" class="easyui-linkbutton ml10" data-options="iconCls:'icon-search'" onclick="Convert.search('searchForm','tt');">查询</a>
+                <a href="#" class="easyui-linkbutton ml10" data-options="iconCls:'icon-clear'" onclick="$('#searchForm').form('reset');">清空</a>
+            </div>
+            
+            <input  type="hidden" name="pid" id="pid" value="">
+        </form>
+
+    </div>
+    <div data-options="region:'center',border:false" style="height:calc(100vh - 157px);" id="tHeight">
+        <table id="tt" class="easyui-datagrid no-row-highlight" title="" iconCls="icon-edit" fit="true" singleSelect="true" idField="id" style="flex: auto;height: 100%;overflow-y:auto">
+
+        </table>
+    </div>
+</div>
+<script type="text/javascript" th:inline="javascript">
+    var _businessTypeJson =eval('[(${businessTypeJson})]');
+    var ourCompanyJson =eval('[(${ourCompanyJson})]');
+    // window.onload = function (){
+    //     parent._callbackMethod['业务总览']=function(){
+    //         reloading();
+    //     }
+    // }
+    $(function(){
+        window.top["reload_approve_datagrid"]=function(){
+            $('#tt').datagrid('reload');
+        }
+
+        window.top["open_window_choose"]=function(url){
+            openChoose(url);
+        }
+
+        // setInterval(reloading, 60000);
+
+        //我方抬头
+        $('#ourCompanyName').combobox({
+            data:ourCompanyJson,
+            textField:'dictName',
+            valueField:'dictName',
+            panelWidth:'auto',
+            panelHeight:"auto"
+        });
+        
+        $("#businessType").combobox({
+            data:_businessTypeJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:"auto",
+            editable:false
+        });
+        $("#contractDateBegin").datebox('setValue', getLastMonthStartDate());
+        // 绑定 "今日" 按钮的点击事件
+        $('#todayBtn').click(function() {
+            $("#contractDateBegin").datebox('setValue', getTodayStartDate());
+            $("#contractDateEnd").datebox('setValue', getTodayEndDate());
+            Convert.search('searchForm','tt');
+        });
+        // 绑定 "本周" 按钮的点击事件
+        $('#thisWeekBtn').click(function() {
+            $("#contractDateBegin").datebox('setValue', getWeekStartDate());
+            $("#contractDateEnd").datebox('setValue', getWeekEndDate());
+            Convert.search('searchForm','tt');
+        });
+
+        // 绑定 "本月" 按钮的点击事件
+        $('#thisMonthBtn').click(function() {
+            $("#contractDateBegin").datebox('setValue', getMonthStartDate());
+            $("#contractDateEnd").datebox('setValue', getMonthEndDate());
+            Convert.search('searchForm','tt');
+        });
+
+        // 绑定 "上月" 按钮的点击事件
+        $('#lastMonthBtn').click(function() {
+            $("#contractDateBegin").datebox('setValue', getLastMonthStartDate());
+            $("#contractDateEnd").datebox('setValue', getLastMonthEndDate());
+            Convert.search('searchForm','tt');
+        });
+        
+        $('#tt').datagrid({
+            // pagination:true,
+            // pageSize:30,
+            // rownumbers:true,
+            queryParams:Convert.getJson4Form('searchForm'),
+            url:_ctx+"/business/overview/queryList",
+            rowStyler: function(index, row) {
+                // 返回一个包含样式属性的字符串
+                return 'height: 40px;'; // 设置行高为 40px，根据需要进行调整
+            },
+            columns:[ [
+                {field:'status',title:'状态', width:150,formatter:function(value, row, index){
+                        return '<span class="yw-menu-section")">'+value+'</span>';
+                    } },
+                {field:'buyNum',title:'采购', width:80,align:'center',
+                    formatter: function(value, row, index) {
+                        // 使用 <div> 元素包装内容，并添加样式类用于定义外边距
+                        if(value){
+                            if('0' === value) {
+                                return '<div class="cell-margin_no_color">' + value + '</div>';
+                            } else {
+                                return '<div class="cell-margin">' + value + '</div>';
+                            }
+                        } else {
+                            return '<div>' + value + '</div>';
+                        }
+                        
+                    }
+                },
+                {field:'dcsxNum',title:'中游', width:80,align:'center',
+                    formatter: function(value, row, index) {
+                        // 使用 <div> 元素包装内容，并添加样式类用于定义外边距
+                        if(value){
+                            var businessType = $('#businessType').val();
+                            var statisticalType = row.statisticalType;
+                            if('0' === value) {
+                                return '<div class="cell-margin_no_color">' + value + '</div>';
+                            } else if('K' === statisticalType || 'N' === statisticalType || 'O' === statisticalType || 'P' === statisticalType || 'DC' === businessType) {
+                                return '<div class="cell-margin_no_color_value">' + value + '</div>';
+                            } else {
+                                return '<div class="cell-margin">' + value + '</div>';
+                            }
+                        } else {
+                            return '<div>' + value + '</div>';
+                        }
+
+                    }
+                },
+                {field:'sellNum',title:'销售', width:80,align:'center',
+                    formatter: function(value, row, index) {
+                        // 使用 <div> 元素包装内容，并添加样式类用于定义外边距
+                        if(value){
+                            if('0' === value) {
+                                return '<div class="cell-margin_no_color">' + value + '</div>';
+                            } else {
+                                return '<div class="cell-margin">' + value + '</div>';
+                            }
+                        } else {
+                            return '<div>' + value + '</div>';
+                        }
+
+                    }
+                },
+                {field:'logicalDeclaration',title:'逻辑说明', width:650,align:'left',
+                    formatter: function(value, row, index) {
+                        var abValue = value;
+                        var content = '<p title="' + value + '" class="note">' + abValue + '</p>';
+                        return content;
+                    }
+                }
+            ]],
+            onClickCell: function(rowIndex, field, value){
+                var rowData = $('#tt').datagrid('getRows')[rowIndex];
+                var statisticalType = rowData.statisticalType;
+                // 点击单元格跳转
+                toDetailTab(rowIndex, field, value);
+            },
+            onClickRow:function(index,row){
+                $(this).datagrid('clearSelections');
+            }
+        });
+
+
+
+    });
+    
+    
+    function toDetailTab(rowIndex, field, value){
+        var rowData = $('#tt').datagrid('getRows')[rowIndex];
+        var statisticalType = rowData.statisticalType;
+        var title = rowData.status;
+        var businessType = $('#businessType').val();
+        if('buyNum' === field) {
+            if(value && '0' !== value) {
+                if('Q' === statisticalType){
+                    toContractFinance('采购'+title,statisticalType,'B','N')
+                } else {
+                    toContractFinance('采购'+title,statisticalType,'B','')
+                }
+            }
+        } else if ('dcsxNum' === field) {
+            if(value && '0' !== value) {
+                if('DC' !== businessType) {
+                    if('H' === statisticalType){
+                        toDCSXYS('中游'+title,'',false,'','','','')
+                    } else if('Q' === statisticalType){
+                        toDCSXYS('中游'+title,'N','','','','','')
+                    } else if('L' === statisticalType){
+                        toDCSXYS('中游'+title,'',true,'PN','','','')
+                    } else if('N' === statisticalType){
+                        // toDCSXYS('中游'+title,'',true,'','','BN','')
+                    } else if('P' === statisticalType){
+                        // toDCSXYS('中游'+title,'',true,'PY','PY','BY','BY')
+                    }
+                }
+            }
+        } else if('sellNum' === field){
+            if(value && '0' !== value) {
+                if('Q' === statisticalType){
+                    toContractFinance('销售'+title,statisticalType,'S','N')
+                } else {
+                    toContractFinance('销售'+title,statisticalType,'S','')
+                }
+            }
+        }
+    }
+    
+    // 跳转到财务合同明细
+    function toContractFinance(title,statisticalType,contractType,contractStatus) {
+        // 查询参数
+        var ourCompanyName = $('#ourCompanyName').val();
+        var businessType = $('#businessType').val();
+        var companyName = $('#companyName').val();
+        var contractDateBegin = $('#contractDateBegin').datebox('getValue');
+        var contractDateEnd = $('#contractDateEnd').datebox('getValue');
+        window.parent.addTab(title,_ctx + _ctx+'/rpt/contractFinance?statisticsType='+statisticalType +
+            '&ourCompanyCd='+ourCompanyName+'&businessType='+businessType+'&companyName='+companyName +
+            '&contractDateBegin='+contractDateBegin+'&contractDateEnd='+contractDateEnd + 
+            '&contractType=' + contractType + '&contractStatus=' + contractStatus + '&productType=NHG');
+    }
+    function toDCSXYS(title,contractStatus,sealFlg,payType,receiveType,billType,invoiceBillType){
+        // 查询参数
+        var ourCompanyName = $('#ourCompanyName').val();
+        var companyName = $('#companyName').val();
+        var contractDateBegin = $('#contractDateBegin').datebox('getValue');
+        var contractDateEnd = $('#contractDateEnd').datebox('getValue');
+
+        window.parent.addTab(title,_ctx + _ctx+'/ctr/contract/findDCSXYS?ourCompanyName='+ourCompanyName +
+            '&companyName='+companyName+'&contractDateBegin='+contractDateBegin+'&contractDateEnd='+contractDateEnd +
+            '&contractStatus=' + contractStatus+'&sealFlg='+sealFlg+'&payType='+payType+'&receiveType='+receiveType+
+            '&billType='+billType+'&invoiceBillType='+invoiceBillType + '&productType=NHG');
+    }
+    
+    
+    
+    function getDay(beginDate, days) {
+        var millSeconds = Math.abs(beginDate) + (days * 24 * 60 * 60 * 1000);
+        var rDate = new Date(millSeconds);
+        var year = rDate.getFullYear();
+        var month = rDate.getMonth() + 1;
+        if (month < 10) month = "0" + month;
+        var date = rDate.getDate();
+        if (date < 10) date = "0" + date;
+        return (year + "-" + month + "-" + date);
+    }
+
+    function getTodayStartDate() {
+        var currentDate = new Date(); // 获取当前日期
+        // 格式化日期为字符串
+        var year = currentDate.getFullYear();
+        var month = currentDate.getMonth() + 1;
+        var date = currentDate.getDate();
+
+        return year + "-" + (month < 10 ? "0" : "") + month + "-" + (date < 10 ? "0" : "") + date;
+    }
+
+    function getWeekStartDate() {
+        var currentDate = new Date();
+        var currentDayOfWeek = currentDate.getDay(); // 获取当前星期几 (0 表示星期日, 1 表示星期一, 依此类推)
+        var weekStartDate = new Date(currentDate); // 克隆当前日期
+
+        // 计算本周的起始日期
+        weekStartDate.setDate(currentDate.getDate() - currentDayOfWeek);
+
+        // 格式化日期为字符串
+        var year = weekStartDate.getFullYear();
+        var month = weekStartDate.getMonth() + 1;
+        var date = weekStartDate.getDate();
+
+        return year + "-" + (month < 10 ? "0" : "") + month + "-" + (date < 10 ? "0" : "") + date;
+    }
+
+    function getMonthStartDate() {
+        var currentDate = new Date();
+        var monthStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+
+        // 格式化日期为字符串
+        var year = monthStartDate.getFullYear();
+        var month = monthStartDate.getMonth() + 1;
+
+        return year + "-" + (month < 10 ? "0" : "") + month + "-01";
+    }
+
+    function getLastMonthStartDate() {
+        var currentDate = new Date();
+        var lastMonthStartDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+
+        // 格式化日期为字符串
+        var year = lastMonthStartDate.getFullYear();
+        var month = lastMonthStartDate.getMonth() + 1;
+
+        return year + "-" + (month < 10 ? "0" : "") + month + "-01";
+    }
+
+    function getTodayEndDate() {
+        var currentDate = new Date(); // 获取当前日期
+        // 格式化日期为字符串
+        var year = currentDate.getFullYear();
+        var month = currentDate.getMonth() + 1;
+        var date = currentDate.getDate();
+
+        return year + "-" + (month < 10 ? "0" : "") + month + "-" + (date < 10 ? "0" : "") + date + " 23:59:59";
+    }
+
+    function getWeekEndDate() {
+        var currentDate = new Date(); // 获取当前日期
+        var currentDayOfWeek = currentDate.getDay(); // 获取当前星期几
+        var weekEndDate = new Date(currentDate);
+
+        // 计算本周的结束日期
+        weekEndDate.setDate(currentDate.getDate() + (6 - currentDayOfWeek)); // 6 表示星期六
+
+        // 格式化日期为字符串
+        var year = weekEndDate.getFullYear();
+        var month = weekEndDate.getMonth() + 1;
+        var date = weekEndDate.getDate();
+
+        return year + "-" + (month < 10 ? "0" : "") + month + "-" + (date < 10 ? "0" : "") + date + " 23:59:59";
+    }
+
+    function getMonthEndDate() {
+        var currentDate = new Date(); // 获取当前日期
+        var lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0); // 获取本月最后一天
+
+        // 格式化日期为字符串
+        var year = lastDayOfMonth.getFullYear();
+        var month = lastDayOfMonth.getMonth() + 1;
+        var date = lastDayOfMonth.getDate();
+
+        return year + "-" + (month < 10 ? "0" : "") + month + "-" + (date < 10 ? "0" : "") + date + " 23:59:59";
+    }
+
+    function getLastMonthEndDate() {
+        var currentDate = new Date(); // 获取当前日期
+        var firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1); // 获取本月第一天
+        var lastMonthEndDate = new Date(firstDayOfMonth);
+
+        // 减去一毫秒以获取上月的最后一秒
+        lastMonthEndDate.setTime(lastMonthEndDate.getTime() - 1);
+
+        // 格式化日期为字符串
+        var year = lastMonthEndDate.getFullYear();
+        var month = lastMonthEndDate.getMonth() + 1;
+        var date = lastMonthEndDate.getDate();
+
+        return year + "-" + (month < 10 ? "0" : "") + month + "-" + (date < 10 ? "0" : "") + date + " 23:59:59";
+    }
+
+    // function reloading(){
+    //     $(".tooltip-bottom").remove();
+    //     $('#tt').datagrid('reload');
+    // }
+
+</script>
+</body>
+</html>

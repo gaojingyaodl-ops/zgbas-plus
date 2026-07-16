@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>未收票明细</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input class="control" id="invoiceBillIds" type="hidden" name="invoiceBillIds"/>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>我方抬头</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>客户名称</label>
+				<input  class="control" id="companyName" type="text" name="companyName"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label style="width: 80px;">付全款日期:</label>
+				<input  id="payFullDateStart" name="payFullDateStart" class="easyui-datebox" th:value="${lastMonthStart}"></input>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label style="width: 80px;">到:</label>
+				<input  id="payFullDateEnd"  name="payFullDateEnd" class="easyui-datebox" th:value="${lastMonthEnd}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>产品类型</label>
+				<input type="text" id="productType" class="control text_padding" name="productType"/>
+			</p>
+
+			<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none"  onclick="exportExcel()">导出</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+		   title="" iconCls="icon-edit" singleSelect="true"
+		   idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var ourCompanyJson =eval('[(${ourCompanyJson})]');
+
+	$(function(){
+		//我方抬头
+		$('#ourCompanyName').combobox({
+			data:ourCompanyJson,
+			textField:'dictName',
+			valueField:'dictName',
+			panelWidth:'auto',
+			panelHeight:"auto"
+		});
+		
+		$("#productType").combobox({
+			data:[{id:'',text:'--全部--'},{id:'HG',text:'化工'},{id:'NHG',text:'非化工'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			onLoadSuccess:function(){
+				$(this).combobox('setValue', 'NHG');
+			}
+		});
+
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			pageList:[500,200,100,50,30,20],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/rpt/notBillStatistics/findRptNotBillStatisticsPage",
+			columns:[ [
+				{field:'buyContractNo',title:'合同编号', align:'left', width:100},
+				{field:'ourCompanyName',title:'我方抬头', align:'left', width:200},
+				{field:'buyCompanyName', title: '供应商名称',align:'left', width:200},
+				{field:'profitType',title:'业务类型',align:'center',width:100},
+				{field:'totalNumber',title:'合同数量',align:'right', width:130, formatter:formatNum},
+				{field:'buyTotalAmount',title:'合同总价(元)',align:'right', width:130,formatter:formatNum},
+				{field:'contractTime',title:'签订日',align:'right',width:130},
+				{field:'payAmount',title:'已付款金额(元)',align:'right', width:130,formatter:formatNum},
+				{field:'payFullDate',title:'付全款日期',align:'right',width:130},
+				{field:'receiptBillAmount',title:'已收票金额(元)',align:'right', width:130,formatter:formatNum},
+				{field:'receiptBillDate',title:'收票日期',align:'right',width:130},
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+
+
+	});
+	function exportExcel(){
+		$('#searchForm').form('submit', {
+			url: _ctx + "/rpt/notBillStatistics/exportExcel"
+		});
+	}
+
+	function formatNum(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+	
+</script>
+</body>
+</html>

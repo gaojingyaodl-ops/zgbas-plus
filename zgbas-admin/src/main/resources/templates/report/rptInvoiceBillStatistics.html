@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>财务合同明细</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter mobile-display-none">
+				<label>我方</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>年月</label>
+				<input  id="invoiceDate" name="invoiceDate" class="easyui-validatebox"/>
+			</p>
+			<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none"  onclick="exportExcel()">导出</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+	var ourCompanyJson =eval('[(${ourCompanyJson})]');
+	$(function(){
+		$('#invoiceDate').datebox({
+			editable:false
+		});
+		intiMonthBox('invoiceDate');
+		//我方抬头
+		$('#ourCompanyName').combobox({
+			data:ourCompanyJson,
+			textField:'dictName',
+			valueField:'dictName',
+			panelWidth:'auto',
+			panelHeight:"auto"
+		});
+		$('#tt').datagrid({
+			rownumbers: true,
+			queryParams: Convert.getJson4Form('searchForm'),
+			url: _ctx + "/rpt/invoiceBillStatistics/findInvoiceBillStatistics",
+			columns: [ [
+				{field:'ourCompanyName',title:'我方', width:200,align:'left'},
+				{field: 'invoiceDate', title: '年月', align: 'left', width: 80},
+				{field: 'invoiceAmount', title: '开票总额', align: 'right', width: 140,formatter: formatNum},
+				{field: 'invoiceNumber', title: '开票吨数', align: 'right', width: 140,formatter: formatNum},
+				{field: 'invoiceReceiveAmount', title: '收票总额', align: 'right', width: 140,formatter: formatNum},
+				{field: 'invoiceReceiveNumber', title: '收票吨数', align: 'right', width: 140,formatter: formatNum}
+			]]
+		});
+
+
+	});
+	function exportExcel(){
+		$.messager.confirm({
+			title: '提示',
+			msg: '确认要导出开票统计吗？',
+			ok: "导出",
+			cancel: "取消",
+			cls: 'c9',
+			border: 'thin',
+			fn: function (r) {
+				if (r) {
+					$('#searchForm').form('submit', {url: _ctx + "/rpt/invoiceBillStatistics/exportExcel"});
+				}
+			}
+		})
+	}
+	function intiMonthBox(id){
+		var db = $('#'+id);
+		db.datebox({
+			onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+				span.trigger('click'); //触发click事件弹出月份层
+				if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+					tds = p.find('div.calendar-menu-month-inner td');
+					tds.click(function (e) {
+						e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+						var year = /\d{4}/.exec(span.html())[0]//得到年份
+								, month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+						db.datebox('hidePanel')//隐藏日期对象
+								.datebox('setValue', year + '-' + month); //设置日期的值
+					});
+				}, 0);
+				yearIpt.unbind();//解绑年份输入框中任何事件
+			},
+			parser: function (s) {
+				if (!s) return new Date();
+				var arr = s.split('-');
+				return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+			},
+			formatter: function (d) {
+				let year = d.getFullYear();
+				let month = d.getMonth() + 1;
+				if (month < 10) {
+					month = '0' + month;
+				}
+				return year + '-' + month;
+			}
+		});
+		var p = db.datebox('panel'), //日期选择对象
+				tds = false, //日期选择对象中月份
+				yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+				span = p.find('span.calendar-text'); //显示月份层的触发控件
+	}
+	function formatNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+</script>
+</body>
+</html>

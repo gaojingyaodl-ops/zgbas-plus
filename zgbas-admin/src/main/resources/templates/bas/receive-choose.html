@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<!-- <link th:href="@{/static/jquery-easyui/themes/trade/approve.css?v=3}" rel="stylesheet" type="text/css" /> -->
+<div class="easyui-layout" style="width:100%;height:490px;">
+
+<div region="center" border="false">
+	<table id="tt_receive_choose" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div region="south" border="false" class="panel_padding mt10">
+	<a href="#" class="easyui-linkbutton btn-info" onclick="ContractChoose.confirmChoose();">确定</a>
+	<a href="#" class="easyui-linkbutton btn-danger" onclick="ContractChoose.closeCurrentWin();">关闭</a>
+</div>
+</div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var contractTypeJson =eval('[(${contractTypeJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	$(function(){
+		$('#tt_receive_choose').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[500,200,100,50,30,20],
+			singleSelect:true,
+			url:_ctx+"/bas/receive/listChoose",
+			columns:[ [
+				{field:'businessNo',title:'业务编号', width:125},
+				{field:'contractNo',title:'合同编号', width:125},
+				{field:'receiveDate',title:'应收日期', width:80,
+					formatter:function(value,row,index){
+						if(value!=undefined && new Date().getTime() >= new Date(value).getTime()){
+							var a="<span style='color:red'>"+value+"</span>";
+							return a;
+						}else{
+							return value;
+						}
+				}},
+				{field:'companyName',title:'企业名称', width:110},
+				{field:'productName',title:'商品名称', width:80},
+				{field:'receiveAmount',title:'应收金额', width:70},
+				{field:'inInvoiceNo',title:'发票号码', width:80},
+				{field:'inInvoiceDate',title:'开票日期', width:80},
+				{field:'inBillNo',title:'记账凭证号', width:100},
+				{field:'status',title:'状态', width:70,
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(receiveStatusJson,"dictCd",value,"dictName");}
+				},
+				{field:'receiveType',title:'收款类型', width:70, 
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(receiveTypeJson,"dictCd",value,"dictName");}
+				},
+				{field:'remark',title:'备注', width:70}
+			]],
+			onSelect:function(index,row){
+				ContractChoose.selected.push(row);
+			},
+			onUnselect:function(index,row){
+				ContractChoose.removeSelected(row);
+				console.log(ContractChoose.selected);
+			}
+		});
+		
+	});
+	
+	
+	var ContractChoose={
+			selected:[],
+			removeSelected:function(row){
+				for(var i=0; i<ContractChoose.selected.length; i++) {
+				    if(ContractChoose.selected[i].id == row.id) {
+				    	ContractChoose.selected.splice(i, 1);
+				      	break;
+				    }
+				  }
+			},
+			confirmChoose:function(){
+				var selectedRows=ContractChoose.selected;//$('#ttsimpleproduct').datagrid('getSelections');
+		    	var callbackExec = $('#w_receive_choose').attr('callbackExec');
+		    	var myfunc = eval(callbackExec);
+		    	if(typeof(myfunc) == "function"){
+		    		myfunc(selectedRows);
+		    	}
+		    	ContractChoose.closeCurrentWin();
+			},
+			
+			closeCurrentWin:function(){
+				$('#w_receive_choose').window('close');
+			}
+				
+		}
+</script>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl60 pr20 pb15 ofh" border="false">
+        <form id="inputForms" method="post" class="from-input-layout">
+            <input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="branchCd" class="control-label">所属地区:</label>
+                    <input name="branchName" type="hidden" id="branchName"  th:value="${entity.branchName}"/>
+                    <input  id="branchCd" class="easyui-validatebox" name="branchCd" required="required" th:value="${entity.branchCd}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label for="targetMonth_input" class="control-label">指标月份:</label>
+                    <input name="targetMonth" class="easyui-validatebox" id="targetMonth_input" required="required" type="text"
+                           th:value="${entity.targetMonth}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label for="targetType" class="control-label">总价类型:</label>
+                    <input name="targetType" class="easyui-validatebox" required="required"  id="targetType" type="text" th:value="${entity.targetType}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label for="targetTotalAmount" class="control-label">总金额（万元）:</label>
+                    <input name="targetTotalAmount" class="easyui-validatebox" required="required"  id="targetTotalAmount" type="text" th:value="${entity.targetTotalAmount}"/>
+                </p>
+            </div>
+            <div class="mb6">
+
+            </div>
+        </form>
+    </div>
+
+
+    <div region="south" border="false" style="overflow: hidden;height: 60px;margin-left:  180px;">
+        <div class="actions_bar">
+            <span class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'"
+                  onclick="submit();">保存</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var branchListJson = eval('[(${branchList})]');
+    var targetTypeJson = eval('[(${targetType})]');
+    $(function () {
+        $('#branchCd').combobox({
+            data: branchListJson,
+            valueField: 'dictCd',
+            textField: 'dictName',
+            onChange: branchChange
+        });
+
+        $('#targetType').combobox({
+            data: targetTypeJson,
+            valueField: 'dictCd',
+            textField: 'dictName',
+        });
+
+        $('#targetTotalAmount').numberbox({
+            min: 0,
+            precision: 2,
+            required: true,
+            groupSeparator:','
+        });
+        $('#targetMonth_input').datebox({
+            required:true
+        });
+        intiMonthBox('targetMonth_input');
+
+    });
+
+    function branchChange(val) {
+        if (val) {
+            let branchName = branchListJson.find(branch => branch.dictCd === val)?.dictName;
+            $('#branchName').val(branchName);
+        }
+    }
+
+    function intiMonthBox(id){
+        var db = $('#'+id);
+        db.datebox({
+            onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                span.trigger('click'); //触发click事件弹出月份层
+                if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                    tds = p.find('div.calendar-menu-month-inner td');
+                    tds.click(function (e) {
+                        e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                        var year = /\d{4}/.exec(span.html())[0]//得到年份
+                            , month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+                        db.datebox('hidePanel')//隐藏日期对象
+                            .datebox('setValue', year + '-' + month); //设置日期的值
+                    });
+                }, 0);
+                yearIpt.unbind();//解绑年份输入框中任何事件
+            },
+            parser: function (s) {
+                if (!s) return new Date();
+                var arr = s.split('-');
+                return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+            },
+            formatter: function (d) {
+                let year = d.getFullYear();
+                let month = d.getMonth() + 1;
+                if (month < 10) {
+                    month = '0' + month;
+                }
+                return year + '-' + month;
+            }
+        });
+        var p = db.datebox('panel'), //日期选择对象
+            tds = false, //日期选择对象中月份
+            yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+            span = p.find('span.calendar-text'); //显示月份层的触发控件
+    }
+
+    //保存
+    function submit() {
+        if ($('#inputForms').form('validate')) {
+            $.ajax({
+                type: "POST",
+                dataType: "json",
+                url: _ctx + '/work/target/saveWorkTarget',
+                data: $('#inputForms').serialize(),
+                success: function (data) {
+                    if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                        $.messager.show({
+                            title: 'Tip',
+                            msg: '添加成功',
+                            timeout: 2000,
+                            showType: 'show'
+                        });
+                    } else {
+                        $.messager.alert('提示', data.failure, 'warning');
+                    }
+                    $('#add_workTarget').window('close');
+                    $('#tt').datagrid('reload');
+                },
+                error: function () {
+                    $.messager.alert('提示', "请联系管理员", 'warning');
+                }
+            })
+        }
+    }
+
+</script>

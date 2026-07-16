@@ -1,0 +1,80 @@
+﻿@charset "utf-8";
+body{margin:0;padding:0;font-size: 12px;font-family:"Lantinghei SC", "Open Sans", Arial, "Hiragino Sans GB", "Microsoft YaHei", "Î¢ÈíÑÅºÚ", "STHeiti", "WenQuanYi Micro Hei", SimSun, sans-serif;}
+img,input,select,textarea{ vertical-align:middle; }
+ul{margin:0;padding: 0;}
+li{list-style: none;}
+.float_left{float:left;}
+.float_right{float:right;}
+.clearFix:after{ content:""; display:block; clear:both; }
+a{text-decoration: none;}
+.colorLan{color: #30bdee!important;}
+.fontBold{font-weight: bold;}
+.width_100{width:100%;}
+.marginAuto{margin:0 auto;}
+.cursor{cursor: pointer;}
+.hide{display:none!important;}
+.nowrap{display: block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+select::-ms-expand { display: none; }
+select.selectClear{
+border: none;
+outline: none;
+/*将默认的select选择框样式清除*/
+appearance:none;
+-moz-appearance:none;
+-webkit-appearance:none;
+-ms-appearance:none;
+/*在选择框的最右侧中间显示小箭头图片*/
+}
+/*--- 专区左---*/
+.prefecture{margin:0 auto;width: 100%;overflow: hidden;position: relative;height: 100%;}
+.preferLeft{width: 200px;height: 100%;background:#fff;overflow: hidden;z-index: 9;position: fixed;top: 0;left: 0;box-shadow: 0 0 10px 0 #d0d0d0;overflow-x: hidden;}
+.prefecture .prefecTop{position: fixed;top: 0;left: 0;width: 100%;height: 70px;background: #76b3ff;box-shadow: 1px 1px 10px 0 #cad5ed;z-index: 99;}
+.prefecture .prefecTop1{width: 500px;height: 70px;}
+.prefecture .prefecTop1 img{width: 65px;height: 49px;margin:10px 20px 10px 20px;cursor: pointer;}
+.prefecture .prefecTop1 .sp_tit{width: 300px;}
+.prefecture .prefecTop1 .sp_tit .color1{color: #fff;font-size: 17px;font-weight: bold;display: block;margin: 12px 0 0 0;}
+.prefecture .prefecTop1 .sp_tit .color2{color:#c0d9ff;font-size: 15px;}
+.prefecTop .preferTit{height: 70px;line-height: 70px;} 
+.preferTit .preferTit1{width: 95px;margin-right: 20px;}
+.preferTit .preferTit1 i{display: block;width: 25px;height: 27px;margin:21px 7px 0 0;cursor: pointer;}
+.preferTit .preferTit1 i.i_logout{background: url(../images/icon_logout.png) center;}
+.preferTit .preferTit1 i.i_password{background: url(../images/icon_password.png) center;}
+.preferTit .preferTit1 span{font-size: 14px;color: #fff;}
+.preferTit .preferTit2{margin-right: 20px;width: 170px;color: #fff;}
+.preferTit .preferTit2 .font1{font-size: 16px;}
+.preferTit .preferTit2 .font2{width: 88px;font-size: 14px;}
+
+/*--- 专区右侧内容 S  ---*/
+.prefecture .preferRight{height: 100%; background: #fff; margin-left: 210px; margin-top: 71px;}
+.sanjiao{width: 0;height: 0;border-left: 3px solid transparent;border-right: 3px solid transparent;border-bottom: 5px solid #20aae9;position: absolute;bottom: 0px;left: 43%;display: none;}
+.sanjiao{ width: 0;height: 0;border-left: 3px solid transparent;border-right: 3px solid transparent;border-bottom: 5px solid #20aae9;position: absolute;bottom: 0px;left: 43%;display: none;}
+
+/*--左侧内容--*/
+.fontS1{font-size: 14px;font-weight: bold;}
+.prefecture .LeftList1{width: 100%;height: 42px;line-height: 42px;background: #c7dcff;margin-top: 70px;}
+.prefecture .LeftList1 span{margin-left: 15px;color: #fff;}
+.prefecture .LeftList1 i.icon_leftA{width: 14px;height: 13px;display: block;background: url(../images/icon_leftA.png) center;margin: 14px 10px 0 0;}
+.prefecture .sptLeft_list{height: 70%;width: 199px;margin:0 auto;overflow-x: hidden;overflow-y: auto;font-size: 13px;}
+.prefecture .sptLeft_list li i{width: 16px;height: 16px;display: block;}
+.prefecture .sptLeft_list li{width: 190px;color: #666;cursor: pointer;margin: 0 auto;border-radius: 20px;}
+.prefecture .sptLeft_list li .li1{height: 52px;line-height: 52px;border-bottom: 2px solid #c7dcff;color: #222;text-indent: 10px;}
+
+.prefecture .sptLeft_list .active{color: #30bdee;}
+.prefecture .sptLeft_list .li1 .triangle{display: block;width: 13px;height: 14px;background: url(../images/icon_xiala.png) no-repeat;margin:19px 5px 0 0;}
+.prefecture .sptLeft_list li.on .triangle{background: url(../images/icon_topA.png) no-repeat;}
+.prefecture .sptLeft_list li.on .li2{display: block;}
+.prefecture .sptLeft_list .li2{margin-top: 5px;display: none;border-bottom: 2px solid #c7dcff;text-indent: 10px;}
+.prefecture .sptLeft_list .li2 span{display: block;height: 28px;line-height: 28px;color: #333;}
+.prefecture .sptLeft_list .li2 span.active{color: #fff;background: #5e9bff;}
+
+/*-----分页 CSS  S-----*/
+.paging{width:100%;margin:30px auto;line-height: 28px;}
+.paging select{height: 30px;margin: 0 5px;width: 60px;}
+.paging a:hover,.paging .span1:hover{opacity: 0.8;filter: alpha(opacity=80);}
+.font_weight{font-weight: bolder;}
+.paging a,.paging span{margin:0 5px;cursor: pointer;}
+.paging a,.paging span.span1{width: 48px;height: 28px;line-height: 28px;text-align: center;background-color: #20aae9;border-radius: 2px;color: #fff;}
+.paging .bgNone{background: #ddd!important;}
+.mb4{margin-bottom: 0px;}
+.mr4{margin-bottom: 0px}
+.sr{overflow: auto;height:1800px}

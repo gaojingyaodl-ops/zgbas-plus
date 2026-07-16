@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+        <form id="inputForm" method="post"  class="from-input-layout">
+            <input type="hidden" name="id" id="entityId" th:value="${entity.id}"/>
+            <input type="hidden" name="enterpriseId" th:value="${entity.enterpriseId}">
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="processName"  class="control-label">流程名称:</label>
+                    <input name="processName" id="processName" required="required" type="text" th:value="${entity.processName}"/>
+                    <input name="processId" id="processId" required="required" type="hidden" th:value="${entity.processId}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="userName"  class="control-label">推送人:</label>
+                    <input type="text" name="userName" id="userName" th:value="${entity.userName}"/>
+                    <input type="hidden" name="userId" id="userId" th:value="${entity.userId}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="conditionValue"  class="control-label">是否有效:</label>
+                    <input type="text" name="enableFlg" id="enableFlg" th:value="${entity.enableFlg}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w4">
+                    <label for="conditionValue"  class="control-label">条件内容:</label>
+                    <input type="text" name="conditionValue" id="conditionValue" th:value="${entity.conditionValue}"/>
+                </p>
+            </div>
+        </form>
+    </div>
+    <div region="south" border="false" style="overflow: hidden;height: 40px;padding-left:290px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveProcessPush();">保存推送配置</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    $(function(){
+        $("#enableFlg").combobox({
+            data:enableFlgs,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:"auto",
+            editable:false,
+            required:true
+        });
+
+        $("#processName").combobox({
+            data:processList,
+            editable : true,
+            textField:'processName',
+            valueField:'processName',
+            required:true,
+            onSelect:function (node){
+                $("#processId").val(node.id);
+            }
+        });
+
+        $('#userName').combotree({
+            data : deptTree,
+            multiple : false,
+            editable : true,
+            required:true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#userName').combotree('clear');
+                }else{
+                    $('#userName').combotree('setValue',node.text);
+                    $('#userId').val(node.id.replace('user', ''));
+                }
+            }
+        });
+
+        $("#conditionValue").textbox({});
+    });
+    //保存
+    function saveProcessPush(){
+        var _url = _ctx + "/pm/push/saveProcessPush";
+        var options = {
+            url: _url,
+            success: function (data) {
+                var rObj = eval('(' + data + ')');
+                if (rObj.success) {
+                    $.messager.show({
+                        title : '提示',
+                        msg : '配置保存成功!',
+                        timeout : 2000,
+                        height:120,
+                        showType : 'show'
+                    });
+                    $('#w_process_push').window("close");
+                    $('#tt').datagrid('reload');
+                } else {
+                    var failure = rObj.failure;
+                    $.messager.alert('提示', failure, 'warning');
+                    onClickFlg = true;
+                    $('#tt').datagrid('reload');
+                }
+            }
+        };
+        $('#inputForm').form('submit', options);
+    }
+</script>

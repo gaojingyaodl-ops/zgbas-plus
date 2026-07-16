@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>业务查询</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+
+<div region="center" border="false" class="panel_padding pl20 pr20" style="height: 500px;">
+    <table id="list" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+<script type="text/javascript">
+    var _bsConfigList = eval('[(${bsConfigList})]');//业务数据
+    $(function(){
+        var lastIndex;
+        $('#list').datagrid({
+            rownumbers:true,
+            data: _bsConfigList,
+            columns:[ [
+                // 供应商没数据，只展示，表示有这个流程（需求这样说的，数据库中没这个字段）
+                {field:'gongyingshagn',title:'供应商',align:'left', width:100},
+                {field:'sxCompany',title:'代采方',align:'left',width:130},
+                {field:'ourCompanyName',title:'我方',align:'left',width:130},
+                // 客户没数据，只展示，表示有这个流程（需求这样说的，数据库中没这个字段）
+                {field:'kehu',title:'客户',align:'left', width:100},
+                {field:'balance',title:'可用余额',align:'right',width: 120,formatter:formateNum},
+            ]],
+        });
+    });
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>业务开关管理</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>我方抬头:</label>
+				<input  name="search_LIKES_ourCompanyName" type="text" id="ourCompanyName"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>代采赊销单位:</label>
+				<input  name="search_LIKES_sxCompany" type="text" id="_sxCompany"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>赊销模式:</label>
+				<input type="text" name="search_EQS_contractModel" id="contractModel"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>是否有效:</label>
+				<input name="search_EQB_enableFlg" id="enableFlg" type="text"/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		<a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="editrow(0)">新增</a>
+	</div>
+</div>
+
+
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<table id="tt" fit="true"
+		   title="" iconCls="icon-edit" singleSelect="true"
+		   idField="id">
+	</table>
+</div>
+<div id="config_detail" title="业务开关明细配置" data-options="width:360,height:370"></div>
+<script type="text/javascript">
+	 var lastIndex;
+	 var enableFlgs = eval('[(${enableFlgs})]');//是否有效
+	 var contractModel = eval('[(${contractModel})]');//赊销模式
+	 var fundSource = eval('[(${fundSource})]');//资金来源
+	 var ourCompanyName = eval('[(${ourCompanyName})]');//我方抬头
+	 var sxCompany = eval('[(${sxCompany})]');//代采赊销单位
+	 var creditTypeJson = eval('[(${creditTypeJson})]');
+	$(function(){
+		/* 是否有效 */
+		$("#enableFlg").combobox({
+			data : enableFlgs,
+			textField : 'dictName',
+			valueField : 'dictCd',
+			width : 150,
+			height : 30,
+		});
+		/* 赊销模式 */
+		$("#contractModel").combobox({
+			data : contractModel,
+			textField : 'dictName',
+			valueField : 'dictCd',
+			width : 150,
+			height : 30,
+		});
+		/* 我方抬头 */
+		$("#ourCompanyName").combobox({
+			data : ourCompanyName,
+			textField : 'remark',
+			valueField : 'dictCd',
+			// panelWidth : 250,
+			panelHeight : 'auto',
+		});
+		/* 我方抬头 */
+		$("#_sxCompany").combobox({
+			data : sxCompany,
+			textField : 'companyAbbr',
+			valueField : 'companyCd',
+			// panelWidth : 250,
+			panelHeight : 'auto',
+		});
+		$('#tt').datagrid({
+			pagination:true,
+			width:400,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[50,40,30,20,10],
+			url:_ctx+"/bs/config/findConfig",
+			columns:[ [
+				{field: 'id',title:'ID',align: 'left',width: 40},
+				{field:'sxCompany',title:'代采赊销单位',align:'left', width:305,
+					formatter: function (value, row, index) {
+						var cds_array = [];
+						var names_array = [];
+						if (value && value.length > 0) {
+							var _arr = value.split(",");
+							for (var i in _arr) {
+								if (_arr[i] == '') {
+									continue;
+								}
+								var _companyName = Convert.findTreeValueByKey(sxCompany, "companyCd", _arr[i], "companyAbbr");
+								cds_array.push(_arr[i]);
+								names_array.push(_companyName);
+							}
+						}
+						row.action = cds_array.join(',');
+						return names_array.join(',');
+					}},
+				{field:'ourCompanyName',title:'我方抬头',align:'left', width:360,
+					formatter: function (value, row, index) {
+						var cds_array = [];
+						var names_array = [];
+						if (value && value.length > 0) {
+							var _arr = value.split(",");
+							for (var i in _arr) {
+								if (_arr[i] == '') {
+									continue;
+								}
+								var _companyName = Convert.findTreeValueByKey(ourCompanyName, "dictCd", _arr[i], "remark");
+								cds_array.push(_arr[i]);
+								names_array.push(_companyName);
+							}
+						}
+						row.action = cds_array.join(',');
+						return names_array.join(',');
+					}},
+				{field:'fundSource',title:'资金来源', width:100,
+					formatter : function(value, row, index) {
+						return Convert.findValueByKey(fundSource, "dictCd",value, "dictName");
+					}},
+				{field:'creditType',title:'授信类型', width:100,
+					formatter : function(value, row, index) {
+						return Convert.findValueByKey(creditTypeJson, "dictCd",value, "dictName");
+					}},
+				{field:'contractModel',title:'赊销模式', width:80,
+					formatter : function(value, row, index) {
+					   return Convert.findValueByKey(contractModel, "dictCd",value, "dictName");
+					}},
+				{field:'enableFlg',title:'是否有效', width:80,align:'center',
+					formatter:function(value){
+						if(value == "0"){
+							return '<span style="color:#FF4A83FF">无效</span>';
+						}else{
+							return '<span style="color:#4A9BFFFF">有效</span>';
+						}
+					}},
+				{field:'balance',title:'可用额度(元)',align:'right', width:130,
+					formatter : function(value, row, index) {
+						var  decimal=2
+							if(!value || value === ''){
+								return ''
+							}else if(typeof value == 'string'){
+								return Number(value).toLocaleString(undefined, {minimumFractionDigits:decimal, maximumFractionDigits:decimal});
+							}else if(typeof value == 'number'){
+								return value.toLocaleString(undefined, {minimumFractionDigits:decimal, maximumFractionDigits:decimal});
+							}else{
+								return value;
+							}
+					}},
+				{field:'remark',title:'备注',align:'center', width:250},
+				{field:'updatedDate',title:'更新时间',align:'center', width:130},
+				{field:'operate',title:'操作', width:80,align:'center',formatter:function(value, row, index){
+						var id =row.id;
+						var str = '<img onclick="removeConfig('+id+')" style="cursor:pointer;width:16px;hight:18px;float:left;margin-left:24px" src="../static/new-version/images/icon_delete.png"/>';
+						return str;
+					}}
+			]],
+			toolbar:'#toolbar',
+			onDblClickCell:function(index,field){
+				var row = $('#tt').datagrid('getSelected');
+				editrow(row.id);
+			}
+		});
+
+		$('#config_detail').window({
+			title : '业务开关明细配置',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			}
+		});
+	});
+
+	/* 弹出新增框 */
+	function editrow(id) {
+		 var url = _ctx + "/bs/config/detail/" + id;
+		 $('#config_detail').window({href:url});
+		 $('#config_detail').window("open");
+	 }
+	/*  删除方法 */
+	function removeConfig(id){
+		$('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		var index = $('#tt').datagrid('getRowIndex', row);
+		if (id=='0'){
+			$('#tt').datagrid('deleteRow',index);
+			var nextSelect=index>0?index-1:0;
+			$('#tt').datagrid('selectRow', nextSelect);
+		}else{
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '删除提示',
+				msg: '确定要删除该信息吗？',
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				fn: function(r){
+					if (r){
+						//TODO:如果该记录被引用,是否强制不允许删除?
+						$.post(_ctx+"/bs/config/delete/"+id,function(result) {
+							var rObj = eval(result);
+							if(rObj.success){
+								$('#tt').datagrid('reload');
+								$('#tt').datagrid('clearSelections');
+							}else{
+								$.messager.alert('error',rObj.failure,'warning');
+							}
+						});
+					}
+				}
+			});
+		}
+	}
+</script>
+</body>
+</html>

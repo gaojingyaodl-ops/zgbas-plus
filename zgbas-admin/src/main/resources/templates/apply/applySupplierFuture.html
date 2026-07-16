@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="center" border="false">
+        <div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden" name="companyId" id="companyId" th:value="${company.id}" />
+            <!--<input type="hidden" name="companyName" id="companyName" th:value="${company.companyName}" />-->
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <lable>公司名称：</lable>
+                    <input type="text" readonly  th:value="${entity.companyName}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>是否允许供应商远期：</lable>
+                    <input type="text" readonly  th:value="${entity.supplierFuture=='0' ? '否' : '是'}"/>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+</script>

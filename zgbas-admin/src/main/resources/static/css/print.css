@@ -1,0 +1,28 @@
+*{font-size:15px; font-family:Tahoma,Verdana,微软雅黑,新宋体}
+body{background:#fff; }
+
+table{border:1px solid #666;border-collapse:collapse;width:100%;}
+table td{border:1px solid #666;padding-left:3px;}
+
+.tip {text-align: left;margin: 10px 0;padding: 10px 0 8px 40px;width: 95%;color: red;background:#fbd5b5 url('../images/res_tip.gif') no-repeat 5px 5px;}
+.tip div ol {margin: 0;padding: 0;}
+
+div.search_div{height:70px;padding-top:5px;overflow:hidden;}
+.form-horizontal div.control-group{margin-bottom: 10px;}
+
+#mainTable_div{clear: both;overflow: hidden;}
+input[type="text"]:focus,input[type="password"]:focus, textarea:focus{ -moz-box-shadow: 0 0 3px rgba(85, 153, 204, 0.3), 0 0 1px 2px rgba(66, 150, 234, 0.8);border-color: #5599CC;}
+
+h1{text-align: center;font-size: 20px}
+.order_print{width: 960px;}
+.order_info{margin: 5px 0; }
+.order_info div.row{clear: both;float: left; line-height: 25px;margin: 2px 0;height: 25px;}
+.order_info div.row div{float: left;}
+.order_info div.row label{width:100px;display: table-cell;float: left;text-align: right;margin-right: 10px;vertical-align: middle;line-height: 27px;}
+.order_info div.row span{float:left;line-height: 25px;height: 25px;width:200px;}
+.order_mat{margin-top:20px;}
+
+.order_detail{margin-top:20px;}
+.order_detail tr{}
+.order_detail thead tr{}
+.order_detail thead tr td{}

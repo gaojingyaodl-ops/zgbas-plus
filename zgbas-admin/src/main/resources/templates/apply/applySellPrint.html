@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="UTF-8">
+<title>销售审批单打印</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+<link th:href="@{/static/css/saleTable.css?v=1}" rel="stylesheet" type="text/css" />
+<script th:src="@{/static/jquery/jquery.jqprint-0.3.js}" type="text/javascript"></script>
+<script th:src="@{/static/jquery/FileSaver.js}" type="text/javascript"></script>
+<script th:src="@{/static/jquery/jquery.wordexport.js}" type="text/javascript"></script>
+</head>
+
+<div th:utext="${printContext}" id="contractText"></div>
+
+<script type="text/javascript">
+	
+	$("#appTable tr td").each(function() {
+		$(this).css({"word-break":"break-all","word-wrap":"break-word"});
+	});
+	
+	$(".td5,.td7,.td9,.td10").css("font-size","11px");
+	
+	$(".td2").css("width","140px");
+	
+	$(".td3").css("width","50px");
+
+	//审批单打印
+	function printTheApprove(){
+		$('#print').jqprint();
+	}
+</script>

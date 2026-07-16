@@ -1,0 +1,4 @@
+<span class="logisticsSpan">
+	<input type="hidden" class="randomNumberInput" th:id="randomNumberInput+${randomNumber}" th:value="${randomNumber}"/>
+	<a style="margin-bottom: 15px" class="easyui-linkbutton addBtn logisticsTapA" th:id="logisticsA+${randomNumber}" th:onclick="'logisticsInfo(\''+${randomNumber}+'\')'" th:text="提货+${randomNumber}"></a>				
+</span>	

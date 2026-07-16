@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<div region="north" border="false">
+		<form id="inputForm" method="post" class="from-input-layout">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label for="companyName">企业名称:</label>
+					<input name="companyName" id="companyName"  type="text" th:value="${entity.companyName}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<label for="legalRepresent" >法人:</label>
+					<input name="legalRepresent" id="legalRepresent"  type="text" th:value="${entity.legalRepresent}"></input>
+				</p>
+				<p class="yw-table-filter w2">
+					<label for="licenseNumber" >营业执照号:</label>
+					<input name="licenseNumber" id="licenseNumber" type="text"   th:value="${entity.licenseNumber}"></input>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter w2">
+					<label for="address">企业地址:</label>
+					<input name="address" id="address" type="text"  th:value="${entity.address}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<label for="contactName" >联系人:</label>
+					<input name="contactName" id="contactName" type="text" th:value="${entity.contactName}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<label for="contactPhone" >联系电话:</label>
+					<input name="contactPhone" id="contactPhone" type="text"  th:value="${entity.contactPhone}"></input>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label for="contactEmail">联系邮箱:</label>
+					<input name="contactEmail" id="contactEmail" type="text"  th:value="${entity.contactEmail}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<label for="registerDate" >注册日期:</label>
+					<input name="registerDate" id="registerDate"  class="easyui-datebox"  th:value="${#dates.format(entity.registerDate,'yyyy-MM-dd')}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label for="enableFlg"  class="control-label">是否有效:</label>
+					<input name="enableFlg" id="enableFlg"   type="text" th:value="${entity.enableFlg}"/>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter w2">
+					<label for="bankAccount">银行账号:</label>
+					<input name="bankAccount" id="bankAccount" type="text"  th:value="${entity.bankAccount}"></input>
+				</p>
+				<p class="yw-table-filter">
+					<label for="bankName" >开户行:</label>
+					<input name="bankName" id="bankName" type="text"  th:value="${entity.bankName}"></input>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter w4">
+					<label for="remark"  class="control-label">备注:</label>
+					<input name="remark"  id="remark" type="text" th:value="${entity.remark}"/>
+				</p>
+			</div>
+		</form>
+	</div>
+	
+	<div region="center" border="false">
+		<a  href="#" class="easyui-linkbutton mb6" id="saveCom" data-options="iconCls:'icon-add'," onclick="insert()">新增</a>
+		<div class="mt20 yw-menu-section tbw popup-tab"  id="tt2" th:url="@{'/bs/partnerCompany/listUser/'+${entity.id}}"></div>
+	</div>
+		
+	<div region="south" style="margin-top: 30px">
+		<a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="$('#inputForm').submit();">保存</a>
+		<th:block th:if="${entity.id!=0 and entity.id!=null }">
+			<a href="#" class="easyui-linkbutton ml10" iconCls="icon-reload" th:onclick="'editrow('+${entity.id}+');'">刷新</a>
+		</th:block>
+	</div>
+</div>
+
+
+<script type="text/javascript">
+	var lastIndex2=-1;
+	var isExists = false;
+	var enableFlgJson = eval('[(${enableFlgJson})]');
+	$(function(){
+		$('#enableFlg').combobox({
+			data:enableFlgJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			onSelect:function(data){
+				if (data.dictCd == false || data.dictCd == "false"){
+					$('#saveCom').hide();
+				}else{
+					$('#saveCom').show();
+				}
+			}
+		})
+		initAppDictInput();
+		$("#inputForm").validate({
+			submitHandler: function(form)
+			   {
+				saveDict();
+			   }
+		});
+	});
+	function saveDict(){
+		var options={
+		        url:_ctx+'/bs/partnerCompany/save',
+		        onSubmit: function(){
+		        	var flag=true;
+		        	var changeRows=[];
+	        		var inserted = $('#tt2').datagrid('getChanges','inserted');
+	        		var updated = $('#tt2').datagrid('getChanges','updated');
+	        		changeRows = inserted.concat(updated);
+		        	for(var i=0;i<changeRows.length;i++){
+		        		var rowIndex=$('#tt2').datagrid('getRowIndex',changeRows[i]);
+		        		flag=$('#tt2').datagrid('validateRow',rowIndex);
+		        		if (!flag){
+		        			$('#tt2').datagrid('selectRow',rowIndex);
+		        			$('#tt2').datagrid('beginEdit', rowIndex);
+							break;
+		        		}else{
+		        			$('#tt2').datagrid('endEdit', rowIndex);
+		        		}
+		        	}
+		        	if(flag){
+		        		$('#tt2').datagrid('endEdit', lastIndex2);
+				        Convert.setChildren2Form("inputForm","tt2");
+		        	}
+		        	return flag;
+		        },
+		        success:function(data){
+					$("#entityId").val(eval('('+ data +')').success);
+					// 保存用户信息
+		        	if(data.indexOf('success')!=-1){
+						savePartnerUser();
+		        	}else{
+		        		$.messager.alert('','保存失败');
+		        	}
+		        }
+			};
+		$('#inputForm').form('submit', options);
+	}
+	function initAppDictInput(){
+		$('#tt2').datagrid({
+			columns:[ [
+				{field:'name',title:'姓名',align:'left',width:100,editor:{type:'validatebox',options:{required:'true',validType:'length[1,100]'}}},
+				{field:'loginName',title:'登录名',align:'left',width:120,editor:{type:'validatebox',options:{required:'true',validType:'length[1,2000]'}}},
+				{field:'SysUserSdkId',title:'系统ID',align:'right',width:50},
+				{field:'mobile',title:'联系电话',align:'center',width:120,editor:{type:'validatebox',options:{validType:'length[1,2000]'}}},
+				{field:'createdDate',title:'创建日期',align:'center',width:150},
+				{field:'enableFlg',title:'是否有效',editor:{type:'checkbox',options:{on:'true',off:'false'}}, width:80, align:'center',
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(enableFlgJson, "dictCd",value, "dictName");
+					}
+				},
+				{field:'action',title:'操作',width:60,align:'center',
+					formatter:function(value,row,index){
+						var id =row.id;
+						var d = '<img href="#" style="cursor:pointer;width:16px;hight:18px" onclick=deleterow2("'+id+'") src="../static/new-version/images/icon_delete.png"></img>';
+						return d;
+					}
+				}
+				] ],
+			toolbar: '#addBtn',
+			onBeforeLoad:function(){
+				$(this).datagrid('rejectChanges');
+			},
+			onClickCell:function(index,field){
+
+				var enFlg = $("#enableFlg").val();
+				if(enFlg == false || enFlg == "false"){
+					$('#tt2').datagrid('removeEditor', 'enableFlg');
+					$('#tt2').datagrid('removeEditor', 'mobile');
+					$('#tt2').datagrid('removeEditor', 'name');
+					$('#tt2').datagrid('removeEditor', 'loginName');
+				}else{
+					if (lastIndex2 != index){
+						$('#tt2').datagrid('endEdit', lastIndex2);
+						$('#tt2').datagrid('beginEdit', index);
+					}
+					lastIndex2 = index;
+					Convert.focusEditor("tt2",field,lastIndex2);
+				}
+			}
+		});
+	}
+	function focusEditor(field,editIndex){
+		var editor = $('#tt2').datagrid('getEditor', {index:editIndex,field:field});
+		if (editor){
+			editor.target.focus();
+		} else {
+			var editors = $('#tt2').datagrid('getEditors', editIndex);
+			if (editors.length){
+				editors[0].target.focus();
+			}
+		}
+	}
+	
+	function insert(){
+		var rowSel=$('#tt2').datagrid('getSelected', lastIndex2);
+		$('#tt2').datagrid('endEdit', lastIndex2);
+		var index = $('#tt2').datagrid('getData').total;
+		if(!index)index = $('#tt2').datagrid('getRows').length;
+		var field={
+				id:'0',
+				dictCd:'',
+				dictName:'',
+				i18n:'',
+				enableFlg:'true',
+				remark:'',
+				dispOrderNo:index+1
+			}
+		$('#tt2').datagrid('appendRow',field);
+		lastIndex2 = $('#tt2').datagrid('getRows').length-1;
+		$('#tt2').datagrid('selectRow', lastIndex2);
+		$('#tt2').datagrid('beginEdit', lastIndex2);				
+		Convert.focusEditor("tt2",field,lastIndex2);	
+	}	
+	
+	function deleterow2(id){
+		$('#tt2').datagrid('selectRecord',id);
+		var row = $('#tt2').datagrid('getSelected');
+		var index = $('#tt2').datagrid('getRowIndex',row);
+		if (id=='0'){
+			$('#tt2').datagrid('deleteRow', index);
+			var nextSelect=index>0?index-1:0;
+			$('#tt2').datagrid('selectRow', nextSelect);
+		}else{
+			$.messager.confirm({
+				width:388,
+				height:170,
+				title: '删除提示',
+				msg: '确认删除合伙人业务员?',
+				ok: "确定",
+				cancel: "取消",
+				cls:'c9',
+				border:'thin',
+				fn: function(r){
+	                if (r){
+	                	if(id){
+							$.post(_ctx+"/bs/partnerCompany/deleteData/"+id, function(result) {
+								$('#tt2').datagrid('reload');
+							});
+						}
+	                }
+	            }
+	        });					
+
+		}
+	}
+	// 保存用户信息
+	function savePartnerUser() {
+		var flag = true;
+		var _entityId = $("#entityId").val();
+		console.log(_entityId)
+		debugger;
+		$('#tt2').datagrid("endEdit",lastIndex);
+		var rows = $('#tt2').datagrid('getRows');
+		var ids = [];
+		for(var i in rows){
+			var row =rows[i];
+			if (row){
+				var index = $('#tt2').datagrid('getRowIndex', row);
+				$('#tt2').datagrid('endEdit', index);
+				row.partnerCompanyId = Number(_entityId);
+				var isFlg = $("#enableFlg").val();
+				if (isFlg == false || isFlg == "false"){
+					row.enableFlg = false;
+				}
+				ids.push(row);
+			}
+		}
+		if (flag){
+			debugger;
+
+			$.post(_ctx+"/bs/partnerCompany/savePartnerUser", {userList:JSON.stringify(ids)} ,function(result) {
+				var rObj = eval(result);
+				if(rObj.success){
+					//若datagrid的url为空，则需添加
+					$('#tt2').datagrid({url:_ctx+"/bs/partnerCompany/listUser/"+_entityId});
+					$('#tt2').datagrid('reload');
+					$.messager.show({
+						height:150,
+						title:'提示',
+						msg:'保存成功',
+						timeout:2000,
+						border:'thin',
+						cls:'c9',
+						showType:'show'
+					});
+					$('#w').window("close");
+				}else{
+					$.messager.alert('error',rObj.failure,'warning');
+					$('#tt2').datagrid('selectRow', index).datagrid('beginEdit', index);
+				}
+			});
+		}
+	}
+</script>

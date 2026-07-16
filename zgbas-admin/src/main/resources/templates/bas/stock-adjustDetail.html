@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+	<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<div region="north" border="false" method="post">
+			<form id="inputForm" class="form-search from-input-layout" method="post" >
+				<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+				<div class="mb6">
+					<p class="yw-table-filter">
+						<label>调整单号:</label>
+						<input type="text" name="businessNo" id="businessNo" readonly="readonly" th:value="${entity.businessNo}" />
+					</p>
+					<p class="yw-table-filter">
+						<label>调整状态:</label>
+						<input type="text" id="adjustStatus" readonly="readonly" th:value="${entity.adjustStatus}" />
+					</p>
+					<span class="btn-group" th:if="${entity.adjustStatus eq 'N'}">
+						<a id="addBtn" href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onClick="choose()">选择</a>
+					</span>
+				</div>
+			</form>
+		</div>
+
+		<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;padding-top: 10px">
+			<table id="relaTable" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+		</div>
+
+		<div region="south" border="false" style="overflow: hidden;height: 50px; padding-top:10px" th:if="${entity.adjustStatus ne 'D'}">
+			<a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-redo'" onclick="save()">保存</a>
+			<a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-redo'" onclick="audit()" th:if="${entity.id ne 0}">审核</a>
+		</div>
+	</div>
+
+	<div id="w_stock_choose" class="easyui-window" title="库存明细" data-options="width:1100,height:540"></div>
+
+<script type="text/javascript">
+var lastIndex;
+var stockDetailIds = [];
+$(function(){
+	var _url = _ctx+"/stock/adjustDetail/list?search_EQL_stockAdjustId="+$("#entityId").val();
+	var columns =[ [
+		{field:'productName',title:'品名',align:'center', width:100},
+		{field:'brandNumber',title:'牌号',align:'center', width:80},
+		{field:'factoryName',title:'厂商',align:'center', width:100},
+		{field:'warehouseName',title:'仓库',align:'center', width:100},
+//		{field:'sysFrozenNumber',title:'系统冻结数量',width:100},
+		{field:'sysAvailableNumber',title:'系统可用数量',width:100},
+//		{field:'realFrozenNumber',title:'实际冻结数量',width:100,editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2}}},
+		{field:'realAvailableNumber',title:'实际可用数量',width:100,editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4}}},
+		//{field:'remark',title:'备注',align:'center', width:80,editor:{type:'textbox'}},
+		{field:'option',title:'操作', width:50,align:'center',formatter:function(value, row, index){
+			var str = '<img onclick="remove(\''+row.id+'\',\''+index+'\',\''+row.stockDetailId+'\',event)" style="cursor:pointer;width:16px;hight:18px" src="/static/images/icon_delete.png"/>';
+	        return str;
+		}}
+	]];
+
+	if (_industry.indexOf('SL')==-1){
+		for(var i in columns[0]){
+			var col =columns[0][i];
+			if (col.field=='brandNumber' || col.field=='factoryName'){
+				col.hidden = true;
+			}
+		}
+	}
+
+	$('#relaTable').datagrid({
+		rownumbers:true,
+		url:_url,
+		columns:columns,
+		onLoadSuccess:function(data){
+			//发起后避免选择重复明细
+			if($("#entityId").val()!=0){
+				var rows = data.rows;
+				for(var i = 0;i<rows.length;i++){
+					var row = rows[i];
+					stockDetailIds.push(row.stockDetailId);
+				}
+			}
+		},
+		onDblClickRow:function(index,row,field){
+			$('#relaTable').datagrid('endEdit', lastIndex);
+			$('#relaTable').datagrid('beginEdit', index);
+			lastIndex = index;
+			Convert.focusEditor("relaTable",field,lastIndex);
+		}
+	});
+
+	$('#w_stock_choose').window({
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		title:"请选择库存明细"
+	});
+
+	var adjustStatus = $("#adjustStatus").val();
+	var status = Convert.findValueByKey(_adjustStatus,"dictCd",adjustStatus,"dictName");
+	$("#adjustStatus").val(status);
+
+});
+
+function choose(){
+	var url=_ctx+"/bas/stockDetail/choose";
+	$('#w_stock_choose').attr('callbackExec', 'chooseCallback');
+	$('#w_stock_choose').window({href:url});
+	$('#w_stock_choose').window("open");
+}
+
+function chooseCallback(stockRows){
+	/* var rows = $('#relaTable').datagrid('getRows');
+	var length =rows.length;
+	for(var i=0;i<length;i++){
+		$('#relaTable').datagrid('deleteRow',0);
+	} */
+	if(stockRows){
+		for(var i=0;i<stockRows.length;i++){
+			var row = stockRows[i];
+			stockDetailId=row.id;
+			if(stockDetailIds.length >0 && stockDetailIds.indexOf(stockDetailId)>-1){
+				continue;
+			}else{
+				stockDetailIds.push(stockDetailId);
+			}
+			var new_row = {
+				id:0,
+				productCd:row.productCd,
+				productName:row.productName,
+				brandNumber:row.brandNumber,
+				factoryId:row.factoryId,
+				warehouseName:row.warehouseName,
+				factoryName:row.factoryName,
+				warehouseId:row.warehouseId,
+				sysFrozenNumber:row.frozenNumber,
+				sysAvailableNumber:row.availableNumber,
+				stockDetailId:row.id
+			};
+			$('#relaTable').datagrid('appendRow', new_row);
+			var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+			$('#relaTable').datagrid('beginEdit', rowIndex);
+		}
+	}
+}
+
+function remove(id,index,stockDetailId,event){
+	//从已选库存明细中删除该元素
+	if(stockDetailId){
+		var _index = stockDetailIds.indexOf(stockDetailId);
+		stockDetailIds.splice(_index,1);
+	}
+	var row , index;
+	if(id=='0' ||id =='' || id == 'undefined') {
+		//$('#relaTable').datagrid('selectRecord',id);
+		//row = $('#relaTable').datagrid('getSelected');
+		//index = $('#relaTable').datagrid('getRowIndex', row);
+		$('#relaTable').datagrid('deleteRow',index);
+	}else{
+		$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+			if(t){
+				$.post(_ctx+"/stock/adjustDetail/delete/"+id,function(result) {
+					var rObj = eval(result);
+					if(rObj.success){
+						$('#relaTable').datagrid("reload");
+					}else{
+						$.messager.alert('error',rObj.failure,'warning');
+					}
+				});
+			}
+		});
+	}
+	event.stopPropagation();
+}
+
+function save(){
+	var flag = beforSaveOper();
+	if(flag){
+		/* $.post(_ctx+"/stock/adjust/saveAdjust",Convert.ToSaveParam("relaTable") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#w_stock_adjust').window("close");
+				$('#stockAdjust').datagrid("reload");
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		}); */
+		var options = {
+			url : _ctx+"/stock/adjust/saveAdjust",
+			success : function(data) {
+				var result = eval('(' + data + ')');
+				if (result.success) {
+					$('#w_stock_adjust').window("close");
+					$('#stockAdjust').datagrid("reload");
+				}
+			}
+		}
+	}
+	$('#inputForm').form('submit', options);
+}
+
+function beforSaveOper() {
+	var flag = true;
+	var changeRows = $('#relaTable').datagrid('getRows');
+	for (var i = 0; i < changeRows.length; i++) {
+		var rowIndex = $('#relaTable').datagrid('getRowIndex', changeRows[i]);
+		flag = $('#relaTable').datagrid('validateRow', rowIndex);
+		if (!flag) {
+			$('#relaTable').datagrid('selectRow', rowIndex);
+			$('#relaTable').datagrid('beginEdit', rowIndex);
+			flag = false;
+			break;
+		} else {
+			$('#relaTable').datagrid('endEdit', rowIndex);
+		}
+	}
+	Convert.setChildren2Form("inputForm","relaTable");
+	return flag;
+}
+
+function audit(){
+	$.messager.confirm('提示','确认审核通过吗?',function(t){
+		if(t){
+			$.post(_ctx+"/stock/adjust/audit/"+$("#entityId").val(), function(result) {
+				var rObj = eval(result);
+				if(rObj.success){
+					$('#w_stock_adjust').window("close");
+					$('#stockAdjust').datagrid("reload");
+				}else{
+					$.messager.alert('error',rObj.failure,'warning');
+				}
+			});
+		}});
+}
+</script>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>考核条目管理</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>考核项目:</label>
+                <input  name="search_EQS_evaluateGroup" type="text" id="evaluateGroupSearch"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>考核指标:</label>
+                <input type="text" name="search_EQS_evaluateMetrics" id="evaluateMetricsSearch"/>
+            </p>
+            <a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+        </div>
+    </form>
+    <div id="btn" class="add-btn" style="margin-top: 10px">
+        <a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="editrow(0)">新增</a>
+    </div>
+</div>
+
+
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+<div id="evaluate_item_detail" title="考核条目信息维护" data-options="width:650,height:340">
+</div>
+<script type="text/javascript">
+    var _evaluateGroupJson = eval('[(${evaluateGroupJson})]');
+    var _evaluateMetricsJson = eval('[(${evaluateMetricsJson})]');
+    var _evaluateDeptJson = eval('[(${evaluateDeptJson})]');
+    $(function(){
+        /* 考核项目 */
+        $("#evaluateGroupSearch").combobox({
+            data : _evaluateGroupJson,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            width : 150,
+            height : 30,
+        });
+        /* 考核指标 */
+        $("#evaluateMetricsSearch").combobox({
+            data : _evaluateMetricsJson,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            width : 150,
+            height : 30,
+        });
+        $('#tt').datagrid({
+            pagination:true,
+            width:400,
+            pageSize:30,
+            rowHeight:500,
+            rownumbers:true,
+            pageList:[50,40,30,20,10],
+            url:_ctx+"/evaluate/item/findAllEvaluateItemLoading",
+            columns:[ [
+                {field:'evaluateGroup',title:'考核项目',align:'left', width:100,
+                    formatter : function(value, row, index) {
+                        return Convert.findValueByKey(_evaluateGroupJson, "dictCd",value, "dictName");
+                    }},
+                {field:'evaluateMetrics',title:'考核指标',align:'left', width:100,
+                    formatter : function(value, row, index) {
+                        return Convert.findValueByKey(_evaluateMetricsJson, "dictCd",value, "dictName");
+                    }},
+                {field:'weight',title:'权重(分)', width:80},
+                {field:'metricsContent',title:'指标定义', width:500,nowrap:true,
+                    formatter:function(value,row,index){
+                        return '<div style="width=100px;word-break:break-all; word-wrap:break-word;white-space:pre-wrap;">'+value+'</div>';
+                        // return '<div style="overflow: hidden; white-space: nowrap; text-overflow:ellipsis;" title="'+value+'">'+value+'</div>';
+                    }
+                },
+                {field:'evaluateDept',title:'评分部门', width:100,align:'center',
+                    formatter : function(value, row, index) {
+                        return Convert.findValueByKey(_evaluateDeptJson, "dictCd",value, "dictName");
+                    }},
+                {field:'dispOrderNo',title:'序号',align:'right', width:80},
+                {field:'operate',title:'操作', width:80,align:'center',formatter:function(value, row, index){
+                        var str = "";
+                        str += '<span style="pointer-events: auto" onclick="editrow(\''+row.id+'\')" class="contract-btn contract-btn-4">编辑</span>';
+                        str += '<span style="pointer-events: auto" onclick="removeConfig(\''+row.id+'\')" class="contract-btn contract-btn-4">删除</span>';
+                        return str;
+                    }}
+            ]],
+            toolbar:'#toolbar',
+            onDblClickCell:function(index,field){
+                var row = $('#tt').datagrid('getSelected');
+                editrow(row.id);
+            }
+        });
+
+        $('#evaluate_item_detail').window({
+            title : '考核条目信息维护',
+            modal : true,
+            closed : true,
+            collapsible : false,
+            minimizable : false,
+            maximizable : false,
+            cache : false,
+            onClose : function() {
+                $('#tt').datagrid('reload');
+            }
+        });
+    });
+
+    /* 弹出新增框 */
+    function editrow(id) {
+        var url = _ctx + "/evaluate/item/detail/" + id;
+        $('#evaluate_item_detail').window({href:url});
+        $('#evaluate_item_detail').window("open");
+
+    }
+    /*  删除方法 */
+    function removeConfig(id){
+        $('#tt').datagrid('selectRecord',id);
+        var row = $('#tt').datagrid('getSelected');
+        var index = $('#tt').datagrid('getRowIndex', row);
+        if (id=='0'){
+            $('#tt').datagrid('deleteRow',index);
+            var nextSelect=index>0?index-1:0;
+            $('#tt').datagrid('selectRow', nextSelect);
+        }else{
+            $.messager.confirm({
+                width:388,
+                height:170,
+                title: '删除提示',
+                msg: '确定要删除该信息吗？',
+                ok: "确定",
+                cancel: "取消",
+                cls:'c9',
+                border:'thin',
+                fn: function(r){
+                    if (r){
+                        //TODO:如果该记录被引用,是否强制不允许删除?
+                        $.post(_ctx+"/evaluate/item/delete/"+id,function(result) {
+                            var rObj = eval(result);
+                            if(rObj.success){
+                                $('#tt').datagrid('reload');
+                                $('#tt').datagrid('clearSelections');
+                            }else{
+                                $.messager.alert('error',rObj.failure,'warning');
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+</script>
+</body>
+</html>

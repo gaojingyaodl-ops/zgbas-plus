@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>待办事项</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+		<form id="searchForm" class="form-search from-input-layout" method="post" >
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同编号:</label>
+				<input id="contractNo" type="text" name="search_EQS_contractNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>待办状态:</label>
+				<input id="status" type="text" name="search_EQS_status"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>业务员:</label>
+				<input id="matchUserName" type="text" name="search_EQS_matchUserName"/>
+			</p>
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<script type="text/javascript">
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var scheduleStatusJson = eval('[(${scheduleStatusJson})]');
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[100,70,50,30],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/ctrContract/schedule/findSchedulePage",
+			columns:[ [
+				{field:'contractNo',title:'合同编号',width:130,align:'center'} ,
+				{field:'subject',title:'待办原因', width:200,align:'left'},
+				{field:'matchUserName',title:'业务员', width:80,align:'left'},
+				{field:'status',title:'待办状态', width:70,align:'left',formatter:function(value,row,index){
+					var str = "";
+					var status = Convert.findValueByKey(scheduleStatusJson,"dictCd",value,"dictName");
+					if(value == 'D') {
+						str = '<span style="color:green">' + status + '</span>';
+					} else if (value == 'N'){
+						str = '<span style="color:red">' + status + '</span>';
+					}
+					return str;
+				}},
+				/* {field:'remark',title:'备注', width:170,align:'left'}, */
+				{field:'detail',title:'详情',align:'center',width:80,formatter:function(value, row, index){
+					var	str = '<i onclick="detail(\''+ row.contractId+ '\',\''+ row.contractNo+ '\')" class="contract-btn contract-btn-10">合同详情</i>'
+					return str;
+				}},
+				{field:'options',title:'操作',align:'center',width:70,formatter:function(value, row, index){
+					var str = "";
+					if (row.status == 'N'){
+						str = '<i onclick="toDo(\''+ row.id+ '\')" class="contract-btn contract-btn-7">处理</i>'
+					}
+					return str;
+				}}
+			]],
+			onDblClickRow:function(index,row){
+			}
+			
+		});
+		//待办状态
+		$("#status").combobox({
+			data:[{id:'N',text:'待处理'},{id:'D',text:'已处理'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		
+	    //业务员下拉 
+	    $('#matchUserName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			//required:true,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#matchUserName').combotree('clear'); 
+				}else{
+					$('#matchUserName').combotree('setValue',node.text);	
+				}
+			} 
+		});
+	});
+	function detail(id,contractNo){
+		var url=_ctx+"/ctr/contract/detail/"+id;
+		var title=contractNo;
+		window.parent.addTab(title,url);
+	}
+	function toDo(id){
+		$.messager.confirm('提示','确定已处理该事项么?',function(t){
+			if(t){
+				if(id){
+					$.post(_ctx + "/ctrContract/schedule/toDo",
+						{"id":id}, function(result) {
+							var rObj = eval(result);
+							if (rObj.success) {
+								$.messager.show({title:'Tip',msg:'操作成功',timeout:2000,showType:'show'});
+								$('#tt').datagrid('reload');
+							} else {
+								$.messager.alert('error',rObj.failure,'warning');
+							}
+						}
+					)
+				}
+			}
+		});
+	}
+</script>
+</body>
+</html>

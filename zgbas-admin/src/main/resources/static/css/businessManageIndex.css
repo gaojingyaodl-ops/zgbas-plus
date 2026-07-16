@@ -1,0 +1,39 @@
+.dev-cards-two{
+    float: left;
+    width: 700px;
+    height: 310px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 20px;
+}
+.fr {
+    float:right;
+}
+.bm-div-toggle-show {
+    width: 60px;
+    height: 25px;
+    display: inline-block;
+    text-align: center;
+    line-height: 25px;
+    background-color: #F2F2F2;
+    border: 1px solid #DDDDDD;
+    cursor: pointer;
+}
+.bm-div-title{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 25px;
+    width: 100%
+}
+.bm-div-with25{
+    /*width: 24%;*/
+}
+.bm-scree-full-i{
+    font-size: 20px;
+    color: #AAAAAA;
+    cursor: pointer;
+}
+.bm-div-with50{
+    width:720px;
+}

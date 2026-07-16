@@ -1,0 +1,467 @@
+<!--收货确认-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div id="inputForm" method="post" class="editForm_approve firstDiv" style="margin-bottom:20px;">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label for="contractNo" class="control-label">合同编号:</label>
+                <input name="contractNo" id="contractNo" class="control chooseBtnStyle" readonly type="text"
+                       th:value="${entity.contractNo}"></input>
+            </p>
+            <a id="addBtn" href="#" class="easyui-linkbutton btn-empty btn64"
+               onClick="contractDetail()">预算详情</a>
+<!--            <a id="" href="#" class="easyui-linkbutton" data-options="iconCls:''" th:if="${entity.id != 0}"-->
+<!--               onClick="openConfirmReceiptDcsxSign()">使用电子签章</a>-->
+        </div>
+        <div class="mb6">
+            <a id="deliveryOutBtn" href="#" class="easyui-linkbutton btn-empty btn64"
+               onClick="openChooseDeliveryOut()">选择出库</a>
+        </div>
+        <div>
+            <input type="hidden" name="id" id="entityId" th:value="${entity.id}"/>
+            <input type="hidden" name="contractId" th:value="${entity.contractId}" id="contractId">
+            <input type="hidden" name="sellContractId" id="sellContractId">
+            <input type="hidden" id="entityStatus" th:value="${entity.status}"/>
+            <input type="hidden" id="canApproveEdit" th:value="${psv.canApproveEdit}"/>
+            <input type="hidden" id="transformAmount"/>
+            <input type="hidden" id="deliveryOutTransformAmount"/>
+            <input type="hidden" id="deliveryOutId" name="deliveryOutId" th:value="${entity.deliveryOutId}"/>
+
+            <table id="outTable" style="width:99%;" title="" iconCls="icon-edit" singleSelect="true"
+                   idField="id"></table>
+        </div>
+        <input type="hidden" id="companyId" name="companyId"/>
+        <input type="hidden" name="status" id="status" th:value="${entity.status}"/>
+        
+        <div class="mb6 pt20">
+            <p class="yw-table-filter w2">
+                <label>我方:</label>
+                <input id="ourCompanyName" name="ourCompanyName" readonly="readonly" th:value="${entity.ourCompanyName}"></input>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>需方:</label>
+                <input name="companyName" id="companyName" readonly="readonly" type="text"
+                       th:value="${entity.companyName}"></input>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label><i>*</i>实际到货日期:</label>
+                <input name="confirmReceiptDate" id="confirmReceiptDate" type="text" th:value="${#dates.format(entity.confirmReceiptDate,'yyyy-MM-dd')}"></input>
+            </p>
+            <p class="yw-table-filter">
+                <label>物流费用:</label>
+                <input id="logisticsCosts" name="logisticsCosts" type="text" readonly th:value="${entity.logisticsCosts}"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>配送地址:</label>
+                <input id="deliveryAddr" name="deliveryAddr" type="text" readonly th:value="${entity.deliveryAddr}"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>联系人:</label>
+                <input id="contactName" name="contactName" type="text"  th:value="${entity.contactName}"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>联系电话:</label>
+                <input id="contactPhone" name="contactPhone" type="text"  th:value="${entity.contactPhone}"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>车号:</label>
+                <input id="plateNumber" name="plateNumber" type="text" th:value="${entity.plateNumber}"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>司机姓名:</label>
+                <input id="driverName" name="driverName" type="text"  th:value="${entity.driverName}"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>司机身份证:</label>
+                <input id="driverCardNo" name="driverCardNo" type="text"  th:value="${entity.driverCardNo}"/>
+            </p>
+            <p class="yw-table-filter w2">
+                <label>备注:</label>
+                <input id="remark" name="remark" type="text" th:value="${entity.remark}"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <span class="upload-btn" id="btn_fileId">
+	               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+            <input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}"/>
+            <p class="controls showImg fileId" id="span_fileId"></p>
+        </div>
+    </div>
+</div>
+<div id="w_confirmReceiptDcsx_sign_window"  title="使用电子签章" data-options="width:580,height:500"></div>
+<div id="w_deliveryOut_choose" class="easyui-window" title="出库批次" data-options="width:700,height:300"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js?v=1}" type="text/javascript"></script>
+<script type="text/javascript">
+    /*弹框垂直居中*/
+    var easyuiPanelOnOpen = function (left, top) {
+        var iframeWidth = $(this).parent().parent().width();
+
+        var iframeHeight = $(this).parent().parent().height();
+
+        var windowWidth = $(this).parent().width();
+        var windowHeight = $(this).parent().height();
+
+        var setWidth = (iframeWidth - windowWidth) / 2;
+        var setHeight = (iframeHeight - windowHeight) / 2;
+        $(this).parent().css({/* 修正面板位置 */
+            left: setWidth,
+            top: setHeight
+        });
+
+        if (iframeHeight < windowHeight) {
+            $(this).parent().css({/* 修正面板位置 */
+                left: setWidth,
+                top: 0
+            });
+        }
+        $(".window-shadow").hide();
+    };
+    $.fn.window.defaults.onOpen = easyuiPanelOnOpen;
+    var _lastIndex;
+    var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+    var _productDeliveryJson = eval('[(${productDeliveryJson})]');
+    var _factoryJson = eval('[(${factoryJson})]');
+    var _productType = eval('[(${productType})]');
+    var _companyJson = eval('[(${companyJson})]');
+    var _productTypeJson = eval('[(${productTypeJson})]');
+    var _productJson = eval('[(${productJson})]');
+    var filePlugin = new FilePlugin('#fileId', $('#entityId').val(), '/apply/confirmReceiptDcsx/updateFileId', [[${param.hasEditFile}]]);
+    var contractApproveId = '[[${contractApproveId}]]';
+    var fileTypeJson=eval('[(${fileTypeJson})]');
+
+    var canApproveEdit = $("#canApproveEdit").val() == "true";
+    // 实际到货日期
+    $('#confirmReceiptDate').datebox({
+        required:true,
+        editable:false,
+    });
+
+    $(function () {
+        $('#w_confirmReceiptDcsx_sign_window').window({
+            title: '使用电子签章',
+            modal:true,
+            closed: true,
+            collapsible : false,
+            minimizable : false,
+            maximizable : false,
+            cache:false
+        });
+        $('.easyui-linkbutton').linkbutton();
+        var _curStatus = $("#entityStatus").val();
+        if (_curStatus == "A" || _curStatus == "D") {
+
+            $("#inputForm").find("input").attr("readonly", true);
+
+            $("#remark").css('background-color', '#F0F0F0');
+            $("#deliveryOutBtn").hide();
+        }
+
+        if (_curStatus && (_curStatus == "N" || _curStatus == "B" || _curStatus == 'C')) {
+            // 附件类型列表
+            $("#fileTypeId").combobox({
+                data:fileTypeJson,
+                valueField:'fileTypeId',
+                textField:'fileTypeName',
+                panelHeight:'auto',
+                editable:true,
+                required:false,
+                limitToList: true,
+                onLoadSuccess:function(){
+                    var value = $(this).val();
+                    if (!value){
+                        $(this).combobox('setValue',fileTypeJson[0].fileTypeId);
+                    }
+                },
+            })
+            $("#fileTypeId").combobox('setValue',null);
+
+            if (_curStatus == 'N') {
+                $('#confirmReceiptDate').datebox('setValue', myformatter(new Date()));
+            }
+        } else if (_curStatus && (_curStatus == "A" || _curStatus == "D")) {
+            $("#inputForm").find("input").attr("readonly", true);
+            $("#inputForm").find("textarea").attr("readonly", true);
+            if (canApproveEdit) {
+                $("#confirmReceiptDate").parent().find("input").attr("readonly", false);
+            }
+            // 附件类型列表
+            var _fileTypeId = $('#fileTypeId').val();
+            $("#fileTypeId").combobox({
+                data:fileTypeJson,
+                valueField:'fileTypeId',
+                textField:'fileTypeName',
+                panelHeight:'auto',
+                editable:true,
+                required:false,
+                limitToList: true,
+                onLoadSuccess:function(){
+                    var value = $(this).val();
+                    if (!value){
+                        $(this).combobox('setValue',_fileTypeId);
+                    }
+                },
+            })
+            $("#fileTypeId").combobox('setValue',null);
+        }
+
+        var columns =[ [
+            {field: 'productCd', title: '品名', align: 'center', width: 90,
+                formatter: function (value, row, index) {
+                    return Convert.findValueByKey(_productJson, "typeCode", value, "typeName");
+                }
+            },
+            {field: 'brandNumber', title: '牌号', width: 120, align: 'center'},
+            {field: 'factoryId', title: '厂商', width: 120, align: 'center',
+                formatter: function (value, row, index) {
+                    return Convert.findValueByKey(_factoryJson, "id", value, "factoryName");
+                }
+            },
+            {field: 'productAttr', title: '在途/现货', align: 'center', width: 90,
+                formatter: function (value, row, index) {
+                    return Convert.findValueByKey(_productType, "dictCd", value, "dictName");
+                }
+            },
+            {field: 'dealNumber', title: '数量(吨)', width: 80, align: 'right',
+                formatter: function (value, row, index) {
+                    if (row != null) {
+                        return parseFloat(value).toFixed(4);
+                    }
+                }
+            },
+            {field: 'dealPrice', title: '单价(元)', width: 80, align: 'right'},
+            {field: 'totalPrice', title: '总价(元)', width: 80, align: 'right', hidden: true},
+            // {field: 'curNumber', title: '收货数量(吨)', width: 110, align: 'right',
+            //     formatter: function (value, row, index) {
+            //         if (row != null) {
+            //             return parseFloat(value).toFixed(4);
+            //         }
+            //     }
+            // },
+            {field:'curNumber',title:'收货数量(吨)', width:110,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4,min:0}},
+                formatter: function (value, row, index) {
+                    if (row != null) {
+                        return parseFloat(value).toFixed(4);
+                    }
+            }},
+            {field: 'option',
+                title: '操作',
+                width: 90,
+                hidden: true,
+                align: 'center',
+                formatter: function (value, row, index) {
+                    return '<i class="icon-remove icon cursor mt4" onclick="remove(\'' + row.id + '\',event,this)"></i>';
+                }
+            }
+        ]];
+
+        var _url = _ctx + "/apply/productDetail/productList?search_EQS_applyType=Z&search_EQL_applyId=" + $("#entityId").val();
+        $('#outTable').datagrid({
+            pageSize: 10,
+            url: _url,
+            rownumbers: true,
+            pagination: false,
+            columns: columns,
+            onClickCell:function(index,field){
+                var rows =$('#outTable').datagrid('getData').rows;
+                var row =rows[index];
+                if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+                    if (_lastIndex != index){
+                        $('#outTable').datagrid('endEdit', _lastIndex);
+                        $('#outTable').datagrid('beginEdit', index);
+                    }
+                    _lastIndex = index;
+                    Convert.focusEditor('outTable',field,_lastIndex);
+                }
+            },
+            onDblClickRow:function(index,row,field){
+                if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+                    //进入可编辑状态
+                    $('#outTable').datagrid('endEdit', _lastIndex);
+                    $('#outTable').datagrid('beginEdit', index);
+                    _lastIndex = index;
+                    Convert.focusEditor("outTable",field,_lastIndex);
+                }
+            },
+            onBeginEdit:function(index,row){
+                var ed_curNumber = $('#outTable').datagrid('getEditor', {index:index,field:'curNumber'});
+                var max_curNumber= row.curNumber;
+                max_curNumber = Number(max_curNumber);
+                if (ed_curNumber){
+                    $(ed_curNumber.target).numberbox('options').max=max_curNumber;
+                }
+            },
+            onLoadSuccess: function () {
+                // 审批加载完成 加载合同信息
+                applyLoadSucess();
+                var contractId = $("#contractId").val();
+                // 根据合同id获取合同详细
+                // getContractDetail(contractId);
+            }
+        });
+
+        $('#w_deliveryOut_choose').window({
+            modal: true,
+            closed: true,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            cache: false,
+            title: "请选择出库批次"
+        });
+
+        //加载附件列表
+        filePlugin.load($('#fileId').val(), '#span_fileId');
+        if ($('#btn_fileId').length > 0) {
+            fileUpload("btn_fileId", "fileId");
+        }
+        _beforSaveOper = true;
+
+    });
+
+    //获取当前时间
+    function myformatter(date){
+        var y = date.getFullYear();
+        var m = date.getMonth()+1;
+        var d = date.getDate();
+        return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+    }
+
+    function remove(id, event, target) {
+        var row, index;
+        index = getRowIndex(target);
+        if (id == '0' || id == '' || id == undefined) {
+            $('#outTable').datagrid('deleteRow', index);
+        } else {
+            $.messager.confirm('提示', '确认要删除该记录吗?', function (t) {
+                if (t) {
+                    $('#outTable').datagrid('deleteRow', index);
+                    var nextSelect = index > 0 ? index - 1 : 0;
+                    $('#outTable').datagrid('selectRow', nextSelect);
+                }
+            });
+        }
+        event.stopPropagation();
+    }
+
+    function chooseCallback(row) {
+        var rows = $('#outTable').datagrid('getRows');
+        var length = rows.length;
+        for (var i = 0; i < length; i++) {
+            $('#outTable').datagrid('deleteRow', 0);
+        }
+        var contract = row[0];
+        // 新建出库申请时 接口没有返回合同的approveId，从这里取出赋值
+        if (contractApproveId == null || contractApproveId == "" || contractApproveId == undefined) {
+            contractApproveId = contract.approveId;
+        }
+        byContract(contract);
+    }
+
+    function deliveryOutChooseCallback(chooseRow) {
+        if (chooseRow) {
+            var _row = chooseRow[0];
+            var new_row = {
+                productCd: _row.productCd,
+                productName: _row.productName,
+                brandNumber: _row.brandNumber,
+                factoryId: _row.factoryId,
+                warehouseAddr: _row.warehouseAddr,
+                warehouseName: _row.warehouseName,
+                factoryName: _row.factoryName,
+                dealNumber: _row.dealNumber,
+                dealPrice: _row.dealPrice,
+                totalPrice: _row.totalPrice,
+                productAttr: _row.productAttr,
+                warehouseNumber: _row.warehouseNumber,
+                curNumber: _row.curNumber,
+                ctrProductId:_row.ctrProductId,
+                applyDeliveryOutId:_row.applyDeliveryOutId
+            };
+            $('#outTable').datagrid('loadData', {total: 0, rows: []});
+            $('#outTable').datagrid('appendRow', new_row);
+        }
+
+    }
+
+    function byContract(contract) {
+        debugger;
+        $("#contractId").val(contract.id);
+        // 查询销售合同
+        if (contract!=undefined){
+            $.ajax({
+                url:_ctx+"/apply/confirmReceiptDcsx/findSellContract",
+                type:"post",
+                async:false,
+                data:{approveId:contract.approveId},
+                success:function(contract){
+                    if (contract != null && contract != undefined){
+                        $("#sellContractId").val(contract.id);
+                    }
+                }
+            });
+        }
+        if (contract.id != undefined) {
+            //根据合同编号获取table表数据
+            var contractId = contract.id;
+            $("#contractId").val(contractId);
+            $("#contractNo").val(contract.contractNo);
+            $("#companyId").val(contract.companyId);
+            $("#companyName").val(contract.ourCompanyName);
+            $("#ourCompanyName").val(contract.companyName);
+            $("#transformAmount").val(contract.transportAmount);
+
+        }
+    }
+
+    //发起申请前操作
+    function beforSaveOper() {
+        var rows = $('#outTable').datagrid('getData').rows;
+        if (rows.length < 1) {
+            $.messager.alert('提示', '必须选择出库批次', 'info');
+            return false;
+        }
+
+        $('#outTable').datagrid('endEdit', _lastIndex);
+        Convert.setChildren2Form("inputFormApprove", "outTable");
+        var _obj = Convert.getJson4Form("inputFormApprove");
+        //点击申请前，先检查是否有改库存数据
+        return true;
+    }
+
+    // 未确认出库批次
+    function openChooseDeliveryOut() {
+        var sellContractId = $("#sellContractId").val();
+        var url = _ctx + "/apply/confirmReceiptDcsx/choose?contractId=" +sellContractId;
+        $('#w_deliveryOut_choose').window({href: url});
+        $('#w_deliveryOut_choose').attr('callbackExec', 'deliveryOutChooseCallback');
+        $('#w_deliveryOut_choose').window("open");
+    }
+
+    function contractDetail(){
+        var contractId = $('#contractId').val();
+        $.post(_ctx + '/bs/matchDetail/content5/' + contractId, function (result) {
+            var title="代采赊销详情";
+            window.parent.addTab(title, _ctx + '/bs/matchDetail/contentdcsx/' + result.approveId);
+        });
+    }
+    function openConfirmReceiptDcsxSign() {
+        var id = $('#entityId').val();
+        $("#w_confirmReceiptDcsx_sign_window").window('clear');
+        var url = _ctx + "/apply/confirmReceiptDcsx/openConfirmReceiptDcsxSign/" + id;
+        $('#w_confirmReceiptDcsx_sign_window').window({href: url});
+        $('#w_confirmReceiptDcsx_sign_window').window("open");
+    }
+</script>
+
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+</html>

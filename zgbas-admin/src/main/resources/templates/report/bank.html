@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta charset="UTF-8">
+<title>资金查询</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div" border="false"  style="height: 105px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">资金类型:</label>
+				<input  class="control" type="text" id="srh_bankType" name="search_bankType"/>
+			</span>
+			<span class="input-colspan">
+				<label>合同编号:</label>
+				<input  class="control" type="text" name="search_EQS_contractNo"/>
+			</span>
+			<span class="input-colspan">
+				<label>商品名称:</label>
+				<input  class="control" type="text" name="search_LIKES_productName"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">企业名称:</label>
+				<input  class="control" type="text" name="search_LIKES_oppCompanyName"/>
+			</span>
+			<span class="input-colspan">
+					<label>合同时间:</label>
+					<input  id="srh_contractTime_from" name="search_GTED_contractTime"  class="easyui-datebox"/>					
+			</span>			
+			<span class="input-colspan">
+					<label style="margin-left: -70px;">到:</label>
+					<input  id="srh_contractTime_to" name="search_LTD_contractTime"  class="easyui-datebox"   />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<script type="text/javascript">
+var companyJson =eval('[(${companyJson})]');
+var contractTypeJson =eval('[(${contractTypeJson})]');
+var contractStatusJson =eval('[(${contractStatusJson})]');
+var bankJson =eval('[(${bankJson})]');
+
+$(function(){
+	
+	$("#srh_bankType").combobox({
+		data:bankJson,
+		textField:'dictName',
+		valueField:'dictCd',
+		panelHeight:"auto"
+	});
+	
+	$('#tt').datagrid({
+		pagination:true,
+		pageSize:30,
+		rownumbers:true,
+		pageList:[500,200,100,50,30,20],
+		url:_ctx+"/rpt/bank/findBnkList",
+		columns:[ [
+			{field:'contractType',title:'类型', width:50,formatter:function(value,row,index){
+				var text ='';
+				if (value == 'B'){
+					text ='应付';
+				}else{
+					text ='应收';
+				}
+				return text;
+			}},
+			{field:'contractStatus', title: '合同状态', width: 80,formatter:function(value,row,index){
+				return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+			}},
+			{field:'businessNo', title:'业务编号', width:128},
+			{field:'contractNo',title:'合同编号', width:120},
+			{field:'contractTime',title:'合同时间', width:100},
+			{field:'oppCompanyName',title:'企业名称', width:120},
+			{field:'productName',title:'商品名称', width:100},
+			{field:'dealPrice',title:'单价', width:60},
+			{field:'dealNumber',title:'数量', width:50},
+			{field:'dealAmount',title:'合同总价', width:70}
+		]]
+	});
+})
+</script>
+</body>
+</html>

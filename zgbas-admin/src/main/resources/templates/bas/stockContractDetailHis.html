@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<input type="hidden" id="stockContractId" th:value="${stockContractId}" />
+<div region="center" border="false" class="easyui-layout">
+	<table id="contractHis" style="height:355px;" border="0"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+	</table>
+</div>
+
+<script type="text/javascript">
+var canViewContract = '[(${canViewContract})]';//查看合同权限
+$(function(){
+	var stockContractId = $("#stockContractId").val();
+	var _operationTypeJson = eval('[(${operationTypeJson})]');
+	$('#contractHis').datagrid({
+		pageSize:10,
+		rownumbers:true,
+		url:_ctx+"/bas/stockContract/listDetailHis/"+stockContractId,
+		pagination:true,
+		pageList:[50,40,30,20,10],
+		columns:[ [
+			{field:'contractNo',title:'合同编号',align:'center',width:140},
+			{field:'productName',title:'品名',align:'center',width:100},
+			{field:'brandNumber',title:'牌号',align:'center',width:100},
+			{field:'factoryName',title:'厂商',align:'center',width:100},
+			{field:'warehouseName',title:'仓库',align:'center',width:150},
+			{field:'relaType',title:'操作类型',align:'right',width:100,formatter:function(value,row,index){
+				if(value!=undefined){
+					return Convert.findValueByKey(_operationTypeJson,'dictCd',value,'dictName');
+				}}},
+			{field:'relaNum',title:'发生数量(吨)', align:'right', width:100},
+			/* {field:'remainFrozenNumber',title:'剩余冻结', align:'right', width:80},
+			{field:'realRemainNumber',title:'剩余可用', align:'right', width:80}, */
+			{field:'createdDate',title:'创建时间', align:'center', width:150}
+		]],
+		toolbar:'#toolbar',
+		
+	});
+})
+</script>

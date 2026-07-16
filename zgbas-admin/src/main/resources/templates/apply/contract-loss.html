@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" id="inputForm" border="false" fit="true">
+	<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+	<input type="hidden" id="entityStatus" th:value="${entity.status}" />
+	<div class="mb6">
+		<p class="yw-table-filter">
+			<label>合同编号:</label>
+			<input name="contractNo" id="contractNo" th:value="${entity.contractNo}" type="text" readonly="readonly"></input>
+			<input name="contractId" id="contractId" th:value="${entity.contractId}" type="hidden"></input>
+		</p>
+		<p class="yw-table-filter">
+			<label>货名:</label>
+			<input name="productsName" id="productsName" th:value="${entity.productsName}" type="text" readonly="readonly"></input>
+		</p>
+		<p class="yw-table-filter">
+			<label>合同数量(吨):</label>
+			<input name="totalNumber" id="totalNumber" th:value="${entity.totalNumber}" type="text" readonly="readonly"></input>
+		</p>
+		<p class="yw-table-filter">
+			<label>合同金额(元):</label>
+			<input name="totalAmount" id="totalAmount" th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}" type="text" readonly="readonly"></input>
+		</p>
+		<a id="addBtn" href="#" class="easyui-linkbutton btn-empty btn64" onClick="BasApply.contractDetail()">预算详情</a>
+	</div>
+	<div class="mb6">
+		<p class="yw-table-filter w2">
+			<label>企业名称:</label>
+			<input name="companyName" id="companyName" th:value="${entity.companyName}" type="text" readonly="readonly"></input>
+		</p>
+		<p class="yw-table-filter w2">
+			<label>我方:</label>
+			<input name="ourCompanyName" id="ourCompanyName" th:value="${entity.ourCompanyName}" type="text" readonly="readonly"></input>
+		</p>
+	</div>
+	<div class="mb6">
+		<p class="yw-table-filter">
+			<label>责任方:</label>
+			<input name="lossTypeFrom" id="lossTypeFrom" th:value="${entity.lossTypeFrom}" type="text"></input>
+		</p>
+		<p class="yw-table-filter">
+			<label>承担方:</label>
+			<input name="lossTypeTo" id="lossTypeTo" th:value="${entity.lossTypeTo}" type="text"></input>
+		</p>
+		<p class="yw-table-filter">
+			<label>货损数量(吨):</label>
+			<input name="lossNum" id="lossNum" th:value="${entity.lossNum}" type="text"></input>
+		</p>
+	</div>
+	<div class="mb6">
+		<p class="yw-table-filter">
+			<label>货损金额(元):</label>
+			<input name="lossAmount" id="lossAmount" th:value="${#numbers.formatDecimal(entity.lossAmount,1,'COMMA',2,'POINT')}" type="text"></input>
+		</p>
+		<p class="yw-table-filter">
+			<label>赔付金额(元):</label>
+			<input name="payAmount" id="payAmount" th:value="${#numbers.formatDecimal(entity.payAmount,1,'COMMA',2,'POINT')}" type="text"></input>
+		</p>
+		<p class="yw-table-filter w2">
+			<label>备注:</label>
+			<input name="remark" id="remark" th:value="${entity.remark}" type="text"></input>
+		</p>
+	</div>
+	
+<!--	<div class="mb6">-->
+<!--		<p class="yw-table-filter w2">-->
+<!--			<label>责任方:</label>-->
+<!--			<input name="lossTypeFrom" id="lossTypeFrom" th:value="${entity.lossTypeFrom}" type="text"></input>-->
+<!--			<input name="dutyCompanyId" id="dutyCompanyId" th:value="${entity.lossTypeFrom}" type="hidden"></input>-->
+<!--		</p>-->
+<!--	</div>-->
+<!--	<div class="mb6">-->
+<!--		<th:block th:replace="~{tags/apply :: remark(${#maps.containsKey(psv.mapEdit, 'remark')}?${psv.mapEdit['remark'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>-->
+<!--	</div>-->
+
+	<div class="editForm">
+		<p style="width:240px">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+		</p>
+		<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js?v=1}"  type="text/javascript"></script>
+<script type="text/javascript">
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/loss/updateFileId',[[${param.hasEditFile}]]);
+	//var _curStatus = $("#entityStatus").val();
+	var _curStatus = '[[${status}]]';
+	var contractApproveId = '[[${contractApproveId}]]';
+	var _lossTypeFromTypeJson=eval('[(${lossTypeFromTypeJson})]');
+	var _lossTypeToTypeJson=eval('[(${lossTypeToTypeJson})]');
+
+	$(function(){
+		//加载附件列表
+		$('.easyui-linkbutton').linkbutton();
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+		var _curStatus = $("#entityStatus").val();
+		var _companyId = $('#dutyCompanyName').val();
+		if(!_companyId){
+			_companyId = 0;
+		}
+		if(_curStatus == "A" || _curStatus =="D"){
+			var _lossTypeFromType = $('#lossTypeFrom').val();
+			var _conLossTypeFromType = Convert.findValueByKey(_lossTypeFromTypeJson,"dictCd",_lossTypeFromType,"dictName");
+			$("#lossTypeFrom").val(_conLossTypeFromType);
+			var _lossTypeToType = $('#lossTypeTo').val();
+			console.log("*****1"+_lossTypeToType)
+			var _conLossTypeToType = Convert.findValueByKey(_lossTypeToTypeJson,"dictCd",_lossTypeToType,"dictName");
+			console.log("*****2"+_conLossTypeToType)
+
+			$("#lossTypeTo").val(_conLossTypeToType);
+		}
+		$("#totalAmount").numberbox({
+			min:0,
+			precision:2,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+			$("#lossAmount,#payAmount").numberbox({
+				min:0,
+				precision:2,
+				parser: function(val) {
+					// 解析时去除千分位分隔符
+					if(val) {
+						return parseFloat(String(val).replace(/,/g, ''));
+					} else {
+						if(isNaN(val)) {
+							return '';
+						} else {
+							return val;
+						}
+					}
+				},
+				formatter: function(val) {
+					if (val || val === 0) {
+						val = parseFloat(val).toFixed(2).toString().split(".");
+						val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+						return val.join(".");
+					} else {
+						if(isNaN(val)){
+							return ""
+						} else {
+							return val;
+						}
+					}
+				}
+			});
+			$("#lossNum").numberbox({
+				min:0,
+				precision:4
+			});
+			$('#lossTypeFrom').combobox({
+				data:_lossTypeFromTypeJson,
+				valueField:'dictCd',
+				textField:'dictName',
+				panelHeight:"auto",
+				editable:false,
+				required:true
+			});
+			$('#lossTypeTo').combobox({
+				data:_lossTypeToTypeJson,
+				valueField:'dictCd',
+				textField:'dictName',
+				panelHeight:"auto",
+				editable:false,
+				required:true
+			});
+			
+			
+			$('#dutyCompanyName').combobox({
+				url:_ctx+"/bs/company/listMyCompany/"+ _companyId,
+				mode:'remote',
+				limitToList:true,
+				valueField:'companyName',
+				textField:'text',
+				panelHeight:300,
+				formatter: function(row){
+					var text = row.text;
+					var myFlag = row.myFlag;
+					if (myFlag!=true){
+						text = '<span style="color:#ccc">'+text+'</span>';
+					}
+					return text;
+				},
+				onSelect : function(node){
+					//是否是我的企业
+					var myFlag = node.myFlag;
+					var bankName = node.bankName;
+					var bankAccount = node.bankAccount;
+					if (myFlag!=true){
+						setTimeout(function () { $("#dutyCompanyName").combobox("clear"); }, 1)
+					}
+				}
+			});
+		}else{
+			$("#inputForm").find("input").not("#remark").not('.tags input').not("[type='button']").attr("readonly",true);
+		}
+		applyLoadSucess();
+	});
+	function chooseCallback(contractRows){
+		var contract = contractRows[0];
+		byContract(contract);
+	}
+	function byContract(contract){
+		if (contract!=undefined){
+			$("#contractId").val(contract.id);
+			$("#contractNo").val(contract.contractNo);
+			$("#productsName").val(contract.productsName);
+			$("#totalNumber").val(contract.totalNumber);
+			$("#totalAmount").numberbox('setValue', contract.totalAmount);
+			$("#companyName").val(contract.companyName);
+			$("#ourCompanyName").val(contract.ourCompanyName);
+		}
+	}
+</script>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>企业评价记录</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+<style>/*
+.control{width:140px !important;}
+.large{width:369px !important;}*/
+</style>
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div" border="false" th:if="${id eq null}"  style="height: 100px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">企业名称:</label>
+				<input id="productCd_companyId" name="search_EQS_companyId" type="text" value=""/>
+			</span>
+			<span class="input-colspan">
+				<label>创建人姓名:</label>
+				<input type="text" name="search_LIKES_createUserName"/>
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			</span>
+		</p>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		 <a  href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="insert()">新增</a>
+		  <a  href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="save()">保存</a>
+	</div>
+</div>
+
+<div region="center" border="false" class="panel_padding">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+	var lastIndex;
+	var companyJson = eval('[(${companyJson})]');
+	var id='[[${id}]]';
+	$(function(){
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:20,
+			rownumbers:true,
+			pageList:[50,40,30,20,10],
+			url:_ctx+"/bs/companyEvaluate/findListByCompanyId?id="+id,
+			columns:[ [
+				{field:'companyId',title:'企业名称',sortable:true, width:140 ,editor:{ type: 'combobox', options: { data:companyJson,textField:'companyName',valueField:'id', required: true}},
+					formatter:function(value,row,index){
+						if(value!=undefined){
+							return Convert.findValueByKey(companyJson,'id',value,'companyName');
+						}
+					}
+				},
+				{field:'grade',title:'评价分数', width:80,editor:{ type: 'numberbox', options: { required: true}}},
+				{field:'content',title:'内容',  width:140,editor:{ type: 'validatebox', options: { required: true}}},
+				{field:'createUserId',title:'创建人编号', width:140},
+				{field:'createUserName',title:'创建人姓名', width:120},
+				{field:'updatedDate',title:'更新时间', width:140},
+				{field:'operate',title:'操作', width:80,align:'center',formatter:function(value, row, index){
+			        var str = '<img onclick="remove('+row.id+')" style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>';
+			        return str;
+				}}
+			]],
+			toolbar:'#toolbar',
+			/* toolbar:[{
+				text:'新增',
+				iconCls:'icon-add',
+				handler:function(){
+					$("#tt").datagrid("appendRow",{companyId:id,grade:'',content:''});
+					var rows=$("#tt").datagrid('getRows');
+					$("#tt").datagrid('beginEdit', rows.length - 1);
+					if(id){
+						for(var i=0;i<rows.length;i++){
+							var ed=$("#tt").datagrid("getEditor",{index:i,field:'companyId'});
+							if(ed)
+								$(ed.target).combobox('readonly', true);
+						}
+					}
+
+				}
+			},'-',{
+				text:'删除',
+				iconCls:'icon-remove',
+				handler:function(){
+					var row = $('#tt').datagrid('getSelected');
+					if(row){
+						var index = $('#tt').datagrid('getRowIndex', row);
+						if (row.id==undefined){
+							$('#tt').datagrid('deleteRow',index);
+						}else{
+						$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+							if(t){
+								//TODO:如果该记录被引用,是否强制不允许删除?
+								$.post(_ctx+"/bs/companyEvaluate/delete/"+row.id,function(result) {
+									var rObj = eval(result);
+									if(rObj.success){
+										$('#tt').datagrid('reload');
+									}else{
+										 $.messager.alert('error',rObj.failure,'warning');
+									}
+								});
+							}
+						});
+						}
+						var nextSelect=index>0?index-1:0;
+						$('#tt').datagrid('selectRow', nextSelect);
+					}
+				}
+			},'-',{
+				text:'保存',
+				iconCls:'icon-save',
+				handler:function(){
+					endEdit();
+					var val=$("#tt").datagrid("getChanges");
+					for(i=0;i<val.length;i++){
+						var index=$('#tt').datagrid("getRowIndex",val[i]);
+						if(!$("#tt").datagrid("validateRow",index)){
+							$.messager.alert("提示","请填写完整!","error");
+							return ;
+						}
+					}
+
+					if($.isEmptyObject(val)){return false}
+					var param=JSON.stringify(val);
+					ajaxPost(param);
+				}
+			}], */
+			onDblClickCell:function(index,field){
+
+				 $('#tt').datagrid('beginEdit', index);
+				 if(id){
+						var ed=$("#tt").datagrid("getEditor",{index:index,field:'companyId'});
+						if(ed)
+							$(ed.target).combobox('readonly', true);
+					}
+			},
+			onClickCell:function(index,field){
+				lastIndex = index;
+				//Convert.focusEditor("tt",field,lastIndex);
+			}
+		});
+
+		//查询企业名称下拉框
+	    $('#productCd_companyId').combobox({
+			data:companyJson,
+			valueField:'id',
+			textField:'companyName',
+			onSelect:function(data){
+				$('#productCd_companyId').val(data.companyName);
+			}
+		});
+
+	});
+	function saveEdit(){
+		var flag=true;
+		var row = $('#tt').datagrid('getSelected');
+		if (row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			$('#tt').datagrid('endEdit', index);
+		}
+		var changeRows=[];
+		var inserted = $('#tt').datagrid('getChanges','inserted');
+		var updated = $('#tt').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#tt').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#tt').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#tt').datagrid('selectRow',index);
+    			$('#tt').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#tt').datagrid('endEdit', index);
+    		}
+		}
+		if (flag){
+		$.post(_ctx+"/bs/company/saveBatch",Convert.ToSaveParam("tt") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+	/*function editrow(id){
+		var url=_ctx+"/bs/companyEvaluate/detail/"+id;
+		$('#w').window({href:url});
+		$('#w').window("open");
+	}*/
+
+	function ajaxPost(param){
+		$.post(_ctx+"/bs/companyEvaluate/sav",{param:param},function(data){
+			var rObj = eval(data);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				 $.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+	function endEdit(){
+		var rows=$("#tt").datagrid('getRows');
+		for(var i=0;i<rows.length;i++){
+			//验证没通过 不关闭编辑器
+			if($("#tt").datagrid("validateRow",i)){
+				$("#tt").datagrid("endEdit",i);
+			}
+		}
+	}
+	function insert(){
+		$("#tt").datagrid("appendRow",{companyId:id,grade:'',content:''});
+		var rows=$("#tt").datagrid('getRows');
+		$("#tt").datagrid('beginEdit', rows.length - 1);
+		if(id){
+			for(var i=0;i<rows.length;i++){
+				var ed=$("#tt").datagrid("getEditor",{index:i,field:'companyId'});
+				if(ed)
+					$(ed.target).combobox('readonly', true);
+			}
+		}
+	}
+	function save(){
+		endEdit();
+		var val=$("#tt").datagrid("getChanges");
+		for(i=0;i<val.length;i++){
+			var index=$('#tt').datagrid("getRowIndex",val[i]);
+			if(!$("#tt").datagrid("validateRow",index)){
+				$.messager.alert("提示","请填写完整!","error");
+				return ;
+			}
+		}
+
+		if($.isEmptyObject(val)){return false}
+		var param=JSON.stringify(val);
+		ajaxPost(param);
+	}
+	function remove(id){
+		$('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		if(row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			if (row.id==undefined){
+				$('#tt').datagrid('deleteRow',index);
+			}else{
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+		                if (r){
+		                	//TODO:如果该记录被引用,是否强制不允许删除?
+							$.post(_ctx+"/bs/companyEvaluate/delete/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									$('#tt').datagrid('reload');
+									$('#tt').datagrid('clearSelections');
+								}else{
+									 $.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+		                }
+		            }
+		        });
+			}
+		}
+	}
+</script>
+</body>
+</html>

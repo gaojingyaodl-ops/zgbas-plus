@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>库存统计报表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div" border="false"  style="height: 110px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<!-- <span class="input-colspan">
+				<label style="width: 60px;">类型:</label>
+				<input type="text" id="optionType" name="optionType"/>
+			</span> -->
+			<span class="input-colspan">
+				<label style="width: 60px;">品名:</label>
+				<input type="text" id="productName" name="productName"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">牌号:</label>
+				<input type="text" id="brandNumber" name="brandNumber"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">仓库:</label>
+				<input type="text" id="warehouseName" name="warehouseName"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">货物类型:</label>
+				<input type="text" id="productAttr" name="productAttr"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">货权:</label>
+				<input type="text" id="spotType" name="spotType"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">是否长约:</label>
+				<input type="text" id="longFlg" name="longFlg"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">业务员:</label>
+				<input type="text" id="matchUserName" name="matchUserName"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">事业部:</label>
+				<input type="text" id="deptId" name="deptId"/>
+			</span>
+			<span class="input-colspan">
+					<label style="width: 60px;">日期:</label>
+					<input name="beginTime" id="beginTime" class="easyui-datebox" />
+			</span>
+			<span class="input-colspan">
+					<label style="width: 60px;">到:</label>
+					<input name="endTime"  id="endTime" class="easyui-datebox" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#searchForm').form('reset');">清空</a>
+				<a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcel()">导出</a>
+			</span>
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;" >
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var productTypeJson = eval('[(${productTypeJson})]');// 品名树
+	var productAttrJson = eval('[(${productAttrJson})]');// 货权状态
+	//var stockTypeJson = eval('[(${stockTypeJson})]');//库存类型
+	var spotTypeJson = eval('[(${spotTypeJson})]');//货权类型
+	var deptJson = eval('[(${deptJson})]');//事业部
+	$(function(){
+		//操作类型下拉
+		/* $("#optionType").combobox({
+			data:[{id:'',text:'--全部--'},{id:'D',text:'日报表'},{id:'M',text:'月报表'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		}); */
+		//业务员下拉
+		 $('#matchUserName').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			height : 30,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#matchUserName').combotree('clear');
+				} else {
+					$('#matchUserName').combotree('setValue', node.text);
+				}
+			}
+		});
+		//品名下拉
+	    $('#productName').combotree({
+			data:productTypeJson,
+			multiple : false,
+			editable : true,
+			onSelect:function(data){
+				$('#productName').val(data.id);
+			}
+		});
+		//货物类型下拉
+	    $('#productAttr').combobox({
+			data:productAttrJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			onSelect:function(data){
+				$('#productAttr').val(data.dictCd);
+			}
+		});
+		//货权下拉
+	    $('#spotType').combobox({
+			data:spotTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			onSelect:function(data){
+				$('#spotType').val(data.dictCd);
+			}
+		});
+		//是否长约下拉
+	    $("#longFlg").combobox({
+				data:[{id:'Y',text:'是'},{id:'N',text:'否'}],
+				textField:'text',
+				valueField:'id',
+				panelHeight:"auto"
+			});
+		//事业部下拉
+	    $('#deptId').combobox({
+				data : deptJson,
+				textField:'deptName',
+				valueField:'deptId',
+				panelHeight:"auto",
+			});
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:20,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/stockInventory/findStockInventory",
+			columns:[ [
+				{field:'contractNo', title:'合同编号',align:'center',width:130},
+				{field:'companyName', title:'供货商',align:'left',width:150},
+				{field:'productName', title: '品名',align:'center',width:100},
+				{field:'brandNumber', title: '牌号',align:'center',width:100},
+				{field:'factoryName', title: '厂商',align:'center',width:100},
+				{field:'warehouseName',title:'仓库',align:'left', width:120},
+				{field:'productAttr',title:'货物类型',align:'center', width:80,
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(productAttrJson,"dictCd",value,"dictName");
+				}},
+				{field:'spotType',title:'货权',align:'center', width:80,
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(spotTypeJson,"dictCd",value,"dictName");
+				}},
+				{field:'longFlg',title:'是否长约',align:'center', width:80,
+					 formatter:function(value,row,index){
+						if(value=="1"){
+							return "是";
+						}else if(value=="0"){
+							return "否";
+						}else{
+							return value;
+						}
+				} },
+				{field:'totalNumber',title:'合同数量(吨)',align:'right', width:100},
+				{field:'soldNumber',title:'已售数量(吨)',align:'right', width:100},
+				{field:'outSoldNumber',title:'未售数量(吨)',align:'right', width:100},
+				{field:'dealedAmount',title:'付款金额(元)',align:'right', width:100,formatter:function(value,row,index){
+					if(row.dealedAmount){
+						return row.dealedAmount.toFixed(2);
+					}else{
+						return 0;
+					}
+				}},
+				{field:'occupation',title:'占用资金(元)',align:'right', width:100, formatter:function(value, row, index){
+					if(row.occupation){
+						return row.occupation.toFixed(2);
+					}else{
+						return 0;
+					}
+				}},
+				{field:'matchUserName',title:'业务员',align:'center', width:80},
+				{field:'theirTeam',title:'所属团队',align:'center', width:80},
+				{field:'deptId',title:'事业部',align:'center', width:80,
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+				}},
+				{field:'createDate', title:'创建日期',align:'center', width:100}
+			] ],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			}
+		});
+		/* $("#optionType").combobox('options').onClick=function(record){
+			$("#optionType").combobox('setValue',record.id);
+			Convert.search('searchForm','tt');
+		}; */
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:"",
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+	});
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/stockInventory/exportExcel"});
+	}
+</script>
+</body>
+</html>

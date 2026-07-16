@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>客户授信额度流水</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>客户名称:</label>
+                <input  name="search_LIKES_companyName" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter">
+                <label>流水类型:</label>
+                <input id="srh_creditType" name="search_EQS_creditType" type="text"/>
+            </p>
+            <p class="yw-table-filter mobile-display-none">
+                <label>审批编号:</label>
+                <input  name="search_LIKES_approveNo" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter mobile-display-none">
+                <label>更新日期</label>
+                <input  id="srh_updatedDate_from" name="search_GTED_updatedDate" class="easyui-datebox"/>
+            </p>
+            <span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+            <p class="yw-table-filter mobile-display-none">
+                <input  id="srh_updatedDate_to"  name="search_LTD_updatedDate" class="easyui-datebox" />
+            </p>
+            <a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','creditFlowTable');">查询</a>
+            <a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+        </div>
+    </form>
+</div>
+
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="creditFlowTable" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+<script type="text/javascript">
+    var lastIndex;
+    var _creditTypeJson = eval('[(${creditTypeJson})]');
+    $(function(){
+
+        $("#srh_creditType").combobox({
+            data: _creditTypeJson,
+            valueField: 'dictCd',
+            textField: 'dictName',
+            panelHeight: "auto",
+            editable: false
+        });
+
+        $('#creditFlowTable').datagrid({
+            pagination:true,
+            width:400,
+            pageSize:30,
+            rownumbers:true,
+            pageList:[50,40,30,20,10],
+            queryParams:Convert.getJson4Form('searchForm'),
+            url:_ctx+"/bs/creditFlow/list",
+            columns:[ [
+                {field:'companyId',title:'关联企业ID',hidden:true},
+                {field:'companyName',title:'企业名称', width:200,align:"left"},
+                {
+                    field: 'creditType',
+                    title: '流水类型',
+                    width: 130,
+                    align: 'left',
+                    formatter: function (value, row, index) {
+                        return Convert.findValueByKey(_creditTypeJson, "dictCd", value, "dictName");
+                    }
+                },
+                // {field:'beforeApproveCreditAmount',title:'变更前审批占用额度', width:120,align:'right', styler:function(){return 'background-color:#d9d9d2;color:#000'}},
+                // {field:'afterApproveCreditAmount',title:'变更后审批占用额度', width:120,align:'right', styler:function(){return 'background-color:#d9d9d2;color:#4a9bff'}},
+                // {field:'approveFlowAmount',title:'审批流水金额', width:120,align:'right', styler:function(){return 'background-color:#d9d9d2;color:red'}},
+                {field:'usedFlowAmount',title:'流水额度', width:120,align:'right',formatter:formatterFundNum},
+                {field:'beforeUsedCreditAmount',title:'期初额度', width:120,align:'right',formatter:formatterNum},
+                {field:'afterUsedCreditAmount',title:'期末额度', width:120,align:'right',formatter:formatterNum},
+                {field:'flowName',title:'摘要', width:280,align:'left'},
+                {field:'approveNo',title:'审批编号', width:150,align:'center', formatter: function (value, row, index){
+                        return '<span onclick="openFlowDetail('+row.approveId+')" class="contract-btn contract-btn-7">'+ row.approveNo +'</span>';
+                    }},
+                {field:'updatedDate',title:'更新日期', width:150,align:'center'}
+            ]],
+            toolbar:'#toolbar',
+            onDblClickCell:function(index,field){
+            }
+        });
+    });
+    function openFlowDetail(approveId){
+        if (approveId) {
+            var title = '审批详情' + ':' + approveId;
+            window.parent.addTab(title, _ctx + '/pm/approve/detail/' + approveId);
+        }
+    }
+    function formatterFundNum(num, row, index) {
+        if (!num){
+            return "";
+        }
+        const _num = parseFloat(num).toFixed(2).toString().split(".");
+        _num[0] = _num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+        const value = _num.join(".");
+        if (num < 0) {
+            return '<span class="contract-btn contract-btn-4">' + value + '</span>';
+        } else {
+            return '<span class="contract-btn contract-btn-2">' + '＋' + value + '</span>';
+        }
+    }
+    function formatterNum(num, row, index) {
+        if (num) {
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+            return num.join(".");
+        } else {
+            return num;
+        }
+    }
+</script>
+</body>
+</html>

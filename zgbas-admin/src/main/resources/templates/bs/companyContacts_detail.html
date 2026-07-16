@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">	
+<div region="center" style="padding:5px 20px 5px 5px;+position: relative;overflow-x:hidden; " border="false">
+		<form id="inputForm" method="post" class="editForm" style="margin-top: 10px;margin-bottom: 0;">
+			<input type="hidden" name="id" id="id" th:value="${entity.id}" ></input>			
+			<p>
+			<span>
+			<label for="companyId"  class="control-label">企业名称:</label>
+			<input type="hidden" id="companyName"/>
+			<input name="companyId" id="companyId" class="control" type="text" th:value="${entity.companyId}"></input>
+			</span>
+			<span>
+			<label for="positionName"  class="control-label">职位:</label>
+			<input name="positionName" id="positionName" class="easyui-validatebox control required" type="text" required="true" th:value="${entity.positionName}" data-options="validType:'length[1,20]'" ></input>
+			</span>		
+			</p>			
+			<p>
+			<span>
+			<label for="contactName"  class="control-label">联系人:</label>
+			<input name="contactName" id="contactName" class="easyui-validatebox control required" type="text" required="true" th:value="${entity.contactName}" data-options="validType:'length[1,20]'" ></input>
+			</span>
+			<span>
+			<label for="contactPhone"  class="control-label">联系电话:</label>
+			<input name="contactPhone" id="contactPhone" class="easyui-validatebox control required" type="text" required="true" th:value="${entity.contactPhone}" data-options="validType:'length[1,20]'" ></input>
+			</span>
+			</p>			
+			<p>
+			<span>
+			<label for="remark"  class="control-label">备注:</label>
+			<input name="remark" id="remark" class="easyui-textbox" data-options="multiline:true" style="height:60px;width:150px;" required="true" th:value="${entity.remark}" ></input>
+			</span>
+			</p>					 
+	</form>
+</div>
+<div region="south" border="false" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn" data-options="iconCls:'icon-save'" onclick="save();">保存</a>
+		</div>
+	</div>
+</div>
+<script>
+$(function(){
+	var bsCompany = eval('[(${bsCompany})]');
+		$('#companyId').combobox({
+			data:bsCompany,
+			valueField:'id',
+			textField:'companyName',
+			required: true,
+			editable:false,
+			onSelect:function(record){
+				$('#companyName').val(record.id);
+				$('#companyId').val(record.companyName);
+			}
+		});
+});
+	
+function save(){
+	var options={
+	        url:_ctx+'/bs/companyContacts/save',
+	        onSubmit: function(){
+	        	var flag=true;
+	        	if(!$("#inputForm").form('validate'))
+	        		flag=false;
+	        	return flag;
+	        },
+	        success:function(data){
+				if(data.indexOf("success")>=0){
+	        		 $.messager.show({
+	                     title:'Tip',
+	                     msg:'保存成功',
+	                     timeout:2000,
+	                     showType:'show'
+	                 });
+	        		 $('#w').window("close");
+	        	}else{
+	        		$.messager.alert('error',data.failure,'warning');
+	        	}
+	        }
+		};
+	$('#inputForm').form('submit', options);
+}
+		
+</script>
+
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>流程权限配置</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+
+<body class="easyui-layout panel-bar" fit="true">
+	<div region="north" style="height: 50px">
+	  	<div style="margin-top: 10px">
+	  		<a href="#" class="easyui-linkbutton"  onclick="" id="byProcess">按流程名称配置</a>
+	  		<a href="#" class="easyui-linkbutton"  onclick="" id="byUser">按业务员配置</a>
+	  	</div>
+	</div>
+	<div region="center" >
+		<div id="processAccess"  class="easyui-layout panel-bar" fit="true"></div>
+    </div>
+    <div region="south" border="true" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+			<a href="#" class="easyui-linkbutton btn64 btn-info-empty" data-options="iconCls:'icon-save'" onclick="save();">保存</a>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+	$(function(){
+		$.post(_ctx+"/pm/processAccess/byProcess",function(result){
+			$("#processAccess").html(result);
+		});
+		
+		$("#byUser").on('click',function(){
+			$.post(_ctx+"/pm/processAccess/byUser",function(result){
+				$("#processAccess").html(result);
+			});
+		})
+		$("#byProcess").on('click',function(){
+			$.post(_ctx+"/pm/processAccess/byProcess",function(result){
+				$("#processAccess").html(result);
+			});
+		})
+	})
+</script>
+</html>

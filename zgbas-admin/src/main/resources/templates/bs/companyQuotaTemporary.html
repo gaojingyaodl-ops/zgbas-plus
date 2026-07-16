@@ -1,0 +1,156 @@
+<!--额度审批-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="center" border="false">
+        <div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden"  id="companyId" th:value="${company.id}" />
+            <div class="mb6">
+                <p class="yw-table-filter  w2">
+                    <label>企业名称</label>
+                    <input id="companyName" readonly type="text" th:value="${company.companyName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>公司类型</label>
+                    <input id="companyGrade" readonly type="text" th:value="${company.companyGrade}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>法人</label>
+                    <input id="legalRepresent" readonly type="text" th:value="${company.legalRepresent}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter  w2">
+                    <label>营业执照</label>
+                    <input id="companyCreditNo" readonly type="text" th:value="${company.companyCreditNo}">
+                </p>
+                <p class="yw-table-filter  w2">
+                    <label>企业地址</label>
+                    <input id="address" readonly type="text" th:value="${company.address}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>联系人</label>
+                    <input id="contactName" readonly type="text" th:value="${company.contactName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>联系电话</label>
+                    <input id="contactPhone" readonly type="text" th:value="${company.contactPhone}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>注册资本</label>
+                    <input id="registerCapital" readonly type="text" th:value="${company.registerCapital}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>成立日期</label>
+                    <input id="registerDate" readonly type="text"
+                           th:value="${#dates.format(company.registerDate,'yyyy-MM-dd')}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>企业类型</label>
+                    <input id="companyType" readonly type="text" th:value="${company.companyType}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>企业性质</label>
+                    <input id="companyCategory" readonly type="text" th:value="${company.companyCategory}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>录入日期</label>
+                    <input id="createdDate" readonly type="text" th:value="${#dates.format(company.createdDate,'yyyy-MM-dd')}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>业务员</label>
+                    <input id="matchUser" readonly type="text" th:value="${matchUser}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w4">
+                    <label>经营范围</label>
+                    <input id="scope" readonly type="text" th:value="${company.scope}">
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">风控评估信息</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <lable>授信类别</lable>
+                    <input name="creditType" type="text" id="creditType"  th:value="${entity.creditType}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>授信额度(元)</lable>
+                    <input name="creditAmount" type="text" id="totalCreditAmount" readonly  th:value="${#numbers.formatDecimal(entity.creditAmount,1,'COMMA',2,'POINT')}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>风控额度(元)</lable>
+                    <input name="riskAmount" type="text" id="riskAmount" readonly  th:value="${#numbers.formatDecimal(entity.riskAmount,1,'COMMA',2,'POINT')}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>临时提额(元)</lable>
+                    <input name="temporaryAmount" type="text" id="temporaryAmount" readonly  th:value="${#numbers.formatDecimal(entity.temporaryAmount,1,'COMMA',2,'POINT')}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <lable>有效天数</lable>
+                    <input name="validDays" type="text" id="validDays" readonly  th:value="${entity.validDays}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <lable>备注</lable>
+                    <input id="remark" readonly type="text" th:value="${entity.remark}">
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    var entity = [[${entity}]];
+    var psv = [[${psv}]];
+    var companyCategoryJson = eval('[(${companyCategoryJson})]');
+    var companyTypeJson = eval('[(${companyTypeJson})]');
+    var companyGradeJson = eval('[(${companyGradeJson})]');
+    var credictTypeJson = eval('[(${credictTypeJson})]');
+
+    //企业分类
+    $("#companyType").combobox({
+        data:companyTypeJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        required: false,
+        editable:false,
+        readonly: true
+    });
+    //企业性质
+    $("#companyCategory").combobox({
+        data:companyCategoryJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        required: false,
+        editable:false,
+        readonly: true
+    });
+    // 公司类型
+    $("#companyGrade").combobox({
+        data:companyGradeJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        editable:false,
+        readonly: true
+    });
+    // 授信类别
+    $("#creditType").combobox({
+        data:credictTypeJson,
+        textField:'dictName',
+        valueField:'dictCd',
+        panelHeight:"auto",
+        editable:false,
+        readonly: true
+    });
+</script>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>业绩大屏</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" style="height: 100%;" border="false">
+    <input type="hidden" id="currentUserId" th:value="${@shiroUtil.getCurrentUserId()}">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <div class="mb6">
+            <input name="basDataServerUrl" id="basDataServerUrl" class="easyui-validatebox" type="hidden" th:value="${basDataServerUrl}"/>
+            <input name="basDataServerPhoneUrl" id="basDataServerPhoneUrl" class="easyui-validatebox" type="hidden" th:value="${basDataServerPhoneUrl}"/>
+            <p class="yw-table-filter">
+                <label style="width: 80px;">年月:</label>
+                <input name="baseDate" class="easyui-validatebox" id="baseDate" type="text" th:value="${nowTargetMonth}"/>
+            </p>
+            <a  href="#" class="easyui-linkbutton addBtn" onclick="gotoMlrDataScreen()" style="width: 100px;">打 开</a>
+        </div>
+    </form>
+</div>
+<script type="text/javascript">
+    var _basDataServerUrl = $('#basDataServerUrl').val();
+    var _basDataServerPhoneUrl = $('#basDataServerPhoneUrl').val();
+    $(function(){
+        $('#baseDate').datebox({
+        });
+        intiMonthBox('baseDate');
+        
+        // 判断是否为手机访问
+        if (isMobile()) {
+            _basDataServerUrl = _basDataServerPhoneUrl;
+        }
+
+    });
+
+    // 判断是否为手机的函数
+    function isMobile() {
+        return window.innerWidth <= 768; // 根据实际情况调整阈值
+    }
+    function formatterData(value){
+        if (value && value.length > 10){
+            return value.substring(0,value.length-3);
+        }
+    }
+    function gotoMlrDataScreen(){
+        var _baseDate = $('#baseDate').val();
+        var month = _baseDate.replaceAll("-","")
+        const firstAmpersandIndex = _basDataServerUrl.indexOf("&"); // 查找第一个 & 的位置
+        const urlPart1 = _basDataServerUrl.substring(0, firstAmpersandIndex); // 切割第一个 & 之前的部分
+        const urlPart2 = _basDataServerUrl.substring(firstAmpersandIndex + 1); // 切割第一个 & 之后的部分
+        const newUrl = urlPart1 + "/" + month + "&" + urlPart2;
+        window.open(newUrl);
+    }
+    
+</script>
+</body>
+</html>

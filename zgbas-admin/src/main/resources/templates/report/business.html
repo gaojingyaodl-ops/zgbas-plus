@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>动态业务核算表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div" border="false"  style="height: 105px">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input id = "searchType" th:value='${searchType}' type="hidden">
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">业务类型:</label>
+				<input type="text" id="businessType" name="businessType"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 100px;">销售合同时间:</label>
+				<input name="sellContractStartTime" class="easyui-datebox"/>				
+			</span>		
+			<span class="input-colspan">
+				<label>到:</label>
+				<input name="sellContractEndTime" class="easyui-datebox" />
+			</span>
+			<span class="input-colspan">
+				<label style="width: 60px;">业务部门:</label>
+				<input type="text" id="deptId" name="deptId"/>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label style="width: 60px;">业务员:</label>
+				<input type="text" id="buyUserName" name="buyUserName"/>
+			</span>
+			<span class="input-colspan">
+				<label style="width: 100px;">收款时间:</label>
+				<input name="receiveStartTime" class="easyui-datebox"/>				
+			</span>		
+			<span class="input-colspan">
+				<label>到:</label>
+				<input name="receiveEndTime" class="easyui-datebox" />
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton" onclick="$('#searchForm').form('reset');">清空</a>
+				<!-- <a href="#" id="btn" class="easyui-linkbutton" onclick="exportExcel()">导出</a> -->
+			</span>
+		</p>
+		<p class="p_text">
+		</p>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:30px;" >
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var businessJson = eval('[(${businessJson})]');
+	var businessTypeJson = eval('[(${businessTypeJson})]');
+	var deptJson = eval('[(${deptJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var searchType = $('#searchType').val();
+	var business_type;
+	if (searchType=='ZY'){
+		business_type = [{dictCd:'ZY-XS',dictName:'自营销售'},{dictCd:'ZY-BB',dictName:'背靠背'},{dictCd:'ZY-JK',dictName:'自营进口'}];
+	}else if (searchType=='DL'){
+		business_type = [{dictCd:'DL-KZ',dictName:'代理开证'},{dictCd:'DL-DC',dictName:'国企代采'}];
+	}else if (searchType=='SX'){
+		business_type = [{dictCd:'SX-SX',dictName:'赊销'},{dictCd:'SX-HK',dictName:'货到付款'}];
+	}else if (searchType=='SY'){
+		business_type = [{dictCd:'SY-XS',dictName:'质押销售'}];
+	}
+	
+	
+	$(function(){
+		$('#buyUserName').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			height : 30,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#buyUserName').combotree('clear');
+				} else {
+					$('#buyUserName').combotree('setValue', node.text);
+				}
+			}
+		});
+		$('#businessType').combobox({
+			data:business_type,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		});
+		$('#deptId').combobox({
+			data : deptJson,
+			textField:'deptName',
+			valueField:'deptId',
+			panelHeight:"auto"
+		}); 
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter :true,
+			fitColumns:false,
+			remoteSort: false,
+			pageList:[500,200,100,50,30,20],
+			url:_ctx+"/rpt/business/findBusiness?business="+searchType,
+			columns:[ [
+				{field:'businessType',title:'业务类型',align:'center', width:100,formatter:function(value,row,index){
+					return Convert.findValueByKey(businessTypeJson,"dictCd",value,"dictName");
+				}},
+				{field:'sellContractNo',title:'销售合同号编号', width:130,align:'center'},
+				{field:'buyAmount',title:'采购货物总额(元)', width:120,align:'right'},
+				{field:'sellAmount',title:'销售货物总值(元)',align:'right',width:120},
+				{field:'vatAmount',title:'增值税(元)',align:'right',width:100},
+				{field:'extraAmount',title:'附加税(元)',align:'right',width:100},
+				{field:'printAmount',title:'印花税(元)',align:'right',width:100},
+				{field:'taxAmount',title:'税费(元)',align:'right',width:100},
+				{field:'costAmount',title:'预估资金成本(元)',align:'right',width:120},
+				{field:'buyOtherWarehouseAmount',title:'预估采购仓储运输费(元)',align:'right',width:160},
+				{field:'sellOtherWarehouseAmount',title:'预估销售仓储运输费(元)',align:'right',width:160},
+				{field:'profit',title:'贸易差价(元)',align:'right', width:110},
+				{field:'grossMargin',title:'毛利(元)',align:'right', width:110},
+				{field:'margin',title:'预估净毛利(元)',align:'right', width:110},
+				{field:'realMargin',title:'实际净毛利(元)',align:'right', width:110},
+				/* {field:'contractDays',title:'合同时长',align:'right', width:70},
+				{field:'realContractDays',title:'实际时长',align:'right', width:70}, */
+				{field:'earnings',title:'合同收益率',align:'center', width:110,
+					formatter:function(value,row,index){
+						if(parseFloat(row.contractDays)<=0){
+							return "不计";
+						}else if(parseFloat(value) < 0){
+							return "亏损"
+						}else{
+							return value;
+						}
+					}
+				},
+				{field:'realEarnings',title:'实际收益率',align:'center', width:110,
+					formatter:function(value,row,index){
+						if(row.realContractDays==null||row.realContractDays==undefined){
+							return '';
+						}else if(parseFloat(row.realContractDays)<=0){
+							return "不计";
+						}else if(parseFloat(value) < 0){
+							return "亏损"
+						}else{
+							return value;
+						}
+					}
+				},
+				{field:'notReceive',title:'未收货款(元)',align:'right', width:110},
+				{field:'dealedAmount',title:'已收货款(元)',align:'right', width:110,formatter:function(value,row,index){
+					if(searchType=='SX'){
+						 $('td[field="dealedAmount"]').show();
+                       return value;
+					}else{
+						$('td[field="dealedAmount"]').hide();
+					}
+				}},
+				{field:'orverdurDay', title:'逾期天数(天)',align:'right', width:110},
+				{field:'creditDays', title:'账期(天)',align:'right', width:110,formatter:function(value,row,index){
+					if(searchType=='SX'){
+						$('td[field="creditDays"]').show();
+						return value;
+					}else{
+						$('td[field="creditDays"]').hide();
+					}
+				}},
+				{field:'interestAmount', title:'罚息',align:'right', width:110,formatter:function(value,row,index){
+					if(searchType=='SX'){
+						 $('td[field="interestAmount"]').show();
+                        return value;
+					}else{
+						$('td[field="interestAmount"]').hide();
+					}
+				}},
+				{field:'receiveInterest', title:'已收罚息',align:'right', width:110,formatter:function(value,row,index){
+					if(searchType=='SX'){
+						 $('td[field="receiveInterest"]').show();
+                       return value;
+					}else{
+						$('td[field="receiveInterest"]').hide();
+					}
+				}},
+				{field:'buyUserName',title:'采购业务员',align:'center', width:110},
+				{field:'sellUserName',title:'销售业务员',align:'center', width:110}
+			]],
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			} ,
+			onLoadSuccess(data) {
+            }
+		});
+		
+		$('#w').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:"",
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		$.extend($.fn.datagrid.methods, {
+		    autoMergeCells : function (jq, fields) {
+		        return jq.each(function () {
+		            var target = $(this);
+		            if (!fields) {
+		                fields = target.datagrid("getColumnFields");
+		            }
+		            var rows = target.datagrid("getRows");
+		            var i = 0,
+		            j = 0,
+		            temp = {};
+		            for (i; i < rows.length; i++) {
+		                var row = rows[i];
+		                j = 0;
+		                for (j; j < fields.length; j++) {
+		                    var field = fields[j];
+		                    var tf = temp[field];
+		                    if (!tf) {
+		                        tf = temp[field] = {};
+		                        tf[row[field]] = [i];
+		                    } else {
+		                        var tfv = tf[row[field]];
+		                        if (tfv) {
+		                            tfv.push(i);
+		                        } else {
+		                            tfv = tf[row[field]] = [i];
+		                        }
+		                    }
+		                }
+		            }
+		            $.each(temp, function (field, colunm) {
+		                $.each(colunm, function () {
+		                    var group = this;
+		                    
+		                    if (group.length > 1) {
+		                        var before,
+		                        after,
+		                        megerIndex = group[0];
+		                        for (var i = 0; i < group.length; i++) {
+		                            before = group[i];
+		                            after = group[i + 1];
+		                            if (after && (after - before) == 1) {
+		                                continue;
+		                            }
+		                            var rowspan = before - megerIndex + 1;
+		                            if (rowspan > 1) {
+		                                target.datagrid('mergeCells', {
+		                                    index : megerIndex,
+		                                    field : field,
+		                                    rowspan : rowspan
+		                                });
+		                            }
+		                            if (after && (after - before) != 1) {
+		                                megerIndex = after;
+		                            }
+		                        }
+		                    }
+		                });
+		            });
+		        });
+		    }
+		});
+	});
+	/* function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/agency/exportExcel"});
+	} */
+</script>
+</body>
+</html>

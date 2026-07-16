@@ -1,0 +1,177 @@
+<!--内部资金拆借-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet"/>
+    <link th:href="@{/static/ruoyi/css/ry-ui.css?v=4.7.3}" rel="stylesheet"/>
+    <style>
+        .layui-layer-dialog {
+            left: 200px !important;
+        }
+
+    </style>
+</head>
+<div class="easyui-layout" fit="true">
+    <div style="color: red;margin-left: 20px;margin-right: 20px;font-size: 14px;text-align: center;">操作导入将清空原有保费流水，重新根据Excel数据生成新的保留流水;  注：需要先将保费余额的期初数据回退!</div>
+    <div id="inputForm" method="post" class="editForm_approve content_div">
+        <input type="hidden" name="id" id="entityId" th:value="1"/>
+        <div class="editForm" style="margin-left: 77px">
+            <p style="width:240px">
+				<span class="upload-btn" id="btn_fileId_picc_insurance">
+	               	 <a  href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">流水EXCEL </a>
+	           	</span>
+                <input class="control" id="fileId_picc_insurance" name="fileId" type="hidden" />
+            </p>
+            <p class="controls showImg fileId" id="span_fileId_picc_insurance"></p>
+        </div>
+    </div>
+    <div id="btn" class="add-btn" style="margin-top: 15px;margin-left: 130px">
+        <a  href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="importPiccExcel()" style="margin-left: 10px">导入人保保费流水</a>
+    </div>
+</div>
+
+</div>
+<script th:src="@{/static/ajax/libs/blockUI/jquery.blockUI.js}"></script>
+<script th:src="@{/static/ajax/libs/layer/layer.min.js}"></script>
+<script th:src="@{/static/ruoyi/js/ry-ui.js?v=4.7.2}"></script>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+
+    var filePlugin = new FilePlugin('#fileId_picc_insurance', null, '/bs/companyDcsx/updateFileId', false);
+    $(function () {
+
+        //加载附件列表
+        filePlugin.load($('#fileId_picc_insurance').val(), '#span_fileId_picc_insurance');
+        if ($('#btn_fileId_picc_insurance').length > 0) {
+            fileUpload("btn_fileId_picc_insurance", "fileId_picc_insurance");
+        }
+
+    });
+
+    /* 申请线上化 */
+    function importPiccExcel() {
+        var fileId = $('#fileId_picc_insurance').val();
+        if(!fileId){
+            $.messager.alert('error', '请先上传人保保费流水EXCEL文件', 'warning');
+            return;
+        }
+
+        $('#w_import_insurance_excel').window("close");
+        $.modal.loading("正在努力导入中，请稍候...");
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: _ctx + "/bs/companyDcsx/importPiccInsuranceExcel",
+            data: {"fileId":fileId},
+            success: function (data) {
+                if(data.failure != null) {
+                    $.messager.alert('error', data.failure, 'warning');
+                } else {
+                    $("#inputForm").form('clear');
+                    $.modal.closeLoading();
+                    $('#tt').datagrid('reload');
+                    openPiccMessage(data);
+                }
+            },
+        })
+
+    }
+    function openPiccMessage(data){
+        var html = '<p style="margin-left: 258px;font-size: 15px;">返回结果为空!</p>';
+        if (data != null && data.length >= 1){
+            html = '<div style="margin: 20px">';
+            for (let i = 0; i < data.length; i++) {
+                html += '<p class="mt10">'+data[i]+'</p>';
+            }
+            html += '</div>';
+        }
+        top.layer.open({
+            title: '人保保费流水数据导入',
+            type: 1,
+            fix: false,
+            shadeClose:true,
+            area: ['500px', '320px'],
+            btn: ['确定', '关闭'],
+            content: html
+        });
+    }
+    function fileUpload(fileUploadId, fuSaveId) {
+        var $this = $('#' + fuSaveId);
+        // fileUploadId:点击弹出选择文件事件的dom对象
+        // fusaveId:文件上传成功后，保存的服务文件Id
+        // --start-文件上传---
+        var uploader = WebUploader.create({
+            auto : true,
+            // swf文件路径
+            swf : _ctx + '/static/webuploader-0.1.5/Uploader.swf',
+            // 文件接收服务端。
+            server : _ctx + '/file/uploadFile',
+            // 选择文件的按钮。可选。
+            // 内部根据当前运行是创建，可能是input元素，也可能是flash.
+            pick : '#' + fileUploadId,
+            paste: document.body,
+            // 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
+            resize : false,
+            duplicate :true ,//true可重复上传，默认不可多次重复上传
+            // 只允许选择图片文件。
+            accept : {
+                title : 'file',
+                extensions : 'xls,xlsx',
+                // extensions : '*',
+                // mimeTypes :	"image/jpg,image/jpeg,image/gif,image/bmp,image/png,application/pdf,application/rar,application/zip,application/excel"
+                mimeTypes :	"*"
+            }
+        });
+        // 去掉文件上传组件样式，使用上传dom 自己样式
+        $(".webuploader-pick").removeClass();
+        uploader.on('beforeFileQueued', function(file) {
+            if (file.name == "image.png"){
+                file.name = 'IMG' + Convert.getNowDateStr() + '.png';
+                // file.name = 'IMG' + new Date().getTime() + '.png';
+            }
+            $.messager.progress('close');
+            if(file &&file.size > 10485760){
+                $.messager.alert('tip',"上传文件不能超过10M!",'info');
+                return false;
+            }
+        })
+        // 当有文件添加进来的时候
+        uploader.on('fileQueued', function(file) {
+            $.messager.progress();
+            //var $li = $('<div id="' + file.id + '" class="file-item thumbnail">' + '<img>' + '<div class="info">' + file.name + '</div>' + '</div>'), $img = $li.find('img');
+        });
+        // 文件上传成功，给item添加成功class, 用样式标记上传成功。
+        uploader.on('uploadSuccess', function(file, response) {
+            $.messager.progress('close');
+            if(file &&file.size > 10485760){
+                $.messager.alert('tip',"上传文件不能超过10M!",'info');
+                return;
+            }
+            $this.val("");
+            if(response && response.result){//上传成功
+                var fileId = response.fileId;
+
+                filePlugin.uploadSuccess(fileId);
+                //加载附件列表
+                filePlugin.load($this.val(),'#span_'+fuSaveId);
+
+            }else{
+                $.messager.alert('tip',"上传文件失败，失败信息："+ response._raw,'info');
+            }
+
+        });
+        uploader.on('error',function(file){
+            $.messager.progress('close');
+            $.messager.alert('tip','文件格式不支持!请上传【xls,xlsx】格式的文件','info');
+        })
+        // 文件上传失败，显示上传出错。
+        uploader.on('file', function(file) {
+            $.messager.progress('close');
+            $.messager.alert('tip','文件上传失败,请重试!','info');
+        });
+        // --end-文件上传---
+    }
+</script>
+</html>

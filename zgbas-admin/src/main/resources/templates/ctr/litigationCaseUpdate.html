@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+        <form id="inputForms" method="post"  class="from-input-layout" >
+            <input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+            <input type="hidden" name="type" id="type" th:value="${type}"/>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="linkContractNos"  class="control-label">关联合同号</label>
+                    <input name="linkContractNos" id="linkContractNos" type="text" th:value="${entity.linkContractNos}"/>
+                    <input name="linkContractIds" id="linkContractIds" type="hidden" th:value="${entity.linkContractIds}" />
+                    <input name="attorneyApproveStatus" id="attorneyApproveStatus" type="hidden" th:value="${entity.attorneyApproveStatus}" />
+                    <input name="processingApproveStatus" id="processingApproveStatus" type="hidden" th:value="${entity.processingApproveStatus}" />
+                    <input name="preservationApproveStatus" id="preservationApproveStatus" type="hidden" th:value="${entity.preservationApproveStatus}" />
+                    <input name="liabilityApproveStatus" id="liabilityApproveStatus" type="hidden" th:value="${entity.liabilityApproveStatus}" />
+                </p>
+                <p class="yw-table-filter">
+                    <span id="selectContractNos" class="easyui-linkbutton btn64" onclick="openChoose()">选择</span>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label for="caseNo"  class="control-label">案件号</label>
+                    <input name="caseNo" id="caseNo" type="text" th:value="${entity.caseNo}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="settleFlag"  class="control-label">是否结案</label>
+                    <input name="settleFlag" id="settleFlag" type="text" th:value="${entity.settleFlag}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="lawyer"  class="control-label">接洽律师</label>
+                    <input name="lawyer" id="lawyer" type="text" th:value="${entity.lawyer}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="judgmentDate"  class="control-label">判决时间</label>
+                    <input name="judgmentDate" id="judgmentDate" type="text" th:value="${entity.judgmentDate}" />
+                </p>
+                <p class="yw-table-filter">
+                    <label for="competentCourt"  class="control-label">管辖法院</label>
+                    <input name="competentCourt" id="competentCourt" type="text" th:value="${entity.competentCourt}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="attorneyFee"  class="control-label">律师费</label>
+                    <input name="attorneyFee" id="attorneyFee" type="text" th:value="${entity.attorneyFee}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="processingFee"  class="control-label">案件受理费</label>
+                    <input name="processingFee" id="processingFee" type="text" th:value="${entity.processingFee}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="preservationFee"  class="control-label">保全费</label>
+                    <input name="preservationFee" id="preservationFee" type="text" th:value="${entity.preservationFee}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="liabilityFee"  class="control-label">诉责费</label>
+                    <input name="liabilityFee" id="liabilityFee" type="text" th:value="${entity.liabilityFee}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="totalFee"  class="control-label">诉讼费用合计</label>
+                    <input name="totalFee" id="totalFee" type="text" th:value="${entity.totalFee}"/>
+                </p>
+                <p class="yw-table-filter w3">
+                    <label for="caseFollow"  class="control-label">案件进展跟进</label>
+                    <input name="caseFollow" id="caseFollow" type="text" th:value="${entity.caseFollow}"/>
+                </p>
+            </div>
+        </form>
+    </div>
+
+
+    <div region="south" border="false" style="overflow: hidden;height: 60px;margin-left:  20px;">
+        <div class="actions_bar">
+            <span id="submitSave" class="easyui-linkbutton btn64" onclick="submitSave()">保存</span>
+            <span id="cancelSave" class="easyui-linkbutton btn-empty btn64 ml10"  onclick="cancelSave()">取消</span>
+        </div>
+    </div>
+</div>
+<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:1160,height:550"></div>
+<script type="text/javascript">
+    var type = $("#type").val();
+    var _settleFlag = [
+        {dictCd:'false',dictName:"未结案"},
+        {dictCd:'true',dictName:"已结案"},
+    ]
+    let attorneyApproveStatus = $("#attorneyApproveStatus").val()
+    let processingApproveStatus = $("#processingApproveStatus").val()
+    let preservationApproveStatus = $("#preservationApproveStatus").val()
+    let liabilityApproveStatus = $("#liabilityApproveStatus").val()
+    $(function(){
+        $("#linkContractNos").textbox({required: true,readonly: true});
+        $("#caseNo").textbox({required: true});
+        $("#settleFlag").combobox({
+            data:_settleFlag,
+            required: true,
+            textField:'dictName',
+            valueField:'dictCd',
+            editable:false,
+            panelHeight:"auto"
+        });
+        $("#lawyer").textbox({required: true});
+        $("#judgmentDate").datebox({
+            editable: false,
+            required: true,
+            height: 30
+        });
+        $("#competentCourt").textbox({required: true});
+        $("#attorneyFee").numberbox({
+            required: true,
+            validType: 'length[1,20]',
+            precision: 2,
+            readonly: attorneyApproveStatus==='A'||attorneyApproveStatus==='D',
+            onChange: function (){
+                getTotalFee()
+            },
+            parser: function(val) {
+                // 解析时去除千分位分隔符
+                if(val) {
+                    return parseFloat(String(val).replace(/,/g, ''));
+                } else {
+                    if(isNaN(val)) {
+                        return '';
+                    } else {
+                        return val;
+                    }
+                }
+            },
+            formatter: function(val) {
+                if (val || val === 0) {
+                    val = parseFloat(val).toFixed(2).toString().split(".");
+                    val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                    return val.join(".");
+                } else {
+                    if(isNaN(val)){
+                        return ""
+                    } else {
+                        return val;
+                    }
+                }
+            }
+        });
+        $("#processingFee").numberbox({
+            required: true,
+            validType: 'length[1,20]',
+            readonly: processingApproveStatus==='A'||processingApproveStatus==='D',
+            precision: 2,
+            onChange: function (){
+                getTotalFee()
+            },
+            parser: function(val) {
+                // 解析时去除千分位分隔符
+                if(val) {
+                    return parseFloat(String(val).replace(/,/g, ''));
+                } else {
+                    if(isNaN(val)) {
+                        return '';
+                    } else {
+                        return val;
+                    }
+                }
+            },
+            formatter: function(val) {
+                if (val || val === 0) {
+                    val = parseFloat(val).toFixed(2).toString().split(".");
+                    val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                    return val.join(".");
+                } else {
+                    if(isNaN(val)){
+                        return ""
+                    } else {
+                        return val;
+                    }
+                }
+            }
+        });
+        $("#preservationFee").numberbox({
+            required: true,
+            validType: 'length[1,20]',
+            readonly: preservationApproveStatus==='A'||preservationApproveStatus==='D',
+            precision: 2,
+            onChange: function (){
+                getTotalFee()
+            },
+            parser: function(val) {
+                // 解析时去除千分位分隔符
+                if(val) {
+                    return parseFloat(String(val).replace(/,/g, ''));
+                } else {
+                    if(isNaN(val)) {
+                        return '';
+                    } else {
+                        return val;
+                    }
+                }
+            },
+            formatter: function(val) {
+                if (val || val === 0) {
+                    val = parseFloat(val).toFixed(2).toString().split(".");
+                    val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                    return val.join(".");
+                } else {
+                    if(isNaN(val)){
+                        return ""
+                    } else {
+                        return val;
+                    }
+                }
+            }
+        });
+        $("#liabilityFee").numberbox({
+            required: true,
+            validType: 'length[1,20]',
+            readonly: liabilityApproveStatus==='A'||liabilityApproveStatus==='D',
+            precision: 2,
+            onChange: function (){
+                getTotalFee()
+            },
+            parser: function(val) {
+                // 解析时去除千分位分隔符
+                if(val) {
+                    return parseFloat(String(val).replace(/,/g, ''));
+                } else {
+                    if(isNaN(val)) {
+                        return '';
+                    } else {
+                        return val;
+                    }
+                }
+            },
+            formatter: function(val) {
+                if (val || val === 0) {
+                    val = parseFloat(val).toFixed(2).toString().split(".");
+                    val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                    return val.join(".");
+                } else {
+                    if(isNaN(val)){
+                        return ""
+                    } else {
+                        return val;
+                    }
+                }
+            }
+        });
+        $("#totalFee").numberbox({
+            readonly: true,
+            validType: 'length[1,20]',
+            precision: 2,
+            parser: function(val) {
+                // 解析时去除千分位分隔符
+                if(val) {
+                    return parseFloat(String(val).replace(/,/g, ''));
+                } else {
+                    if(isNaN(val)) {
+                        return '';
+                    } else {
+                        return val;
+                    }
+                }
+            },
+            formatter: function(val) {
+                if (val || val === 0) {
+                    val = parseFloat(val).toFixed(2).toString().split(".");
+                    val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                    return val.join(".");
+                } else {
+                    if(isNaN(val)){
+                        return ""
+                    } else {
+                        return val;
+                    }
+                }
+            }
+        });
+        $('#w_contract_choose').window({
+            title: '请选择合同',
+            modal:true,
+            closed: true,
+            collapsible : false,
+            minimizable : false,
+            cache:false,
+            iconCls:""
+        });
+    });
+    function  getTotalFee(){
+        let attorneyFee = $("#attorneyFee").numberbox("getValue")||0;
+        let processingFee = $("#processingFee").numberbox("getValue")||0;
+        let preservationFee = $("#preservationFee").numberbox("getValue")||0;
+        let liabilityFee = $("#liabilityFee").numberbox("getValue")||0;
+        let totalFee = parseFloat(attorneyFee) + parseFloat(processingFee) + parseFloat(preservationFee) + parseFloat(liabilityFee);
+        $("#totalFee").numberbox('setValue',totalFee.toFixed(2));
+    }
+    //保存
+    function submitSave(){
+       let flg= $("#inputForms").form('validate');
+       if(flg){
+           $.ajax({
+               type:"POST",
+               url: _ctx+"/ctr/litigationCase/save",
+               data:  $('#inputForms').serialize(),
+               success: function (data){
+                   if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                       $.messager.show({
+                           title: 'Tip',
+                           msg: '保存成功',
+                           timeout: 2000,
+                           showType: 'show'
+                       });
+                   } else {
+                       $.messager.alert('error', data.failure, 'warning');
+                   }
+                   $("#caseWindow").window("close");
+               },
+               error : function() {
+                   $.messager.alert('error', "请联系管理员", 'warning');
+               }
+           })
+       }
+    }
+
+    function cancelSave(){
+        $('#caseWindow').window("close");
+    }
+    function openChoose(){
+        var url=_ctx+"/ctr/contract/contractChoose";
+        $('#w_contract_choose').attr('callbackExec', 'chooseCallback');
+        $('#w_contract_choose').window({href:url});
+        $('#w_contract_choose').window("open");
+    }
+
+    function chooseCallback(contractRows){
+        if(contractRows){
+            let contractNos = contractRows.map(it=>it.contractNo).join(',')
+            let contractIds = contractRows.map(it=>it.id).join(',')
+            $("#linkContractNos").textbox('setValue',contractNos)
+            $("#linkContractIds").val(contractIds)
+        }
+
+    }
+</script>

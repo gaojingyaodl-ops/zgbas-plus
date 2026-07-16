@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" border="false" fit="true">
+	<div id="inputForm" class="from-input-layout" method="post">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" name="status" id="entityStatus" th:value="${entity.status}"/>
+		<input type="hidden" id="current_userId" th:value = "${@shiroUtil.getCurrentUserId()}">
+		<input type="hidden" id="current_userName" th:value="${@shiroUtil.getCurrentUserName()}">
+		<input id="stockVirtualNo" name="stockVirtualNo" type="hidden" th:value="${entity.stockVirtualNo}" />
+		<input type="hidden" id="supplierPrepayAmount">
+		<input type="hidden" id="usedSupplierPrepayAmount">
+		<div class="form-section">
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label>采购类型</label>
+					<input class="art" value="库存采购"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>采购编号</label>
+					<input type="text" readonly th:value="${entity.stockVirtualNo}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>包装规格</label>
+					<input id="wrapSpecs" name="wrapSpecs" type="text" th:value="${entity.wrapSpecs}" />
+				</p>
+				<p class="yw-table-filter">
+					<label>质量标准</label>
+					<input id="qualityStandard" name="qualityStandard" type="text" th:value="${entity.qualityStandard}"/>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label>品种</label>
+					<input id="productCd" name="productCd" type="text" th:value="${entity.productCd}"/>
+					<input id="productName" name="productName" type="hidden" th:value="${entity.productName}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>牌号</label>
+					<input id="brandNumber" name="brandNumber" type="text" th:value="${entity.brandNumber}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>数量(吨)</label>
+					<input id="dealNumber" name="dealNumber" type="text" th:value="${entity.dealNumber}"/>
+					<input id="maxNumber" name="maxNumber" type="hidden" />
+				</p>
+				<p class="yw-table-filter">
+					<label>厂商</label>
+					<input id="factoryId" name="factoryId" type="hidden" />
+					<input id="factoryName" name="factoryName" type="text" th:value="${entity.factoryName}"/>
+				</p>
+			</div>
+
+			<p class="form-section-title"><span class="approve_text">库存采购</span><i></i></p>
+			<div class="mb10">
+				<p class="yw-table-filter w2">
+					<label>供应商</label>
+					<input id="buyCompanyId" name="companyId" type="hidden" th:value="${entity.companyId}" />
+					<input id="buyCompanyName" name="companyName" type="text" th:value="${entity.companyName}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>结算方式</label>
+					<input id="deliveryModeB" name="deliveryMode" type="text" th:value="${entity.deliveryMode}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>中游加价(元)</label>
+					<input id="raisePrice" name="raisePrice"  type="text" th:value="${entity.raisePrice == null ? '10.00' : entity.raisePrice}"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter w2">
+					<label>代采方</label>
+					<input id="buyOurCompanyName" name="buyOurCompanyName" type="text" th:value="${entity.buyOurCompanyName}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>采购含税单价(元)</label>
+					<input id="bdealPrice" name="dealPrice" type="text" th:value="${entity.dealPrice}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>采购不含税单价(元)</label>
+					<input id="bdealAmountNotax" name="dealAmountNotax" readonly type="text" th:value="${entity.dealAmountNotax}"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter w2">
+					<label>我方</label>
+					<input id="ourCompanyName" name="ourCompanyName" type="text" th:value="${entity.ourCompanyName}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>采购总价(元)</label>
+					<input id="btotalAmount" name="totalAmount" type="text" th:value="${entity.totalAmount}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>销售指导价</label>
+					<input id="minSellPrice" name="minSellPrice" type="text" th:value="${entity.minSellPrice}"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>仓储费(元)</label>
+					<input id="bwarehouseCost" name="warehouseCost"  type="text" th:value="${entity.warehouseCost == null ? '0.00' : entity.warehouseCost}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>运输费(元)</label>
+					<input id="btransportCost" name="transportCost" type="text" th:value="${entity.transportCost == null ? '0.00' : entity.transportCost}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>装卸费(元)</label>
+					<input id="bstevedorage" name="stevedorage" type="text" th:value="${entity.stevedorage == null ? '0.00' : entity.stevedorage}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>支付方式</label>
+					<input id="payType" name="payType" type="text" th:value="${entity.payType}"/>
+				</p>
+			</div>
+
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>付全款日期</label>
+					<input id="payFullTime" name="payFullTime" type="text" th:value="${#dates.format(entity.payFullTime, 'yyyy-MM-dd')}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>交货方式</label>
+					<input id="deliveryType" name="deliveryType" type="text" th:value="${entity.deliveryType}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>交货日期</label>
+					<input id="buyDeliveryDate" name="deliveryDate" type="text" th:value="${#dates.format(entity.deliveryDate, 'yyyy-MM-dd')}"/>
+				</p>
+				<span style="margin-left: -10px;">
+                    <label>-</label>
+                </span>
+				<p class="yw-table-filter">
+					<input id="BarrivalTimeExt" name="arrivalTimeExt" type="text" th:value="${entity.arrivalTimeExt}"/>
+				</p>
+
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>采购员</label>
+					<input class="art" id="buyMatchUserName" name="matchUserName" type="text" th:value="${entity.matchUserName}"/>
+					<input id="buyMatchUserId" name="matchUserId" type="hidden" th:value="${entity.matchUserId}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>定金比例</label>
+					<input id="payRate" name="payRate" type="text" th:value="${entity.payRate}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>定金</label>
+					<input id="payRateAmount" name="payBondAmount" type="text" th:value="${entity.payBondAmount}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>付定金日期</label>
+					<input id="buyPayBondTime" name="payBondTime" type="text" th:value="${entity.payBondTime}"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<input id="bdeliveryAddr" name="deliveryAddr" type="hidden" th:value="${entity.deliveryAddr}"/>
+				<input id="bsAreaId" name="bsAreaId" type="hidden" th:value="${entity.bsAreaId}"/>
+				<p class="yw-table-filter">
+                        <span class="input-colspan">
+                            <label>省份:</label>
+                            <input name="provinceName" id="provinceName" required="required" type="text"/>
+                                <input name="provinceNameUtil" id="provinceNameUtil" type="hidden"/>
+                                <input name="provinceCodeUtil" id="provinceCodeUtil" type="hidden"/>
+                        </span>
+				</p>
+				<span style="margin-left: -10px;">
+                        <label>-</label>
+                    </span>
+				<p class="yw-table-filter">
+                        <span class="input-colspan">
+                            <label>市:</label>
+                            <input name="areaCode" id="cityName"  type="text"/>
+                            <input name="cityNameUtil" id="cityNameUtil" type="hidden"/>
+                            <input name="cityCodeUtil" id="cityCodeUtil" type="hidden"/>
+                        </span>
+				</p>
+				<span style="margin-left: -10px;">
+                        <label>-</label>
+                    </span>
+				<p class="yw-table-filter">
+                        <span class="input-colspan">
+                        <label>区:</label>
+                            <input name="areaCode" id="areaCode" type="text"/>
+                            <input name="areaCodeUtil" id="areaCodeUtil" type="hidden"/>
+                            <input name="areaNameUtil" id="areaNameUtil" type="hidden"/>
+                        </span>
+				</p>
+				<span style="margin-left: -10px;">
+                        <label>-</label>
+                    </span>
+				<p class="yw-table-filter ">
+					<label>详细地址</label>
+					<input id="bcontactAddr" name="contactAddr" type="text" th:value="${entity.contactAddr}"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter w2">
+					<label>补充条款</label>
+					<input id="extraTerm" name="extraTerm" type="text" th:value="${entity.extraTerm}"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>备注</label>
+					<input id="payRemark" name="remark" type="text" th:value="${entity.remark}"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter w2 buyTemplateClass">
+					<label>采购合同模板</label>
+					<input id="buyTemplateId" name="templateId" type="text" th:value="${entity.templateId}"/>
+				</p>
+
+				<span class="yw-table-filter upbtempBtnClass upload-btn" id="upbtempBtn">
+                    <a href="#"  class="easyui-linkbutton btn-empty btn64 addBtn">上传模板</a>
+                </span>
+
+				<p class="yw-table-filter bContractPreviewClass">
+					<a href="#" id="bContractPreviewBtn" class="easyui-linkbutton btn-empty addBtn btn64">合同预览</a>
+				</p>
+
+				<p class="yw-table-filter w2">
+					<input type="hidden" name="contentTemplateId" id="buyContentTemplateId" th:value="${entity.contentTemplateId}"/>
+					<label class="control-label" id="upbtempPath"></label>
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+</html>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+	// 附件上传插件初始化
+	var filePlugin = new FilePlugin('#buyContentTemplateId', $('#entityId').val(), '/apply/inventoryVirtual/updateFileId', true);
+	var $id = $('#entityId').val();
+	//品名列表
+	var _productTypeJson = eval('[(${productTypeJson})]');
+	// 牌号名称
+	var _brandJson = eval('[(${brandJson})]');
+	// 厂商列表
+	var _factoryJson = eval('[(${factoryJson})]');
+	// 付款方式
+	var _payTypeJson = eval('[(${payTypeJson})]');
+	// 结算方式
+	var _deliveryModeJson = eval('[(${deliveryModeJson})]');
+	// 提货方式
+	var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+	_deliveryTypeJson = _deliveryTypeJson.filter(function (a) {
+		return a.dictCd != 'P';
+	});
+	//交货日期补充
+	var _arrivalTimeExtJson = eval('[(${arrivalTimeExtJson})]');
+	//质量标准
+	var _qualityStandardJson = eval('[(${qualityStandardJson})]');
+	// 定金比例
+	var _contractBondRateJson = eval('[(${contractBondRateJson})]');
+	// 包装规格
+	var _packingSpecificaJson = eval('[(${packingSpecificaJson})]');
+	// 采购类型
+	var _virtualBuyTypeJson = eval('[(${virtualBuyTypeJson})]');
+	// 业务员树
+	var _matchUserNameTree = eval('[(${matchUserNameTree})]');
+	// 采购合同模板
+	var _buyTemplateList = eval('[(${buyTemplateList})]');
+	var _matchCreateFlg = false;
+	var _deliveryAddrFlg = false;
+	_beforSaveOper = true;
+	var _curStatus = $("#entityStatus").val();
+	// 代采赊销-采购-我方
+	var _dcsxOurCompanyNameJson = eval('[(${dcsxOurCompanyNameJson})]');
+	var _ourCompanyNameJson = eval('[(${ourCompanyNameJson})]');
+	var _buyVirtualFlg = false;
+	var _sellVirtualFlg = false;
+	$(function () {
+		$('#addBtn').linkbutton();
+		$('#addBtnp').linkbutton();
+		$('.easyui-linkbutton').linkbutton();
+		$('#buyOurCompanyName').combobox({
+			data: _dcsxOurCompanyNameJson,
+			valueField: 'companyCd',
+			textField: 'companyName',
+			panelHeight: "auto",
+			editable: false,
+			required: false,
+			onLoadSuccess: function() {
+				comboReadonly(this);
+			},
+			onChange: function (val){
+				if (val) {
+					if (val == $("#ourCompanyName").combobox("getValue")){
+						$("#ourCompanyName").combobox('clear');
+					}
+				}
+			}
+		});
+		$('#ourCompanyName').combobox({
+			data: _ourCompanyNameJson,
+			valueField: 'dictCd',
+			textField: 'dictName',
+			panelHeight: "auto",
+			editable: false,
+			required: true,
+			onLoadSuccess: function() {
+				comboReadonly(this);
+			},
+			onChange: function (val){
+				if (val) {
+					if (val == $("#buyOurCompanyName").combobox("getValue")){
+						$("#buyOurCompanyName").combobox('clear');
+					}
+				}
+			}
+		});
+
+		// 合同预览按钮初始化隐藏
+		$(".bContractPreviewClass").hide();
+
+		$('#w_contract').window({
+			title: '电子合同',
+			modal: true,
+			closed: true,
+			collapsible: false,
+			minimizable: false,
+			maximizable: false,
+			cache: false
+		});
+		// 初始化牌照
+		$("#brandNumber").combobox({
+			data: _brandJson,
+			required: true,
+			limitToList: true,
+			editable: true,
+			textField: 'brandNumber',
+			valueField: 'brandNumber'
+		});
+
+		// 初始化品种
+		$("#productCd").combotree({
+			data: _productTypeJson,
+			required: true,
+			editable: true,
+			panelWidth: 150,
+			panelHeight: 300,
+			onSelect: function (node) {
+				if (node.children.length!=0){
+					$("#productCd").combotree('clear');
+					$("#productName").val('');
+					return;
+				}
+				var text = node.text;
+				$("#productName").val(text);
+				var new_brandJson = _brandJson.filter(function (e) {
+					return e.productCd == node.id && e.enterpriseId == 44;
+				})
+				// 初始化牌照
+				$("#brandNumber").combobox({
+					data: new_brandJson,
+					required: true,
+					limitToList: true,
+					editable: true,
+					textField: 'brandNumber',
+					valueField: 'brandNumber'
+				});
+			}
+		});
+
+		// 初始化厂商数据
+		$("#factoryName").combobox({
+			data: _factoryJson,
+			required: true,
+			textField: 'factoryName',
+			valueField: 'factoryName',
+			panelHeight: '100',
+			onLoadSuccess: function() {
+				comboReadonly(this);
+			},
+			onSelect: function (node) {
+				var id = node.id;
+				$("#factoryId").val(id);
+			}
+		});
+
+		// 采购-销售地点
+		$('#bdeliveryAddr').textbox({required: true});
+		$('#bdeliveryAddr').next().hide();
+		$('#bsAreaId').textbox({required: true});
+		$('#bsAreaId').next().hide();
+
+		var other = {
+			id: -1,
+			templateName: "其他",
+		}
+		_buyTemplateList.push(other);
+		$("#buyTemplateId").combobox({
+			data: _buyTemplateList,
+			required: false,
+			editable: false,
+			textField: 'templateName',
+			valueField: 'id',
+			panelHeight: '200',
+			onLoadSuccess: function() {
+				comboReadonly(this);
+			},
+			onChange: function () {
+				upbtempBtnFun(true, false, false);
+			}
+		});
+
+		// 采购-收货日期(补充)
+		$("#BarrivalTimeExt").combobox({
+			data: _arrivalTimeExtJson,
+			valueField: 'dictCd',
+			textField: 'dictName',
+			panelHeight: "auto",
+			required: true,
+			editable: false,
+			onLoadSuccess: function () {
+				var value = $(this).combobox('getValue');
+				if (!value) {
+					$(this).combobox("setValue", "LR");
+				}
+				comboReadonly(this);
+			}
+		});
+
+		// 数量
+		$("#dealNumber").numberbox({
+			required: true,
+			validType: 'length[1,20]',
+			precision: 4,
+			onChange: function (value) {
+				formatterBuy(null);
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(4).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		$("#buyPayBondTime").datebox({
+			editable:false,
+			height:30
+		})
+
+		$("#minSellPrice").numberbox({
+			required: true,
+			validType: 'length[1,20]',
+			precision: 3,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(3).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		$("#payRateAmount").numberbox({
+			required: true,
+			validType: 'length[1,20]',
+			precision: 3,
+			onChange:function (value) {
+				if (Number(value)>0){
+					$("#buyPayBondTime").datebox({
+						required:true,
+					})
+				}else{
+					$("#buyPayBondTime").datebox({
+						required:false,
+					})
+					$('#buyPayBondTime').datebox("setValue",'');
+				}
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(3).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		// 仓储费 运输费
+		$("#bwarehouseCost,#btransportCost,#stevedorage,#raisePrice").numberbox({
+			required: true,
+			validType: 'length[1,20]',
+			precision: 2,
+			onChange: function (value) {
+				// 延迟执行，防止服务合同字段不是最新值
+				// 清除旧的定时器
+				window.clearTimeout($(this).data('timeout'));
+				// 设置新的定时器
+				$(this).data('timeout', setTimeout(function () {
+					// 这里放置要执行的代码
+					// getGrossProfit();
+				}, 1000));
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(3).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		// 采购 不含税单价(元)
+		$("#bdealAmountNotax").numberbox({
+			required: true,
+			validType: 'length[1,20]',
+			precision: 3,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(3).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		// 总价
+		$("#btotalAmount").numberbox({
+			editable: false,
+			precision: 3,
+			onChange: function () {
+				_deliveryModeJson_ = _deliveryModeJson.filter(function (a){
+					return a.dictCd == "XHHK" || a.dictCd == "XKHH";
+				})
+				// 预付款额度不足时，采购合同只能选择先货后款
+				if (Number($("#supplierPrepayAmount").val()) - Number($("#usedSupplierPrepayAmount").val()) < Number($("#btotalAmount").numberbox("getValue"))) {
+					_deliveryModeJson_ = _deliveryModeJson.filter(function (a){
+						return a.dictCd == "XHHK";
+					})
+					if (!_buyVirtualFlg){
+						$('#deliveryModeB').combobox("clear");
+					}
+				}
+				if (!_buyVirtualFlg){
+					$('#deliveryModeB').combobox('loadData', _deliveryModeJson_);
+				}
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(3).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		// 含税单价
+		$("#bdealPrice").numberbox({
+			required: true,
+			validType: 'length[1,20]',
+			precision: 3,
+			onChange: function (value) {
+				formatterBuy(value);
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(3).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+
+		// 付全款日期、付全款日期、交货日期、交货日期
+		$("#receiveFullTime,#payFullTime,#buyDeliveryDate").datebox({
+			height: 30,
+			required: true,
+			editable: false
+		});
+
+		// 质量标准
+		$("#qualityStandard").combobox({
+			data: _qualityStandardJson,
+			required: true,
+			textField: 'dictName',
+			valueField: 'dictCd',
+			panelHeight: 'auto',
+			onLoadSuccess: function() {
+				comboReadonly(this);
+			}
+		});
+
+		// 包装规格
+		$("#wrapSpecs").combobox({
+			data: _packingSpecificaJson,
+			required: true,
+			textField: 'dictName',
+			valueField: 'dictCd',
+			panelHeight: 'auto',
+			onLoadSuccess: function() {
+				comboReadonly(this);
+			}
+		});
+
+		// 采购类型
+		$("#virtualBuyType").combobox({
+			data: _virtualBuyTypeJson,
+			readonly: true,
+			required: true,
+			textField: 'dictName',
+			valueField: 'dictCd',
+			panelHeight: 'auto',
+			onLoadSuccess: function (data) {
+				comboReadonly(this);
+			}
+		});
+
+		if (_curStatus != 'A' && _curStatus != 'D'){
+			// 供方公司名
+			$('#buyCompanyName').combobox({
+				url:_ctx+"/bs/company/listMyCompany/"+0+"/"+1,
+				mode:'remote',
+				limitToList:true,
+				valueField:'companyName',
+				textField:'text',
+				panelHeight:300,
+				required:true,
+				onLoadSuccess: function() {
+					comboReadonly(this);
+				},
+				formatter: function(row){
+					var text = row.text;
+					var myFlag = row.myFlag;
+					if (myFlag!=true){
+						text = '<span style="color:#ccc">'+text+'</span>';
+					}
+
+					return text+"[剩余额度:"+(Number(row.supplierPurchaseAmount) - Number(row.usedSupplierPurchaseAmount))+"]";
+
+				},
+				onSelect : function(node){
+					_supplierFuture = node.supplierFuture == '1' ? false : true;
+					_supplierDelivery = node.supplierDelivery == '1' ? true : false;
+					var tt_deliverJson = _deliveryTypeJson;
+					// 不能上游配送
+					if (!_supplierDelivery && !_buyVirtualFlg) {
+						tt_deliverJson = _deliveryTypeJson.filter(function (a){
+							return a.dictCd != 'P1';
+						});
+					}
+					$("#deliveryType").combobox("loadData", tt_deliverJson);
+
+
+					$("#supplierPrepayAmount").val(node.supplierPrepayAmount);
+					$("#usedSupplierPrepayAmount").val(node.usedSupplierPrepayAmount);
+					$('#buyCompanyId').val(node.id);
+					if (!_buyVirtualFlg){
+						_deliveryModeJson_ = _deliveryModeJson.filter(function (a){
+							return a.dictCd == "XHHK" || a.dictCd == "XKHH";
+						})
+					}
+					// 预付款额度充足时，采购合同可以选择先款后货；
+					// 不做限制
+
+					// 预付款额度不足时，采购合同只能选择先货后款
+					if (!_buyVirtualFlg){
+						if (Number(node.supplierPrepayAmount) - Number(node.usedSupplierPrepayAmount) < Number($("#btotalAmount").numberbox("getValue"))) {
+							_deliveryModeJson_ = _deliveryModeJson.filter(function (a){
+								return a.dictCd == "XHHK";
+							})
+							$('#deliveryModeB').combobox("clear");
+						}
+						$('#deliveryModeB').combobox('loadData', _deliveryModeJson_);
+					}
+
+					//关联收货地址省市区
+					$("#provinceName").combobox({
+						url: _ctx + "/bs/areaCost/ajaxGetCity?id=1",
+						valueField: "id",
+						textField: "name",
+						width: 150,
+						height: 30
+					});
+					$("#cityName").combobox({
+						url:_ctx+"/bs/areaCost/ajaxGetCity?id=0",
+						valueField:"id",
+						textField:"name",
+						width : 150,
+						height : 30,
+					});
+					$("#areaCode").combobox({
+						url:_ctx+"/bs/areaCost/ajaxGetCity?id=0",
+						valueField:"id",
+						textField:"name",
+						width : 150,
+						height : 30,
+					});
+				}
+			});
+		}
+
+		// 采购业务员树
+		$('#buyMatchUserName').combotree({
+			data: _matchUserNameTree,
+			multiple: false,
+			editable: true,
+			required: true,
+			formatter: function (node) {
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg == false) {
+					return '<span style="color:red;">' + node.text + '(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect: function (node) {
+				if (node.children.length != 0) {
+					$('#buyMatchUserName').combotree('clear');
+				} else {
+					var value = node.id;
+					var value1 = value.replace('user', '');
+					$("#buyMatchUserId").val(value1);
+					$('#buyMatchUserName').combotree('setValue', node.text);
+				}
+			},
+			onLoadSuccess: function () {
+				let buyMatchUserId = $("#buyMatchUserId").val();
+				// 如果业务员 id 不为空的话，说明是回显
+				if(strIsNull(buyMatchUserId)){
+					var user_id = $("#current_userId").val();
+					var user_name = $("#current_userName").val();
+					$("#buyMatchUserId").val(user_id);
+					$('#buyMatchUserName').combotree('setValue', user_name);
+				}
+			}
+		});
+
+		// 结算方式
+		$('#deliveryModeB').combobox({
+			data: _deliveryModeJson,
+			valueField: 'dictCd',
+			textField: 'dictName',
+			required: true,
+			panelHeight: "auto",
+			editable: false,
+			onHidePanel: function () {
+				BasCombobox.onHidePanel(this);
+			},
+			onLoadSuccess: function () {
+				comboReadonly(this);
+			}
+		});
+
+		// 加载销售合同附件插件
+		filePlugin.load($('#buyContentTemplateId').val(), '#upbtempPath');
+		if ($("#buyContentTemplateId").length > 0) {
+			fileUpload("upbtempBtn", "buyContentTemplateId", "upbtempPath", filePlugin);
+		}
+
+
+
+		// 销售-结算方式
+		$('#deliveryModeS').combobox({
+			data: _deliveryModeJson,
+			valueField: 'dictCd',
+			textField: 'dictName',
+			required: true,
+			panelHeight: "auto",
+			editable: false,
+			onHidePanel: function () {
+				BasCombobox.onHidePanel(this);
+			},
+			onLoadSuccess: function () {
+				comboReadonly(this);
+			}
+		});
+
+		// 支付方式
+		$("#payType,#receiveType").combobox({
+			data: _payTypeJson,
+			textField: 'dictName',
+			valueField: 'dictCd',
+			panelHeight: "auto",
+			required: true,
+			editable: false,
+			onHidePanel: function () {
+				BasCombobox.onHidePanel(this);
+			},
+			onLoadSuccess: function () {
+				comboReadonly(this);
+			}
+		});
+
+		// 定金比例-采购
+		$('#payRate').combobox({
+			data: _contractBondRateJson,
+			valueField: 'dictCd',
+			textField: 'dictName',
+			panelHeight: 'auto',
+			editable: false,
+			onLoadSuccess: function (data) {
+				var value = $(this).val();
+				if (!value) {
+					$(this).combobox('setValue', data[0].dictCd);
+				}
+				comboReadonly(this);
+			},
+			onSelect: function (node) {
+				if (_curStatus !== 'A' &&  _curStatus !== 'D'){
+					var value = node.dictCd;
+					var totalAmount = $("#btotalAmount").numberbox('getValue');
+					var payRateAmount = Number(totalAmount) * Number(value).toFixed(3);
+					$("#payRateAmount").numberbox('setValue', payRateAmount);
+				}
+			}
+		});
+
+		//交货方式
+		$("#deliveryType").combobox({
+			data: _deliveryTypeJson,
+			valueField: 'dictCd',
+			textField: 'dictName',
+			panelHeight: "auto",
+			editable: false,
+			required: true,
+			onLoadSuccess: function () {
+				comboReadonly(this);
+			}
+		});
+
+		let idStr = $('#entityId').val();
+		if(idStr){
+			let nameStr = $('#bdeliveryAddr').val()
+			let names = nameStr.split('/');
+			for (i = 0; i < names.length; i++) {
+				if(i==0){
+					$('#provinceName').val(names[i]);
+				}
+				if(i==1){
+					$('#cityName').val(names[i]);
+				}
+				if(i==2){
+					$('#areaCode').val(names[i]);
+				}
+			}
+
+			let areaIdsStr = $('#bsAreaId').val()
+			let areaIds = areaIdsStr.split('/');
+			for (i = 0; i < areaIds.length; i++) {
+				if(i==0){
+					$('#provinceCodeUtil').val(areaIds[i]);
+				}
+				if(i==1){
+					$('#cityCodeUtil').val(areaIds[i]);
+				}
+				if(i==2){
+					$('#areaNameUtil').val(areaIds[i]);
+				}
+			}
+			let buyTemplateId = $('#buyTemplateId').val();
+			if(buyTemplateId){
+				$('.upbtempBtnClass').hide();
+				$(".bContractPreviewClass").show();
+				$("#bContractPreviewBtn").off("click");
+				$("#bContractPreviewBtn").on("click", function () {
+					printContract(buyTemplateId);
+				})
+			}
+		}
+		if (_curStatus === 'A' || _curStatus === 'D') {
+			$("#payFullTime").datebox('readonly', true);
+			$("#buyDeliveryDate").datebox('readonly', true);
+			$("#buyPayBondTime").datebox('readonly', true);
+			$("#productCd").combotree('readonly', true);
+			$("#buyMatchUserName").combotree('readonly', true);
+			$("#brandNumber").combobox('readonly', true);
+			$("#inputForm").find("input").not("[type='button']").attr("readonly", true);
+			$(".chooseBtn").hide();
+		}
+	});
+
+
+	function formatterBuy(value){
+		if (!value){
+			value = $("#bdealPrice").numberbox('getValue');
+		}
+		var notax = parseFloat(value/1.13).toFixed(3);
+		$("#bdealAmountNotax").numberbox('setValue',notax);
+		var dealNumber = $("#dealNumber").numberbox('getValue');
+		var payRate = $("#payRate").combobox('getValue');
+		if (dealNumber){
+			var totalAmount = parseFloat(value*dealNumber).toFixed(3);
+			$("#btotalAmount").numberbox('setValue',totalAmount);
+			$("#payRateAmount").numberbox('setValue',totalAmount*payRate);
+
+			_deliveryModeJson_ = _deliveryModeJson.filter(function (a){
+				return a.dictCd == "XHHK" || a.dictCd == "XKHH";
+			})
+
+			// 预付款额度不足时，采购合同只能选择先货后款
+			if (Number($("#supplierPrepayAmount").val()) - Number($("#usedSupplierPrepayAmount").val()) < Number($("#btotalAmount").numberbox("getValue"))) {
+				_deliveryModeJson_ = _deliveryModeJson.filter(function (a){
+					return a.dictCd == "XHHK";
+				})
+				if (!_buyVirtualFlg){
+					$('#deliveryModeB').combobox("clear");
+				}
+			}
+			if (!_buyVirtualFlg){
+				$('#deliveryModeB').combobox('loadData', _deliveryModeJson_);
+			}
+		}
+	}
+
+	function upbtempBtnFun(flg1, flg2, flg3) {
+		var buy_template_id = $("#buyTemplateId").combobox("getValue");
+		var buy_content_template_id = $("#buyContentTemplateId").val();
+		if (flg1) {
+			if (buy_template_id) {
+				$("#upbtempBtn").removeClass("webuploader-container");
+			} else {
+				$("#upbtempBtn").addClass("webuploader-container");
+			}
+			if (buy_template_id == -1) {
+				// 如果选择其他 显示上传按钮
+				$(".upbtempBtnClass").show();
+				$("#upbtempBtn").addClass("webuploader-container");
+				$(".bContractPreviewClass").hide();
+				$("#bContractPreviewBtn").off("click");
+			} else {
+				$(".upbtempBtnClass").hide();
+				$("#upbtempBtn").removeClass("webuploader-container");
+				// 显示合同预览按钮
+				$(".bContractPreviewClass").show();
+				$("#bContractPreviewBtn").off("click");
+				$("#bContractPreviewBtn").on("click", function () {
+					printContract(buy_template_id);
+				})
+			}
+		} else if (flg2) {
+			if (flg3) {
+				$("#buyTemplateId").combobox({readonly: false});
+				$("#buyTemplateId").combobox({
+					data: _buyTemplateList,
+					required: false,
+					editable: false,
+					textField: 'templateName',
+					valueField: 'id',
+					panelHeight: '100',
+					onChange: function () {
+						upbtempBtnFun(true, false);
+					}
+				});
+			} else if (buy_content_template_id) {
+				$("#buyTemplateId").combobox({readonly: true});
+			} else {
+				$("#buyTemplateId").combobox({readonly: false});
+				$("#buyTemplateId").combobox({
+					data: _buyTemplateList,
+					required: false,
+					editable: false,
+					textField: 'templateName',
+					valueField: 'id',
+					panelHeight: '100',
+					onChange: function () {
+						upbtempBtnFun(true, false);
+					}
+				});
+			}
+		}
+	}
+	$("#provinceName").combobox({
+		url: _ctx + "/bs/areaCost/ajaxGetCity?id=1",
+		valueField: "id",
+		textField: "name",
+		width: 150,
+		height: 30,
+		onSelect: function (record) {
+			if (_deliveryAddrFlg){
+				return;
+			}
+			let name1 = record.name;
+			let id1 = record.id;
+			$("#provinceNameUtil").text(name1);
+			$("#provinceCodeUtil").text(id1);
+			$("#cityName").combobox({
+				url: _ctx + "/bs/areaCost/ajaxGetCity?id=" + record.id,
+				valueField: "id",
+				textField: "name",
+				width: 150,
+				height: 30,
+				onSelect: function (record) {
+					if (_deliveryAddrFlg){
+						return;
+					}
+					$('#cityNameUtil').text("/" + record.name);
+					$("#cityCodeUtil").text("/" + record.id);
+					$("#areaCode").combobox({
+						url: _ctx + "/bs/areaCost/ajaxGetCity?id=" + record.id,
+						valueField: "id",
+						textField: "name",
+						width: 150,
+						height: 30,
+						onSelect: function (record) {
+							if (_deliveryAddrFlg){
+								return;
+							}
+							$("#areaCodeUtil").text("/" + record.id);
+							$("#areaNameUtil").text("/" + record.name);
+							areaNameUtil = $("#areaNameUtil").text();
+							areaCodeUtil = $("#areaCodeUtil").text();
+							console.log(record.name)
+							if (record.name != "") {
+								var tt = $("#provinceNameUtil").text();
+								var ttCode = $("#provinceCodeUtil").text();
+								var cc = $("#cityNameUtil").text();
+								var ccCode = $("#cityCodeUtil").text();
+								$("#bdeliveryAddr").textbox("setValue", tt + cc + areaNameUtil);
+								$("#bsAreaId").textbox("setValue", ttCode + ccCode + areaCodeUtil);
+							}
+						}
+					});
+					cityNameUtilUtil = $("#cityNameUtil").text();
+					cityCodeUtilUtil = $("#cityCodeUtil").text();
+					console.log(record.name)
+					var tt = $("#provinceNameUtil").text();
+					var ttCode = $("#provinceCodeUtil").text();
+					$("#bdeliveryAddr").textbox("setValue", tt + cityNameUtilUtil);
+					$("#bsAreaId").textbox("setValue", ttCode + cityCodeUtilUtil);
+				}
+			});
+			$('#bdeliveryAddr').textbox("setValue", "");
+			$('#bsAreaId').textbox("setValue", "");
+			$("#bdeliveryAddr").textbox("setValue", name1);
+
+		}
+	});
+
+	//合同模板预览
+	function printContract(templateId) {
+		let id = strIsNull($id) ? null : $id;
+		if (templateId) {
+			var url ;
+			if(id == null){
+				url = _ctx + "/ctr/contractText/getTemplateContractNew/" + templateId + "?windowId=w_contract";
+			}else{
+				url = _ctx+"/ctr/contractText/getInventoryText/"+templateId+"/"+id + "?windowId=w_contract";
+			}
+			$('#w_contract').window({href: url,maximizable: false});
+			// 手机端默认最大化
+			if (window.innerWidth <= 768) {
+				$('#w_contract').window('maximize');
+			}
+			$('#w_contract').window("open");
+		}
+	}
+
+	function fileUpload(fileBtn, fileId, filePath, filePlugin) {
+		var $this = $('#' + fileId);
+		// --start-文件上传---
+		var uploader = WebUploader.create({
+			auto: true,
+			// swf文件路径
+			swf: _ctx + '/static/webuploader-0.1.5/Uploader.swf',
+			// 文件接收服务端。
+			server: _ctx + '/file/uploadFile',
+			// 选择文件的按钮。可选。
+			// 内部根据当前运行是创建，可能是input元素，也可能是flash.
+			pick: '#' + fileBtn,
+			// 不压缩image, 默认如果是jpeg，文件上传前会压缩一把再上传！
+			resize: false,
+			duplicate: true,//true可重复上传，默认不可多次重复上传
+			// 只允许选择PDF文件。
+			accept: {
+				title: 'file',
+				extensions: 'pdf',
+				mimeTypes: "*"
+			}
+		});
+		// 去掉文件上传组件样式，使用上传dom 自己样式
+		$(".webuploader-pick").removeClass();
+
+		uploader.on('beforeFileQueued', function (file) {
+			$.messager.progress('close');
+			if (file && file.size > 10485760) {
+				$.messager.alert('tip', "上传文件不能超过10M!", 'info');
+				return false;
+			}
+		})
+
+		// 当有文件添加进来的时候
+		uploader.on('fileQueued', function (file) {
+			$.messager.progress();
+		});
+
+		// 文件上传成功，给item添加成功class, 用样式标记上传成功。
+		uploader.on('uploadSuccess', function (file, response) {
+			$.messager.progress('close');
+			if (file && file.size > 10485760) {
+				$.messager.alert('tip', "上传文件不能超过10M!", 'info');
+				return;
+			}
+			if (response && response.result) {//上传成功
+				// console.log("uploadSuccess", response);
+				var fileId = response.fileId;
+
+				// console.log("fileId", fileId);
+				filePlugin.uploadSuccess(fileId);
+				//加载附件列表
+				filePlugin.load($this.val(), '#' + filePath);
+				if (filePath == "upbtempPath") {
+					upbtempBtnFun(false, true, false);
+				}
+				if (filePath == "upselltempPath") {
+					upstempBtnFun(false, true, false);
+				}
+			} else {
+				$.messager.alert('tip', "上传文件失败，失败信息：" + response._raw, 'info');
+			}
+
+		});
+		uploader.on('error', function (file) {
+			$.messager.progress('close');
+			$.messager.alert('tip','文件格式不支持请上传 PDF 格式文件!','info');
+		})
+		// 文件上传失败，显示上传出错。
+		uploader.on('file', function (file) {
+			$.messager.progress('close');
+			$.messager.alert('tip', '文件上传失败,请重试!', 'info');
+		});
+		// --end-文件上传---
+	}
+	function comboReadonly(domThis){
+		if (_curStatus === 'A' || _curStatus === 'D'){
+			$(domThis).combo('readonly' , true);
+		}
+	}
+	//发起申请前操作
+	function beforSaveOper(){
+		return true;
+	}
+</script>

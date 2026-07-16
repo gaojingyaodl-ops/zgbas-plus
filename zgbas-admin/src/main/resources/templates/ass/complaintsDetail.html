@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <style>
+        #content {
+            resize: none;
+            background-color: #fff;
+            border-radius: 2px;
+            outline-color:#cbd1e0;
+            border: solid 1px #cbd1e0;
+            padding-left: 8px;
+            padding-right: 8px;
+            height: 150px;
+            width: 470px;
+            font-size: 15px;
+            text-align: left;
+        }
+    </style>
+</head>
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+        <form id="inputForm" method="post"  class="from-input-layout">
+            <input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+            <input type="hidden" name="status" id="stauts" th:value="${entity.status}" />
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label for="complaintsType"  class="control-label">投诉类型:</label>
+                    <input name="complaintsType" class="control" id="complaintsType" type="text" th:value="${entity.complaintsType}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label class="control-label">日期:</label>
+                    <input type="text" class="control" id="complainsDate" th:value="${#dates.format(entity.createdDate, 'yyyy-MM-dd')}"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label for="fromUserName"  class="control-label">姓名:</label>
+                    <input type="text" class="control" readonly name="fromUserName" id="fromUserName" th:value="${entity.fromUserName}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter" id="toUser">
+                    <label for="toUserName"  class="control-label">被投诉人:</label>
+                    <input name="toUserName" class="control" id="toUserName" type="text" th:value="${entity.toUserName}"/>
+                    <input name="toUserId" id="toUserId" type="hidden" th:value="${entity.toUserId}"/>
+                </p>
+                <p class="yw-table-filter hide" id="toDept">
+                    <label for="toDeptName"  class="control-label">被投诉部门:</label>
+                    <input name="toDeptName" class="control" id="toDeptName" type="text" th:value="${entity.toDeptName}"/>
+                    <input name="toDeptId" id="toDeptId" type="hidden" th:value="${entity.toDeptId}"/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label for="subject"  class="control-label">投诉事项:</label>
+                    <input name="subject" class="control" id="subject" type="text" th:value="${entity.subject}"/>
+                </p>
+            </div>
+            <div class="mb10">
+                <p class="yw-table-filter w3">
+                    <label for="content" class="control-label">内容:</label>
+                    <textarea name="content" id="content" required="required" class="textarea easyui-validatebox control" type="text" th:utext="${entity.content}"></textarea>
+                </p>
+            </div>
+        </form>
+    </div>
+    <div region="south" border="false" style="overflow: hidden;height: 40px;padding-left:225px;">
+        <div class="actions_bar" th:if="${entity.status != '1' && entity.fromUserId == @shiroUtil.getCurrentUserId()}">
+            <span class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveComplaints();">确认投诉</span>
+        </div>
+        <div class="actions_bar" th:if="${entity.status == '1'}">
+            <span class="easyui-linkbutton btn-info-empty">已处理</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var _stauts = $("#stauts").val();
+    $(function(){
+        if (_stauts == '1'){
+            $(".control").attr("readOnly","true");
+        }
+
+        $("#complaintsType").combobox({
+            data : _complaintsTypeJson,
+            textField : 'dictName',
+            valueField : 'dictCd',
+            panelHeight: 'auto',
+            editable : false,
+            onSelect : function (node){
+                var _complaintTypeValue =  node.dictCd;
+                if (_complaintTypeValue == '0'){
+                    $("#toUser").removeClass('hide');
+
+                    $("#toDept").addClass('hide');
+                    $("#toDeptName").combotree({required:false});
+                    $("#toDeptName").combotree("clear");
+                }else if (_complaintTypeValue == '1'){
+                    $("#toDept").removeClass('hide');
+
+                    $("#toUser").addClass('hide');
+                    $("#toUserName").combotree({required:false});
+                    $("#toUserName").combotree("clear");
+                }else if (_complaintTypeValue == '2'){
+                    $("#toDept").addClass('hide');
+                    $("#toUser").addClass('hide');
+
+                    $("#toDeptName").combotree({required:false});
+                    $("#toDeptName").combotree("clear");
+                    $("#toUserName").combotree({required:false});
+                    $("#toUserName").combotree("clear");
+                }
+            }
+        });
+
+        $("#complainsDate").datebox({
+            height:30,
+            required: true,
+            editable: false,
+            readonly: true,
+            hasDownArrow: false
+        });
+
+        $('#toUserName').combotree({
+            data: _userTree,
+            multiple : false,
+            editable : true,
+            required: true,
+            formatter:function(node){
+                var enableFlg = node.attributes.enableFlg;
+                if (enableFlg==false){
+                    return '<span style="color:red;">'+node.text+'(无效)</span>';
+                }
+                return node.text;
+            },
+            onSelect : function(node){
+                if(node.children.length!=0 || node.attributes.type == 'dept'){
+                    $('#toUserName').combotree('clear');
+                }else{
+                    var value = node.id;
+                    var value1 = value.replace('user','');
+                    $("#toUserId").val(value1);
+                    $('#toUserName').combotree('setValue',node.text);
+                }
+            }
+        });
+
+        $('#toDeptName').combotree({
+            data: _deptTree,
+            multiple : false,
+            editable : true,
+            required: true,
+            formatter:function(node){
+                var enableFlg = node.attributes.enableFlg;
+                if (enableFlg==false){
+                    return '<span style="color:red;">'+node.text+'(无效)</span>';
+                }
+                return node.text;
+            },
+            onSelect : function(node){
+                debugger;
+                if(node.children.length!=0){
+                    $('#toDeptName').combotree('clear');
+                }else{
+                    var value = node.id;
+                    var value1 = value.replace('dept','');
+                    $("#toDeptId").val(value1);
+                    $('#toDeptName').combotree('setValue',node.text);
+                }
+            }
+        });
+
+        $("#subject").textbox({
+            required: true
+        });
+
+    });
+    //保存
+    function saveComplaints(){
+        var _url = _ctx + "/ass/complaints/saveComplaints";
+        $.messager.confirm({
+            width:388,
+            height:170,
+            title: '提示',
+            msg: '确定要发起投诉吗？',
+            ok: "确定",
+            cancel: "取消",
+            cls:'c9',
+            border:'thin',
+            fn: function(r){
+                if (r){
+                    var _complaintTypeValue =  $("#complaintsType").combobox('getValue');
+                    if (_complaintTypeValue == '0'){
+                        $("#toDeptName").combotree({required:false});
+                        $("#toDeptName").combotree("clear");
+                    }else if (_complaintTypeValue == '1'){
+                        $("#toUserName").combotree({required:false});
+                        $("#toUserName").combotree("clear");
+                    }else if (_complaintTypeValue == '2'){
+                        $("#toDeptName").combotree({required:false});
+                        $("#toDeptName").combotree("clear");
+                        $("#toUserName").combotree({required:false});
+                        $("#toUserName").combotree("clear");
+                    }
+
+                    var options = {
+                        url: _url,
+                        success: function (data) {
+                            var rObj = eval('(' + data + ')');
+                            if (rObj.success) {
+                                $.messager.show({
+                                    title : '提示',
+                                    msg : '投诉发起成功!',
+                                    timeout : 2000,
+                                    height:120,
+                                    showType : 'show'
+                                });
+                                $('#w_complaints').window("close");
+                                $('#complaint_table').datagrid('reload');
+                            } else {
+                                var failure = rObj.failure;
+                                $.messager.alert('提示', failure, 'warning');
+                                $('#complaint_table').datagrid('reload');
+                            }
+                        }
+                    };
+                    $('#inputForm').form('submit', options);
+                }
+            }
+        });
+    }
+</script>

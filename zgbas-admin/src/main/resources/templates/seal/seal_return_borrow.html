@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true" id="tab">	
+	<div region="center" class="search_div pt20	pl60 pr20 pb15 ofh" border="false">
+		<form id="inputFormSealBorrow" method="post"  enctype="multipart/form-data" class="from-input-layout" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="id" th:value="${entity.id}" required="required"/>
+		<input type="hidden" id="_itemType" th:value="${entity.itemType}"/>
+		<input type="hidden" id="_alreadyReturn" th:value="${entity.alreadyReturn}"/>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="keepUserName">保管人</label>
+				<input id="keepUser_name" type="text" readonly th:value="${entity.keepUserName}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label for="companyName">公司名称</label>
+				<input id="company_name" type="text" readonly th:value=${entity.companyName}></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label for="itemType">印章类型</label>
+				<input id="item_type" type="text" name="itemType"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label for="remark">备注</label>
+				<input name="remark" type="text"></input>
+			</p>
+		</div>
+		</form>
+	
+	</div>
+	<div region="south" border="false" style="overflow: hidden;height: 50px;padding-left:40px;">
+		<div class="actions_bar">
+			<a href="#" class="easyui-linkbutton btn64" id="btn_psd" onclick="sealReturn()">确认归还</a>
+			<a href="#" class="easyui-linkbutton btn64 ml6" onclick="$('#w_return_seal').window('close')">关闭</a>
+		</div>
+	</div>
+</div>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+var _customerNameJson = eval('[(${customerNameJson})]');
+var _itemTypeJson = eval('[(${itemTypeJson})]');
+var _itemTypeReturnJson = [];
+$(function(){
+	var company_name = $("#company_name").val();
+	var _company_name = Convert.findValueByKey(_customerNameJson,"dictCd",company_name,"dictName");
+	$('#company_name').val(_company_name);
+
+	var _itemType = $("#_itemType").val();
+	var _alreadyReturn = $("#_alreadyReturn").val();
+
+	var arr1 = _itemType.split(",");
+	var arr2 = _alreadyReturn.split(",");
+	var arr3 = arr1;
+	if (_alreadyReturn){
+		arr3 = getArrDifference(arr1,arr2);
+	}
+	for(var i = 0; i < arr3.length; i++){
+		for(var j = 0; j < _itemTypeJson.length; j++){
+			if (arr3[i] == _itemTypeJson[j].dictCd){
+				_itemTypeReturnJson.push(_itemTypeJson[j]);
+				break;
+			}
+		}
+	}
+	$("#item_type").combobox({
+		data:_itemTypeReturnJson,
+		textField:'dictName',
+		valueField:'dictCd',
+		editable:false,
+		multiple:true,
+		required:true,
+	    formatter: function (row) {
+            var opts = $(this).combobox('options');
+            return '<input style="margin-right:10px;" type="checkbox" class="combobox-checkbox ckbox">' + row[opts.textField]
+        },
+        onShowPanel: function () {
+            var opts = $(this).combobox('options');
+            var target = this;
+            var values = $(target).combobox('getValues');
+            $.map(values, function (value) {
+                var el = opts.finder.getEl(target, value);
+                el.find('input.combobox-checkbox')._propAttr('checked', true);
+            })
+        },
+        onLoadSuccess: function () {
+            var opts = $(this).combobox('options');
+            var target = this;
+            var values = $(target).combobox('getValues');
+            $.map(values, function (value) {
+                var el = opts.finder.getEl(target, value);
+                el.find('input.combobox-checkbox')._propAttr('checked', true);
+            })
+        },
+        onSelect: function (row) {
+            var opts = $(this).combobox('options');
+            var el = opts.finder.getEl(this, row[opts.valueField]);
+            el.find('input.combobox-checkbox')._propAttr('checked', true);
+        },
+        onUnselect: function (row) {
+            var opts = $(this).combobox('options');
+            var el = opts.finder.getEl(this, row[opts.valueField]);
+            el.find('input.combobox-checkbox')._propAttr('checked', false);
+        }
+	});
+	
+});
+
+function sealReturn() {
+	var options = {
+		url : _ctx + '/apply/sealBorrow/returnSeal',
+		onSubmit : function() {
+			var flag = $("#inputFormSealBorrow").form('validate');
+			if (!flag) {
+				$.messager.alert('提示','请填写完整!!','info');
+			}
+			return flag;
+		},
+		success : function(data) {
+			var result = eval('(' + data + ')');
+			if (result.success) {
+				$.messager.show({
+					title : 'Tip',
+					msg : '操作成功',
+					timeout : 2000,
+					showType : 'show'
+				});
+				$('#w_return_seal').window("close");
+				$('#tt').datagrid('reload');
+			} else {
+				$.messager.alert('error', result.failure, 'warning');
+			}
+		}
+	}
+	$('#inputFormSealBorrow').form('submit', options);
+}
+function getArrDifference(arr1, arr2) {
+    return arr1.concat(arr2).filter(function(v, i, arr) {
+        return arr.indexOf(v) === arr.lastIndexOf(v);
+    });
+}
+</script>

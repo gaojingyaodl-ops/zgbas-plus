@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<div class="easyui-layout" fit="true">	
+<div id="btn" class="add-btn" style="margin-top: 10px">
+		  <a  href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="insert()">新增</a>
+		  <a  href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveEdit()">保存</a>
+</div>
+  <div style="height:150px;">
+   <input type="hidden" id="warehouseId" th:value="${warehouseId}" />
+			 <table id="warehouseAddrTable" fit="true" border="0"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+			</table>
+	</div>
+</div>
+<script type="text/javascript">
+$(function(){
+	var _warehouseId = $("#warehouseId").val();
+	var _url = _ctx+"/bas/warehouseAddr/addrList/"+_warehouseId;
+	$('#warehouseAddrTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:[ [
+			{field:'id',title:'ID',hidden:true},
+			{field:'warehouseId',title:'仓库id',hidden:true},
+			{field:'warehouseShortName',title:'仓库地址简称',align:'center',width:100,editor: { type: 'validatebox',options:{required:true,validType:'length[1,20]'}}},
+			{field:'warehouseAddr',title:'地址', width:150,editor:{type:'validatebox',options:{required:true,validType:'length[1,20]'}}},
+			{field:'updatedDate',title:'更新时间', align:'center', width:150},
+			{field:'defaultFlg',title:'是否默认', width:100,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+				if(value =='1'){
+					return'是';
+				}else{
+					return'否';
+				}
+			}},
+			{field:'action',title:'操作', width:150,align:'center',formatter:function(value, row, index){ 
+				var id=row.id;
+			    var str = '<img onclick=remove("'+id+'") style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>';
+			   /*  var strs = "<span class='btnSpan' onclick='update(\""+id+"\")' class='l-btn'><span style='width:60px;cursor: pointer;'>是否默认</span>";  */
+		        return str;
+			}}
+		]],
+		toolbar:'#toolbar',
+		onDblClickCell:function(index,field){
+			$('#warehouseAddrTable').datagrid('endEdit', lastIndex);
+			$('#warehouseAddrTable').datagrid('beginEdit', index);
+			lastIndex = index;
+			Convert.focusEditor("warehouseAddrTable",field,lastIndex);
+		}
+	});
+});
+
+
+function insert(){
+	var _warehouseId = $("#warehouseId").val();
+	$("#warehouseAddrTable").datagrid("appendRow",{warehouseId:_warehouseId,id:'0'});
+	var rows=$("#warehouseAddrTable").datagrid('getRows');					
+	$("#warehouseAddrTable").datagrid('beginEdit', rows.length - 1);
+}
+
+function saveEdit(){
+	var flag=true;
+	var row = $('#warehouseAddrTable').datagrid('getSelected');
+	if (row){
+		var index = $('#warehouseAddrTable').datagrid('getRowIndex', row);
+		flag=$('#warehouseAddrTable').datagrid('validateRow',index);
+		if (!flag){
+			return;
+		}
+		$('#warehouseAddrTable').datagrid('endEdit', index);
+	}
+	var changeRows=[];
+	var inserted = $('#warehouseAddrTable').datagrid('getChanges','inserted');
+	var updated = $('#warehouseAddrTable').datagrid('getChanges','updated');
+	changeRows = inserted.concat(updated);
+	for(var i=0;i<changeRows.length;i++){
+		var curRow = changeRows[i];
+		var index = $('#warehouseAddrTable').datagrid('getRowIndex', curRow);
+		flag=$('#warehouseAddrTable').datagrid('validateRow',index);
+		console.log('flag',flag);
+		if (!flag){
+			$('#warehouseAddrTable').datagrid('selectRow',index);
+			$('#warehouseAddrTable').datagrid('beginEdit', index);
+			break;
+		}else{
+			$('#warehouseAddrTable').datagrid('endEdit', index);
+		}
+	}
+	if (flag){
+		$.post(_ctx+"/bas/warehouseAddr/saveAddr",Convert.ToSaveParam("warehouseAddrTable"),function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#warehouseAddrTable').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+}
+function remove(id){
+	$('#warehouseAddrTable').datagrid('selectRecord',id);
+	var row = $('#warehouseAddrTable').datagrid('getSelected');
+	var index = $('#warehouseAddrTable').datagrid('getRowIndex',row);
+	if (id=='0'){
+		$('#warehouseAddrTable').datagrid('deleteRow',index);
+		var nextSelect=index>0?index-1:0;
+		$('#warehouseAddrTable').datagrid('selectRow', nextSelect);
+	}else{
+		$.messager.confirm({
+			width:388,
+			height:170,
+			title: '删除提示',
+			msg: '确定要删除该信息吗？',
+			ok: "确定",
+			cancel: "取消",
+			cls:'c9',
+			border:'thin',
+			fn: function(r){
+                if (r){
+                	//TODO:如果该记录被引用,是否强制不允许删除?
+					$.post(_ctx+"/bas/warehouseAddr/delete/"+id,function(result) {
+						var rObj = eval(result);
+						if(rObj.success){
+							$('#warehouseAddrTable').datagrid('reload');
+							$('#warehouseAddrTable').datagrid('clearSelections');
+						}else{
+							 $.messager.alert('error',rObj.failure,'warning');
+						}
+					});
+                }
+            }
+        });
+	}
+}
+function update(id) {
+	$.messager.confirm({
+		width:388,
+		height:170,
+		title: '默认选择提示',
+		msg: '确定要此仓库设置为默认的吗？',
+		ok: "确定",
+		cancel: "取消",
+		cls:'c9',
+		border:'thin',
+		fn: function(r){
+            if (r){
+				$.post(_ctx + "/bas/warehouseAddr/update/"+id,function(result) {
+					var rObj = eval(result);
+					if(rObj.success){
+						$('#warehouseAddrTable').datagrid('reload');
+						$('#warehouseAddrTable').datagrid('clearSelections');
+					}else{
+						 $.messager.alert('error',rObj.failure,'warning');
+					}
+				});
+            }
+        }
+    });
+	}
+	
+</script>

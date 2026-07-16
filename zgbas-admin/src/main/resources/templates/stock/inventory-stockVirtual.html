@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+    <script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+    <script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+    <script th:src="@{/static/js/filePlus.js}" type="text/javascript"></script>
+    <script th:src="@{/static/jquery/FileSaver.js}" type="text/javascript"></script>
+    <script th:src="@{/static/jquery/jquery.wordexport.js}" type="text/javascript"></script>
+    <script th:src="@{/static/js/areaJson.js?v=2}" type="text/javascript"></script>
+    <style>
+        .form-section-title {
+            display: block;
+            width: 100%;
+            height: 26px;
+            margin-bottom: 15px;
+            color: var(--skin-color);
+        }
+        .approve_text {
+            display: block;
+            width: 93.5%;
+            height: 26px;
+            line-height: 26px;
+            border-bottom: 1px solid #cbd1e0;
+        }
+    </style>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+    <input type="hidden" id="current_userId" th:value = "${@shiroUtil.getCurrentUserId()}">
+    <input type="hidden" id="current_userName" th:value="${@shiroUtil.getCurrentUserName()}">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <input type="hidden" name="search_NEQS_inventoryStatus" value="C"/>
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>库存编号</label>
+                <input class="control" name="search_LIKES_stockVirtualNo" type="text"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>企业名称</label>
+                <input class="control" name="search_LIKES_companyName" type="text"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>采购业务员</label>
+                <input class="control" name="search_LIKES_matchUserName" type="text"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>状态</label>
+                <input class="control" name="search_EQS_inventoryStatus" id="inventoryStatus" type="text"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>品名</label>
+                <input class="control" name="search_LIKES_productName" type="text"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>牌号</label>
+                <input class="control" name="search_LIKES_brandNumber" id="brandNumberSearch" type="text"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>厂商</label>
+                <input class="control" name="search_LIKES_factoryName" type="text"/>
+            </p>
+            <a href="#" id="btnEdit" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" id="btnDel" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+            <a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none" onclick="exportExcel()">导出</a>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right: 20px;padding-left:20px;">
+    <table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id">
+    </table>
+</div>
+<div id="virtualDlg"  data-options="width:550,height: 440,border:'thin',collapsible: false,minimizable: false,cls:'c9'">
+    <form id="frm_appvoe_step" class="editForm from-input-layout" method="post">
+        <div style="margin-top: 20px;margin-bottom: 20px;margin-left: 45px" class="virtual_dlg_div hide">
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>库存编号:</label>
+                    <input id="_stockVirtualNo" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>品种:</label>
+                    <input id="_productName" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>牌号:</label>
+                    <input id="_brandNumber" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>厂商:</label>
+                    <input id="_factoryName" class="mid" readonly/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>供应商:</label>
+                    <input id="_companyName" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>代采方:</label>
+                    <input id="_buyOurCompanyName" class="mid" readonly/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>采购单价(元/吨):</label>
+                    <input id="_dealPrice" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>采购数量(吨):</label>
+                    <input id="_dealNumber" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>代采方:</label>
+                    <input id="_ourCompanyName" class="mid" readonly/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>销售指导价(元/吨):</label>
+                    <input id="_minSellPrice" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>库存数量:</label>
+                    <input id="_stockNumber" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>付全款日期:</label>
+                    <input id="_payFullTime" class="mid" readonly/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>销售业务员:</label>
+                    <input id="_sellMatchUserName" class="mid" readonly/>
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">变更信息</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter releaseTag">
+                    <label>释放数量(吨):</label>
+                    <input id="newReleaseNumber" class="mid"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>销售指导价(元/吨):</label>
+                    <input id="newMinSellPrice" class="mid"/>
+                </p>
+                <p class="yw-table-filter releaseTag">
+                    <label>销售业务员</label>
+                    <input class="art" id="newSellMatchUserName"/>
+                    <input id="newSellMatchUserId" type="hidden"/>
+                </p>
+            </div>
+        </div>
+    </form>
+</div>
+<div id="w" title="模板详情" data-options="width:1085,height:580"></div>
+<script type="text/javascript">
+    var _contractType = eval('[(${contractType})]');
+    // 虚拟库存记录状态
+    var _stockVirtualStatusJson = eval('[(${stockVirtualStatusJson})]');
+    // 代采方
+    var _ourCompanyNameJson = eval('[(${ourCompanyNameJson})]');
+    // 代采方
+    var _dcsxOurCompanyNameJson = eval('[(${dcsxOurCompanyNameJson})]');
+    var _matchUserNameTree = eval('[(${matchUserNameTree})]');
+    // 虚拟库存类型
+    var _contractTypeJson = eval('[(${contractTypeJson})]');
+    // 交货方式
+    var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+    // 采购类型
+    var _virtualBuyTypeJson = eval('[(${virtualBuyTypeJson})]');
+    var _zgbasAdmin = [[${zgbasAdmin}]];
+    console.log('_zgbasAdmin:' + _zgbasAdmin);
+    var lastIndex;
+    var _currUserId = $("#current_userId").val();
+    $(function () {
+        $('#tt').datagrid({
+            pagination: true,
+            rownumbers: true,
+            pageSize: 30,
+            pageList: [50, 40, 30, 20, 10],
+            queryParams: Convert.getJson4Form('searchForm'),
+            url: _ctx + "/inventory/stockVirtual/findInventoryPage",
+            frozenColumns:[ [
+                {field: 'stockVirtualNo', title: '库存编号', align: 'left', width: 140},
+                {field: 'companyName', title: '供应商', align: 'left', width: 120,formatter:function(value,row){
+                        if (value){
+                            let viewName;
+                            viewName = Convert.findValueByKey(_dcsxOurCompanyNameJson, "companyName", value, "companyAbbr")
+                            if (!viewName){
+                                let s_str = value.split("有限公司");
+                                if (s_str) {
+                                    viewName = s_str[0];
+                                }
+                            }
+                            return '<p title="' + value + '" class="note">' + viewName + '</p>';
+                        }
+                    }},
+                {field:'buyOurCompanyName',title:'代采方', width:90,align:'left',formatter:function(value){
+                        return Convert.findValueByKey(_dcsxOurCompanyNameJson, "companyCd", value, "companyAbbr");
+                    }},
+                {field:'ourCompanyName',title:'我方', width:90,align:'left',formatter:function(value){
+                        return Convert.findValueByKey(_ourCompanyNameJson, "dictCd", value, "remark");
+                    }},
+                {field: 'productName', title: '品种', align: 'left', width: 80}
+            ] ],
+            columns: [ [
+                {field: 'id', hidden: 'true'},
+                {field: 'brandNumber', title: '牌号', align: 'left', width: 80},
+                {field: 'factoryName', title: '厂商', align: 'left', width: 80},
+                {field: 'dealNumber', title: '采购数量(吨)', align: 'right', width: 90, formatter: formateNum},
+                {field: 'releaseNumber', title: '已释放数量(吨)', align: 'right', width: 90, formatter: formateNum},
+                {
+                    field: 'virtual_num', title: '库存数量', align: 'right', width: 90,
+                    formatter: function (value, row, index) {
+                        return formateNum(Number(row.dealNumber - row.releaseNumber));
+                    }
+                },
+                {field: 'dealPrice', title: '采购单价(元/吨)', align: 'right', width: 110, formatter: formateNum},
+                {field: 'raisePrice', title: '加价(元/吨)', align: 'right', width: 110, formatter: formateNum},
+                {field: 'minSellPrice', title: '销售指导价(元/吨)', align: 'right', width: 120, formatter: formateNum},
+                {field: 'totalAmount', title: '总价(元)', align: 'right', width: 80, formatter: formateNum},
+                {field: 'deliveryDate', title: '交货日期', align: 'center', width: 100},
+                {field: 'payFullTime', title: '付全款日期', align: 'center', width: 100},
+                {
+                    field: 'deliveryType', title: '交货方式', align: 'left', width: 80,
+                    formatter: function (value) {
+                        return Convert.findValueByKey(_deliveryTypeJson, 'dictCd', value, 'dictName')
+                    }
+                },
+                {field: 'inventoryStatus', title: '状态', align: 'center', width: 65, formatter: parseVirtualStatus},
+                {field: 'deliveryAddr', title: '交货地点', align: 'left', width: 140},
+                {field: 'matchUserName', title: '采购业务员', align: 'left', width: 70},
+                {
+                    field: 'op', title: '操作', width: 120, align: 'left',
+                    formatter: function (value, row, index) {
+                        let str = "";
+                        if ((row.matchUserId == _currUserId || _zgbasAdmin) && row.inventoryStatus == "N") {
+                            str += '<span onclick="invalidInventory(' + row.id + ')" style="cursor:pointer;color: #c44c62;font-weight: bold;" > ' + "作废" + ' </span>';
+                            str += '<span onclick="updateMinSellPrice(' + row.id + ')" style="cursor:pointer;color: #d6b018;font-weight: bold;padding-left: 10px;" > ' + "调整指导价" + ' </span>';
+                        }
+                        if ((row.matchUserId == _currUserId || _zgbasAdmin) && row.inventoryStatus == "F") {
+                            str += '<span onclick="releaseStockVirtual(' + row.id + ')" style="cursor:pointer;color: #4b7edc;font-weight: bold;" > ' + "释放" + ' </span>';
+                            str += '<span onclick="updateMinSellPrice(' + row.id + ')" style="cursor:pointer;color: #d6b018;font-weight: bold;padding-left: 10px;" > ' + "调整指导价" + ' </span>';
+                        }
+                        return str;
+                    }
+                }
+            ]],
+            onDblClickRow:function(index,row){
+                openVirtualApproveDetail(row.approveId, row.virtualBuyType);
+            },
+        });
+        $('#w').window({
+            modal: true,
+            closed: true,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            cache: false,
+            onClose: function () {
+                $('#tt').datagrid('reload');
+            }
+        });
+
+        // 采购类型
+        $("#virtualBuyTypeSrh").combobox({
+            data: [{dictCd:'KC',dictName:'库存释放'},{dictCd:'XY',dictName:'协议采购'}],
+            textField: 'dictName',
+            valueField: 'dictCd',
+            panelHeight: 'auto'
+        });
+
+        $("#newMinSellPrice, #newReleaseNumber").numberbox({
+            validType: 'length[1,20]',
+            precision: 2,
+            required: false
+        });
+
+        $('#newSellMatchUserName').combotree({
+            data: _matchUserNameTree,
+            multiple: false,
+            editable: true,
+            required: false,
+            formatter: function (node) {
+                var enableFlg = node.attributes.enableFlg;
+                if (enableFlg == false) {
+                    return '<span style="color:red;">' + node.text + '(无效)</span>';
+                }
+                return node.text;
+            },
+            onSelect: function (node) {
+                if (node.children.length != 0) {
+                    $('#newSellMatchUserName').combotree('clear');
+                } else {
+                    var value = node.id;
+                    var value1 = value.replace('user', '');
+                    $("#newSellMatchUserId").val(value1);
+                    $('#newSellMatchUserName').combotree('setValue', node.text);
+                }
+            }
+        });
+        $('#inventoryStatus').combobox({
+            data:_stockVirtualStatusJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:'auto'
+        })
+    });
+
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(3).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+
+    // 格式化报价单状态样式
+    function parseVirtualStatus(value) {
+        var result = "";
+        var statusName = Convert.findValueByKey(_stockVirtualStatusJson, 'dictCd', value, 'dictName');
+        if (!statusName){
+            return "";
+        }
+        var str = '<span class="contract-btn ';
+        if (value == "N") {
+            str += 'contract-btn-10">';
+        } else if (value == "I") {
+            str += 'contract-btn-2">';
+        } else if (value == "A") {
+            str += 'contract-btn-1">';
+        } else if (value == "S") {
+            str += 'contract-btn-3">';
+        } else if (value == "C") {
+            str += 'contract-btn-8">';
+        } else if (value == "F") {
+            str += 'contract-btn-5">';
+        } else if (value == "Y") {
+            str += 'contract-btn-9">';
+        } else {
+            result = statusName;
+        }
+        if (!result) {
+            result = str + statusName + '</span>';
+        }
+        return result;
+    }
+
+    function openVirtualApproveDetail(approveId, virtualType) {
+        window.parent.addTab('自营库存采购:' + approveId, _ctx + '/pm/approve/detail/' + approveId);
+    }
+
+    function openApproveDetail(approveId) {
+        var title =  '预算单:' + approveId;
+        window.parent.addTab(title, _ctx + '/pm/approve/detail/' + approveId);
+    }
+
+    function openContractDetail(approveId) {
+        var title = "预算详情" + ':' + approveId;
+        window.parent.addTab(title, _ctx + '/bs/matchDetail/content/' + approveId);
+    }
+
+    function invalidInventory(id) {
+        $.messager.confirm({
+            width: 388,
+            height: 170,
+            title: '作废提示',
+            msg: '确认作废该数据?',
+            ok: "确定",
+            cancel: "取消",
+            cls: 'c9',
+            border: 'thin',
+            fn: function (r) {
+                if (r) {
+                    if (id) {
+                        $.post(_ctx + "/inventory/stockVirtual/invalidInventory/" + id, function (result) {
+                            $('#tt').datagrid('reload');
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+    function releaseStockVirtual(virtualId){
+        setVirtualValue(virtualId);
+        $(".releaseTag").removeClass("hide");
+        openVirtualDialog(virtualId, "库存释放", true);
+    }
+
+    function updateMinSellPrice(virtualId){
+        setVirtualValue(virtualId);
+        $(".releaseTag").addClass("hide");
+        openVirtualDialog(virtualId, "调整销售指导价", false);
+    }
+
+    function setVirtualValue(virtualId){
+        if (virtualId){
+            $.ajax({
+                type:"GET",
+                dataType: "json",
+                url: _ctx + '/inventory/stockVirtual/getInventoryStockVirtual?id=' + virtualId,
+                success: function (data){
+                    if(data){
+                        $("#_stockVirtualNo").val(data.stockVirtualNo);
+                        $("#_productName").val(data.productName);
+                        $("#_brandNumber").val(data.brandNumber);
+                        $("#_factoryName").val(data.factoryName);
+                        $("#_companyName").val(data.companyName);
+                        $("#_dealPrice").val(formatNumberWithCommas(data.dealPrice));
+                        $("#_dealNumber").val(formatNumberWithCommas(data.dealNumber));
+                        $("#_stockNumber").val(formatNumberWithCommas(data.dealNumber-data.releaseNumber));
+                        $("#_minSellPrice").val(formatNumberWithCommas(data.minSellPrice));
+                        $("#_sellMatchUserName").val(data.sellMatchUserName);
+                        $("#_payFullTime").val(data.payFullTime);
+                        $("#_buyOurCompanyName").val(Convert.findValueByKey(_dcsxOurCompanyNameJson, "companyCd", data.buyOurCompanyName, "companyName"));
+                        $("#_ourCompanyName").val(Convert.findValueByKey(_ourCompanyNameJson, "dictCd", data.buyOurCompanyName, "dictName"));
+                    }else{
+                        $.messager.alert('error', "删除失败！请联系管理员", 'warning');
+                    }
+                }
+            })
+        }
+    }
+
+    function formatNumberWithCommas(x) {
+        if (!x){
+            return "";
+        }
+        // 转换x为字符串，然后分割整数部分和小数部分
+        const parts = x.toString().split('.');
+        let intPart = parts[0];
+        let decimalPart = parts.length > 1 ? '.' + parts[1].padEnd(2, '0') : '.00'; // 保留两位小数
+        // 从右向左每三位添加一个逗号
+        intPart = intPart.split('').reverse().join('').replace(/(\d{3})(?=\d)/g, '$1,').split('').reverse().join('');
+        return intPart + decimalPart;
+    }
+
+    function openVirtualDialog(virtualId, dlgTitle, releaseFlg) {
+        $("#newMinSellPrice,#newReleaseNumber").numberbox('clear');
+        $('#newSellMatchUserName').combotree('clear');
+        $("#newSellMatchUserId").val("");
+        $(".virtual_dlg_div").removeClass("hide");
+        $("#virtualDlg").dialog({
+            title: dlgTitle,
+            width: 750,
+            height: 580,
+            closed: true,
+            cache: false,
+            modal: true,
+            buttons: [{
+                width: 68,
+                height: 28,
+                text: '确定',
+                handler: function () {
+                    let _newReleaseNumber = $("#newReleaseNumber").numberbox('getValue');
+                    let _newMinSellPrice = $("#newMinSellPrice").numberbox('getValue');
+                    let _newSellMatchUserName = $("#newSellMatchUserName").combotree('getValue');
+                    let _newSellMatchUserId = $("#newSellMatchUserId").val();
+                    if (releaseFlg === true) {
+                        if (!_newReleaseNumber) {
+                            $.messager.alert('提示', '请输入释放数量！', 'warning');
+                            return;
+                        }
+                    } else {
+                        if (!_newMinSellPrice) {
+                            $.messager.alert('提示', '请输入销售指导价！', 'warning');
+                            return;
+                        }
+                    }
+                    $.modal.loading("正在更新...");
+                    var data = {
+                        'id': virtualId,
+                        'minSellPrice': _newMinSellPrice,
+                        'releaseNumber': _newReleaseNumber,
+                        'sellMatchUserName': _newSellMatchUserName,
+                        'sellMatchUserId': _newSellMatchUserId,
+                    }
+                    $.ajax({
+                        url: _ctx + "/inventory/stockVirtual/updateInventory",
+                        async: false,
+                        type: "POST",
+                        dateType: "json",
+                        contentType: 'application/json',
+                        data: JSON.stringify(data),
+                        success: function (data) {
+                            var rObj = eval(data);
+                            if (rObj.success) {
+                                $.messager.show({
+                                    title: 'Tip',
+                                    msg: dlgTitle + '更新成功!',
+                                    timeout: 2000,
+                                    height: 120,
+                                    showType: 'show'
+                                });
+                                $('#tt').datagrid('reload');
+                            } else {
+                                $.messager.alert('提示', rObj.failure, 'warning');
+                            }
+                        }
+                    })
+                    $("#virtualDlg").dialog('close');
+                    $.modal.closeLoading();
+                }
+            }, {
+                width: 68,
+                height: 28,
+                text: '关闭',
+                handler: function () {
+                    $("#virtualDlg").dialog('close');
+                }
+            }]
+        });
+        $("#virtualDlg").dialog('open');
+        $('.panel-tool').addClass("hide");
+    }
+    function exportExcel(){
+        $.messager.confirm({
+            title: '提示',
+            msg: '确认要导出库存列表吗？',
+            ok: "导出",
+            cancel: "取消",
+            cls: 'c9',
+            border: 'thin',
+            fn: function (r) {
+                if (r) {
+                    $('#searchForm').form('submit', {url:_ctx+"/inventory/stockVirtual/exportExcel"});
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

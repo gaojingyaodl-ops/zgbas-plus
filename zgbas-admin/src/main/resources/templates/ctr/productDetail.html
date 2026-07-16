@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+ <div>
+   <input type="hidden" id="contractId" th:value="${contractId}" />
+   <table id="contractProductDetail" 
+		title="" iconCls="icon-edit" singleSelect="true"
+		idField="id">
+	</table>
+</div>
+<script th:src="@{/static/js/areaJson.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+var _bsAreaJson = areaJson;
+var packingSpecificaJson=eval('[(${packingSpecificaJson})]');
+$(function(){
+	var contractId = $("#contractId").val();
+	var _url = _ctx+"/ctr/product/list?search_EQL_ctrContractId="+contractId;
+	$('#contractProductDetail').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:[ [
+			{field:'productName',title:'品名',align:'center',width:120},
+			{field:'brandNumber',title:'牌号',align:'center',width:120},
+			{field:'factoryName',title:'厂商',align:'center',width:130},
+			{field:'warehouseName',title:'仓库',align:'center',width:160},
+			/* {field:'warehousePos',title:'仓库所在地',align:'center',width:160,editor:{ type:'combotree',options:{required:'true',panelWidth:160,panelHeight:300,data:_bsAreaJson,onBeforeExpand:function(node){}}},
+				formatter:function(value,row,index){
+					return Convert.findTreeValueByKey(_bsAreaJson,"id",value,"text");
+			}},
+			{field:'wrapSpecs',title:'包装规格',align:'center',width:120,editor:{type:'combobox',options:{required:true,editable:false,panelHeight:'auto',data:packingSpecificaJson,textField:'dictName',valueField:'dictCd',onHidePanel:function(){BasCombobox.onHidePanel(this);}}},
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(packingSpecificaJson,"dictCd",value,"dictName");
+			}}, */
+			{field:'dealNumber',title:'数量(吨)', align:'center', width:120},
+			{field:'dealPrice',title:'单价(元)',align:'center',  width:120},
+			{field:'totalPrice',title:'总价(元)', align:'center', width:120}
+		]],
+		onLoadSuccess:function(data){
+				var clasf = data.rows[0].productCd.substring(0,2);
+				if(clasf!="SL"){
+					$("#contractTable").datagrid("hideColumn", "brandNumber");
+					$("#contractTable").datagrid("hideColumn", "factoryName");
+				}else{
+					$("#contractTable").datagrid("showColumn", "brandNumber");
+					$("#contractTable").datagrid("showColumn", "factoryName");
+				}
+			}
+	});
+	
+})
+</script>

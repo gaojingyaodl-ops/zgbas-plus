@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>代采中间链条</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input type="hidden" id="type" th:value="${type}"/>
+		<input type="hidden" id="businessType" name="businessType" th:value="${businessType}">
+		<input id="isGcy" type="hidden" th:value="${isGcy}"/>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同编号</label>
+				<input class="control" id="contractNo" type="text" name="search_LIKES_contractNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>下游企业</label>
+				<input class="control" id="companyName" type="text" name="search_LIKES_companyName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>上游企业</label>
+				<input type="text" id="ourCompanyName" class="control text_padding"
+					   name="search_LIKES_ourCompanyName"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>业务员</label>
+				<input type="text" id="matchUserName" class="control text_padding" name="search_EQS_matchUserName"></input>
+			</p>
+			<a href="#" class="easyui-linkbutton btn64"
+			   onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10"
+			   onclick="$('#searchForm').form('reset');">清空</a>
+			<input type="hidden" id="refreshColumns" value="B"></input>
+		</div>
+		<div class="mb6 mt20">
+			<!--            <a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6"-->
+			<!--               style="position: fixed;right:22px;top:100px;" onclick="exportExcel()">导出</a>-->
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+		   title="" iconCls="icon-edit" singleSelect="true"
+		   idField="id">
+	</table>
+</div>
+<script type="text/javascript">
+	var lastIndex = 0;
+	// type是合同类型 B为采购 S为销售  代采预算不分采购合同或销售合同 一同显示
+	var type = $("#type").val();
+	// 是否使用授信标识
+	var columns_detail = [ [
+		{field: 'id', hidden: 'true'},
+		{field: 'contractNo', title: '合同编号',align:'left', width: 140},
+		{field: 'approveNo', title: '审批编号',align:'left', width: 140},
+		{
+			field: 'companyName', title: '下游企业', align: 'left', width: 180, formatter: function (value, row) {
+				if (value) {
+					var s_str = value.split("有限公司");
+					if (s_str) {
+						value = s_str[0];
+					}
+					var content = '<p title="' + value + '" class="note">' + value + '</p>';
+					return content;
+				}
+			}
+		},
+		{field: 'ourCompanyName', title: '上游企业',align:'left', width: 230},
+		{field: 'productBrand', title: '品种',width: 80, align: "left"},
+		{field: 'productNum', title: '牌号', width: 80, align: "left"},
+		{field: 'totalNumber', title: '数量(吨)', align: "right", width: 90},
+		{field: 'dealPrice', title: '采购单价(元)', align: "right", width: 120, formatter: formateNum},
+		{field: 'totalAmount', title: '采购总价(元)', align: "right", width: 120, formatter: formateNum},
+		{field: 'matchUserName', title: '业务员', align: "center", width: 100},
+	]];
+	// 默认概要列
+	columns = columns_detail;
+	$(function () {
+		$("#contractNo,#companyName,#productsName").textbox({});
+		$('#tt').datagrid({
+			pagination: true,
+			rownumbers: true,
+			pageSize: 30,
+			showFooter: true,
+			queryParams: Convert.getJson4Form('searchForm'),
+			pageList: [500, 200, 100, 50, 30, 20],
+			url: _ctx + "/ctr/dcChontractChain/list",
+			columns: columns,
+			onDblClickRow: function (index, row) {
+				lastIndex = index;
+				approveSeal(row.approveId);
+			},
+			onClickRow: function (index, row) {
+				lastIndex = index;
+			},
+			onLoadSuccess: function (data) {
+				$(".tip").tooltip(
+						{
+							onShow: function () {
+								$(this).tooltip('tip').css({
+									width: '400',
+									boxShadow: '1px 1px 3px #292929'
+								});
+							}
+						}
+				);
+
+				var total = $('#tt').datagrid('getData').total;
+				if (lastIndex > total - 1) {
+					lastIndex = total - 1;
+				}
+				if (lastIndex) {
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+				if (type == 'S') {
+					$("#tt").datagrid("hideColumn", "contractDifTime");
+				}
+			}
+		});
+		$.extend($.fn.datagrid.methods, {
+			autoMergeCells: function (jq, fields) {
+				return jq.each(function () {
+					var target = $(this);
+					if (!fields) {
+						fields = target.datagrid("getColumnFields");
+					}
+					var rows = target.datagrid("getRows");
+					var i = 0,
+							j = 0,
+							temp = {};
+					for (i; i < rows.length; i++) {
+						var row = rows[i];
+						j = 0;
+						for (j; j < fields.length; j++) {
+							var field = fields[j];
+							var tf = temp[field];
+							if (!tf) {
+								tf = temp[field] = {};
+								tf[row[field]] = [i];
+							} else {
+								var tfv = tf[row[field]];
+								if (tfv) {
+									tfv.push(i);
+								} else {
+									tfv = tf[row[field]] = [i];
+								}
+							}
+						}
+					}
+					$.each(temp, function (field, colunm) {
+						$.each(colunm, function () {
+							var group = this;
+
+							if (group.length > 1) {
+								var before,
+										after,
+										megerIndex = group[0];
+								for (var i = 0; i < group.length; i++) {
+									before = group[i];
+									after = group[i + 1];
+									if (after && (after - before) == 1) {
+										continue;
+									}
+									var rowspan = before - megerIndex + 1;
+									if (rowspan > 1) {
+										target.datagrid('mergeCells', {
+											index: megerIndex,
+											field: field,
+											rowspan: rowspan
+										});
+									}
+									if (after && (after - before) != 1) {
+										megerIndex = after;
+									}
+								}
+							}
+						});
+					});
+				});
+			}
+		});
+	});
+
+	function formateNum(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+
+	function formateData(value, row, index) {
+		if (value) {
+			return value.substring(2, value.length);
+		}
+	}
+
+	function approveSeal(approveId) {
+		var title="预算详情";
+		$.post(_ctx + '/ctr/dcChontractChain/approve/' + approveId, function (result) {
+			window.parent.addTab(title,_ctx+'/pm/approve/detail/'+ result);
+		});
+	}
+	// 判断是否为空
+	function isBlank(val) {
+		if (val == undefined
+				|| val == ''
+				|| val == null) {
+			return true;
+		}
+		return false;
+	}
+</script>
+</body>
+</html>

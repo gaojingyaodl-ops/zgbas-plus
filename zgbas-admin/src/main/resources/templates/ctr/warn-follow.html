@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<div style="height:100px;" class="down-mb15">
+  <input type="hidden" id="contract_id" th:value="${contract_id}" />
+  <input type="hidden" id="followCreateUserId" th:value="${followCreateUserId}" />
+  <input type="hidden" id="followCreateUserName" th:value="${followCreateUserName}" />
+  <div id="btn" class="add-btn" style="margin-top: 10px;margin-bottom: 10px;margin-left: 10px;">
+    <a  href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="insertFollow()">新增</a>
+    <a  href="#" class="easyui-linkbutton btn-info-empty ml10" data-options="iconCls:'icon-save'" onclick="saveFollow()">保存</a>
+  </div>
+  <table id="followDetailTable" style="height: 400px;margin-top: 10px;" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+</div>
+<script type="text/javascript">
+  var follow_last_index;
+  var _$contractId = $("#contract_id").val();
+  var _$followCreateUserId = $("#followCreateUserId").val();
+  var _$followCreateUserName = $("#followCreateUserName").val();
+  $(function(){
+    var _url = _ctx+"/ctr/follow/getFollowDetail/"+_$contractId;
+    $('#followDetailTable').datagrid({
+      pageSize:20,
+      rownumbers:true,
+      url:_url,
+      pagination:false,
+      columns:[ [
+        {
+          field: 'notifyContent',
+          title: '跟进内容',
+          align: 'left',
+          width: 430,
+          editor: {type: 'validatebox', options: {required: true}},
+          formatter: function (value, row, index) {
+            var abValue = value;
+            return '<p title="' + value + '" class="note">' + abValue + '</p>';
+          }
+        },
+        {field:'ctrContractId',title:'合同ID',align:'center',width:90,hidden:true},
+        {field:'createUserId',title:'创建人ID',align:'center',width:90,hidden:true},
+        {field:'createUserName',title:'创建人',align:'center',width:90},
+        {field:'createdDate',title:'创建时间', align:'center', width:130},
+        {field:'option',title:'操作', align:'center', width:70, formatter:function (value, row, index){
+              return '<span onclick="deleteFollow('+row.id+')" class="contract-btn contract-btn-10">删除</span>';
+        }},
+      ]],
+      onDblClickCell:function(index,field){
+        $('#followDetailTable').datagrid('endEdit', follow_last_index);
+        $('#followDetailTable').datagrid('beginEdit', index);
+        follow_last_index = index;
+        Convert.focusEditor("followDetailTable",field,follow_last_index);
+
+      },
+      onClickCell:function(index,field){
+        follow_last_index = index;
+      },
+      onLoadSuccess:function(data){
+
+      }
+    });
+  })
+
+  function insertFollow() {
+    $("#followDetailTable").datagrid("appendRow", {
+      notifyContent: '',
+      ctrContractId:_$contractId,
+      createUserId:_$followCreateUserId,
+      createUserName:_$followCreateUserName
+    });
+    var rows = $("#followDetailTable").datagrid('getRows');
+    $("#followDetailTable").datagrid('beginEdit', rows.length - 1);
+  }
+
+  function saveFollow() {
+    var flag = true;
+    var row = $('#followDetailTable').datagrid('getSelected');
+    if (row) {
+      var index = $('#followDetailTable').datagrid('getRowIndex', row);
+      $('#followDetailTable').datagrid('endEdit', index);
+    }
+    var changeRows = [];
+    var inserted = $('#followDetailTable').datagrid('getChanges', 'inserted');
+    var updated = $('#followDetailTable').datagrid('getChanges', 'updated');
+    changeRows = inserted.concat(updated);
+    for (var i = 0; i < changeRows.length; i++) {
+      var index = $('#followDetailTable').datagrid('getRowIndex', changeRows[i]);
+      flag = $('#followDetailTable').datagrid('validateRow', index);
+      if (!flag) {
+        $('#followDetailTable').datagrid('selectRow', index);
+        $('#followDetailTable').datagrid('beginEdit', index);
+        break;
+      } else {
+        $('#followDetailTable').datagrid('endEdit', index);
+      }
+    }
+    if (flag) {
+      $.post(_ctx + "/ctr/follow/saveBatch", Convert.ToSaveParam("followDetailTable"), function (result) {
+        var rObj = eval(result);
+        if (rObj.success) {
+          $('#followDetailTable').datagrid('reload');
+          $('#tt').datagrid('reload');
+        } else {
+          $.messager.alert('error', rObj.failure, 'warning');
+        }
+      });
+    }
+  }
+
+  function deleteFollow(id){
+    $('#followDetailTable').datagrid('selectRecord',id);
+    var row = $('#followDetailTable').datagrid('getSelected');
+    if(row){
+      var index = $('#followDetailTable').datagrid('getRowIndex', row);
+      if (row.id==undefined){
+        $('#followDetailTable').datagrid('deleteRow',index);
+      }else{
+        $.messager.confirm({
+          width:388,
+          height:170,
+          title: '删除提示',
+          msg: '确认要删除该条跟进记录吗？',
+          ok: "确定",
+          cancel: "取消",
+          cls:'c9',
+          border:'thin',
+          fn: function(r){
+            if (r){
+              $.post(_ctx+"/ctr/follow/delete/"+row.id,function(result) {
+                var rObj = eval(result);
+                if(rObj.success){
+                  $('#followDetailTable').datagrid('reload');
+                  $('#followDetailTable').datagrid('clearSelections');
+
+                  $('#tt').datagrid('reload');
+                }else{
+                  $.messager.alert('error',rObj.failure,'warning');
+                }
+              });
+            }
+          }
+        });
+      }
+    }
+  }
+</script>

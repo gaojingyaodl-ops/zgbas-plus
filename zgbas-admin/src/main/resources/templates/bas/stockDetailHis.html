@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<div class="easyui-layout" fit="true">	
+  <!-- <div style="height:150px;">
+   	 <input type="hidden" id="stockDetailId" th:value="${stockDetailId}" />
+	 <table id="stockTable" style="height:300px;" border="0"
+		title="" iconCls="icon-edit" singleSelect="true"
+		idField="id">
+	</table>
+	</div> -->
+	<input type="hidden" id="stockDetailId" th:value="${stockDetailId}" />
+	<div id="boxDiv" class="easyui-tabs tbw mt15 pb40 popup-tab">
+			<div title="采购销售流水">
+				<table id="stockTableBuyAndSell" style="height:300px;" border="0"
+					title="" iconCls="icon-edit" singleSelect="true"
+					idField="id">
+				</table>
+			</div>
+			<div title="出入库流水">
+				 <table id="stockdeliveryTable" style="height:300px;" border="0"
+					title="" iconCls="icon-edit" singleSelect="true"
+					idField="id">
+				</table>
+			</div>
+	</div>
+</div>
+<div id="w_contract" title="合同详情" data-options="width:820,height:550"></div>
+<div id="w_apply" title="申请单详情" data-options="width:820,height:550"></div>
+<script type="text/javascript">
+var canViewContract = '[(${canViewContract})]';//查看合同权限
+$(function(){
+	var _stockDetailId = $("#stockDetailId").val();
+	var _operationTypeJson = eval('[(${operationTypeJson})]');
+	var delivery_url = _ctx+"/bas/stockDetail/listDetailHis/"+_stockDetailId+"/delivery";
+	var buyAndSell_url = _ctx+"/bas/stockDetail/listDetailHis/"+_stockDetailId+"/buyAndSell";
+	
+	var columns_delivery = [ [
+		{field:'applyNo',title:'出入库单号',align:'center',width:140},
+		{field:'productName',title:'品名',align:'center',width:90},
+		{field:'brandNumber',title:'牌号',align:'center',width:90},
+		{field:'factoryName',title:'厂商',align:'center',width:90},
+		{field:'warehouseName',title:'仓库',align:'center',width:120},
+		{field:'operationType',title:'操作类型',align:'left',width:90,formatter:function(value,row,index){
+			if(value!=undefined){
+				return Convert.findValueByKey(_operationTypeJson,'dictCd',value,'dictName');
+			}}},
+		{field:'dealNumber',title:'发生数量(吨)', align:'right', width:100},
+		{field:'remainFrozenNumber',title:'剩余冻结', align:'right', width:80},
+		{field:'realRemainNumber',title:'剩余可用', align:'right', width:80},
+		{field:'createdDate',title:'创建时间', align:'center', width:150},
+		{field:'action',title:'操作', width:75,align:'center',formatter:function(value, row, index){ 
+			var str = "";
+			if(row.applyNo){
+		        str = "<div class='btnSpan' onclick='queryApply(\""+row.operationType+"\",\""+row.applyId+"\")' class='l-btn'><span style='width:60px;cursor: pointer;'>申请详情</span></div>"; 
+			}
+	        return str; }}
+	]];
+	
+	if (_industry.indexOf('SL')==-1){
+		for(var i in columns_delivery[0]){
+			var col =columns_delivery[0][i];
+			if (col.field=='brandNumber' || col.field=='factoryName'){
+				col.hidden = true;
+			}
+		}
+	}
+	
+	var columns_BuyAndSell=[ [
+		{field:'contractNo',title:'合同编号',align:'center',width:140},
+		{field:'productName',title:'品名',align:'center',width:110},
+		{field:'brandNumber',title:'牌号',align:'center',width:110},
+		{field:'factoryName',title:'厂商',align:'center',width:110},
+		{field:'warehouseName',title:'仓库',align:'center',width:120},
+		{field:'operationType',title:'操作类型',align:'right',width:100,formatter:function(value,row,index){
+			if(value!=undefined){
+				return Convert.findValueByKey(_operationTypeJson,'dictCd',value,'dictName');
+			}}},
+		{field:'dealNumber',title:'发生数量(吨)', align:'right', width:110},
+		{field:'remainFrozenNumber',title:'剩余冻结', align:'right', width:100},
+		{field:'realRemainNumber',title:'剩余可用', align:'right', width:90},
+		{field:'createdDate',title:'创建时间', align:'center', width:150}
+	]];
+	/* if (canViewContract == 'true'){
+		var col_edit ={field:'action',title:'操作', width:75,align:'center',formatter:function(value, row, index){
+			var str = "";
+			if(row.contractId){
+		        str = "<div class='btnSpan' onclick='queryContract(\""+row.contractId+"\")' class='l-btn'><span style='width:60px;cursor: pointer;'>查看合同</span></div>"; 
+			}
+	        return str; }	
+		}
+		columns_BuyAndSell[0].push(col_edit);
+	} */
+	if (_industry.indexOf('SL')==-1){
+		for(var i in columns_BuyAndSell[0]){
+			var col =columns_BuyAndSell[0][i];
+			if (col.field=='brandNumber' || col.field=='factoryName'){
+				col.hidden = true;
+			}
+		}
+	}
+	
+	$('#stockdeliveryTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:delivery_url,
+		pagination:false,
+		columns:columns_delivery
+	});
+	$('#stockTableBuyAndSell').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:buyAndSell_url,
+		pagination:false,
+		columns:columns_BuyAndSell
+	});
+	$('#w_contract').window({
+		title:'合同详情',
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		onClose:function(){
+			$('#tt').datagrid('reload');
+		}
+	});
+	$('#w_apply').window({
+		title:'申请单详情',
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		onClose:function(){
+			$('#tt').datagrid('reload');
+		}
+	});
+})
+
+
+function queryContract(id){
+	if (canViewContract == 'true'){
+		if(id){
+			var url=_ctx+"/ctr/contract/detail/"+id+"?from=stock";
+			$('#w_contract').window({href:url});
+			$('#w_contract').window("open");
+		}
+	}else{
+		$.messager.alert('提示','暂无该权限 , 如有疑问请联系管理员!','info');
+	}
+}
+
+function queryApply(optionType,applyId){
+	$.ajax({
+		   type: "POST",
+		   url: _ctx + "/bas/stockDetail/findApprove",
+	 	   data: {"optionType":optionType,"applyId":applyId},
+	 	   async:false,
+		   success: function(result){
+			   	var row = result;
+				var title =row.processName+ ':' +row.id;
+				window.parent.addTab(title,_ctx+'/pm/approve/detail/'+row.id);
+		   }
+		});
+	}
+</script>

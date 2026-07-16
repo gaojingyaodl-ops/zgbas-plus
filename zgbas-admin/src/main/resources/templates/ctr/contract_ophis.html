@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+ <div>
+   <input type="hidden" id="ophisId" th:value="${ophisId}" />
+   <table id="ophisTable" 
+		title="" iconCls="icon-edit" singleSelect="true"
+		idField="id" style="width:900px;max-height: 500px;">
+	</table>
+</div>
+<script type="text/javascript">
+var lastIndex;
+$(function(){
+	var _ophisId = $("#ophisId").val();
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+    var _approveStatusJson = eval('[(${approveStatusJson})]');
+	var _url = _ctx+"/ctr/contractOphis/detailHisPage/"+_ophisId;
+	$('#ophisTable').datagrid({
+		pagination:false,
+		pageSize:20,
+		rownumbers:true,
+		pageList:[50,40,30,20,10],
+        showFooter:false,
+		url:_url,
+		columns:[ [
+			{field:'createUserName',title:'创建人',align:'center',width:90},
+			{field:'contractStatus', title: '合同状态', width: 80,align:'center',formatter:function(value,row,index){
+				return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+			}},
+			{field:'createdDate',title:'创建时间',align:'center',width:140},
+			{field:'happenDate',title:'发生日期',align:'center',width:110},
+			{field:'remark',title:'备注',width:230,align:'left',formatter: function(value, row, index) {
+				var abValue = value;
+		        var content = '<span href="#" title="' + value + '" class="note">' + abValue + '</span>';
+		        return content;
+			}},
+            {
+                field: 'approveStatus',
+                title: '状态',
+                width: 100,
+                align: 'center',
+                formatter: function (value, row, index) {
+                    var status = Convert.findValueByKey(_approveStatusJson, "dictCd", value, "dictName");
+                    var a = '';
+                    if (value == "A") {
+                        a = "<span style='color:#ff8153'>" + status + "</span>";
+                    } else if (value == "D") {
+                        a = status;
+                    } else if (value == "B") {
+                        a = "<span style='color:red'>" + status + "</span>";
+                    } else if (value == "N") {
+                        a = "<span style='color:#4a9bff'>" + status + "</span>";
+                    } else if (value == "C") {
+                        a = "<span style='color:#ccc'>" + status + "</span>";
+                    } else if (value == "E") {
+                        a = "<span style='color:#b266ff'>" + status + "</span>";
+                    }
+                    if (row.enableFlg === 'false') {
+                        a = "<span style='color:#CCCCCC'>" + status + "</span>";
+                    }
+                    return a;
+                }
+            },
+			{field:'handle',title:'操作',align:'center',width:110,formatter:function(value,row,index){
+				var html="";
+				if(row.approveId){
+					html ="<span href='#' class='easyui-linkbutton contract-btn contract-btn-1' onclick='approveDetail(\""+ row.approveId+"\",\""+ row.processName+ "\")'>审批详情</span>";
+				} 
+			    if(row.ctrBuyContractId){
+				    html +="<span href='#' class='easyui-linkbutton contract-btn contract-btn-1' onclick='contractDetail(\""+ row.ctrBuyContractId+"\",\""+row.buyContractNo+ "\")'>采购合同</span>";
+			    }
+			    if(row.ctrSellContractId){
+					html +="<span href='#' class='easyui-linkbutton contract-btn contract-btn-1' onclick='contractDetail(\""+ row.ctrSellContractId+"\",\""+row.sellContractNo+ "\")'>销售合同</span>";
+			    }
+			    return html;
+			}}
+		]],
+	});
+	
+})
+//发起流程
+function approveDetail(approveId,processName){
+	var title =processName+ ':' +approveId;
+	window.parent.addTab(title,_ctx+'/pm/approve/detail/'+approveId);
+} 
+	
+function contractDetail(id,contractNo){
+	var url=_ctx+"/ctr/contract/detail/"+id;
+	var title=contractNo;
+	window.parent.addTab(title,url);
+}
+</script>

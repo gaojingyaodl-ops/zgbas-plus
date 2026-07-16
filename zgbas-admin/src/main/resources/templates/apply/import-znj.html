@@ -1,0 +1,54 @@
+<div class="detail-content" th:each="detail:${detailList}">
+    <fieldset class="form-section detail-fieldset" style="padding: 0px 30px 10px 20px;">
+        <legend class="form-section-title" style="margin-bottom:25px;"><span class="approve_text">明细</span><i></i>
+        </legend>
+        <div region="north" border="false" id="inputForm" method="post"
+             class="editForm_approve  editForm_approverela content_div detail_div">
+            <form th:id="form+${detail.randomNumber}">
+                <input th:id="overdueLateFeeSum+${detail.randomNumber}" name="overdueLateFeeSum" th:value="${detail.overdueLateFeeSum}" type="hidden" />
+                <div class="mb10">
+                    <p class="yw-table-filter">
+                        <label>合同编号</label>
+                        <input th:id="contractNo+${detail.randomNumber}" name="contractNo" th:value="${detail.contractNo}" type="text" />
+                    </p>
+                    <span class="syncClass" style="line-height: 28px;">
+                        <a href="#" class="easyui-linkbutton btn-empty" th:onclick="'applyProtocolDoc_znj.syncContractDetail('+${detail.randomNumber}+')'" >同步合同信息</a>
+                    </span>
+                </div>
+                <div class="mb10">
+                    <p class="yw-table-filter">
+                        <label>合同金额(元)</label>
+                        <input th:id="totalAmount+${detail.randomNumber}" name="totalAmount" th:value="${detail.totalAmount}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>实际收货日期</label>
+                        <input th:id="deliveryDate+${detail.randomNumber}" name="deliveryDate" th:value="${detail.deliveryDate}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>约定账期(天)</label>
+                        <input th:id="creditDays+${detail.randomNumber}" name="creditDays" th:value="${detail.creditDays}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>应付款日期</label>
+                        <input th:id="payDateStr+${detail.randomNumber}" name="payDateStr" th:value="${detail.payDateStr}" type="text"/>
+                    </p>
+                </div>
+                <div class="mb10">
+                    <p class="yw-table-filter w2">
+                        <label>实际付款日期</label>
+                        <textarea th:id="realPayDateStr+${detail.randomNumber}" name="realPayDateStr" th:text="${detail.realPayDateStr}" type="text" style="height:45px;width: 315px"/>
+                    </p>
+                    <p class="yw-table-filter w2">
+                        <label>逾期滞纳金</label>
+                        <textarea th:id="overdueLateFees+${detail.randomNumber}" name="overdueLateFees" th:text="${detail.overdueLateFees}" required="true" type="text" style="height:45px;width: 315px"/>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <div region="south" border="true" style="float: right;" th:if="${!disabled}">
+            <a href="#" class="easyui-linkbutton btn-empty btn64 btn-danger"
+               th:attr="detailId=${randomNumber}" onclick="applyProtocolDoc_znj.removeNode(this)">删除</a>
+        </div>
+    </fieldset>
+</div>

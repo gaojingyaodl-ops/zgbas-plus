@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<div class="easyui-layout" fit="true">	
+  <div style="height:150px;">
+   <input type="hidden" id="stockDetailId" th:value="stockDetailId" />
+			 <table id="stockTable" style="height:300px;" border="0"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+			</table>
+	</div>
+</div>
+<script type="text/javascript">
+$(function(){
+	var stockDetailId = $("#stockDetailId").val();
+	var deliveryTypeJson =eval('[(${deliveryTypeJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	var _url = _ctx+"/rpt/buyer/deliveryList/"+stockDetailId;
+	$('#stockTable').datagrid({
+		pageSize:20,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:[ [
+			{field:'createdDate',title:'日期', width:140},
+			{field:'contractNo',title:'销售合同号', width:120},
+			{field:'operatorName',title:'业务员', width:80},
+			{field:'companyName',title:'需方单位', width:150},
+			{field:'contractStatus',title:'状态', width:70,formatter:function(value,row,index){
+				return Convert.findValueByKey(contractStatusJson,"dictCd",value,"dictName");
+			}},
+			{field:'totalNumber',title:'合同数量', width:80},
+			{field:'dealNumber',title:'出库数量', width:80},
+			{field:'deliveryType',title:'出库方式', width:70,formatter:function(value,row,index){
+				return Convert.findValueByKey(deliveryTypeJson,"dictCd",value,"dictName");
+			}},
+			{field:'plateNumber',title:'车号',width:100},
+			{field:'driverName',title:'司机',width:70},
+			{field:'driverCardNo',title:'身份证号',width:155}
+		]]
+	});
+	
+	$('#w_contract').window({
+		title:'操作记录',
+		modal:true,
+		closed: true,
+		collapsible : false,
+		minimizable : false,
+		cache:false,
+		onClose:function(){
+			$('#tt').datagrid('reload');
+		}
+	});
+})
+</script>

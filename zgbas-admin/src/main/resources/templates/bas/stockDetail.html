@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>库存明细</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+	<div class="mb6">
+		<p class="yw-table-filter">
+			<label>品名:</label>
+			<input id="productCd_query" name="productCd" type="text" value=""/>
+		</p>
+		<p class="yw-table-filter">
+			<label>合同编号:</label>
+			<input type="text" name="contractNo" />
+		</p>
+		<p class="yw-table-filter">
+			<label>供货商:</label>
+			<input type="text" name="buyCompanyName" />
+		</p>
+		<p class="yw-table-filter">
+			<label>我方抬头:</label>
+			<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"></input>
+		</p>
+		<p class="yw-table-filter">
+			<label>业务员:</label>
+			<input type="text" id="matchUserName" name="bizUserName" />
+		</p>
+		<p class="yw-table-filter">
+			<label>状态:</label>
+			<input type="text" name="status" id="stockStatus_query"/>
+		</p>
+		<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6 btn-export" style="position: fixed;right:20px;top:35px;" onclick="exportExcel()">导出</a>
+	</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left: 20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w_move" class="easyui-window" title="移库详情" data-options="width:920,height:350"></div>
+<div id="w_editor" class="easyui-window" title="编辑" data-options="width:800,height:300"></div>
+<div id="w_detail" title="库存流水" data-options="width:950,height:400"></div>
+<script type="text/javascript">
+	var lastIndex;
+	var canUpdate = '[(${canUpdate})]';//更改库存类型权限
+	var movestock = '[(${movestock})]';//移库权限
+	var stockStatusJson=eval('[(${stockStatusJson})]');
+	var productAttrJson=eval('[(${productAttrJson})]');
+	var productTypeJson=eval('[(${productTypeJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var stockTypeJson = eval('[(${stockTypeJson})]');//库存类型
+	var spotTypeJson = eval('[(${spotTypeJson})]');//货权类型
+	var stockCategoryJson = eval('[(${stockCategoryJson})]');//货权类型
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	var deptAllJson =eval('[(${deptAllJson})]');
+	$(function(){
+		
+		var columns = [ [				
+			{field:'productName',title:'品名',align:'left', width:100,sortable:true},
+			{field:'brandNumber',title:'牌号',align:'left', width:100,sortable:true},
+			{field:'factoryName',title:'厂商名称',align:'left', width:120,sortable:true},
+			{field:'contractNo',title:'合同编号', align:'center',width:120/* ,
+				formatter:function(value,row,index){
+					if(value){
+						return '<span class="c_blue_b yw-menu-section">'+value+'</span>';
+					}
+				} */
+			},
+			/* {field:'ourCompanyName',title:'我方抬头',width:200}, */
+			{field:'buyCompanyName',align:'left',title:'供货商',width:180},
+			{field:'warehouseName',align:'left',title:'仓库名称', width:150,sortable:true},
+			{field:'availableNumber',title:'采购数量(吨)', width:110,sortable:true,align:'right'},
+			{field:'deliveryInNumber',title:'入库数量(吨)', width:110,sortable:true,align:'right'},
+			{field:'deliveryOutNumber',title:'出库数量(吨)', width:110,sortable:true,align:'right'},
+			{field:'warehouseCost',title:'仓储费(元)', width:110,align:'right',hidden:true},
+			/* {field:'frozenNumber',title:'销售数量(吨)', width:110,sortable:true,align:'right'}, */
+			{field:'dealPrice',title:'单价(元)', width:100,sortable:true,align:'right'},
+			{field:'productAttr',title:'产品类型', width:80,sortable:true,align:'center',
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(productAttrJson,"dictCd",value,"dictName")
+			}},
+			{field:'stockType',title:'库存类型', width:80,sortable:true,align:'center',
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(stockTypeJson,"dictCd",value,"dictName")
+			}},
+			{field:'spotType',title:'货权类型', width:80,sortable:true,align:'center',
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(spotTypeJson,"dictCd",value,"dictName")
+			}},
+				{
+					field : 'bizUserName',
+					title : '业务员',
+					width : 80,
+					sortable : true
+				},
+				{field:'deptId',title:'事业部',align:'center', width:100,formatter:function(value,row,index){
+					return Convert.findValueByKey(deptAllJson,"id",value,"deptName");
+				}},
+				{
+					field : 'createdDate',
+					title : '创建时间',
+					width : 140
+				},
+				{
+					field : 'action',
+					title : '流水信息',
+					width : 100,
+					align : 'center',
+					formatter : function(value, row, index) {
+						if (row.id) {
+							var str = "";
+							str = '<span onclick="queryStockDetailHis('+row.id+')" class="contract-btn contract-btn-10">查看流水</span>';
+							return str;
+						}
+					}
+				},
+				{
+					field : 'operate',
+					title : '操作',
+					width : 120,
+					align : 'center',
+					hidden : true,
+					formatter : function(value, row, index) {
+						var str = row.productAttr;
+						if (str == "N" && row.availableNumber>0) {
+							var opr = '<img onclick="transferWarehouse(\''
+									+ row.id
+									+ '\')" style="cursor:pointer;width:16px;hight:18px" src="../static/images/icon_xiangqing1.png" title="移库"/>';
+							return opr;
+						} else {
+							return "";
+						}
+
+					}
+				}
+		]];
+		for ( var i in columns[0]) {
+			var col = columns[0][i];
+			if (movestock=='true'){
+				if (col.field == 'operate') {
+					col.hidden = false;
+				}
+			}
+		}
+		if (_industry.indexOf('SL') == -1) {
+			for ( var i in columns[0]) {
+				var col = columns[0][i];
+				if (col.field == 'brandNumber' || col.field == 'factoryName') {
+					col.hidden = true;
+				}
+				if (movestock=='true'){
+					if (col.field == 'operate') {
+						col.hidden = true;
+					}
+				}
+			}
+
+			$('#srh_span_brandNumber').hide();
+			$('#srh_span_factoryName').hide();
+		}
+
+		$("#stockStatus_query").combobox({
+			data : [ {
+				id : 'H',
+				text : '历史'
+			}, {
+				id : 'C',
+				text : '当前'
+			}, {
+				id : 'A',
+				text : '作废'
+			},{
+				id : '',
+				text : '全部'
+			} ],
+			textField : 'text',
+			valueField : 'id',
+			panelHeight : "auto",
+			onLoadSuccess : function() {
+				$("#stockStatus_query").combobox('setValue', 'C');
+			}
+		});
+
+		$('#tt').datagrid({
+			pagination : true,
+			width : 400,
+			pageSize : 30,
+			rownumbers : true,
+			showFooter : true,
+			pageList : [ 50, 40, 30, 20],
+			queryParams : Convert.getJson4Form('searchForm'),
+			url : _ctx + "/bas/stockDetail/listVo",
+			columns : columns,
+			toolbar:'#toolbar',
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				if(canUpdate == 'true'){
+					//editorStockType(row.id);
+				}
+				
+			},
+		});
+
+		//品名下拉
+		$('#productCd_query').combotree({
+			data : productTypeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(data) {
+				$('#productCd_query').val(data.typeName);
+			}
+		});
+		$('#ourCompanyName').combobox({
+			data:_ourCompanyJson, 
+			valueField:'dictName',
+			textField:'dictName',
+			panelWidth:'auto',
+			panelHeight:"auto"
+		});
+		$('#matchUserName').combotree(
+				{
+					data : matchUserNameTreeJson,
+					multiple : false,
+					editable : true,
+					//required:true,
+					height : 30,
+					formatter : function(node) {
+						var enableFlg = node.attributes.enableFlg;
+						if (enableFlg == false) {
+							return '<span style="color:red;">' + node.text
+									+ '(无效)</span>';
+						}
+						return node.text;
+					},
+					onSelect : function(node) {
+						if (node.children.length != 0) {
+							$('#matchUserName').combotree('clear');
+						} else {
+
+							$('#matchUserName')
+									.combotree('setValue', node.text);
+						}
+					}
+				});
+
+		$('#w_move').window({
+			title : '移库详情',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			}
+		});
+		
+		$('#w_editor').window({
+			title : '编辑',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			}
+		});
+
+		$('#w_detail').window({
+			title : '库存流水',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			iconCls : ""
+		});
+	});
+	//编辑库存类型
+	function editorStockType(detailId){
+		var url=_ctx+"/bas/stockDetail/detail/"+detailId;
+		$('#w_editor').window({href : url});
+		$('#w_editor').window("open");
+	}
+	//移库
+	function transferWarehouse(detailId) {
+		var url = _ctx + "/bas/stockDetail/getEntityById?id=" + detailId;
+		$('#w_move').window({href : url});
+		$('#w_move').window("open");
+	}
+
+	function queryStockDetailHis(id) {
+		if (id) {
+			var url = _ctx + "/bas/stockDetail/detailHis/" + id;
+			$('#w_detail').window({
+				href : url
+			});
+			$('#w_detail').window("open");
+		}
+	}
+	function exportExcel() {
+		$('#searchForm').form('submit', {
+			url : _ctx + "/bas/stockDetail/exportExcel"
+		});
+	}
+	function saveEdit(){
+		var flag=true;
+		var row = $('#tt').datagrid('getSelected');
+		if (row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			$('#tt').datagrid('endEdit', index);
+		}
+		var changeRows=[];
+		var inserted = $('#tt').datagrid('getChanges','inserted');
+		var updated = $('#tt').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#tt').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#tt').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#tt').datagrid('selectRow',index);
+    			$('#tt').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#tt').datagrid('endEdit', index);
+    		}
+		}
+		if (flag){
+		$.post(_ctx+"/bas/stockDetail/saveBatch",Convert.ToSaveParam("tt") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+	function endEdit(){
+		var rows=$("#tt").datagrid('getRows');
+		for(var i=0;i<rows.length;i++){
+			//验证没通过 不关闭编辑器
+			if($("#tt").datagrid("validateRow",i)){							
+				$("#tt").datagrid("endEdit",i);	
+			}
+		}
+	}
+	function save(){
+		endEdit();
+		var val=$("#tt").datagrid("getChanges");
+		for(i=0;i<val.length;i++){
+			var index=$('#tt').datagrid("getRowIndex",val[i]);
+			if(!$("#tt").datagrid("validateRow",index)){
+				$.messager.alert("提示","请填写完整!","error");
+				return ;
+			}
+		}
+		if($.isEmptyObject(val)){return false}
+		var param=JSON.stringify(val);
+		ajaxPost(param);
+	}
+	function ajaxPost(param){
+		$.post(_ctx+"/bas/stockDetail/saveBatch",Convert.ToSaveParam("tt"),function(data){
+			var rObj = eval(data);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				 $.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+	}
+</script>
+</body>
+</html>

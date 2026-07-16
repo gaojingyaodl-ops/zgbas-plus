@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+    <link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+    <script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+    <script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+    <script th:src="@{/static/js/filePlus.js}" type="text/javascript"></script>
+    <script th:src="@{/static/jquery/FileSaver.js}" type="text/javascript"></script>
+    <script th:src="@{/static/jquery/jquery.wordexport.js}" type="text/javascript"></script>
+    <script th:src="@{/static/js/areaJson.js?v=2}" type="text/javascript"></script>
+    <style>
+        .form-section-title {
+            display: block;
+            width: 100%;
+            height: 26px;
+            margin-bottom: 15px;
+            color: var(--skin-color);
+        }
+        .approve_text {
+            display: block;
+            width: 93.5%;
+            height: 26px;
+            line-height: 26px;
+            border-bottom: 1px solid #cbd1e0;
+        }
+    </style>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+    <input type="hidden" id="current_userId" th:value = "${@shiroUtil.getCurrentUserId()}">
+    <input type="hidden" id="current_userName" th:value="${@shiroUtil.getCurrentUserName()}">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <input type="hidden" name="search_NEQS_inventoryStatus" value="C"/>
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>库存编号</label>
+                <input class="control" name="stockVirtualNo" type="text"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>销售合同号</label>
+                <input class="control" name="sellContractNo" type="text"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>业务类型</label>
+                <input class="control" name="businessType" id="businessType" type="text"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>货名</label>
+                <input class="control" name="productName" type="text"/>
+            </p>
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter mobile-display-none">
+                <label>业务区域:</label>
+                <input name="deptId" id="regionContrastDeptId"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>销售签约日期</label>
+                <input   name="contractTimeBegin" class="easyui-datebox"/>
+            </p>
+            <span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+            <p class="yw-table-filter">
+                <input   name="contractTimeEnd" class="easyui-datebox" />
+            </p>
+            <a href="#" id="btnEdit" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" id="btnDel" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+            <a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none" onclick="exportExcel()">导出</a>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right: 20px;padding-left:20px;">
+    <table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id">
+    </table>
+</div>
+<script type="text/javascript">
+    // 虚拟库存记录状态// 代采方
+    var _regionContrastJson=eval('[(${regionContrastJson})]');
+    var _businessTypeJson = [
+        {"dictCd":"ZY-BB1","dictName":"赊销"},
+        {"dictCd":"ZY-BB","dictName":"代采"},
+        {"dictCd":"ZY-TP","dictName":"托盘"},
+        {"dictCd":"ZY-XS","dictName":"自营"},
+    ]
+    var lastIndex;
+    $(function () {
+        $('#tt').datagrid({
+            pagination: true,
+            rownumbers: true,
+            pageSize: 20,
+            pageList: [50, 40, 30, 20, 10],
+            queryParams: Convert.getJson4Form('searchForm'),
+            url: _ctx + "/inventory/book/findPageStockBook",
+            frozenColumns:[ [
+                {field: 'stockVirtualNo', title: '库存编号', align: 'left', width: 120}
+            ] ],
+            columns: [ [
+                {field: 'contractNo', title: '销售合同号', align: 'left', width: 100},
+                {field:'ourCompanyName',title:'下游我方', width:140,align:'left', formatter: function (value, row, index) {
+                        let viewName;
+                        let s_str = value.split("有限公司");
+                        if (s_str) {
+                            viewName = s_str[0];
+                        } else {
+                            viewName = value
+                        }
+                        return '<p title="' + value + '" class="note">' + viewName + '</p>';
+                    }},
+                {field:'companyName',title:'下游客户', width:140,align:'left', formatter: function (value, row, index) {
+                        let viewName;
+                        let s_str = value.split("有限公司");
+                        if (s_str) {
+                            viewName = s_str[0];
+                        } else {
+                            viewName = value
+                        }
+                        return '<p title="' + value + '" class="note">' + viewName + '</p>';
+                    }},
+                {field: 'businessTypeName', title: '业务类型', align: 'left', width: 80},
+                {field: 'productsName', title: '货名', align: 'left', width: 140},
+                {field: 'matchUserName', title: '业务员', align: 'left', width: 80},
+                {field: 'deptName', title: '业务区域', align: 'left', width: 90},
+                {field: 'totalNumber', title: '数量(吨)', align: 'right', width: 90, formatter: formateNum},
+                {field: 'minSellPrice', title: '销售指导价', align: 'right', width: 110, formatter: formateNum},
+                {field: 'kubBuyPrice', title: '上游-采购价', align: 'right', width: 110, formatter: formateNum},
+                {field: 'buyPrice', title: '中游-采购价', align: 'right', width: 110, formatter: formateNum},
+                {field: 'sellPrice', title: '销售价', align: 'right', width: 120, formatter: formateNum},
+                {field: 'totalAmount', title: '销售总价', align: 'right', width: 120, formatter: formateNum},
+                {field: 'minSellPriceProfit', title: '指导价毛利', align: 'right', width: 80, formatter: formateNum},
+                {field: 'buyPriceProfit', title: '采购价毛利', align: 'right', width: 100, formatter: formateNum},
+                {field: 'warehouseDay', title: '在库天数', align: 'center', width: 100},
+                {field: 'creditCycle', title: '下游账期', align: 'center', width: 80},
+                {field: 'costOfFunds', title: '资金成本', align: 'right', width: 90, formatter: formateNum},
+                {field: 'warehouseAmount', title: '仓储费', align: 'right', width: 90, formatter: formateNum},
+                {field: 'transportAmount', title: '运输费', align: 'right', width: 90, formatter: formateNum},
+                {field: 'stevedorage', title: '装卸费', align: 'right', width: 90, formatter: formateNum},
+                {field: 'insuranceAmount', title: '保费', align: 'right', width: 90, formatter: formateNum},
+                {field: 'contractTime', title: '签约日期', align: 'center', width: 100},
+                {field: 'realWarehoseDate', title: '出库日期', align: 'center', width: 100},
+                {field: 'payFullTime', title: '支付上游日期', align: 'center', width: 100},
+                {field: 'sumPayAmount', title: '支付上游金额', align: 'right', width: 120, formatter: formateNum},
+                {field: 'receiveDate', title: '下游回款日期', align: 'center', width: 100},
+                {field: 'sumReceiveAmount', title: '下游付款金额', align: 'right', width: 120, formatter: formateNum},
+                {field: 'confirmDate', title: '确认收货日期', align: 'center', width: 100}
+            ]]
+        });
+        $('#w').window({
+            modal: true,
+            closed: true,
+            collapsible: false,
+            minimizable: false,
+            maximizable: false,
+            cache: false,
+            onClose: function () {
+                $('#tt').datagrid('reload');
+            }
+        });
+        $("#regionContrastDeptId").combobox({
+            data:_regionContrastJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            editable:false,
+            panelHeight:"auto"
+        });
+        $("#businessType").combobox({
+            data:_businessTypeJson,
+            textField:'dictName',
+            valueField:'dictCd',
+            editable:false,
+            panelHeight:"auto"
+        });
+    });
+
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(3).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+    function exportExcel() {
+        $.messager.confirm({
+            title: '提示',
+            msg: '确认要导出库存台账吗？',
+            ok: "导出",
+            cancel: "取消",
+            cls: 'c9',
+            border: 'thin',
+            fn: function (r) {
+                if (r) {
+                    $('#searchForm').form('submit', {url: _ctx + "/inventory/book/exportExcel"});
+                }
+            }
+        })
+    }
+
+</script>
+</body>
+</html>

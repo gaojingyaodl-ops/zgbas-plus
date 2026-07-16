@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-bottom:20px">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>企业名:</label>
+				<input readonly name="companyName" id="companyName" type="text" th:value="${entity.companyName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>vip等级:</label>
+				<input readonly name="vipLevel" id="vipLevel2" type="text"   th:if="${entity.vipLevel}eq 180" value="半年度会员"></input>
+				<input readonly name="vipLevel" id="vipLevel3" type="text"   th:if="${entity.vipLevel}eq 365" value="年度会员"></input>
+			</p>
+
+			<p class="yw-table-filter w2">
+				<label>vip费用:</label>
+				<input readonly name="companyName" id="companyName" type="text" th:value="${entity.vipAmount}"></input>
+			</p>
+
+		</div>
+
+
+			<div class="editForm" style="margin-left: 60px">
+				<p style="width:240px">
+				<span class="upload-btn" id="btn_vipContractId">
+	               	 <a  class="easyui-linkbuttonvip btn-empty file-upload" >上传服务合同 </a>
+	           	</span>
+					<input class="control" id="vipContractId" name="vipContractId" type="hidden" th:value="${entity.vipContractId}" />
+				</p>
+				<p class="controls showImg vipContractId" id="span_vipContractId"></p>
+			</div>
+
+
+		<div class="editForm" style="margin-left: 60px">
+			<p style="width:240px">
+				<span class="upload-btn" id="btn_fileId">
+	               	 <a  href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+		</div>
+
+		</div>
+	</div>
+</div>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/vip/updateFileId',false);
+
+var filePluginsvip = new FilePlugin('#vipContractId',$('#entityId').val(),'/apply/vip/vipContractId',false);
+
+$(function(){
+	//合同加載列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	$('.easyui-linkbuttonvip').linkbutton();
+	//加载附件列表
+	filePluginsvip.load($('#vipContractId').val(),'#span_vipContractId');
+
+});
+</script>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl80 pr20 pb15 ofh" border="false">
+        <form id="inputForms" method="post"  class="from-input-layout" >
+            <input type="hidden" name="id" id="id" th:value="${entity.id}"/>
+            <div class="mb6">
+                <p class="yw-table-filter w3">
+                    <label for="userId"  class="control-label">用户:</label>
+                    <input name="userId" id="userId" required="required"  type="text" th:value="${entity.userId}"/>
+                    <input type="hidden" name="userName" id="userNameX" th:value="${entity.userName}"/>
+                </p>
+                <p class="yw-table-filter w3">
+                    <label for="assessmentUserId"  class="control-label">考核人:</label>
+                    <input name="assessmentUserId" id="assessmentUserId" required="required"  type="text" th:value="${entity.assessmentUserId}"/>
+                    <input type="hidden" name="assessmentUserName" id="assessmentUserNameX" th:value="${entity.assessmentUserName}"/>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w3">
+                    <label for="remark"  class="control-label">备注:</label>
+                    <input name="remark" id="remark" type="text" th:value="${entity.remark}"/>
+                </p>
+            </div>
+
+        </form>
+    </div>
+
+
+    <div region="south" border="false" style="overflow: hidden;height: 60px;margin-left:  280px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="submit();">保存</span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //var entityId=$("#id").val();
+    var userNameTreeJson = eval('[(${userNameTree})]');
+    $(function(){
+        $('#userId').combotree({
+            data : userNameTreeJson,
+            multiple : false,
+            editable : true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#userId').combotree('clear');
+                }
+                $('#userNameX').val(node.text);
+            }
+        })
+        $('#assessmentUserId').combotree({
+            data : userNameTreeJson,
+            multiple : false,
+            editable : true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#assessmentUserId').combotree('clear');
+                }
+                $('#assessmentUserNameX').val(node.text);
+            }
+        })
+    });
+
+    //保存
+    function submit(){
+        let userId = $('#userId').val();
+        if(userId === null || userId === ''){
+            $.messager.alert('error', '请选择用户', 'warning');
+            return;
+        }
+        let assessmentUserNameX = $('#assessmentUserNameX').val();
+        if(assessmentUserNameX === null || assessmentUserNameX === ''){
+            $.messager.alert('error', '请选择考核人', 'warning');
+            return;
+        }
+
+        var entityId = $("#id").val();
+        if (entityId != null  && entityId !=0 && entityId != ""){//判断是否有id值，有则修改，无则添加
+            Edit();//修改方法
+        }else{
+            save();//添加方法
+        }
+    }
+    /* 修改方法 */
+    function Edit(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: '/evaluate/user/manage/update',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '修改考核人配置成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#evaluate_user_manage_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+    /* 添加方法 */
+    function save(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: '/evaluate/user/manage/save',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '添加成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $("#evaluate_user_manage_detail").window("close");
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+
+</script>

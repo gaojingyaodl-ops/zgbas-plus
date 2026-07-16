@@ -1,0 +1,66 @@
+<div class="detail-content" th:each="detail:${detailList}">
+    <fieldset class="form-section detail-fieldset" style="padding: 0px 30px 10px 20px;">
+        <legend class="form-section-title" style="margin-bottom:25px;"><span class="approve_text">明细</span><i></i>
+        </legend>
+        <div region="north" border="false" id="inputForm" method="post"
+             class="editForm_approve  editForm_approverela content_div detail_div">
+            <form th:id="form+${detail.randomNumber}">
+                <div class="mb10">
+                    <p class="yw-table-filter">
+                        <label>合同编号</label>
+                        <input th:id="contractNo+${detail.randomNumber}" name="contractNo" th:value="${detail.contractNo}" type="text" />
+                    </p>
+                    <span class="syncClass" style="line-height: 28px;">
+                        <a href="#" class="easyui-linkbutton btn-empty " th:onclick="'applyProtocolDoc_ckh.syncContractDetail('+${detail.randomNumber}+')'" >同步合同信息</a>
+                    </span>
+                </div>
+                <div class="mb10">
+                    <p class="yw-table-filter">
+                        <label>品种</label>
+                        <input th:id="productCd+${detail.randomNumber}" name="productCd" th:value="${detail.productCd}" type="text"/>
+                        <input th:id="productName+${detail.randomNumber}" name="productName" th:value="${detail.productName}" type="hidden">
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>牌号</label>
+                        <input th:id="brandNumber+${detail.randomNumber}" name="brandNumber" th:value="${detail.brandNumber}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>数量（吨）</label>
+                        <input th:id="totalNumber+${detail.randomNumber}" name="totalNumber" th:value="${detail.totalNumber}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>约定付款日期</label>
+                        <input th:id="payFullDate+${detail.randomNumber}" name="payFullDate" th:value="${detail.payFullDate}" type="text" />
+                    </p>
+                </div>
+                <div class="mb10">
+                    <p class="yw-table-filter">
+                        <label>合同金额(元)</label>
+                        <input th:id="totalAmount+${detail.randomNumber}" name="totalAmount" th:value="${detail.totalAmount}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>已付金额(元)</label>
+                        <input th:id="dealedAmount+${detail.randomNumber}" name="dealedAmount" th:value="${detail.dealedAmount}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>逾期未付金额(元)</label>
+                        <input th:id="unPayOverdueAmount+${detail.randomNumber}" name="unPayOverdueAmount" th:value="${detail.unPayOverdueAmount}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>逾期罚息(元)</label>
+                        <input th:id="breachAmount+${detail.randomNumber}" name="breachAmount" th:value="${detail.breachAmount}" type="text"/>
+                    </p>
+                    <p class="yw-table-filter">
+                        <label>逾期天数</label>
+                        <input th:id="breachDays+${detail.randomNumber}" name="breachDays" th:value="${detail.breachDays}" type="text"/>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <div region="south" border="true" style="float: right;" th:if="${!disabled}">
+            <a href="#" class="easyui-linkbutton btn-empty btn64 btn-danger"
+               th:attr="detailId=${randomNumber}" onclick="applyProtocolDoc_ckh.removeNode(this)">删除</a>
+        </div>
+    </fieldset>
+</div>

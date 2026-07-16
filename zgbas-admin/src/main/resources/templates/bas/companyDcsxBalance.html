@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>资金方管理</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>资方名称:</label>
+                <input name="search_LIKES_companyName" id="companyName" type="text"/>
+            </p>
+            <input name="search_EQB_enableFlg" id="enableFlg" type="hidden" value="true"/>
+            <a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" id="btn1" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+            <span class="" th:if="${importPiccInsurancePerm == true}">
+                <a href="#" class="easyui-linkbutton btn-empty btn110 ml10 mobile-display-none" style="" onclick="showImportPiccInsuranceExcel()">人保保费流水导入</a>
+            </span>
+        </div>
+    </form>
+</div>
+
+
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+<div id="premiumRecharge"  data-options="width:700,height:350">
+</div>
+<div id="w_import_insurance_excel" title="人保保费流水excel" class="easyui-window" data-options="width:400,height:290">
+<script type="text/javascript">
+    $(function(){
+
+        $('#w_import_insurance_excel').window({
+            title: '人保保费流水数据导入',
+            modal:true,
+            closed: true,
+            collapsible : false,
+            minimizable : false,
+            maximizable : false,
+            cache:false,
+            onClose:function(){
+                $('#tt').datagrid('reload');
+            }
+        });
+
+        $('#premiumRecharge').window({
+            title : '',
+            modal : true,
+            closed : true,
+            collapsible : false,
+            minimizable : false,
+            maximizable : false,
+            cache : false,
+            onClose : function() {
+                $('#tt').datagrid('reload');
+            }
+        });
+        $('#tt').datagrid({
+            pagination:true,
+            width:400,
+            pageSize:20,
+            rownumbers:true,
+            queryParams:{
+                search_EQB_enableFlg: true
+            },
+            pageList:[50,40,30,20,10],
+            url:_ctx+"/bs/companyDcsx/list",
+            columns:[ [
+                {field:'companyName',title:'资方名称',align:'left', width:200},
+                {field:'fundAmountQg',title:'资金余额-青光',align:'right', width:120,formatter:formateFundAmountQg},
+                {field:'fundAmountWs',title:'资金余额-网塑',align:'right', width:120,formatter:formateFundAmountWs},
+                {field:'insuranceAmount',title:'保费余额', align:'right',width:120,formatter:formateInsuranceAmount},
+                {field:'operate',title:'操作', width:150,align:'center', formatter: function (value, row, index){
+                        return `
+                        <span onclick="clickPremiumRecharge('${row.companyCd}', 'T')" class="contract-btn contract-btn-2">充值保费</span>
+                        <span onclick="clickPremiumRecharge('${row.companyCd}', 'D')" class="contract-btn contract-btn-1">保费扣款</span>
+                    `;
+                    }
+                }
+            ]],
+            toolbar: '#toolbar'
+        });
+        // 默认查找有效的
+        $('#btn').click()
+    });
+    function formateFundAmountQg(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            const value = num.join(".");
+            return '<span onclick="openFundFlowDetail(\'qg\')" class="contract-btn contract-btn-3">'+value+'</span>';
+        }
+    }
+    function formateFundAmountWs(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            const value = num.join(".");
+            return '<span onclick="openFundFlowDetail(\'ws\')" class="contract-btn contract-btn-3">'+value+'</span>';
+        }
+    }
+    function formateInsuranceAmount(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            const value = num.join(".");
+            return '<span onclick="openInsuranceAmountFlowDetail('+row.id+')" class="contract-btn contract-btn-3">'+value+'</span>';
+        }else{
+            return num;
+        }
+    }
+    function clickPremiumRecharge(companyCd,flowType){
+        let _title;
+        if(flowType == 'T'){
+            _title = '资金方保费充值'
+        } else {
+            _title = '资金方保费扣款'
+        }
+        var url = _ctx + "/bs/companyDcsx/recharge/"+companyCd+'/'+flowType;
+        $('#premiumRecharge').window({href:url,title:_title});
+        $('#premiumRecharge').window("open");
+    }
+    function openFundFlowDetail(type){
+        window.parent.addTab('余额流水', _ctx + '/apply/fundRecharge/fundAmountFlow?type='+type);
+    }
+    function openInsuranceAmountFlowDetail(id){
+        window.parent.addTab('保费流水', _ctx + "/bs/companyDcsx/insuranceAmountFlow?fundCompanyId="+id);
+    }
+    /** 导入人保数据 */
+    function showImportPiccInsuranceExcel(){
+        var url=_ctx+"/bs/companyDcsx/showImportPiccInsuranceExcel";
+        $('#w_import_insurance_excel').window({href:url});
+        $('#w_import_insurance_excel').window("open");
+    }
+</script>
+</body>
+</html>

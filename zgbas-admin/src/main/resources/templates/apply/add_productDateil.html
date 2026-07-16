@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<style>
+.editForm_approve .large{width:365px}
+</style>
+<div class="easyui-layout" fit="true">
+	<div region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+		<table id="relaTable1" style="height:250px;"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+		</table>
+		<p class="tool">
+			<label>
+			<span class="btn_com float_left bglan relaInsertSpan" onclick="insert()">
+                <i class="float_left i_add"></i>
+                <span class="float_left">新增</span>
+            </span>
+			</label>
+		</p>
+	</div>
+	<div region="south" border="true" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn" data-options="iconCls:'icon-save'" onclick="joinToProduct()">保存</a>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+var edIndex;
+	$(function(){
+		//var _url = _ctx+"/apply/match/addProductDetail;
+		$('#relaTable1').datagrid({
+			pageSize:50,
+			rownumbers:true,
+			//url:_url,
+			pagination:false,
+			columns:[ [
+/* 				{field:'contractType',title:'合同类别', width:80,editor:{type:'combobox',options:{required:'true',editable : false,data:_contractTypeJson,textField:'dictName',valueField:'dictCd'}}},	 */
+				{field:'productCd',title:'品名',width:120,editor:{type:'combotree',options:{required:'true',panelWidth:180,data:_productDeliveryJson}}},
+				{field:'brandNumber',title:'牌号', width:80,editor:{type:'combobox',options:{required:'true',panelWidth:180,textField:'factoryName',valueField:'id'}}},
+				{field:'factoryId',title:'厂商',width:120,editor:{type:'combobox',options:{required:'true',panelWidth:180,data:_factoryJson,textField:'factoryName',valueField:'id'}}},
+				{field:'dealNumber',title:'数量', width:80,editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2}}},
+				{field:'dealPrice',title:'进单价', width:80,editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2}}},
+				{field:'totalPrice',title:'进总价', width:80,editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2}}},
+				{field:'option',title:'操作', width:120, align:'center',formatter:function(value, row, index){
+					var str = "<img onclick=remove('relaTable1') style='cursor:pointer;width:16px;hight:18px' src='/static/images/icon_delete.png'/>";
+					str=str+' <img onclick="addProductDateil()" style="cursor:pointer;width:16px;hight:18px" src="/static/images/icon_alter.png"/>';
+			        return str;
+				}}
+			]],
+			toolbar:'.tool',
+			onBeginEdit:function(index,row){
+			 	var ed_productCd = $('#relaTable1').datagrid('getEditor', {index:index,field:'productCd'});
+				var ed_brandNumber = $('#relaTable1').datagrid('getEditor', {index:index,field:'brandNumber'});
+				$(ed_productCd.target).combotree('options').onClick = function(record){
+					/* var productName = record.text;
+					row.productName = productName; */
+				};
+				var ed_factoryId = $('#relaTable1').datagrid('getEditor', {index:index,field:'factoryId'});
+				$(ed_factoryId.target).combobox('options').onClick = function(record){
+					/* var factoryName =record.factoryName;
+					row.factoryName = factoryName; */
+				};
+				//结算总数量
+				curOper(index,row,"relaTable1");
+			}
+		});
+	});
+
+	function insert(){
+		if(!edIndex){
+			edIndex =1;
+		}
+		$('#relaTable1').datagrid('endEdit', edIndex);
+		var field={};
+		$('#relaTable1').datagrid('appendRow',field);
+
+		lastIndex = $('#relaTable1').datagrid('getRows').length-1;
+		$('#relaTable1').datagrid('selectRow', lastIndex);
+		$('#relaTable1').datagrid('beginEdit', lastIndex);
+	}
+
+	//加入到商品列表
+	function joinToProduct(){
+		//获得编辑的所有行
+		//校验所有编辑框
+		var rtn=true;
+		var changeRows=$('#relaTable1').datagrid('getChanges','inserted','updated');
+		for(var i=0;i<changeRows.length;i++){
+			var rowIndex=$('#relaTable1').datagrid('getRowIndex',changeRows[i]);
+			flag=$('#relaTable1').datagrid('validateRow',rowIndex);
+			if (!flag){
+				$('#relaTable1').datagrid('selectRow',rowIndex);
+				$('#relaTable1').datagrid('beginEdit', rowIndex);
+				rtn=false;
+				break;
+			}else{
+				$('#relaTable1').datagrid('endEdit', rowIndex);
+			}
+		}
+
+		if(!rtn){
+			$.messager.alert('提示','输入不正确，请填写完整！','info');
+			return false;
+		}
+
+		var changeRows=$('#relaTable1').datagrid('getChanges','inserted','updated');
+		for(var i=0;i<changeRows.length;i++){
+			console.log(changeRows[i]);
+			//保存合同类型
+			var contractType=$('#w_contract_choose123').attr("contractType");
+			changeRows[i].contractType=contractType;
+			//获得关联索引
+			var parentIndex=$('#w_contract_choose123').attr("parenIndex");
+			changeRows[i].pointer=parentIndex;
+			//添加到商品datagrid
+			$("#relaTable2").datagrid("appendRow",changeRows[i]);
+			/* var index=$("#relaTable2").datagrid("getRowIndex",changeRows[i]);
+			$("#relaTable2").datagrid("beginEdit",index); */
+			//$("#relaTable2").datagrid("endEdit",index);
+		}
+		$("#w_contract_choose123").window("close");
+
+	}
+
+</script>

@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<!-- <script th:src="@{/static/jquery-easyui/jquery.easyui.min.js}" type="text/javascript"></script> -->
+<div class="easyui-layout" id="inputForm" border="false" fit="true">
+	<div region="north" border="false" method="post"  style="margin-bottom:10px;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" id="entityStatus" th:value="${entity.status}" />
+		<input type="hidden" id="pay_kind" th:value="${entity.payKind}">
+		<input type="hidden" id="onLineFlg" th:value="${onLineFlg}">
+		<input type="hidden" id="contractId" th:value="${entity.contractId}"/>
+		<div id="btn" class="add-btn" th:if="${entity.status eq 'B' or entity.status eq 'N'}">
+			<a href="#" class="easyui-linkbutton btn-empty btn64" onClick="insert()">新增</a>
+		</div>
+
+		<table id="relaTable" title="" iconCls="icon-edit" singleSelect="true" idField="id" style="height: 120px"></table>
+	</div>
+
+	<div region="center" id="inputForm" style="position: relative;overflow:hidden;" fit="true" border="false">
+		<p class="p_text">
+			<th:block th:replace="~{tags/apply :: contractNo (${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<span class="input-colspan">
+				<label>合同属性:</label>
+				<input name="contractAttr" id="contractAttr" type="text"  required="required" th:value="${entity.contractAttr}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>交货日期:</label>
+				<input name="deliveryTime" id="deliveryTime" required="required" th:value="${#dates.format(entity.deliveryTime,'yyyy-MM-dd')}"></input>
+				<input name="arrivalTimeExt" id="arrivalTimeExt" required="required" th:value="${entity.arrivalTimeExt}"/>
+			</span>
+			<!-- <span class="input-colspan hide" id="ra">
+				<label>收款比例:</label>
+				<input type="text" name="receiveRate" id="receiveRate" th:value="${entity.receiveRate}" >
+			</span>	 -->
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>业务类型:</label>
+				<input type="text" name="businessType" id="businessType" th:value="${entity.businessType}" >
+			</span>
+			<span class="input-colspan">
+				<label>合同总价(元):</label>
+				<input id="totalAmount" type="text" th:value="${entity.totalAmount}"/>
+			</span>
+			<span class="input-colspan">
+				<label>质量标准:</label>
+				<input name="qualityStandard" id="qualityStandard"  type="text" th:value="${entity.qualityStandard}" ></input>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan2">
+				<label>我方抬头:</label>
+				<input name="ourCompanyName" id="ourCompanyName" type="text" required="required" th:value="${entity.ourCompanyName}"></input>
+			</span>
+			<th:block th:replace="~{tags/apply :: deliveryType (${#maps.containsKey(psv.mapEdit, 'deliveryType')}?${psv.mapEdit['deliveryType'].require},${#maps.containsKey(psv.mapEdit, 'deliveryType')}?${psv.mapEdit['deliveryType'].edit && psv.hasEdit}:${ psv.hasEdit},${deliveryTypeJson})}"/>
+			<span class="input-colspan">
+				<label>结算方式:</label>
+				<input type="text" name="deliveryMode" id="deliveryMode" th:value="${entity.deliveryMode}"/>
+			</span>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan2">
+				<label>交货地点:</label>
+				<input id="shippingAddr" name="shippingAddr" th:value="${entity.shippingAddr}" type="text" required="required"></input>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan4">
+				<label>付款方式:</label>
+				<input name="payKind" id="payKind"  type="text" th:value="${entity.payKind}"></input>
+				<input name="payKindCode" id="payKindCode" type="hidden" th:value="${entity.payKindCode}"></input>
+			</span>
+		</p>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>保证金(元):</label>
+				<input type="text" name="contractAmount" id="contractAmount" th:value="${entity.contractAmount}" >
+			</span>
+			<span class="input-colspan">
+				<label>收保证金日期:</label>
+				<input  name="receiveBondTime" class="easyui-datebox" required="required" id="receiveBondTime" th:value="${#dates.format(entity.receiveBondTime,'yyyy-MM-dd')}">
+			</span>
+			<span class="input-colspan">
+				<label>收全款日期:</label>
+				<input  name="receiveTime" class="easyui-datebox" required="required" id="receiveTime" th:value="${#dates.format(entity.receiveTime,'yyyy-MM-dd')}">
+			</span>
+			<th:block th:replace="~{tags/apply :: receiveType (${#maps.containsKey(psv.mapEdit, 'receiveType')}?${psv.mapEdit['receiveType'].require},${#maps.containsKey(psv.mapEdit, 'receiveType')}?${psv.mapEdit['receiveType'].edit && psv.hasEdit}:${ psv.hasEdit},${payTypeJson},'')}"/>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>预估运输费(元):</label>
+				<input name="transportCost" id="transportCost" onkeyup="value=value.replace(/^(\d*\.?\d{0,2}).*/,'$1')" type="text" th:value="${entity.transportCost}">
+			</span>
+			<span class="input-colspan">
+				<label>预估仓储费(元):</label>
+				<input name="warehouseCost" id="warehouseCost" onkeyup="value=value.replace(/^(\d*\.?\d{0,2}).*/,'$1')"  type="text" th:value="${entity.warehouseCost}"></input>
+			</span>
+			<span class="input-colspan2">
+				<label>补充条款:</label>
+				<input name="extraTerm" type="text" id="extraTerm" th:value="${entity.extraTerm}"></input>
+			</span>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan2">
+				<label>需货商名称:</label>
+				<input name="companyName" id="companyName"  type="text" required="required" th:value="${entity.companyName}"></input>
+				<input type="hidden" name="companyId" th:value="${entity.companyId}" id="companyId">
+			</span>
+			<span class="input-colspan2">
+				<label>联系地址:</label>
+				<input name="contactAddr" id="contactAddr" readonly="readonly" type="text" th:value="${entity.contactAddr}"></input>
+			</span>
+		</p>
+		<div id="onLine" class="onlinStyle hide">注：该企业具备电子签约功能，将通过采购机器人完成电子签章！</div>
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>联系人:</label>
+				<input name="contactName" id="contactName"  readonly="readonly" type="text" th:value="${entity.contactName}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>联系电话:</label>
+				<input name="contactPhone" id="contactPhone"  readonly="readonly" type="text" th:value="${entity.contactPhone}"></input>
+			</span>
+			<span class="input-colspan2">
+				<label>备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+			</span>
+		</p>
+		<div class="editForm">
+			<p>
+				<span class="upload-btn" id="btn_fileId">
+				 	<i></i>
+	               	<span>附件上传</span>
+	           	</span>
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+		</div>
+    </div>
+</div>
+<script type="text/javascript" th:inline="javascript">
+var lastIndex;
+var _factoryJson = eval('[(${factoryJson})]');
+var _productTypeJson = eval('[(${productTypeJson})]');
+var _brandJson = eval('[(${brandJson})]');
+//var _companyJson = eval('[(${companyJson})]');
+var _productTypeJson = eval('[(${productTypeJson})]');
+var _payTypeJson = eval('[(${payTypeJson})]');
+var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+var _warehouseJson = eval('[(${warehouseJson})]');
+var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+var _deliveryModeJson = eval('[(${deliveryModeJson})]');
+var _qualityStandardJson = eval('[(${qualityStandardJson})]');
+var _payModeJson = eval('[(${payModeJson})]');
+var _attachDeliveryTimeJson = eval('[(${attachDeliveryTimeJson})]');
+var _payModeJson = eval('[(${payModeJson})]');
+var _businessJson = eval('[(${businessJson})]');
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/presell/updateFileId',[[${param.hasEditFile}]]);
+var hasEdit = [[${psv.hasEdit}]];
+var _contractAttrJson= eval('[(${contractAttr})]');
+$(function(){
+	$('.easyui-linkbutton').linkbutton();
+	_beforSaveOper = true;
+	var _curStatus = $("#entityStatus").val();
+	var _url = _ctx+"/apply/productDetail/productList?search_EQS_applyType=L&search_EQL_applyId="+$("#entityId").val();
+	var columns =[ [
+		{field:'productCd',title:'品名',align:'center',width:150,editor:{type:'combotree',options:{required:'true',editable:'false',panelWidth:150,panelHeight:300,data:_productTypeJson}},
+			formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_productTypeJson,"id",value,"text");
+		}},
+		{field:'brandNumber',title:'牌号',align:'center',width:150,editor:{type:'combobox',options:{required:'true',panelWidth:180}}},
+		{field:'factoryId',title:'厂商',align:'center',width:180,editor:{type:'combobox',options:{required:'true',panelWidth:180,data:_factoryJson,textField:'factoryName',valueField:'id',onHidePanel:function(){BasCombobox.onHidePanel(this);}}},
+			formatter:function(value,row,index){
+				return Convert.findValueByKey(_factoryJson,"id",value,"factoryName");
+		}},
+		{field:'warehouseName',title:'提货/配送仓库',align:'center',width:180,editor:{type:'combobox',options:{required:true,valueField:'warehouseName',textField:'warehouseName'}}},
+		{field:'warehousePos',title:'仓库所在地',align:'center',width:160,editor:{ type:'combotree',options:{required:'true',panelWidth:160,panelHeight:300,data:_bsAreaJson,onBeforeExpand:function(node){}}},
+			formatter:function(value,row,index){
+				return Convert.findTreeValueByKey(_bsAreaJson,"id",value,"text");
+		}},
+		{field:'warehousePrice',title:'仓储费/地区单价(元)', width:100,align:'right',hidden:'hidden',editor:{type:'numberbox',options:{validType:'length[1,20]',precision:3}}},
+		{field:'wrapSpecs',title:'包装规格',align:'center',width:120,editor:{type:'combobox',options:{required:true,editable:false,panelHeight:'auto',data:packingSpecificaJson,textField:'dictName',valueField:'dictCd',onHidePanel:function(){BasCombobox.onHidePanel(this);}}},
+			formatter:function(value,row,index){
+				return Convert.findValueByKey(packingSpecificaJson,"dictCd",value,"dictName");
+		}},
+		{field:'dealNumber',title:'数量(吨)', width:100,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4}},
+			formatter: function (value, row, index) {
+                if (row != null) {
+                    return parseFloat(value).toFixed(3);
+                }
+		}},
+		{field:'dealPrice',title:'单价(元)', width:100,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2}}},
+		{field:'totalPrice',title:'总价(元)', width:120,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:2}}},
+		{field:'option',title:'操作', width:120,hidden:true, align:'center',formatter:function(value, row, index){
+			var str = '<img onclick="remove(\''+row.id+'\',event,this)" style="cursor:pointer;width:16px;hight:18px" src="/static/images/icon_delete.png"/>';
+	        return str;
+		}}
+	]];
+	if (_industry.indexOf('SL')==-1){
+		for(var i in columns[0]){
+			var col =columns[0][i];
+			if (col.field=='brandNumber' || col.field=='factoryId'){
+				col.editor.options.required = false;
+				col.hidden = true;
+			}
+
+		}
+	}
+
+	$('#relaTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		url:_url,
+		pagination:false,
+		columns:columns,
+		onBeginEdit:function(index,row){
+			//新增采购申请默认属性为在途P
+			row.productAttr = "N";
+
+			var ed_warehouseName = $('#relaTable').datagrid('getEditor', {index:index,field:'warehouseName'});
+			var ed_productCd = $('#relaTable').datagrid('getEditor', {index:index,field:'productCd'});
+			var ed_warehousePos = $('#relaTable').datagrid('getEditor', {index:index,field:'warehousePos'});
+			//品名绑定失焦事件，判断是否点击了combotree
+			$(ed_productCd.target).combotree('textbox').on('blur',function(){
+				var t = $(ed_productCd.target).combotree('tree');
+				var _productSelect = t.tree('getSelected');
+				if(!_productSelect) $(ed_productCd.target).combotree('clear');
+			});
+			$(ed_productCd.target).combotree('options').onClick = function(record){
+				if(record.children.length!=0){
+					$(ed_productCd.target).combotree('clear');
+				}else{
+					var productName = record.text;
+					row.productName = productName;
+					var productCode = record.id;
+					$(ed_warehouseName.target).combobox('reload',_ctx+'/bas/warehouse/findWarehoseList/'+productCode);
+
+					$.post(_ctx+"/bas/brand/findBrand",{"productCode":productCode},function(data){
+						var ed_brandNumber = $('#relaTable').datagrid('getEditor', {index:index,field:'brandNumber'});
+// 						var ed_factoryId = $('#relaTable').datagrid('getEditor', {index:index,field:'factoryId'});
+						var list=data;
+						$(ed_brandNumber.target).combobox({
+							data:list,
+							valueField:"brandNumber",
+							textField:'brandNumber'
+						});
+						if(productCode.indexOf("HG")>=0){
+							if (list.length>0){
+								$(ed_brandNumber.target).combobox('select',list[0].brandNumber);
+							}
+// 							$(ed_brandNumber.target).combobox('disableValidation');
+// 							$('#relaTable').datagrid('hideColumn', 'brandNumber');
+// 							$(ed_factoryId.target).combobox('disableValidation');
+// 							$('#relaTable').datagrid('hideColumn', 'factoryId');
+						}else{
+// 							$(ed_brandNumber.target).combobox('enableValidation');
+// 							$('#relaTable').datagrid('showColumn', 'brandNumber');
+// 							$(ed_factoryId.target).combobox('enableValidation');
+// 							$('#relaTable').datagrid('showColumn', 'factoryId');
+						}
+
+					});
+				}
+			}
+			var productCode = row.productCd;
+			if(productCode){
+				$(ed_warehouseName.target).combobox('reload',_ctx+'/bas/warehouse/findWarehoseList/'+productCode);
+			}
+
+			var ed_factoryId = $('#relaTable').datagrid('getEditor', {index:index,field:'factoryId'});
+			$(ed_factoryId.target).combobox('options').onClick = function(record){
+				var factoryName =record.factoryName;
+				row.factoryName = factoryName;
+			};
+			$(ed_factoryId.target).combobox('options').onHidePanel=function(){
+					BasCombobox.onHidePanel($(ed_factoryId.target));
+			};
+			$(ed_warehousePos.target).combotree('options').onClick = function(record){
+				if(record.children.length!=0){
+					$(ed_warehousePos.target).combotree('clear');
+				}else{
+					$(ed_warehousePos.target).combotree('setValue',record.id);
+					//根据市区areacode获取单价
+					$.post(_ctx+"/bs/areaCost/acquirePriceVo",{"areaCode":record.id},function(data){
+						var rObj = eval(data);
+						var _housePrice=rObj;
+						var _area_housePrice =  $('#relaTable').datagrid('getEditor', {index:index,field:'warehousePrice'});
+						$(_area_housePrice.target).numberbox('setValue',rObj.warehouseUnitCost);
+			 		});
+				}
+			};
+			curOper(index,row);
+		},
+		onDblClickRow:function(index,row,field){
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				//进入可编辑状态
+				$('#relaTable').datagrid('endEdit', lastIndex);
+				$('#relaTable').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("relaTable",field,lastIndex);
+			}
+		},
+		onClickCell:function(index,field){
+			var rows =$('#relaTable').datagrid('getData').rows;
+			var row =rows[index];
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				if (lastIndex != index){
+					$('#relaTable').datagrid('endEdit', lastIndex);
+					$('#relaTable').datagrid('beginEdit', index);
+				}
+				lastIndex = index;
+				Convert.focusEditor('relaTable',field,lastIndex);
+			}
+		},
+		onClickRow:function(index,row){
+			lastIndex = index;
+		},
+		onLoadSuccess:function(data){
+			if(_curStatus && _curStatus=='N'&&data.total==0){
+				var new_row = {id:0};
+				$('#relaTable').datagrid('appendRow', new_row);
+				var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+				lastIndex = rowIndex;
+				$('#relaTable').datagrid('beginEdit', rowIndex);
+			}else{
+			}
+	}
+
+	});
+
+	if(hasEdit){
+		$('#relaTable').datagrid('showColumn', 'option');
+
+		$('#contractAttr').combobox({
+			data:_contractAttrJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable:false,
+			onLoadSuccess:function(){
+				$(this).combobox("setValue","N");
+			}
+		});
+
+		$('#deliveryTime').datebox({
+			 required: true,
+			 editable:false,
+			onChange : function(newValue,oldValue){
+			 	var mDate=$("#deliveryTime").datebox('getValue');
+			 	var dateFullTimeValue = $('#receiveTime').datebox('getValue');
+				var curr_time = new Date();
+				var sDate=myformatter(curr_time);
+				var newcc = beForeDate(strDateForDate(mDate));
+				if(mDate>sDate){
+					$('#contractAttr').combobox('setValue', "F");
+				}else{
+					$('#contractAttr').combobox('setValue',"N");
+				}
+
+			 	var dateDeliveryTime = new Date(mDate);
+			 	dateDeliveryTime.setDate(dateDeliveryTime.getDate() + 3);//交货时间后三天
+				//收全款时间大于等于交货时间小于等于交货时间+3天
+			  $('#receiveTime').datebox().datebox('calendar').calendar({
+					validator: function(date){
+		                return strDateForDate(mDate) <= date && date <= dateDeliveryTime;
+		            }
+				 });
+				if(mDate >= dateFullTimeValue){
+					/*  $('#receiveFullTime').datebox('setValue', beForeDate(strDateForDate(mDate))); */
+					$('#receiveTime').datebox('setValue',mDate);
+				}else{
+					//相差小于三天，默认时间
+					if(new Date(dateFullTimeValue).getDate() >dateDeliveryTime.getDate()){
+						$('#receiveTime').datebox('setValue',mDate);
+					} else {
+						$('#receiveTime').datebox('setValue',dateFullTimeValue);
+					}
+
+				}
+			}
+		});
+
+
+		$('#transportAmount,#warehouseAmount').numberbox({
+		    min:0,
+		    precision:2
+		});
+
+		$("#totalAmount").numberbox({
+			 min:0,
+			 precision:2,
+			 required: true,
+			 readonly: true
+		});
+
+		$('#businessType').combobox({
+			data:_businessJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:'auto',
+			hasDownArrow:false,
+			readonly:true,
+			onLoadSuccess:function(){
+				var value = $(this).combobox('getValue');
+				if (!value){
+					$(this).combobox('select', _businessJson[0].dictCd);
+				}
+			}
+		});
+
+		//结算方式
+		$('#deliveryMode').combobox({
+			data:_deliveryModeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false,
+			hasDownArrow:false,
+			readonly:true,
+			onLoadSuccess:function(){
+				$(this).combobox("setValue","XHHK");
+			}
+		});
+		//运输费仓储费
+		$('#transportCost,#warehouseCost').numberbox({
+			min:0,
+		    precision:2,
+		    required: true
+		});
+		// 质量标准
+		$('#qualityStandard').combobox({
+			data:_qualityStandardJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false,
+		//	hasDownArrow:false,
+		//	readonly:true,
+			onLoadSuccess:function(){
+				var _value = $(this).combobox('getValue');
+				if(!_value){
+					$(this).combobox("setValue","Y");
+				}
+			}
+		});
+		//交货地点
+		$('#shippingAddr').textbox({
+			required:true
+		});
+		//交货补充日期
+		$('#arrivalTimeExt').combobox({
+			data:_attachDeliveryTimeJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false,
+			required: true,
+			onLoadSuccess:function(){
+				if(!$(this).combobox('getValue')){
+					$(this).combobox("setValue","LR");
+				}
+			},
+			onSelect:function(record){
+			 	if(record.dictCd == 'K'){
+			 		$('#deliveryTime').datebox('clear');
+			 		$('#deliveryTime').datebox({required:false});
+			 		$("#inputForm").find("input[name='deliveryTime']").parent().addClass("hide");
+			 	}else{
+			 		var _value = $('#deliveryTime').datebox('getValue');
+			 		$('#deliveryTime').datebox({required:true});
+			 		$('#deliveryTime').datebox('setValue',_value);
+			 		$("#inputForm").find("input[name='deliveryTime']").parent().removeClass("hide");
+			 	}
+		 	}
+		});
+		var _companyId = $('#companyId').val();
+		if(!_companyId){
+			_companyId = 0;
+		}
+		$('#companyName').combobox({
+			url:_ctx+"/bs/company/listMyCompany/"+ _companyId,
+			mode:'remote',
+			limitToList:true,
+			valueField:'companyName',
+			textField:'text',
+			panelHeight:300,
+			formatter: function(row){
+				var text = row.text;
+				var myFlag = row.myFlag;
+				if (myFlag!=true){
+					text = '<span style="color:#ccc">'+text+'</span>';
+				}
+				return text;
+			},
+			onSelect : function(node){
+				var _id = node.id;
+				var onLineFlg = node.onLineFlg;
+				$("#companyId").val(_id);
+				if (node.contactName){
+					$("#contactName").val(node.contactName);
+				}
+				if (node.contactPhone){
+					$("#contactPhone").val(node.contactPhone);
+				}
+				if (node.address){
+					$("#contactAddr").val(node.address);
+				}
+				//是否是我的企业
+				var myFlag = node.myFlag;
+				if (myFlag!=true){
+					setTimeout(function () { $("#companyName").combobox("clear"); }, 1)
+				}
+				if (onLineFlg==true){
+					$('#onLine').removeClass("hide");
+				}else{
+					$('#onLine').addClass("hide");
+				}
+			}
+		});
+
+		$('#payKind').combobox({
+		});
+		//我方抬头
+		$('#ourCompanyName').combobox({
+			data:_ourCompanyJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false,
+			onLoadSuccess:function(){
+				var value = $(this).combobox('getValue');
+				var companyName;
+				if (!value){
+					$('#ourCompanyName').combobox('select', _ourCompanyJson[0].dictCd);
+					companyName = _ourCompanyJson[0].dictName;
+				}
+				// 根据我方抬头获取remark（银行及账户）
+				if (companyName){
+					var _remark = Convert.findValueByKey(_ourCompanyJson,"dictName",companyName,"remark");
+					for(var i=0;i<_payModeJson.length;i++){
+						_payModeJson[i].content = _payModeJson[i].content.replace(/\([^\)]*\)/g, _remark);
+					}
+					refreshPayKindJson();
+				}
+				var entityOurCompanyName = '[(${entity.ourCompanyName})]';
+				if (entityOurCompanyName){
+					var dictCd = Convert.findValueByKey(_ourCompanyJson,"dictName",entityOurCompanyName,"dictCd");
+					$('#ourCompanyName').combobox('setValue',dictCd);
+				}
+			},
+			onSelect : function(node){
+				// 根据我方抬头确定付款方式下拉列表
+				var _ourCompanyName = node.dictName;
+				// 根据我方抬头获取remark（银行及账户）
+				var _remark = Convert.findValueByKey(_ourCompanyJson,"dictName",_ourCompanyName,"remark");
+				for(var i=0;i<_payModeJson.length;i++){
+					_payModeJson[i].content = _payModeJson[i].content.replace(/\([^\)]*\)/g, _remark);
+				}
+				refreshPayKindJson();
+			}
+		});
+
+		//收保证金日期
+		$('#receiveBondTime').datebox({
+			editable:false,
+			onChange : function(newValue,oldValue){
+				var value1 = formattData(newValue);
+				var value2 = formattData(oldValue);
+				for(var i=0;i<_payModeJson.length;i++){
+					if(i == 0){
+						_payModeJson[i].content = _payModeJson[i].content.replace(value2, value1);
+					}
+				}
+				refreshPayKindJson();
+			}
+		});
+
+		//收全款日期
+		$('#receiveTime').datebox({
+			editable:false,
+			onChange : function(newValue,oldValue){
+				//定金时间
+				$("#receiveBondTime").datebox('calendar').calendar({
+					validator:function(date){
+						return date <=strDateForDate(newValue);
+					}
+				});
+				//如果new<old
+				//定金时间
+				var dateBondTimeValue = $('#receiveBondTime').datebox('getValue');
+				 if(dateBondTimeValue > newValue){
+					 $('#receiveBondTime').datebox('setValue', newValue);
+				}  else {
+					$('#receiveBondTime').datebox('setValue', dateBondTimeValue);
+				}
+				refreshPayKindJson();
+			}
+		});
+
+		$('#contractAmount').numberbox({
+			 min:0,
+			 precision:2,
+			 onChange:function(newValue,oldValue){
+				var _datagrid = $('#relaTable');
+				var rows = $('#relaTable').datagrid('getRows');
+				var totalAmount = 0;
+				var _totalPrice=0;
+				for(var i=0; i<rows.length; i++){
+					var _ed_totalPrice =  _datagrid.datagrid('getEditor', {index:i,field:'totalPrice'});
+						_totalPrice=rows[i].totalPrice;
+					if(_ed_totalPrice){
+						 _totalPrice =$(_ed_totalPrice.target).numberbox('textbox').val();
+					}else{
+					}
+					totalAmount = Number(totalAmount) + Number(_totalPrice);
+				}
+
+			   	if(parseFloat(newValue) > parseFloat(totalAmount)){
+				   newValue = Number(totalAmount).toFixed(2);
+			   	   $('#contractAmount').numberbox('setValue', newValue);
+				}
+			    for(var i=0;i<_payModeJson.length;i++){
+				   if (oldValue){
+					   _payModeJson[i].content = _payModeJson[i].content.replace(oldValue+'元', newValue+'元');
+				   }else{
+					   _payModeJson[i].content = _payModeJson[i].content.replace('****元', newValue+'元');
+				   }
+				}
+			   refreshPayKindJson();
+			 }
+		});
+
+		var entityBondAmount = $('#contractAmount').numberbox('getValue');
+		var bondTime = $('#receiveBondTime').datebox('getValue');
+		var fullTime = $('#receiveTime').datebox('getValue');
+		var beginBondTime = strDateForDate(bondTime);
+		var deliveryTimeStr = $('#deliveryTime').datebox('getValue');
+		var beginDeliveryTime = strDateForDate(deliveryTimeStr);
+		var dateDeliveryTime = new Date(deliveryTimeStr);
+		dateDeliveryTime.setDate(dateDeliveryTime.getDate() + 3);//交货时间后三天
+		//收全款时间大于等于交货时间小于等于交货时间+3天
+		//交货时间
+		$("#receiveTime").datebox('calendar').calendar({
+			validator:function(date){
+				return beginBondTime <= date && date <=dateDeliveryTime ;
+			}
+		});
+		/* $("#deliveryTime").datebox('calendar').calendar({
+			validator:function(date){
+				return beginBondTime <= date;
+			}
+		}); */
+		//定金时间
+		$("#receiveBondTime").datebox('calendar').calendar({
+			validator:function(date){
+				return date <=strDateForDate(fullTime);
+			}
+		});
+		var receiveBondTime = formattData(bondTime);
+		var receiveTime = formattData(fullTime);
+		var sDate=formattData(myformatter(new Date()));
+		if (entityBondAmount != null && entityBondAmount != "" && entityBondAmount != undefined){
+			for(var i=0;i<_payModeJson.length;i++){
+				 _payModeJson[i].content = _payModeJson[i].content.replace('****元', entityBondAmount+'元');
+				 _payModeJson[i].content = _payModeJson[i].content.replace(sDate, receiveBondTime);
+			}
+			refreshPayKindJson();
+		}
+		//提货方式
+		$('#deliveryType').combobox({
+			data:_deliveryTypeJson,
+			required: true,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			onSelect:function(record){
+				/* if("P"==record.dictCd){
+					$("#shippingAddr").parent().removeClass("hide");
+				}else{
+					$("#shippingAddr").parent().addClass("hide");
+					$("#shippingAddr").val("");
+				}				 */
+			},
+			onLoadSuccess:function(){
+				var value =$(this).combobox('getValue');
+				if (!value){
+					$("#deliveryType").combobox('select',_deliveryTypeJson[0].dictCd);
+				}
+				/* if("P"==value){
+					$("#shippingAddr").parent().removeClass("hide");
+				}else{
+					$("#shippingAddr").parent().addClass("hide");
+					$("#shippingAddr").val("");
+				} */
+			}
+		});
+		$('#contractAmount').numberbox('textbox').on('blur',function(){
+			 var contractAmount = Number($('#contractAmount').val());
+		     var totalAmount = Number($('#totalAmount').val());
+		     if(contractAmount>totalAmount){
+		    	 $('#contractAmount').numberbox('setValue', totalAmount);
+			  }
+		})
+		$('#payKind').combobox({
+			data:_payModeJson,
+			valueField:'serialNumber',
+			textField:'content',
+			panelHeight:"auto",
+			required:true,
+			readonly:true,
+			hasDownArrow:false,
+			onLoadSuccess:function(){
+				var value = $(this).val();
+				if (!value){
+					$(this).combobox('select',_payModeJson[0].serialNumber);
+				}
+			},
+			onSelect : function(node){
+				var serialNumber = node.serialNumber;
+				$('#payKindCode').val(serialNumber);
+			}
+		});
+	} else {
+		$("#inputForm").find("input").not('.tags input').not("[type='button']").attr("readonly",true);
+
+		var _deliveryType = $('#deliveryType').val();
+		var _conDeliveryType = Convert.findValueByKey(_deliveryTypeJson,"dictCd",_deliveryType,"dictName");
+		$("#deliveryType").val(_conDeliveryType);
+
+		var _deliveryMode = $('#deliveryMode').val();
+		var _conDeliveryMode = Convert.findValueByKey(_deliveryModeJson,"dictCd",_deliveryMode,"dictName");
+		$("#deliveryMode").val(_conDeliveryMode);
+
+		$("#ra").removeClass("hide");
+
+		$("#receiveRate").val(toPercent($("#receiveRate").val()));
+
+		//格式化合同总价
+		$("#totalAmount").val(Number($("#totalAmount").val()).toFixed(2));
+
+		var _contractAttr = $('#contractAttr').val();
+		var _concontractAttrMsg = Convert.findValueByKey(_contractAttrJson,"dictCd",_contractAttr,"dictName");
+		$("#contractAttr").val(_concontractAttrMsg);
+
+		// 质量标准
+		var _qualityStandard = $('#qualityStandard').val();
+		_qualityStandard = Convert.findValueByKey(_qualityStandardJson,"dictCd",_qualityStandard,"dictName");
+		$("#qualityStandard").val(_qualityStandard);
+
+		// 交货日期
+		$("#arrivalTimeExt").attr('type','hidden');
+		var _arrivalTimeExt = $('#arrivalTimeExt').val();
+		_arrivalTimeExt = Convert.findValueByKey(_attachDeliveryTimeJson,"dictCd",_arrivalTimeExt,"dictName");
+		var _deliveryTime = $("#deliveryTime").val()
+		$("#deliveryTime").val(_deliveryTime + _arrivalTimeExt);
+
+		// 业务类型
+		var _businessType = $('#businessType').val();
+		businessType = Convert.findValueByKey(_businessJson,"dictCd",_businessType,"dictName");
+		$("#businessType").val(businessType);
+
+		var onLineFlg = $("#onLineFlg").val();
+		if (onLineFlg=="true"){
+			$("#onLine").removeClass("hide");
+		}
+
+	}
+
+	//加载附件列表
+	filePlugin.load($('#fileId').val(),'#span_fileId');
+	if ($("#btn_fileId").length>0){
+		fileUpload("btn_fileId", "fileId");
+	}
+});
+
+//获取当前日期
+function myformatter(date){
+    var y = date.getFullYear();
+    var m = date.getMonth()+1;
+    var d = date.getDate();
+    return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+}
+
+function formattData(date){
+	var arr = date.split('-');
+	var year = arr[0]
+    var month = arr[1];
+    var day = arr[2];
+	return year + '年' + month + '月' + day + '日';
+}
+
+function insert(){
+	if(!lastIndex){
+		lastIndex =1;
+	}
+	var field={id:0};
+	var row = $('#relaTable').datagrid('appendRow',field);
+
+	lastIndex = $('#relaTable').datagrid('getRows').length-1;
+	$('#relaTable').datagrid('selectRow', lastIndex);
+	$('#relaTable').datagrid('beginEdit', lastIndex);
+	Convert.focusEditor("relaTable",field,lastIndex);
+}
+
+function remove(id,event,target){
+	var row , index;
+	index = getRowIndex(target);
+	if(id=='0' ||id =='' || id == undefined) {
+		//row = $('#relaTable').datagrid('getSelected');
+		//index = $('#relaTable').datagrid('getRowIndex', row);
+		$('#relaTable').datagrid('deleteRow',index);
+	}else{
+		//$('#relaTable').datagrid('selectRecord',id);
+		//row = $('#relaTable').datagrid('getSelected');
+		//index = $('#relaTable').datagrid('getRowIndex', row);
+		$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+			if(t){
+				$('#relaTable').datagrid('deleteRow', index);
+				var nextSelect=index>0?index-1:0;
+				$('#relaTable').datagrid('selectRow', nextSelect);
+				grossProfit();
+			}
+		});
+	}
+	event.stopPropagation();
+}
+function grossProfit(){
+	var _datagrid = $('#relaTable');
+	var rows = $('#relaTable').datagrid('getRows');
+	var totalAmount = 0;
+	var _totalPrice=0;
+	for(var i=0; i<rows.length; i++){
+		var _ed_totalPrice =  _datagrid.datagrid('getEditor', {index:i,field:'totalPrice'});
+			_totalPrice=rows[i].totalPrice;
+		if(_ed_totalPrice){
+			 _totalPrice =$(_ed_totalPrice.target).numberbox('textbox').val();
+		}else{
+		}
+		totalAmount = Number(totalAmount) + Number(_totalPrice);
+	}
+	$("#totalAmount").numberbox('setValue', totalAmount);
+}
+
+//计算商品总价
+function curOper(curIndex,row){
+	var _datagrid = $('#relaTable');
+	var _ed_dealPrice = _datagrid.datagrid('getEditor', {index:curIndex,field:'dealPrice'});
+	var _ed_dealNumber = _datagrid.datagrid('getEditor', {index:curIndex,field:'dealNumber'});
+	var _ed_dealAmount = _datagrid.datagrid('getEditor', {index:curIndex,field:'totalPrice'});
+	var sumAmount=function(){
+		var _dealNumber=$(_ed_dealNumber.target).numberbox('textbox').val();
+		var _dealPrice= $(_ed_dealPrice.target).numberbox('textbox').val();
+		if(_dealPrice &&_dealNumber){
+			$(_ed_dealAmount.target).numberbox('setValue', _dealPrice*_dealNumber);
+		}
+	}
+	var totalAmount = function(){
+		var rows = $('#relaTable').datagrid('getRows');
+		var totalAmount = 0;
+		var _totalPrice=0;
+		for(var i=0; i<rows.length; i++){
+			var _ed_totalPrice =  _datagrid.datagrid('getEditor', {index:i,field:'totalPrice'});
+				_totalPrice=rows[i].totalPrice;
+			if(_ed_totalPrice){
+				 _totalPrice =$(_ed_totalPrice.target).numberbox('textbox').val();
+			}else{
+			}
+			totalAmount = Number(totalAmount) + Number(_totalPrice);
+		}
+		$("#totalAmount").numberbox('setValue', totalAmount);
+	}
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',sumAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',sumAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',sumAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',sumAmount);
+
+	$(_ed_dealPrice.target).numberbox('textbox').on('keyup',totalAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('keyup',totalAmount);
+	$(_ed_dealPrice.target).numberbox('textbox').on('blur',totalAmount);
+	$(_ed_dealNumber.target).numberbox('textbox').on('blur',totalAmount);
+
+	$(_ed_dealAmount.target).numberbox('textbox').on("keyup",function(){
+		var _dealAmount = $(this).val();
+		$(_ed_dealAmount.target).numberbox('setValue', _dealAmount);
+	})
+}
+
+//发起申请前操作
+function beforSaveOper(){
+	var changeRows = $('#relaTable').datagrid('getRows');
+	for(var i=0;i<changeRows.length;i++){
+		var row = changeRows[i];
+		var rowIndex=$('#relaTable').datagrid('getRowIndex',changeRows[i]);
+		flag=$('#relaTable').datagrid('validateRow',rowIndex);
+		if (!flag){
+			$('#relaTable').datagrid('selectRow',rowIndex);
+			$('#relaTable').datagrid('beginEdit', rowIndex);
+			break;
+		}else{
+			var ed_warehouseName = $('#relaTable').datagrid('getEditor', {index:i,field:'warehouseName'});
+			if(ed_warehouseName){
+				var warehouseName = $(ed_warehouseName.target).combobox('textbox').val();
+				$(ed_warehouseName.target).combobox('setValue',warehouseName);
+			}
+			$('#relaTable').datagrid('endEdit', rowIndex);
+			//判断是否可以发起预售：库存数量小于预售申请数量
+			/* var url = _ctx + "/bas/stock/queryStockNumber";
+			var data = {productCd:row.productCd,brandNumber:row.brandNumber,factoryId:row.factoryId,warehouse:row.warehouseName};
+			var canApply = true;
+			$.ajax({
+				  url: url,
+				  data : data,
+				  async: false,
+				  success:function(data){
+					 if(data.realNumber>row.dealNumber){
+						 canApply = false;
+					 }
+				  }
+			}); */
+		}
+	}
+	/* if(!canApply){
+		return false;
+	} */
+    Convert.setChildren2Form("inputFormApprove","relaTable");
+    return true;
+}
+
+//将小数转为百分数
+function toPercent(point){
+    var str=Number(point*100).toFixed(2);
+    str+="%";
+    return str;
+}
+function strDateForDate(str){
+	var strDate = str.split(" ");
+	var strDatepart = strDate[0].split("-");
+	var dtDate = new Date(strDatepart[0],strDatepart[1]-1,strDatepart[2]);
+	return dtDate;
+}
+//获取当前时间后一天
+function beForeDate(date){
+    var y = date.getFullYear();
+    var m = date.getMonth()+1;
+    var d = date.getDate()+1;
+    return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+}
+function refreshPayKindJson(){
+	var payKind = $('#payKindCode').val();
+	$('#payKind').combobox('loadData',_payModeJson);
+	$('#payKind').combobox('select',payKind);
+}
+</script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>

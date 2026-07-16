@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<script th:src="@{/static/js/admin/apply_match.js?v=1}" type="text/javascript"></script>
+<div class="easyui-layout" fit="true" id="parenDiv">
+	<div region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+		<input type="hidden" name="id" id="entityId" th:value="${match.id}" />
+		<input type="hidden" name="status" id="entityStatus" th:value="${match.status}" />
+		<input type="hidden" id="businessType" name="businessType" th:value="${match.businessType}">
+		<input type="hidden" id="currentUserId" th:value = "${@shiroUtil.getCurrentUserId()}">
+       	<input type="hidden" id="currentUserName" th:value = "${@shiroUtil.getCurrentUserName()}">
+		<input type="hidden" id="sellTotalNumber"/>
+		<input type="hidden" id="buyTotalNumber"/>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>我方:</label>
+				<input id="ourCompanyName"  name="ourCompanyName" class="control  text_padding" data-options="required:true"  type="text"></input>
+			</p>
+			<p class="yw-table-filter hide">
+				<label>差价:</label>
+				<input id="differPrice"  name="differPrice" class="control readonly text_padding" readonly="readonly" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>质量标准:</label>
+				<input id="qualityStandard" name="qualityStandard" type="text"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>业务类型:</label>
+				<input type="text" th:value="${business}" readonly="readonly"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同属性:</label>
+				<input name="contractAttr" id="contractAttr" type="text"></input>
+			</p>
+			<p class="yw-table-filter hide">
+				<label>毛利:</label>
+				<input name="costProfit" id="costProfit"  type="text" readonly="readonly"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同利润:</label>
+				<input name="grossProfit" id="grossProfit" type="text" readonly="readonly" class="control readonly text_padding"></input>
+			</p>
+		</div>
+	  </div>
+	<div id="b_parenDiv">
+	 	<p class="form-section-title"><span class="approve_text">采购</span><i></i></p>
+		<div region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+		<form th:id="form+${randomNumber1}">
+		<span class="btn-group" style="line-height: 28px;">
+       		<a href="#" class="easyui-linkbutton mb6" data-options="iconCls:'icon-add'" id="selectContract" th:tag="${randomNumber1}"  onclick="applyMatch.selectContract(this)">选择</a>
+       	</span>
+		<div class="mb6">
+			<th:block th:replace="~{tags/apply :: contractNo (${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<p class="yw-table-filter">
+				<label>合同类型:</label>
+				<input th:id="contractType+${randomNumber1}" val="B" name="contractType"  class="control contractType text_padding" value="B" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同总价:</label>
+				<input th:id="totalAmount+${randomNumber1}" name="totalAmount" readonly="readonly"  class="control b_totalAmount contractType text_padding" type="text"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>供方:</label>
+				<input th:id="buyCompanyId+${randomNumber1}" name="companyId" type="hidden">
+				<input th:id="buyCompanyName+${randomNumber1}" name="companyName" class="control contactPhone text_padding" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>交货方式:</label>
+				<input th:id="deliveryType+${randomNumber1}"  class="control text_padding" th:value="${entity.deliveryType}" name="deliveryType" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>业务员:</label>
+				<input th:id="matchUserId+${randomNumber1}" class="control text_padding" th:value="${entity.matchUserId}" name="matchUserId" type = "hidden"></input>
+				<input th:id="matchUserName+${randomNumber1}" class="control text_padding" th:value="${entity.matchUserName}" name="matchUserName" type = "text"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>仓储费(元):</label>
+				<input th:id="warehouseCost+${randomNumber1}" name="warehouseCost" value="0.00" class="control text_padding" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>不含税仓储费:</label>
+				<input th:id="tax_warehouseCost+${randomNumber1}" value="0.00" class="control text_padding" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>运输费(元):</label>
+				<input th:id="transportCost+${randomNumber1}" name="transportCost" value="0.00" class="control text_padding" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>不含税运输费:</label>
+				<input th:id="tax_transportCost+${randomNumber1}" value="0.00" class="control text_padding" type="text"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<!-- 结算方式 -->
+			<th:block th:replace="~{tags/apply :: deliveryModeForMatch (${#maps.containsKey(psv.mapEdit, 'deliveryMode')}?${psv.mapEdit['deliveryMode'].require},${#maps.containsKey(psv.mapEdit, 'deliveryMode')}?${psv.mapEdit['deliveryMode'].edit && psv.hasEdit}:${ psv.hasEdit},${buyDeliveryModeJson},${randomNumber1},'结算方式')}"/>
+			<!-- 支付方式 -->
+			<th:block th:replace="~{tags/apply :: payType (${#maps.containsKey(psv.mapEdit, 'payType')}?${psv.mapEdit['payType'].require},${#maps.containsKey(psv.mapEdit, 'payType')}?${psv.mapEdit['payType'].edit && psv.hasEdit}:${ psv.hasEdit},${payTypeJson},${randomNumber1})}"/>
+			<p class="yw-table-filter">
+				<label>到货日期:</label>
+				<input th:id="arrivalTimeB+${randomNumber1}" name="deliveryTime" class="control text_padding" type="text" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<input th:id="arrivalTimeExtB+${randomNumber1}" name="arrivalTimeExt" type="text"/>
+			</p>
+		</div>
+
+		<div class="mb6">
+			<!-- <th:block th:replace="~{tags/apply :: deliveryTypeMatch (${#maps.containsKey(psv.mapEdit, 'deliveryType')}?${psv.mapEdit['deliveryType'].require},${#maps.containsKey(psv.mapEdit, 'deliveryType')}?${psv.mapEdit['deliveryType'].edit && psv.hasEdit}:${psv.hasEdit},${deliveryTypeJson},${randomNumber1})}"/> -->
+			<p class="yw-table-filter">
+				<label>定金比例:</label>
+				<input th:id="payRate+${randomNumber1}" data-options="required:true"  name="payRate" class="control text_padding" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>定金(元):</label>
+				<input th:id="payBondAmount+${randomNumber1}" data-options="required:true"  name="payBondAmount" value="0" class="control text_padding" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>付定金日期:</label>
+				<input th:id="payBondTime+${randomNumber1}"  name="payBondTime" class="control text_padding" type="text" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>付全款日期:</label>
+				<input th:id="payFullTime+${randomNumber1}"  name="payFullTime" class="control text_padding" type="text" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>详细地址:</label>
+				<input th:id="contactAddr+${randomNumber1}" name="contactAddr" class="control contactAddr text_padding" type="text"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>交货地点:</label>
+				<input th:id="deliveryAddr+${randomNumber1}" name="deliveryAddr" class="control payRemark text_padding large" type="text"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<input type="hidden" th:value="${randomNumber1}" name="randomNumber" id="randomNumber" />
+			<p class="yw-table-filter w2">
+				<label>补充条款:</label>
+				<input th:id="extraTerm+${randomNumber1}" name="extraTerm" class="control payRemark text_padding large" type="text"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>备注:</label>
+				<input th:id="remark+${randomNumber1}" name="payRemark" class="control payRemark text_padding large" type="text"></input>
+			</p>
+		</div>
+	  </form>
+	  </div>
+	<div class="mt20 mb20">
+		<div id="btn" class="add-btn mt6 mb6">
+			<a href="#" class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="applyMatch.insert(this)" th:attr="table=relaTable+${randomNumber1}">新增</a>
+			<a href="#" class="easyui-linkbutton addBtn ml10" data-options="iconCls:'icon-add'" onclick="applyMatch.batchInsertSell(this)" th:attr="table=relaTable+${randomNumber1}">同步销售</a>
+		</div>
+		<table th:id="relaTable+${randomNumber1}"  th:attr="pointer=${randomNumber1}" atr="B" class="relaTable" id="relaTable"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+		</table>
+	</div>
+	</div>
+  	<div id="s_parenDiv">
+		<p class="form-section-title"><span class="approve_text">销售<i></i></p>
+		<div region="north" border="false" id="inputForm" method="post" class="editForm_approve  editForm_approverela content_div">
+		<form th:id="form+${randomNumber2}">
+
+		<div class="mb6">
+			<th:block th:replace="~{tags/apply :: contractNo (${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'contractNo')}?${psv.mapEdit['contractNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<p class="yw-table-filter">
+				<label>合同类型:</label>
+				<input th:id="contractType+${randomNumber2}" val="S" name="contractType" data-options="required:true" readonly="readonly" type="text" value="S" class="control contractType text_padding"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>合同总价:</label>
+				<input th:id="totalAmount+${randomNumber2}" name="totalAmount" readonly="readonly"  class="control s_totalAmount contractType text_padding" type="text"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<!-- 需方 -->
+			<th:block th:replace="~{tags/apply :: companyId (${#maps.containsKey(psv.mapEdit, 'companyId')}?${psv.mapEdit['companyId'].require}:true,${#maps.containsKey(psv.mapEdit, 'companyId')}?${psv.mapEdit['companyId'].edit && psv.hasApprove}:${ psv.hasEdit},${companyJson},${randomNumber2},'需方')}"/>
+			<p class="yw-table-filter">
+				<label>交货方式:</label>
+				<input th:id="deliveryType+${randomNumber2}"  class="control text_padding" th:value="${entity.deliveryType}" name="deliveryType" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>业务员:</label>
+				<input th:id="matchUserId+${randomNumber2}" class="control text_padding" th:value="${entity.matchUserId}" name="matchUserId" type = "hidden"></input>
+				<input th:id="matchUserName+${randomNumber2}" class="control text_padding" th:value="${entity.matchUserName}" name="matchUserName" type = "text"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>仓储费(元):</label>
+				<input th:id="warehouseCost+${randomNumber2}" name="warehouseCost" value="0.00" class="control text_padding sell_warehouse" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>不含税仓储费:</label>
+				<input th:id="tax_warehouseCost+${randomNumber2}" value="0.00" class="control text_padding sell_warehouse" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>运输费(元):</label>
+				<input th:id="transportCost+${randomNumber2}" name="transportCost" value="0.00" class="control  text_padding sell_transport"  type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>不含税运输费:</label>
+				<input th:id="tax_transportCost+${randomNumber2}"  value="0.00" class="control  text_padding sell_transport"  type="text"></input>
+			</p>
+		</div>
+
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>结算方式:</label>
+				<input th:id="deliveryModeS+${randomNumber2}" name="deliveryMode" class="control  text_padding"  type="text"></input>
+			</p>
+			<!-- 支付方式 -->
+			<th:block th:replace="~{tags/apply :: receiveType (${#maps.containsKey(psv.mapEdit, 'receiveType')}?${psv.mapEdit['receiveType'].require},${#maps.containsKey(psv.mapEdit, 'receiveType')}?${psv.mapEdit['receiveType'].edit && psv.hasEdit}:${ psv.hasEdit},${payTypeJson},${randomNumber2})}"/>
+			<p class="yw-table-filter">
+				<label>交货日期:</label>
+				<input th:id="arrivalTime+${randomNumber2}" name="deliveryTime" class="control text_padding" type="text" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<input th:id="arrivalTimeExt+${randomNumber2}" name="arrivalTimeExt" type="text"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>定金比例:</label>
+				<input th:id="receiveRate+${randomNumber2}" data-options="required:true" name="receiveRate" type="text" class="control text_padding"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>定金(元):</label>
+				<input th:id="receiveBondAmount+${randomNumber2}" data-options="required:true" name="receiveBondAmount" value="0" type="text" class="control text_padding"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>收定金日期:</label>
+				<input th:id="receiveBondTime+${randomNumber2}" name="receiveBondTime" id="receiveBondTime" type="text" class="control text_padding" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>收全款日期:</label>
+				<input th:id="receiveFullTime+${randomNumber2}" name="receiveFullTime" id="receiveFullTime" type="text" class="control text_padding" th:value="${#dates.format(defaultDate, 'yyyy-MM-dd')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>账期(天):</label>
+				<input th:id="creditDays+${randomNumber2}" name="creditDays" type="text" class="control text_padding">
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>详细地址:</label>
+				<input th:id="contactAddr+${randomNumber2}" name="contactAddr" class="control contactAddr text_padding" type="text"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>交货地点:</label>
+				<input th:id="deliveryAddr+${randomNumber2}" name="deliveryAddr" class="control payRemark text_padding large" type="text"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<input type="hidden" th:value="${randomNumber2}" name="randomNumber" id="randomNumber" />
+			<p class="yw-table-filter w2">
+				<label>补充条款:</label>
+				<input th:id="extraTerm+${randomNumber2}" name="extraTerm" class="control payRemark text_padding large" type="text"></input>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>备注:</label>
+				<input th:id="remark+${randomNumber2}" name="payRemark" class="control payRemark text_padding large" type="text"></input>
+			</p>
+		</div>
+	  	</form>
+	  	</div>
+
+		<div style="margin-bottom:20px;">
+		<table th:id="relaTable+${randomNumber2}"  th:attr="pointer=${randomNumber2}" atr="S" class="relaTable" id="relaTable"
+					title="" iconCls="icon-edit" singleSelect="true"
+					idField="id">
+		</table>
+		</div>
+	</div>
+	<div class="editForm">
+		<p style="width:240px">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${match.fileId}" />
+		</p>
+		<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+	<div id="w_stock_choose" class="easyui-window" title="合同详情" data-options="width:1060,height:540"></div>
+</div>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/match/updateFileId',[[${param.hasEditFile}]]);
+var lastIndex;
+_beforSaveOper=true;
+var indexlist=new Array();
+var removelist=new Array();
+var buyPricelist=new Array();
+var _cur_userId = '[[${currentUserId}]]';
+//品名列表
+var _productAllJson = eval('[(${productAllJson})]');
+var _productChildrenJson = eval('[(${productChildrenJson})]');
+//牌号名称
+var _brandJson = eval('[(${brandJson})]');
+//厂商列表
+var _factoryJson = eval('[(${factoryJson})]');
+//合同类型
+var _contractTypeJson = eval('[(${contractTypeJson})]');
+//付款方式
+var _payTypeJson= eval('[(${payTypeJson})]');
+//结算方式
+var _deliveryModeJson =eval('[(${deliveryModeJson})]');
+var _buyDeliveryModeJson =eval('[(${buyDeliveryModeJson})]');
+var _sellDeliveryModeJson =eval('[(${sellDeliveryModeJson})]');
+//提货方式
+var _deliveryTypeJson =eval('[(${deliveryTypeJson})]');
+//合同属性
+var _contractAttrJson= eval('[(${contractAttr})]');
+//交货日期补充
+var _arrivalTimeExtJson= eval('[(${arrivalTimeExtJson})]');
+//质量标准
+var _qualityStandardJson = eval('[(${qualityStandardJson})]');
+//我方企业抬头
+var _ourCompanyNameJson =eval('[(${ourCompanyNameJson})]');
+//开票日期
+//var _invoiceDateJson = eval('[(${invoiceDateJson})]');
+//默认交货地址
+var _defaultDeliveryAddr = eval('[(${defaultDeliveryAddr})]');
+
+var _contractBondRateJson = eval('[(${contractBondRateJson})]');
+
+var _matchUserNameTree = eval('[(${matchUserNameTree})]');
+
+var buyProductCdlist=new Array();
+
+var sellProductCdlist=new Array();
+
+var _defaultAddr = "";
+
+applyMatch.init();
+
+//企业列表
+//var _companyJson= eval('[(${companyJson})]');
+var number1= 0;
+var number2 = 1;
+var editableFlg = false;
+	$(function(){
+
+		getCostProfit();
+		$('.easyui-linkbutton').linkbutton();
+		//加载easyui组件
+		applyMatch.initLoadEasyui(number1,"B","T","M");
+		number1 = number1+2;
+		applyMatch.initLoadEasyui(number2,"S","T","M");
+		number2 = number2+2;
+		//通用框
+		//交货方式
+		$("#deliveryMode").combobox({
+			data:_deliveryModeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+		});
+		//合同属性
+		$('#contractAttr').combobox({
+			data:_contractAttrJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: true,
+			editable: false,
+			onLoadSuccess:function(){
+				if(!$(this).combobox('getValue')){
+					$(this).combobox("setValue","N");
+				}
+			}
+		});
+		// 质量标准
+		$('#qualityStandard').combobox({
+			data:_qualityStandardJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			required: false,
+			editable: false,
+			onLoadSuccess:function(){
+				var value = $(this).val();
+				if (!value){
+					$(this).combobox('setValue',"Y");
+				}
+			}
+		});
+		$('#ourCompanyName').combobox({
+			data:_ourCompanyNameJson,
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false,
+			onLoadSuccess:function(data){
+				var value = $(this).val();
+				if (!value){
+					$(this).combobox('setValue',data[0].dictCd);
+					value = data[0].dictCd;
+				}
+			}
+		});
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($("#btn_fileId").length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+
+		$('#w_stock_choose').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			title:"请选择采购库存"
+		});
+
+	});
+	function chooseCallback(stockRows){
+		var selectContract = $("#selectContract");
+		var num = selectContract.attr("tag");
+		var _datagrid = $('#relaTable'+num);
+		var rows = _datagrid.datagrid('getRows');
+		for(var i=rows.length-1;i>=0;i--){
+			_datagrid.datagrid('deleteRow',i);
+		}
+		if(stockRows){
+			var _curProductCd = "";
+			for(var i=0;i<stockRows.length;i++){
+				var row = stockRows[i];
+				var new_row = {
+						id:0,
+						productCd:row.productCd,
+						productName:row.productName,
+						brandNumber:row.brandNumber,
+						factoryId:row.factoryId,
+						warehouseName:row.warehouseName,
+						factoryName:row.factoryName,
+						warehouseId:row.warehouseId,
+						maxNumber:row.remainNumber,
+						dealNumber:row.remainNumber,
+						productAttr:row.productAttr,
+						stockDetailId:row.id,
+						otherDealPrice:row.dealPrice,
+						warehouseAddr:row.warehouseAddr,
+						stockContractId:row.id,
+						warehousePrice:row.warehousePrice,
+						dealPrice:row.dealPrice,
+						taxPrice:parseFloat(row.dealPrice/1.13).toFixed(2),
+						totalPrice:parseFloat(row.dealPrice*row.remainNumber).toFixed(2)
+				};
+				_curProductCd = row.productCd;
+				_datagrid.datagrid('appendRow', new_row);
+				var rowIndex=_datagrid.datagrid('getRowIndex',new_row);
+				_datagrid.datagrid('beginEdit', rowIndex);
+			}
+		}
+	}
+
+//发起申请前操作
+function beforSaveOper(){
+	applyMatch.curGrossProfitAndDiffPrice();
+	var buyTotalNumber=$("#buyTotalNumber").val();
+	var sellTotalNumber=$("#sellTotalNumber").val();
+	if(buyTotalNumber!=sellTotalNumber){
+		$.messager.alert('提示','保存失败，数量必须一致!','warning');
+		return false;
+	}
+
+	/*  var rtn=applyMatch.eqSet(buyProductCdlist,sellProductCdlist);
+	if(!rtn){
+		$.messager.alert('提示','撮合业务  货品必须一致!','warning');
+		return false;
+	} */
+	//参数array
+	var arr=new Array();
+	var result={};
+	//获得所有的datagrid
+	var _tab=$(".relaTable");
+	var _len=_tab.length;
+	for(var i=0;i<_len;i++){
+		//获得table id
+		var _datagridId=$(_tab[i]).attr("id");
+		//获得 pointer
+		var _pointer=$(_tab[i]).attr("pointer");
+		//将form 解析成对象
+		var str= Convert.getJson4Form("form"+_pointer);
+		arr.push(str);
+
+
+		//校验所有该table的所有行
+		valideAllRow(_datagridId);
+		var inserted=$("#"+_datagridId).datagrid('getChanges','inserted');
+		result['_inserted'+_pointer]=inserted;
+
+		var updated=$("#"+_datagridId).datagrid('getChanges','updated');
+		result['_updated'+_pointer]=updated;
+
+		var deleted = $('#'+_datagridId).datagrid('getChanges','deleted');
+		result['_deleted'+_pointer]=deleted;
+	}
+
+
+	//商品信息
+	var resultData= Convert.ToJSONString(result);
+	if($('#_easy_grid').length==0){
+		$('#inputFormApprove').append('<input type="hidden" id="_easy_grid" name="_easy_grid">');
+	}
+	$('#_easy_grid').val(resultData);
+	console.log("resultData:"+resultData);
+	//基本数据
+
+	if($("#contentStr").length==0){
+		$('#inputFormApprove').append('<input type="hidden" id="contentStr" name="contentStr">');
+	}
+	var resultArr=Convert.ToJSONString(arr);
+	$("#contentStr").val(resultArr);
+	console.log("formData:"+resultArr);
+	//删除信息
+	if(removelist.length>0){
+		if($("#removeArrStr").length==0){
+			$('#inputFormApprove').append('<input type="hidden" id="removeArrStr" name="removeArrStr">');
+		}
+		var removeArr=Convert.ToJSONString(removelist);
+		$("#removeArrStr").val(removeArr);
+		console.log("formData:"+removeArr);
+	}
+	return true;
+}
+
+function valideAllRow(datagridId){
+	//获得该table的所有行 校验
+	var _tab=$("#"+datagridId).datagrid("getRows");
+	var _len=_tab.length;
+	for(var i=0;i<_len;i++){
+		var rowIndex=$('#'+datagridId).datagrid('getRowIndex',_tab[i]);
+		flag=$('#'+datagridId).datagrid('validateRow',rowIndex);
+		if (!flag){
+			$('#'+datagridId).datagrid('selectRow',rowIndex);
+			$('#'+datagridId).datagrid('beginEdit', rowIndex);
+			break;
+		}else{
+			var ed_warehouseName = $('#'+datagridId).datagrid('getEditor', {index:i,field:'warehouseName'});
+			if(ed_warehouseName){
+				var warehouseName = $(ed_warehouseName.target).combobox('textbox').val();
+				$(ed_warehouseName.target).combobox('setValue',warehouseName);
+			}
+			$('#'+datagridId).datagrid('endEdit', rowIndex);
+		}
+	}
+}
+//获取当前日期
+function myformatter(date){
+    var y = date.getFullYear();
+    var m = date.getMonth()+1;
+    var d = date.getDate();
+    return y+'-'+(m<10?('0'+m):m)+'-'+(d<10?('0'+d):d);
+}
+
+function formattData(date){
+	var arr = date.split('-');
+	var year = arr[0]
+    var month = arr[1];
+    var day = arr[2];
+	return year + '年' + month + '月' + day + '日';
+}
+</script>

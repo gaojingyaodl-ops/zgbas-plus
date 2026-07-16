@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>实际出库明细统计</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+	<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 80px;">品名:</label>
+				<input id="productCd_query" name="productName" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">厂商:</label>
+				<input type="text" class="control text_padding" name="factoryName"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">业务员:</label>
+				<input type="text" id="matchUserName" class="control text_padding" name="matchUserName"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">牌号:</label>
+				<input type="text" class="control text_padding" name="brandNumber"></input>
+			</p>
+
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>我方抬头:</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">采购日期:</label>
+				<input  id="srh_createdDate_from" name="beginTime" class="easyui-datebox"/>				
+			</p>
+			<p class="yw-table-filter">
+				<label style="width: 80px;">到:</label>
+				<input  id="srh_createdDate_to"  name="endTime" class="easyui-datebox" />
+			</p>
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" id="btn" iconCls="icon-export" class="easyui-linkbutton ml6 btn-export" style="position: fixed;right:20px;top:85px;" onclick="exportExcel()">导出</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;" >
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w_delivery" title="出库明细" data-options="width:1150,height:450">		
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var deptJson =eval('[(${deptJson})]');
+	var userJson =eval('[(${userJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+	var productTypeJson =eval('[(${productTypeJson})]');
+	var productJson =eval('[(${productJson})]');
+	var contractAttrJson =eval('[(${contractAttrJson})]');
+	var deptAllJson =eval('[(${deptAllJson})]');
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	$(function(){
+		$('#matchUserName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			//required:true,
+			formatter:function(node){
+				var enableFlg = node.attributes.enableFlg;
+				if (enableFlg==false){
+					return '<span style="color:red;">'+node.text+'(无效)</span>';
+				}
+				return node.text;
+			},
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#matchUserName').combotree('clear'); 
+				}else{
+				
+					$('#matchUserName').combotree('setValue',node.text);	
+				}
+			} 
+		});
+		//品名下拉
+	    $('#productCd_query').combotree({
+			data:productJson, 
+			valueField:'typeCode',
+			textField:'typeName',
+			onSelect:function(data){
+				$('#productCd_query').val(data.typeName);
+			}
+		});
+		$('#procurementName').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			//required:true,
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#procurementName').combotree('clear'); 
+				}else{
+				
+					$('#procurementName').combotree('setValue',node.text);	
+				}
+			} 
+		});
+		$('#srh_deptIdType').combotree({
+			data: matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node){
+				if(node.children.length!=0){
+					$('#srh_deptIdType').combotree('clear'); 
+				}else{
+					//更新datagrid的deliveryMode和warehouse的下拉框
+					var id = node.id;
+					$('#srh_deptIdType').val(node.text);
+					$("#srh_deptIdType").val(node.text)
+					if(id.indexOf("deptName")>=0){
+						id = id.replace("deptName","");
+						$("#srh_deptIdType").val(Number(id));
+					}
+					
+				}
+			} 
+		});
+		 $("#srh_procurementName").combobox({
+				data:userJson,
+				textField:'name',
+				valueField:'id',
+				panelHeight:"auto"
+			}); 
+		 $('#ourCompanyName').combobox({
+				data:_ourCompanyJson, 
+				valueField:'dictName',
+				textField:'dictName',
+				//panelWidth:'220px',
+				panelHeight:"auto"
+			});
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter : true,
+			pageList:[500,200,100,50,30,20],
+			///rpt/invoiceInquiry/findByStatus
+			url:_ctx+"/rpt/buyer/findDeliveryReport",
+			columns:[ [ 
+				{field:'contractNo', title: '采购合同号',width:120,
+					formatter:function(value,row,index){
+						if(value){
+							return '<span class="c_blue_b yw-menu-section">'+value+'</span>';
+						}
+					}
+				},
+				{field:'contractAttr',title:'类型',align:'center', width:80,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractAttrJson,"dictCd",value,"dictName");
+				}},
+				{field:'contractTime',title:'采购日期', width:100,align:'center'},
+				{field:'productName',title:'货名',align:'left', width:120,formatter:function(value, row, index){
+					if(value){
+						var str = row.productName+'/'+row.brandNumber+'/'+row.factoryName;
+						if (_industry.indexOf('SL')==-1){
+							//不是塑料行业主要显示品名
+							str = row.productName;
+						}
+						return str;
+					}
+				}},
+				/* {field:'ourCompanyName',title:'我方抬头',width:200}, */
+				{field:'companyName',title:'供方单位',align:'left',width:200},
+				{field:'totalNumber',title:'采购数量(吨)',align:'right', width:100,formatter:formateNum},
+				{field:'deliveryInNumber',title:'入库数量(吨)',align:'right', width:100,formatter:formateNum},
+				{field:'deliveryOutNumber',title:'出库数量(吨)',align:'right',width:100,formatter:formateNum},
+				/* {field:'deliveryOutNumber',title:'出库数量(吨)',align:'right',width:100,formatter:function(value, row, index){
+					var str='';
+					//style="color:#8bd898;"
+					if (row.deliveryOutNumber && value>0){
+						str = '<span onclick="deliveryOut(\''+row.stockDetailId+'\')" class="contract-btn" style="margin-right:0px;">'+value+'</span>';
+					}else {
+						str=value;
+					}
+					return str;
+				}}, */
+				{field:'surplusNumber',title:'结余数量(吨)',align:'right',width:100,formatter:formateNum},
+				{field:'warehouseNo',title:'入库单号', width:145},
+				{field:'warehouse',title:'入库仓库',width:120},
+				/* {field:'delivery',title:'货权状态',widht:90}, */
+				{field:'matchUserName', title:'业务员',align:'center', width:80},
+				/* {field:'matchUserName',title:'小组负责人',width:80}, */
+				{field:'deptId',title:'所属事业部',align:'center', width:100,formatter:function(value,row,index){
+					return Convert.findValueByKey(deptAllJson,"deptId",value,"deptName");
+				}}
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				editrow(row.id);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+		$('#w_delivery').window({
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			//iconCls:"",
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+	});
+	function deliveryOut(id){
+		if(id!="undefined"){
+			var url = _ctx+"/rpt/buyer/deliveryDetail/"+id;  
+			$('#w_delivery').window({href:url});
+			$('#w_delivery').window("open");
+		}
+	}
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/buyer/exportExcel"});
+	}
+	function formateNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+</script>
+</body>
+</html>

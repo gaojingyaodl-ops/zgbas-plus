@@ -1,0 +1,92 @@
+*{font-size:12px; font-family:Tahoma,Verdana,微软雅黑,新宋体}
+body{background:#D2E0F2; }
+a{ color:Black; text-decoration:none;}
+a:hover{ color:Red; text-decoration:underline;}
+.textbox03 {border: #878787 1px solid;padding: 4px 3px;font:Verdana, Geneva, sans-serif,宋体;line-height: 14px; background-color: #fff;  height: auto; font-size: 14px;  font-weight: bold; width: 190px; }
+
+.txt01{font:Verdana, Geneva, sans-serif,宋体;padding:3px 2px 2px 2px; border-width:1px; border-color:#ddd;  color:#000;}
+.txt {border: #878787 1px solid;padding: 4px 3px;font:Verdana, Geneva, sans-serif,宋体;line-height: 14px; background-color: #fff;  height: auto; font-size: 14px;}
+.footer{text-align:center;color:#15428B; margin:0px; padding:0px;line-height:23px; font-weight:bold;}
+
+.head a{color:White;text-decoration:underline;}
+
+.top{overflow: hidden; height: 71px;
+ background: #7f99be  repeat-x center 50%;
+ line-height: 20px;color: #fff;}
+
+.easyui-accordion ul{list-style-type:none;margin:0px; padding:10px;}
+.easyui-accordion ul li{ padding:0px;}
+.easyui-accordion ul li a{line-height:24px;}
+.easyui-accordion ul li div{margin:2px 0px;padding-left:10px;padding-top:2px;}
+.easyui-accordion ul li div.hover{border:1px dashed #99BBE8; background:#E0ECFF;cursor:pointer;}
+.easyui-accordion ul li div.hover a{color:#416AA3;}
+.easyui-accordion ul li div.hover a:hover{color:#416AA3;text-decoration: none;}
+.easyui-accordion ul li div.selected{border:1px solid #99BBE8; background:#E0ECFF;cursor:default;}
+.easyui-accordion ul li div.selected a{color:#416AA3; font-weight:bold;}
+.validatebox-invalid{border-color:#ffa8a8!important;background-color:#fff3f3!important;}
+
+.icon{ width:18px; line-height:18px; display:inline-block;}
+.cus-window{padding:5px;background: #fafafa;}
+.edit_table{border:1px solid #eee;border-collapse:collapse;width:100%;}
+.edit_table td{border:1px solid #eee;line-height:25px;padding-left:3px;}
+
+.tip {text-align: left;margin: 10px 0;padding: 10px 0 8px 40px;width: 95%;color: red;background:#fbd5b5 url('../images/res_tip.gif') no-repeat 5px 5px;}
+.tip div ol {margin: 0;padding: 0;}
+
+div.search_div{overflow:auto;clear: both;}
+.form-search{float: left;width: 100%;}
+.form-search p{margin: 5px 0;height:27px;padding-top: 3px;}
+.form-search div.line{height: 0px;border-bottom: 1px dotted #e0e0e0 ;}
+.form-search p label{vertical-align: middle;text-align: right;display: inline-block;margin: 0 5px;}
+.form-search .control{border-radius:4px; vertical-align: middle;line-height: 20px;height: 20px;width:120px; background-color: #FFFFFF; border: 1px solid #CCCCCC;box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;transition: border 0.2s linear 0s, box-shadow 0.2s linear 0s;}
+.form-search .control:focus{border-color: #5599CC; box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(82, 168, 236, 0.6);}
+.form-search .checkbox{margin: 0;vertical-align: middle;}
+
+.form-horizontal div.control-group{margin-bottom: 10px;}
+
+.icon-dict{
+	background:url('../images/icons/book.png') no-repeat;
+}
+.icon-excel{
+	background:url('../images/icons/excel.png') no-repeat center center;
+}
+
+#mainTable_div{clear: both;overflow: hidden;}
+input[type="text"]:focus,input[type="password"]:focus, textarea:focus{ -moz-box-shadow: 0 0 3px rgba(85, 153, 204, 0.3), 0 0 1px 2px rgba(66, 150, 234, 0.8);border-color: #5599CC;}
+
+.editForm{margin: 5px 0; overflow: auto;}
+.editForm p>span{float: left;display: inline-block;}
+.editForm .combo>input{float: left;}
+.editForm label{width:70px;display: table-cell;float: left;text-align: right;margin-right: 10px;vertical-align: middle;line-height: 27px;}
+.editForm .control{float:left;line-height: 25px!important;height: 20px!important;width:120px; background-color: #FFFFFF; border: 1px solid #CCCCCC;border-radius:3px;box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset;transition: border 0.2s linear 0s, box-shadow 0.2s linear 0s;padding: 1px 3px;}
+.editForm .checkbox{float:left;line-height: 25px;height: 25px;width: auto;}
+.editForm .checkbox input[type="checkbox"]{float: left;margin-top:7px;}
+.editForm .checkbox span{line-height: 26px;float: left;}
+.editForm p{clear: both;float: left; line-height: 25px;margin: 2px 0;width: 100%;}
+.editForm .readonly{background-color: #ccc;}
+.editForm input[readonly]{background-color: #ccc;}
+.editForm p div{float: left;}
+.editForm textarea.control{height: 50px!important;}
+.editForm .control.mid{width:210px;}
+.editForm .large{width:329px;}
+.editForm .larger{width:536px}
+.editForm select.control.large{width:328px;}
+.editForm select.control{height: 24px!important;}
+.editForm textarea.control.exlarge{width:525px;height:100px!important;}
+.editForm .control.exlarge{width:510px;}
+.editForm .control.exlarge3{width:535px;}
+.editForm fieldset{padding:0;border:1px solid #ccc;margin: 10px 5px;}
+.editForm .chooseBtn{width:40px;margin-left: 2px;}
+.actions_bar {margin: 5px;}
+.actions_bar .btn{}
+
+.file_div {display: block;margin: 10px 20px;}
+.file_div div{display: block;height: 20px;width: 100%;}
+.file_div div a{line-height: 20px;}
+.file_div div span{cursor: pointer;display: inline-block;width: 10px;line-height: 20px;}
+.file_div div span:hover{color: red;}
+
+.btn2{border-radius:3px;background-color:#67d1f7;border: 1px solid #409dd6;color: #fff;padding:2px 5px;cursor: pointer;vertical-align: middle;}
+.btn2:hover{background-color:#409dd6;}
+
+.color_hong{color:red;}

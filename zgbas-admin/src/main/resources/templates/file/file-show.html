@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="file_div" >
+<div th:each="f:${list}" th:id="'file'+${f.id}">
+<!-- <a th:href="@{${g_filePath}+'/view/show/'+${f.id}}" th:text="${f.originalFilename}"  th:attrappend="target=${(#strings.endsWith(f.filename,'png')||#strings.endsWith(f.filename,'jpg'))?'_blank':''}"></a> -->
+<a th:href="@{${g_filePath}+'/view/show/'+${f.id}}" th:text="${f.originalFilename}"  th:attrappend="target=_blank"></a>
+<span th:if="${hasEditFile==true}" th:attr="updateUrl=${url},domId=${domId},bizId=${bizId}" style="color: red;cursor:pointer;" th:onclick="'filePlugin.del(this,\''+${f.id}+'\')'" title="删除附件">X</span>
+</div>
+</div>

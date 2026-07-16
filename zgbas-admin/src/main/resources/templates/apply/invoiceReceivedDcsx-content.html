@@ -1,0 +1,272 @@
+<!--收票-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+
+</head>
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" name="contractId" id="contractId" th:value="${entity.contractId}" />
+		<input type="hidden" name="status" id="entityStatus" th:value="${entity.status}" />
+		<input type="hidden" name="businessNo" id="businessNo" th:value="${entity.businessNo}" />
+		<input type="hidden" id="hashEdit" th:value="${psv.hasEdit}"/>
+		<input type="hidden" id="canApproveEdit" th:value="${psv.canApproveEdit}"/>
+		<input type="hidden"  id="contractApproveId" />
+		<input type="hidden"  id="contractMatchCreditFlg" />
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同编号:</label>
+				<input id="contractNo" name="contractNo" readonly type="text" th:value="${entity.contractNo}"/>
+				<!-- <input type="button" value="选择" onclick="openChoose();" class="chooseBtn" style="width:50px"/> -->
+			</p>
+			<a id="addBtn" href="#" class="easyui-linkbutton btn-empty btn64" onClick="contractDetail()">合同详情</a>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同总价(元):</label>
+				<input name="totalAmount" id="totalAmount" readonly type="text"  th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>已付金额(元):</label>
+				<input name="payedAmount" id="payedAmount" readonly type="text" th:value="${#numbers.formatDecimal(entity.payedAmount,1,'COMMA',2,'POINT')}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>已收金额(元):</label>
+				<input name="billedAmount" id="billedAmount" readonly type="text" th:value="${#numbers.formatDecimal(entity.billedAmount,1,'COMMA',2,'POINT')}" ></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>业务员:</label>
+				<input name="matchUserName" id="matchUserName" readonly type="text" th:value="${entity.matchUserName}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>供方:</label>
+				<input type="text" readonly name="companyName" id="companyName" th:value="${entity.companyName}"/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>发票抬头(需):</label>
+				<input name="invoiceCompanyName" id="invoiceCompanyName" type="text" th:value="${entity.invoiceCompanyName}"></input>
+			</p>
+		</div>
+		<!-- <hr class="editor_hr"></hr> -->
+		<div class="mb6">
+			<th:block   th:replace="~{tags/apply :: inInvoiceNo (${#maps.containsKey(psv.mapEdit, 'inInvoiceNo')}?${psv.mapEdit['inInvoiceNo'].require}:true,${#maps.containsKey(psv.mapEdit, 'inInvoiceNo')}?${psv.mapEdit['inInvoiceNo'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<th:block th:replace="~{tags/apply :: invoiceAmount (${#maps.containsKey(psv.mapEdit, 'invoiceAmount')}?${psv.mapEdit['invoiceAmount'].require}:true,${#maps.containsKey(psv.mapEdit, 'invoiceAmount')}?${psv.mapEdit['invoiceAmount'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<th:block contenteditable='true'  th:replace="~{tags/apply :: inInvoiceDate(${#maps.containsKey(psv.mapEdit, 'inInvoiceDate')}?${psv.mapEdit['inInvoiceDate'].require}:true,${#maps.containsKey(psv.mapEdit, 'inInvoiceDate')}?${psv.mapEdit['inInvoiceDate'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>记账凭证号:</label>
+				<input name="inBillNo" id="inBillNo" type="text"  th:value="${entity.inBillNo}"></input>
+			</p>
+			<div class="yw-table-filter">
+				<label>附件类型:</label>
+				<input name="fileTypeId" id="fileTypeId" type="text" th:value="${entity.fileTypeId}"></input>
+			</div>
+			<p class="yw-table-filter w2">
+				<label>备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+			</p>
+		</div>
+		<div class="mb6" style="width: 250px;" >
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+		</div>
+	</div>
+</div>
+<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640">
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+
+	var companyJson =eval('[(${companyJson})]');
+	var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+	// 附件类型
+	var fileTypeJson=eval('[(${fileTypeJson})]');
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/invoiceReceived/updateFileId',[[${param.hasEditFile}]]);
+	$(function(){
+
+		$('#w_contract_choose').window({
+			title: '请选择合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false
+		});
+		$('.easyui-linkbutton').linkbutton();
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+		var _curStatus = $("#entityStatus").val();
+		var _entityId = $("#entityId").val();
+		var _companyId;
+		if (_curStatus=='N' && _entityId=='0'){
+			_companyId = contract.companyId;
+		}else{
+			_companyId = $("#companyId").val();
+		}
+		$('#invoiceAmount,#totalAmount,#payedAmount,#billedAmount').numberbox({
+			min:0,
+			precision:2,
+			required: true,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+			$("#companyId").combobox({
+				url:_ctx+"/bs/company/findCompany/"+ _companyId,
+				mode:'remote',
+				limitToList:true,
+				valueField:'id',
+				textField:'text',
+				panelHeight:300,
+				required:true,
+				readonly:true,
+				hasDownArrow:false,
+				onHidePanel:function(){
+					BasCombobox.onHidePanel(this);
+				}
+			});
+
+			$('#inInvoiceDate').datebox({
+				required: true,
+				editable: false
+			});
+			$('#invoiceCompanyName').combobox({
+				data:_ourCompanyJson,
+				valueField:'dictName',
+				textField:'dictName',
+				panelHeight:300,
+				required: true,
+				readonly:false,
+				hasDownArrow:false,
+				onHidePanel:function(){
+					BasCombobox.onHidePanel(this);
+				}
+			});
+			// $("#inputForm").find("input").not("[type='button']").not("#inInvoiceDate").attr("readonly",true);
+			$("#inInvoiceDate").datebox({});
+			$("#invoiceAmount").text({});
+			$('#inInvoiceNo').textbox({
+				required:true,
+				editable:true
+			});
+			// 附件类型列表
+			$("#fileTypeId").combobox({
+				data:fileTypeJson,
+				valueField:'fileTypeId',
+				textField:'fileTypeName',
+				panelHeight:'auto',
+				editable:true,
+				required:false,
+				limitToList: true,
+				onLoadSuccess:function(){
+					var value = $(this).val();
+					if (!value){
+						$(this).combobox('setValue',fileTypeJson[0].fileTypeId);
+					}
+				},
+			})
+			$("#fileTypeId").combobox('setValue',null);
+		}else if(_curStatus&&(_curStatus=='A'||_curStatus=='D')){
+			$(".chooseBtn").hide();
+			var flag = $("#canApproveEdit").val();
+			if (flag == 'true'){
+
+			}
+			// 附件类型
+			var _fileTypeId = $('#fileTypeId').val();
+			var fileType = Convert.findValueByKey(fileTypeJson,"fileTypeId",_fileTypeId,"fileTypeName");
+			$("#fileTypeId").val(fileType);
+			$("#pm_content_div").find("input").not('.tags').not("[type='button']").attr("readonly",true);
+			var _ourCompanyName = $('#invoiceCompanyName').val();
+			var _conDeliveryType = Convert.findValueByKey(_ourCompanyJson,"dictCd",_ourCompanyName,"dictName");
+			$("#ourCompanyName").val(_conDeliveryType);
+			//格式化合同总价
+			// $("#totalAmount").val(Number($("#totalAmount").val()).toFixed(2));
+		}
+		applyLoadSucess();
+	})
+	//选择合同
+	function openChoose(){
+		var url=_ctx+"/ctr/contract/choose?contractType=B&type=I&contractStatus=C&billFlg=0&contract_Status=G1";
+		$('#w_contract_choose').attr('callbackExec', 'chooseCallback');
+		$('#w_contract_choose').window({href:url});
+		$('#w_contract_choose').window("open");
+	}
+	function chooseCallback(contractRows){
+		var contract = contractRows[0];
+		byContract(contract);
+	}
+
+	function byContract(contract){
+		if (contract!=undefined){
+			$("#contractId").val(contract.id);//合同id
+			$("#contractNo").val(contract.contractNo);//合同编号
+			$("#totalAmount").numberbox('setValue',contract.totalAmount);
+			$("#invoiceAmount").val(contract.dealedAmount);
+			$('#payedAmount').numberbox('setValue',contract.dealedAmount);
+			$("#contractNo").val(contract.contractNo);
+			$("#companyId").combobox('setValue',contract.companyId);//收款单位
+			$("#companyName").val(contract.companyName);//收款单位
+			$('#invoiceCompanyName').combobox('setValue',contract.ourCompanyName);
+			var totalAmount = contract.totalAmount;
+			if (contract.businessType == "ZY-TP") {
+				totalAmount = contract.settlementTotalAmount;
+			}
+			var billedAmount = contract.billedAmount;
+			var applyBillAmount = contract.applyBillAmount;
+			$("#invoiceAmount").numberbox('setValue',totalAmount - applyBillAmount);
+			$("#matchUserName").val(contract.matchUserName);
+			$("#billedAmount").numberbox('setValue',billedAmount);
+		}
+	}
+	//合同详情
+	function contractDetail(){
+		var contractNo = $("#contractNo").val();
+		var contractId = $("#contractId").val();
+		var title=contractNo;
+		$.post(_ctx + '/bs/matchDetail/content5/' + contractId, function (result) {
+			var title="代采赊销详情"+contractNo;
+			window.parent.addTab(title, _ctx + '/bs/matchDetail/contentdcsx/' + result.approveId);
+		});
+
+	}
+
+
+</script>

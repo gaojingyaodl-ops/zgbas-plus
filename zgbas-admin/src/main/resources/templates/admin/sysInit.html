@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<meta charset="UTF-8">
+	<link th:href="@{${g_logoIconUrl}}" rel="shortcut icon" type="image/png" />
+	<link th:href="@{${g_logoIconUrl}}" rel="icon" type="image/png" />
+	<title>供应链核心管理平台</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+	<script th:src="@{/static/js/admin/index.js?v=2211}" type="text/javascript"></script>
+</head>
+<body style="width:100%;min-height:100vh;overflow:hidden">
+	<div class="easyui-layout" style="width:100%;height:100%; border: none;">
+        <div data-options="region:'north'" style="height:44px;border: none;overflow:hidden" class="trade-header">
+        	<div class="header-left">
+	            <img th:src="@{${g_logoUrl}}" alt="">
+	            <div class="header-tips">
+	                <span class="span1">欢迎使用[[${g_enterpriseName}]]供应链核心管理平台</span>
+	                <span class="span2">开放创新、勤勉务实</span>
+	            </div>
+	        </div>
+        </div>
+
+        <div data-options="region:'west'" title="菜单导航" style="width:178px;padding-left: 10px;padding-right: 10px;">
+        	<div class="easyui-accordion" data-options="fit:true,border:false">
+               <div style="overflow:auto;" title="系统设置">
+					<ul class="ul-list-nav">
+						<li><div>初始化设置</div></li>
+					</ul>
+				</div>
+            </div>
+        </div>
+
+        <div data-options="region:'center',iconCls:'icon-ok'" style="margin-left:10px;border:none;text-align:left">
+             <div class="easyui-layout" style="width:100%;height:100%; border: none;">
+               	<div data-options="region:'center',iconCls:'icon-ok'" style="margin-left:10px;border:none;text-align:left">
+                	<div class="easyui-tabs" fit="true" border="false" id="tabs">
+                		<div title="首页">
+                			<div style="margin: 20px 0 20px 20px;font-size: 18px">
+                				<span>企业名称:</span>
+                				<span th:text="${requestVo.companyName}" id="companyName"></span>
+                				<input type="hidden" th:value="${requestVo.admin}" id="admin"/>
+                			</div>
+                			<div style="margin-left: -10px">
+                				<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onClick="insert(code='Y')">业务员</a>
+               					<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onClick="insert(code='W')">物管员</a>
+               					<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onClick="insert(code='C')">财务员</a>
+               				</div>
+               				<table id="relaTable" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+               			</div>
+               		</div>
+             	</div>
+
+             	<div data-options="region:'south',iconCls:'icon-ok'" style="margin-left:10px;border:none;text-align:left;margin-bottom:10px;">
+       				<a href="#" class="easyui-linkbutton" data-options="iconCls:'icon-add'" onClick="createUser()">创建</a>
+       			</div>
+             </div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+var _roleCodeJson = [{'id':'bas_new_bizuser','text':'业务员'},{'id':'bas_new_cyuser','text':'物管员'},{'id':'bas_new_fin','text':'财务员'}];
+$(function(){
+	$('#relaTable').datagrid({
+		rownumbers:true,
+		columns:[ [
+			{field:'roleCode',title:'角色',align:'center',width:100,formatter:function(value,row,index){
+				return Convert.findValueByKey(_roleCodeJson,"id",value,"text");
+			}},
+			{field:'loginName',title:'账号',align:'center',width:100,editor:{type:'textbox',options:{required:'true'}}},
+			{field:'password',title:'密码',align:'center',width:100,editor:{type:'textbox',options:{required:'true'}}},
+			{field:'userName',title:'姓名',align:'center',width:100,editor:{type:'textbox',options:{required:'true'}}}/* ,
+			{field:'option',title:'操作',align:'center',width:100} */
+		]]
+	});
+})
+function insert(code){
+	var roleCode = '';
+	if(code == 'Y'){
+		roleCode = 'bas_new_bizuser';
+	}else if(code == 'W'){
+		roleCode = 'bas_new_cyuser';
+	}else{
+		roleCode = 'bas_new_fin';
+	}
+	var new_row = {roleCode:roleCode};
+	$('#relaTable').datagrid('appendRow', new_row);
+	var rowIndex=$('#relaTable').datagrid('getRowIndex',new_row);
+	$('#relaTable').datagrid('beginEdit', rowIndex);
+}
+function createUser(){
+	var changeRows = $('#relaTable').datagrid('getRows');
+	for(var i=0;i<changeRows.length;i++){
+		var rowIndex=$('#relaTable').datagrid('getRowIndex',changeRows[i]);
+		flag=$('#relaTable').datagrid('validateRow',rowIndex);
+		if (!flag){
+			$('#relaTable').datagrid('selectRow',rowIndex);
+			$('#relaTable').datagrid('beginEdit', rowIndex);
+			break;
+		}else{
+			$('#relaTable').datagrid('endEdit', rowIndex);
+		}
+	}
+	//用户列表
+	var result = Convert.ToSaveJson("relaTable");
+	result = Convert.ToJSONString(result);
+	var _companyName = $("#companyName").text();
+	var _admin = $("#admin").val();
+	$.post(_ctx+"/open/sys/createUser",{'companyName':_companyName,'admin':_admin,'_easy_grid':result},
+	    function(data){
+	      if(data.success){
+	    	  $.messager.alert('提示','创建成功！','info');
+	      }
+	});
+}
+</script>
+</html>

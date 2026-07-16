@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>财务合同明细</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同类型</label>
+				<input type="text" id="contractType" class="control text_padding" name="contractType"></input>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>合同号</label>
+				<input class="control" id="contractNo" type="text" name="contractNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>企业名称</label>
+				<input  class="control" id="companyName" type="text" name="companyName"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>业务类型</label>
+				<input  type="text" id="businessType" class="control text_padding" name="businessType"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>统计类型</label>
+				<input  type="text" id="statisticalType" class="control text_padding" name="statisticalType"/>
+			</p>
+			
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter mobile-display-none">
+				<label>我方抬头</label>
+				<input type="text" id="ourCompanyNames" class="control text_padding" name="ourCompanyNames"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>签订日:</label>
+				<input id="contractTimeBegin" name="contractTimeBegin" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+						<label>~</label>
+					</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input  id="contractTimeEnd"  name="contractTimeEnd" class="easyui-datebox" />
+			</p>
+			<p class="yw-table-filter">
+				<label>状态</label>
+				<input type="text" id="contractStatus" class="control text_padding" name="contractStatus"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>产品类型</label>
+				<input type="text" id="productType" class="control text_padding" name="productType"/>
+			</p>
+			<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none"  onclick="exportExcel()">导出</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var ourCompanyJson =eval('[(${ourCompanyJson})]');
+	var statisticalTypeJson =eval('[(${statisticalTypeJson})]');
+	var businessTypeFlgJson = [{id:'SX',text:'赊销'},{id:'DC',text:'代采'}];// 发票状态
+	var _statisticsType_index = '[[${statisticsType}]]';
+	var _ourCompanyName_index = '[[${ourCompanyCd}]]';
+	_ourCompanyName_index = _ourCompanyName_index.replace(/[\[\]"]+/g, '').split(',').map(item => item.trim()); // 去除每个元素前后的空格
+	var _businessType_index = '[[${businessType}]]';
+	
+	var _companyName_business = '[[${companyName}]]';
+	var _contractTimeBegin_business = '[[${contractTimeBegin}]]';
+	var _contractTimeEnd_business = '[[${contractTimeEnd}]]';
+	var _contractType_business = '[[${contractType}]]';
+	var _contractStatus_business = '[[${contractStatus}]]';
+	var _productType_business = '[[${productType}]]';
+
+	
+	$(function(){
+		$("#contractStatus").combobox({
+			data:[{id:'',text:'--全部--'},{id:'Y',text:'有效'},{id:'N',text:'作废'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			onLoadSuccess:function(){
+				$("#contractStatus").combobox('setValue','Y');
+			}
+		});
+		$("#productType").combobox({
+			data:[{id:'',text:'--全部--'},{id:'HG',text:'化工'},{id:'NHG',text:'非化工'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			onLoadSuccess:function(){
+			}
+		});
+		$("#contractType").combobox({
+			data:[{id:'',text:'--选择--'},{id:'B',text:'采购合同'},{id:'S',text:'销售合同'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		});
+		// 业务类型
+		$('#businessType').combobox({
+			data:businessTypeFlgJson,
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto"
+		})
+		if(!strIsNull(_businessType_index)){
+			$("#businessType").combobox('setValue',_businessType_index);
+		}
+		// 统计类型
+		$('#statisticalType').combobox({
+			data:statisticalTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		})
+		// 首页跳转的时候使用
+		if(!strIsNull(_statisticsType_index)){
+			$("#statisticalType").combobox('setValue',_statisticsType_index);
+		}
+		//我方抬头
+		$('#ourCompanyNames').combobox({
+			data:ourCompanyJson,
+			textField:'dictName',
+			valueField:'dictName',
+			multiple : true,
+			panelWidth:'auto',
+			panelHeight:"auto"
+		});
+		// 首页跳转的时候使用
+		if(!strIsNull(_ourCompanyName_index)){
+			$("#ourCompanyNames").combobox('setValue',_ourCompanyName_index);
+		}
+
+		if(!strIsNull(_companyName_business)){
+			$("#companyName").val(_companyName_business);
+		}
+		if(!strIsNull(_contractTimeBegin_business)){
+			$("#contractTimeBegin").datebox('setValue',_contractTimeBegin_business);
+		}
+		if(!strIsNull(_contractTimeEnd_business)){
+			$("#contractTimeEnd").datebox('setValue',_contractTimeEnd_business);
+		}
+		if(!strIsNull(_contractType_business)){
+			$("#contractType").combobox('setValue',_contractType_business);
+		}
+		if(!strIsNull(_contractStatus_business)){
+			$("#contractStatus").combobox('setValue',_contractStatus_business);
+		}
+		if(!strIsNull(_productType_business)){
+			$("#productType").combobox('setValue',_productType_business);
+		}
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter :true,
+			pageList:[500,200,100,50,30,20],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/rpt/contractFinance/findContractFinancePage",
+			columns:[ [
+				{field:'contractNo',title:'合同编号',width:110,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'businessType',title:'业务类型',width:80,align:'center',formatter:function (value,row,index) {
+					if (row.matchCreditFlg == 'true' || row.matchCreditFlg == true){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								value = '<span style="color: red">赊销</span>';
+							}else {
+								value = '<span>赊销</span>';
+							}
+						}
+						
+					}else if (row.matchCreditFlg == 'false' || row.matchCreditFlg == false){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								value = '<span style="color: red">代采</span>';
+							}else {
+								value = '<span>代采</span>';
+							}
+						}
+					}
+					return value;
+				}  },
+				{field:'productName',title:'货名',align:'center', width:130,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'companyName', title: '对方企业名称',width:190,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'totalNumber',title:'合同数量(吨)',align:'center', width:80,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'totalAmount',title:'合同总价(元)',align:'right', width:80,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'contractTime',title:'签订日',align:'center', width:80,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'ourCompanyName',title:'我方抬头', width:190,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'matchUserName', title:'业务员', width:80,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'deptName', title:'区域', width:100,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'dealedAmount',title:'已收/付款金额',align:'right', width:90,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'payFullTime',title:'收/付全款日期', width:110,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'billedAmount',title:'已开/收票金额',align:'right', width:110,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				},
+				{field:'realBillDate',title:'开/收票日期',align:'right', width:110,
+					formatter:function(value,row,index){
+						if(row.id && value){
+							if (row.noReceiveBreachAmount > 0) {
+								return '<span style="color: red">'+value+'</span>';
+							}else {
+								return '<span>'+value+'</span>';
+							}
+						}
+					}
+				}
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+				approveDetail(row);
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+
+
+	});
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/contractFinance/exportExcel"});
+	}
+	function approveDetail(row){
+		var  approveId=row.approveId;
+		var  matchCreditFlg=row.matchCreditFlg;
+		var title = "预算详情" + ':' +approveId;
+		if (matchCreditFlg== true) {
+			// 赊销
+			window.parent.addTab(title,_ctx+'/bs/matchDetail/content2/'+approveId);
+			// }
+		}else {
+			// 代采
+			window.parent.addTab(title,_ctx+'/bs/matchDetail/content/'+approveId);
+		}
+
+
+	}
+</script>
+</body>
+</html>

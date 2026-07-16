@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+	<style>
+		input[type="checkbox"], .input-checkbox {
+			display: inline-block;
+			width: 16px;
+			height: 16px;
+			cursor: pointer;
+			border-color: var(--skin-color);
+		}
+
+		fieldset {
+			display: block;
+			margin-inline-start: 2px;
+			margin-inline-end: 2px;
+			padding-block-start: 0.35em;
+			padding-inline-start: 0.75em;
+			padding-inline-end: 0.75em;
+			padding-block-end: 0.625em;
+			min-inline-size: min-content;
+		}
+
+		legend {
+			display: block;
+			padding-inline-start: 2px;
+			padding-inline-end: 2px;
+			unicode-bidi: isolate;
+			border-width: initial;
+			border-style: none;
+			border-color: initial;
+			border-image: initial;
+		}
+	</style>
+</head>
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-bottom:20px">
+		<input type="hidden" id="receiveDetailListStr" name="receiveDetailListStr" th:value="${entity.receiveDetailListStr}">
+		<input type="hidden" id="contractDetailListStr" th:value="${entity.contractDetailListStr}">
+		<input type="hidden" id="domSize" th:value="${entity.receiveDetailList.size()}">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" id="contractId" th:value="${entity.contractId}" />
+		<input type="hidden" id="entityStatus" th:value="${entity.status}" />
+		<input type="hidden" id="hashEdit" th:value="${psv.hasEdit}"/>
+		<input type="hidden" id="receiveInterestAmount"/>
+		<input type="hidden" name="canApproveEdit" id="canApproveEdit" th:value="${psv.canApproveEdit}" />
+		<input type="hidden" id="applyAmount"/>
+		<div class="mb6">
+			<th:block contenteditable='true'  th:replace="~{tags/apply :: receiveTypes(${#maps.containsKey(psv.mapEdit, 'receiveType')}?${psv.mapEdit['receiveType'].require}:true,${#maps.containsKey(psv.mapEdit, 'receiveType')}?${psv.mapEdit['receiveType'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<p class="yw-table-filter">
+				<label><i>*</i>收款方式:</label>
+				<input name="receiveMode" id="receiveMode" class="easyui-textbox" type="text" th:value="${entity.receiveMode}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>付款方:</label>
+				<input name="companyId" type="hidden" id="companyId" th:value="${entity.companyId}"/>
+				<input type="text" name="companyName" readonly="readonly" id="companyName" th:value="${entity.companyName}"/>
+			</p>
+			<!--收款金额-->
+			<th:block contenteditable='true'  th:replace="~{tags/apply :: receiveAmount(${#maps.containsKey(psv.mapEdit, 'receiveAmount')}?${psv.mapEdit['receiveAmount'].require}:true,${#maps.containsKey(psv.mapEdit, 'receiveAmount')}?${psv.mapEdit['receiveAmount'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<!--息费用承担方-->
+			<th:block contenteditable='true'  th:replace="~{tags/apply :: discountTarget(${#maps.containsKey(psv.mapEdit, 'discountTarget')}?${psv.mapEdit['discountTarget'].require}:false,${#maps.containsKey(psv.mapEdit, 'discountTarget')}?${psv.mapEdit['discountTarget'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>我方:</label>
+				<input name="ourCompanyName" id="ourCompanyName" readonly type="text" required="required" th:value="${entity.ourCompanyName}"/>
+			</p>
+			<!--收款日期-->
+			<th:block contenteditable='true' th:replace="~{tags/apply :: receiveDate(${#maps.containsKey(psv.mapEdit, 'receiveDate')}?${psv.mapEdit['receiveDate'].require}:true,${#maps.containsKey(psv.mapEdit, 'receiveDate')}?${psv.mapEdit['receiveDate'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<!--收承兑日期-->
+			<th:block contenteditable='true' th:replace="~{tags/apply :: billDueTime(${#maps.containsKey(psv.mapEdit, 'billDueTime')}?${psv.mapEdit['billDueTime'].require}:false,${#maps.containsKey(psv.mapEdit, 'billDueTime')}?${psv.mapEdit['billDueTime'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<!--承兑到期日-->
+			<th:block contenteditable='true' th:replace="~{tags/apply :: dueTime(${#maps.containsKey(psv.mapEdit, 'dueTime')}?${psv.mapEdit['dueTime'].require}:false,${#maps.containsKey(psv.mapEdit, 'dueTime')}?${psv.mapEdit['dueTime'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w3">
+				<label>备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"/>
+			</p>
+			<!--贴现费用-->
+			<th:block contenteditable='true'  th:replace="~{tags/apply :: discountAmount(${#maps.containsKey(psv.mapEdit, 'discountAmount')}?${psv.mapEdit['discountAmount'].require}:false,${#maps.containsKey(psv.mapEdit, 'discountAmount')}?${psv.mapEdit['discountAmount'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+			<!--贴现利率-->
+			<th:block contenteditable='true'  th:replace="~{tags/apply :: discountRate(${#maps.containsKey(psv.mapEdit, 'discountRate')}?${psv.mapEdit['discountRate'].require}:false,${#maps.containsKey(psv.mapEdit, 'discountRate')}?${psv.mapEdit['discountRate'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+		</div>
+		<div th:each="detail,iter : ${entity.receiveDetailList}" class="div-v2" id="dynamicDiscountDom">
+			<fieldset class="form-section-v2">
+				<legend class="form-section-title-v2"><span th:id="legendContractNo">[[${detail.contractNo}]]</span><i></i></legend>
+				<div class="mb6">
+					<p class="yw-table-filter">
+						<label>合同编号:</label>
+						<input type="text" th:id="${'contractNo' + iter.index}" th:value="${detail.contractNo}" readonly/>
+						<input class="hide" type="text" th:id="${'contractId' + iter.index}" th:value="${detail.contractId}"/>
+						<input class="hide" type="text" th:id="${'detailId' + iter.index}" th:value="${detail.id}"/>
+					</p>
+					<p class="yw-table-filter">
+						<label>待收合同金额（元）:</label>
+						<input class="targetNum" type="text" th:id="${'unpayedAmount' + iter.index}" th:value="${#numbers.formatDecimal(detail.unpayedAmount,1,'COMMA',2,'POINT')}" readonly/>
+						<input class="hide" type="text" th:id="${'payedAmount' + iter.index}" th:value="${#numbers.formatDecimal(detail.payedAmount,1,'COMMA',2,'POINT')}"/>
+					</p>
+					<p class="yw-table-filter">
+						<label>待收罚息金额（元）:</label>
+						<input class="targetNum" type="text" th:id="${'needBreachAmount' + iter.index}" th:value="${#numbers.formatDecimal(detail.breachAmount - detail.receiveBreachAmount,1,'COMMA',2,'POINT')}" readonly/>
+						<input class="hide" type="text" th:id="${'breachAmount' + iter.index}" th:value="${#numbers.formatDecimal(detail.breachAmount,1,'COMMA',2,'POINT')}"/>
+						<input class="hide" type="text" th:id="${'receiveBreachAmount' + iter.index}" th:value="${#numbers.formatDecimal(detail.receiveBreachAmount,1,'COMMA',2,'POINT')}"/>
+					</p>
+				</div>
+				<div class="mb6 discount-mb6">
+					<p class="yw-table-filter">
+						<label>合同总金额（元）:</label>
+						<input class="targetNum" type="text" th:id="${'totalAmount' + iter.index}" th:value="${#numbers.formatDecimal(detail.totalAmount,1,'COMMA',2,'POINT')}" readonly/>
+					</p>
+					<p th:if="${detail.receiveType == 'T'}" class="yw-table-filter">
+						<label>待收贴现费用（元）:</label>
+						<input class="targetNum" type="text" th:id="${'needDiscountAmount' + iter.index}" th:value="${#numbers.formatDecimal(detail.unDiscountAmount,1,'COMMA',2,'POINT')}" readonly/>
+					</p>
+					<p class="yw-table-filter">
+						<label><i>*</i>收款金额（元）:</label>
+						<input class="dealAmount" type="text" th:id="${'receiveAmount' + iter.index}" th:value="${detail.receiveAmount}"/>
+					</p>
+					<p th:if="${detail.receiveMode == 'H'}" class="yw-table-filter">
+						<label><i>*</i>贴现费用（元）:</label>
+						<input class="dealAmount" type="text" th:id="${'discountAmount' + iter.index}" th:value="${detail.discountAmount}"/>
+					</p>
+					<p class="yw-table-filter hide discountCheckDom">
+						<input type="checkbox" class="checkbox" checked="checked" th:id="${'discountCheck' + iter.index}"/> <span>抵扣</span>
+					</p>
+				</div>
+			</fieldset>
+		</div>
+	</div>
+	<div class="editForm">
+		<p style="width:240px">
+			<span class="upload-btn" id="btn_fileId">
+               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+           	</span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+		</p>
+		<p class="controls showImg fileId" id="span_fileId"></p>
+	</div>
+	<div id="w_contract_choose" class="easyui-window" title="合同详情" data-options="width:830,height:640"></div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js?v=1}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_discount.js?v=1}" type="text/javascript"></script>
+<script type="text/javascript">
+	var _initFlg = true;
+	var imgShowUrl = _filePath + '/view/small/';
+	var companyJson = eval('[(${companyJson})]');
+	var discountTargetJson = eval('[(${discountTargetJson})]');
+	var approveStatusJson = eval('[(${approveStatusJson})]');
+	var receiveModeJson = eval('[(${receiveModeJson})]');
+	var _receiveModeJson = receiveModeJson.filter(function (a) {
+		return a.dictCd != 'H';
+	});
+	var receiveTypeJson = eval('[(${receiveTypeJson})]');
+	var _ourCompanyJson = eval('[(${ourCompanyJson})]');
+	var _curStatus = $("#entityStatus").val();
+	var _entityId = $("#entityId").val();
+	var filePlugin = new FilePlugin('#fileId', $('#entityId').val(), '/apply/receive/updateFileId', [[${param.hasEditFile}]]);
+	var canApproveEdit = $("#canApproveEdit").val();
+	var _$currContract;
+	let _domSize = $('#domSize').val();
+	$(function(){
+		$('.easyui-linkbutton').linkbutton();
+		Discount.initViewDom(_domSize);
+		if (_curStatus && (_curStatus == 'N' || _curStatus == 'B' || _curStatus == 'C')) {
+			$("#receiveMode").combobox({
+				data:receiveModeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				required: true,
+				panelHeight:"auto",
+				editable:false,
+				onSelect:function(record){
+					Discount.changeReceiveMode(record.dictCd);
+				}
+			});
+
+			$("#receiveType").combobox({
+				data:receiveTypeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				required: true,
+				panelHeight:"auto",
+				editable:false,
+				onSelect:function(record){
+					Discount.changeReceiveType(record.dictCd);
+				}
+			});
+			//我方抬头
+			$('#ourCompanyName').combobox({
+				data:_ourCompanyJson,
+				valueField:'dictName',
+				textField:'dictName',
+				panelHeight:"auto",
+				editable:false,
+				hasDownArrow:false,
+				readonly:true,
+				onHidePanel:function(){
+					BasCombobox.onHidePanel(this);
+				}
+			});
+			applyLoadSucess();
+		}
+
+		// 审批中
+		if(_curStatus&&(_curStatus=='A')){
+			$(".chooseBtn").hide();
+
+			$("#receiveType").combobox({
+				data:receiveTypeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				required: true,
+				panelHeight:"auto",
+				editable:false,
+				readonly:true
+			});
+
+			$("#receiveMode").combobox({
+				data:receiveModeJson,
+				textField:'dictName',
+				valueField:'dictCd',
+				required: true,
+				panelHeight:"auto",
+				editable:false,
+				readonly:true
+			});
+
+			$("#inputForm").find("input").not("[type='button']").not("#receiveDate").attr("readonly", true);
+			$("#inputForm").find("input").not("[type='button']").not("#receiveAmount").attr("readonly", true);
+			$("#inputForm").find("input").not("[type='button']").not("#receiveType").attr("readonly", true);
+			$('#receiveAmount,#discountAmount').numberbox({
+				required: true,
+				precision: 2,
+				min: 0
+			});
+			$('#discountTarget').combobox({
+				data:discountTargetJson,
+				required: true,
+				textField:'dictName',
+				valueField:'dictCd',
+				readonly: false
+			});
+			$('#discountRate').numberbox({
+				required: true,
+				precision: 6,
+				min: 0
+			});
+			Discount.dealWithEdit(_domSize);
+		}
+
+		if(_curStatus&&(_curStatus=='D')){
+			$(".chooseBtn").hide();
+			Discount.dealWithEdit(_domSize);
+			//转换收款类型
+			var _receiveType = $("#receiveType").val();
+			var ConvertReceiveType = Convert.findValueByKey(receiveTypeJson,"dictCd",_receiveType,"dictName");
+			$("#receiveType").val(ConvertReceiveType);
+			//转换收款方式
+			var _receiveMode = $("#receiveMode").val();
+			var ConvertReceiveMode = Convert.findValueByKey(receiveModeJson,"dictCd",_receiveMode,"dictName");
+			$("#receiveMode").val(ConvertReceiveMode);
+			$("#inputForm").find("input").not("[type='button']").attr("readonly",true);
+		}
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+		let _$receiveMode = Discount.getComboboxValue("#receiveMode");
+		if (_$receiveMode === 'H'){
+			$('.discountDom').removeClass('hide');
+		}
+		_beforSaveOper = true;
+		_special_befor_flg = true;
+		_initFlg = false;
+	});
+
+	function chooseCallback(contractRows){
+		var contract = contractRows[0];
+		_$currContract = contract;
+		setDefaultParam(contract);
+	}
+
+	function setDefaultParam(contract) {
+		if (contract != undefined) {
+			$('#ourCompanyName').combobox('setValue', contract.ourCompanyName);
+			$("#contractId").val(contract.id);
+			var totalAmount = parseFloat(contract.totalAmount);//合同总价
+			var applyPayAmount = contract.applyPayAmount;
+			$("#companyId").val(contract.companyId);
+			$("#companyName").val(contract.companyName);
+			$("#receiveAmount").numberbox('setValue', totalAmount - applyPayAmount);
+			$("#receiveAmount0").numberbox('setValue', totalAmount - applyPayAmount);
+			$("#receiveBreachAmount").numberbox('setValue', contract.receiveBreachAmount);
+			if (contract.dealedAmount - contract.totalAmount >= 0) {
+				if (contract.breachAmount - contract.receiveBreachAmount > 0) {
+					$("#receiveType").combobox('setValue', "M");
+					$("#receiveAmount").numberbox('setValue', contract.breachAmount - contract.receiveBreachAmount);
+					$("#receiveAmount0").val(contract.breachAmount - contract.receiveBreachAmount);
+				} else if (contract.discountChargeAmount - contract.discountReceiveAmount > 0) {
+					setTimeout(function () {
+						$("#receiveType").combobox('setValue', "T");
+					}, 800);
+				}
+			}
+			$('#contractNo0').val(contract.contractNo);
+			$('#totalAmount0').numberbox('setValue', contract.totalAmount);
+			$('#unpayedAmount0').numberbox('setValue', contract.totalAmount - contract.dealedAmount);
+			$('#needBreachAmount0').numberbox('setValue', contract.breachAmount - contract.receiveBreachAmount);
+			$('#needDiscountAmount0').numberbox('setValue', contract.discountChargeAmount - contract.discountReceiveAmount);
+			$("#legendContractNo").text(contract.contractNo);
+		}
+	}
+	//发起申请前操作
+	function beforSaveOper(){
+		var _receiveMode = $("#receiveMode").combobox("getValue");
+		if (_receiveMode != "H") {
+			$("#discountTarget").combobox({required: false});
+		}
+		var receiveDetailArr = new Array();
+		var totalReceiveAmount = $("#receiveAmount").numberbox("getValue");
+		var _currTotalAmount = 0;
+		var discountDomAll = document.querySelectorAll('#dynamicDiscountDom .discount-mb6');
+		var _cur_one_check_flg = false;
+		for (let i = 0; i < discountDomAll.length; i++) {
+			let currCheckFlg = document.getElementById('discountCheck' + i).checked;
+			if (currCheckFlg){
+				_cur_one_check_flg = true;
+				let currReceiveAmount = $('#receiveAmount' + i).numberbox("getValue");
+				if (!currReceiveAmount){
+					$.messager.alert('提示', currContractNo + '保存失败，收款金额不可为空！','warning');
+					return false;
+				}
+				let currContractNo = $('#contractNo'+ i).val();
+				let currContractId = $('#contractId'+ i).val();
+				let currPayedAmount = $('#payedAmount'+ i).val();
+				let currUnpayedAmount = $('#unpayedAmount'+ i).val();
+				let currBreachAmount = $('#breachAmount'+ i).val();
+				let currReceiveBreachAmount = $('#receiveBreachAmount'+ i).val();
+				let currDetailId = $('#detailId'+ i).val();
+				let currDiscountAmount = 0;
+				if (_receiveMode === "H") {
+					currDiscountAmount = $('#discountAmount' + i).numberbox("getValue");
+				}
+				receiveDetailArr.push({
+					"id": currDetailId,
+					"contractId": currContractId,
+					"contractNo": currContractNo,
+					"payedAmount": Number(currPayedAmount),
+					"unpayedAmount": Number(currUnpayedAmount),
+					"breachAmount": Number(currBreachAmount),
+					"receiveBreachAmount": Number(currReceiveBreachAmount),
+					"receiveAmount": Number(currReceiveAmount),
+					"discountAmount": Number(currDiscountAmount),
+				});
+				_currTotalAmount += Number(currReceiveAmount);
+				// console.log("i ==" + _currTotalAmount);
+			}
+		}
+		console.log("totalReceiveAmount:" + totalReceiveAmount);
+		console.log("currTotalAmount:" + _currTotalAmount);
+		if (Number(totalReceiveAmount) === 0){
+			$.messager.alert('提示', '收款金额不可为0 ！','warning');
+			return false;
+		}
+		if (Number(totalReceiveAmount) < 0){
+			$.messager.alert('提示', '收款金额不可小于0 ！','warning');
+			return false;
+		}
+		if (!_cur_one_check_flg){
+			$.messager.alert('提示', '请至少勾选一条抵扣合同 ！','warning');
+			return false;
+		}
+		if (Math.round(totalReceiveAmount * 100) / 100 === Math.round(_currTotalAmount * 100) / 100){
+			$("#receiveDetailListStr").val(JSON.stringify(receiveDetailArr));
+			console.log(receiveDetailArr);
+			return true;
+		}
+		$.messager.alert('提示', '收款金额明细金额不一致，请检查并调整！','warning');
+		return false;
+	}
+</script>
+</html>

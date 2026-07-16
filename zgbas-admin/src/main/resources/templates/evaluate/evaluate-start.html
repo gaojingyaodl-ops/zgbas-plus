@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="north" class="search_div pt20	pl80 pr20 pb15 ofh" border="false">
+        <form id="inputForms" method="post"  class="from-input-layout" >
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="evaluateMonth"  class="control-label">考评月份:</label>
+                    <input name="evaluateMonth" id="evaluateMonth"  type="text" />
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label for="deptId"  class="control-label">考评部门:</label>
+                    <input type="text" name="deptId" id="deptId"/>
+                </p>
+            </div>
+        </form>
+    </div>
+
+
+    <div region="south" border="false" style="overflow: hidden;height: 60px;margin-left:  180px;">
+        <div class="actions_bar">
+            <span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="submit();">确认</span>
+            <a href="#" class="easyui-linkbutton btn-danger-empty" data-options="iconCls:'icon-no'" onclick="$('#evaluate_start').window('close')">取消</a>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    var _deptJson = eval('[(${deptJson})]');
+    $(function(){
+        // $('#deptId').combobox({
+        //     data : _deptJson,
+        //     textField:'deptName',
+        //     valueField:'id',
+        //     panelHeight:300,
+        //     multiple: true,
+        // });
+        $('#deptId').combotree({
+            data : _deptJson,
+            multiple : true,
+            editable : true,
+            panelHeight:300,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#deptId').combotree('clear');
+                }
+            }
+        })
+        intiMonthBox('evaluateMonth');
+    });
+
+    //保存
+    function submit(){
+        var entityId = $("#id").val();
+        if (entityId != null  && entityId !=0 && entityId != ""){//判断是否有id值，有则修改，无则添加
+            Edit();//修改方法
+        }else{
+            save();//添加方法
+        }
+    }
+    /* 修改方法 */
+    function Edit(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: '/evaluate/item/update',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '修改成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                } else {
+                    $("#evaluate_start").window("close");
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+    /* 添加方法 */
+    function save(){
+        $.ajax({
+            type:"POST",
+            dataType: "json",
+            url: '/evaluate/total/startEvaluate',
+            data: $('#inputForms').serialize(),
+            success: function (data){
+                console.log(data);//打印服务端返回的数据(调试用)\
+                if ((!isEmpty(data)) && !isEmpty(data.success)) {
+                    $.messager.show({
+                        title: 'Tip',
+                        msg: '发起考评成功',
+                        timeout: 2000,
+                        showType: 'show'
+                    });
+                    $("#evaluate_start").window("close");
+                } else {
+                    $.messager.alert('error', data.failure, 'warning');
+                }
+                $('#tt').datagrid('reload');
+            },
+            error : function() {
+                $.messager.alert('error', "请联系管理员", 'warning');
+            }
+
+        })
+    }
+
+</script>

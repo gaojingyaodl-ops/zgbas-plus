@@ -1,0 +1,45 @@
+/* header */
+
+body{
+	background:url('../images/bg.png');}
+
+/* #header {margin-bottom:15px;} */
+
+.rectangle {
+	width: 680px;
+	height: 392px;
+	background-color: #ffffff;
+	margin:197px auto;
+}
+
+#header{
+	font-family: MicrosoftYaHeiUI-Bold;
+	font-size: 32px;
+	color: #5e9bff;
+	width:334px;
+	height: 41px;
+	text-align: center;
+	margin-left: 173px;
+	padding-top: 52px;
+}
+
+.form{
+	width:334px;
+	margin-top: 48px;
+	margin-left: 210px;
+}
+/* #header h1 {color: #658A16;}
+
+#header h1 small {color: #BACE87;} */
+
+/* footer */
+#footer {
+	margin-top: 15px;
+	padding: 15px 0px 0px 0px;
+	font-size: 95%;
+	text-align: center;
+	border-top: 2px solid #658A16;
+}
+
+#footer a {color: #999;}
+

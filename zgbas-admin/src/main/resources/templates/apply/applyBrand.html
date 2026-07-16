@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div id="inputForm" method="post" class="editForm_approve content_div"
+         style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+        <input type="hidden" name="id" id="entityId" th:value="${entity.id}"/>
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>品名:</label>
+                <input id="productCd"  name="productCd" th:value = "${entity.productCd}" type="text" />
+            </p>
+            <p class="yw-table-filter">
+                <label>牌号:</label>
+                <input id= "brandNumber" type="text"  name="brandNumber" th:value = "${entity.brandNumber}">
+            </p>
+<!--            <p class="yw-table-filter">-->
+<!--                <label>牌号分类:</label>-->
+<!--                <input  name="brandSort" id="brandSort" th:value = "${entity.brandSort}" type="text" />-->
+<!--            </p>-->
+
+        </div>
+        <div class="mb6">
+            <p class="yw-table-filter w2">
+                <label>备注:</label>
+                <input name="remark" id="remark" th:value = "${entity.remark}" type="text" />
+            </p>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+    var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/brand/updateFileId',[[${param.hasEditFile}]]);
+    function toUpperCase(obj) {
+        obj.value = obj.value.toUpperCase()
+    }
+    //品名下拉
+    var productTypeJson=eval('[(${productTypeJson})]');
+    var _curStatus = '[[${status}]]';
+    $('#productCd').combotree({
+        data:productTypeJson,
+        valueField:'typeCode',
+        textField:'typeName',
+        required:true,
+        editable:true,
+        onSelect:function(node){
+            if (node.children.length!==0){
+                $("#productCd").combotree('clear');
+                return;
+            }
+            $('#productCd').val(node.typeName);
+        }
+    });
+
+
+    //牌号分类
+    $("#brandSort").textbox({
+        editable: true
+    })
+    //牌号
+    $("#brandNumber").textbox({
+        required:true,
+        onChange: function(value){
+            if (value){
+                $("#brandNumber").textbox('setValue',value.toUpperCase());
+            }
+        }
+    })
+
+    //牌号
+    $("#brandNumber").textbox({
+        required:true,
+        onChange: function(value){
+            if (value){
+                $("#brandNumber").textbox('setValue',value.toUpperCase());
+            }
+        }
+    })
+
+    //备注
+    $("#remark").textbox({
+        editable: true
+    })
+
+    $(function () {
+        //加载附件列表
+        filePlugin.load($('#fileId').val(),'#span_fileId');
+        if ($('#btn_fileId').length>0){
+            fileUpload("btn_fileId", "fileId");
+        }
+    });
+</script>

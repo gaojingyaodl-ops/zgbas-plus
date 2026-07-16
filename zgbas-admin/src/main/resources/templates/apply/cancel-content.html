@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<!-- <link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" /> -->
+<div class="easyui-layout" border="false" fit="true">
+   <div region="north" border="false" method="post"  style="margin-bottom:10px;">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<input type="hidden" id="entityStatus" th:value="${entity.status}" />
+			<input type="hidden" name="contractStatus" id="contractStatus" th:value="${entity.contractStatus}"/>	
+			<input type="hidden" id="contractId" name="contractId" th:value="${entity.contractId}"/>	
+			<!-- <input type="hidden" id="businessType" name="businessType" th:value="${entity.businessType}">-->
+			<div class="mb6 add-btn" id = "btn">
+				<p class="yw-table-filter">
+					<label>合同编号:</label>
+					<input type="text" id="contractNo" name="contractNo" readonly="readonly" th:value="${entity.contractNo}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>作废类型:</label>
+					<input id="cancelType" name="cancelType" type="text" th:value="${entity.cancelType}"/>
+				</p>
+			</div>
+			<div class="mb6">
+				<p class="yw-table-filter w2">
+					<label >作废原因:</label>
+					<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+				</p>
+			</div>
+			<table id="relaTable"
+					title="" iconCls="icon-edit" singleSelect="true"
+					idField="id">
+			</table>
+		</div>
+		<div>
+			<table id="relaTable" title="" iconCls="icon-edit" singleSelect="true" idField="id"></table>
+		</div>
+		 <p class="form-section-title"><span class="approve_text">附件上传</span><i></i></p>
+			<div class="editForm"> 
+			<p style="width:240px">
+				<span class="upload-btn" id="btn_fileId">
+	               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+		</div>
+</div>
+ <form id="inputForm" method="post">
+ <input type="hidden" id="searchContractId" name="search_EQS_contractId"/>
+ </form>
+<script th:src="@{/static/js/ConvertUtil.js?v=1}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/cancel/updateFileId',true);
+var lastIndex;
+var _cancelTypeJson = [];//eval('[(${cancelTypeJson})]');
+var hasEdit = [[${psv.hasEdit}]];
+var colums = [ [ ] ];
+var _url = "";
+var dealedAmount=0,billedAmount=0,warehouseNumber=0,refundAmount=0,_curOrder=0;
+var curContract={};
+var exitContract = [[(${contract})]];
+var _onLoadValueFlg = false;//初始化操作时是否有值
+$(function(){  
+	lastStepOperFlg = true;
+	$('.easyui-linkbutton').linkbutton();
+	_beforSaveOper = true;
+	var _id = $("#entityId").val();
+	if(_id){
+		_url = _ctx+"/apply/cancel/detailList?search_EQL_applyCancelId="+_id;
+		_onLoadValueFlg = true;
+	}
+	var _curStatus = $("#entityStatus").val();
+		colums =[ [
+		{field:'id',hidden:true},
+		{field:'applyCancelId',hidden:true,align:'center'},
+		{field:'oldApproveId',hidden:true,align:'center'},
+		{field:'oldApproveNo',title:'审批编号',width:150,align:'center'},
+		{field:'oldApproveDate',title:'审批时间',width:150,align:'center'},
+		{field:'cancelNum',title:'作废数量', width:100,align:'right'},
+		{field:'cancelAmount',title:'作废金额',width:100,align:'right'},
+		{field:'option',title:'操作', width:120, align:'center',formatter:function(value, row, index){
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+			var str = '<i onclick="remove(\''+row.id+'\',event,this)" class="icon-remove icon cursor"></i>';  
+	        return str; 
+			}
+		}}
+	]];
+	$('#relaTable').datagrid({
+		pageSize:50,
+		rownumbers:true,
+		pagination:false,
+		url:_url,
+		columns:colums,
+		onDblClickRow:function(index,row,field){
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				//进入可编辑状态
+				$('#relaTable').datagrid('endEdit', lastIndex);
+				$('#relaTable').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("relaTable",field,lastIndex);
+			}
+		},
+		onClickCell:function(index,field){
+			var rows =$('#relaTable').datagrid('getData').rows;
+			var row =rows[index];
+			if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+				if (lastIndex != index){
+					$('#relaTable').datagrid('endEdit', lastIndex);
+					$('#relaTable').datagrid('beginEdit', index);
+				}
+				lastIndex = index;
+				Convert.focusEditor('relaTable',field,lastIndex);
+			}
+		},
+		onClickRow:function(index,row){
+			lastIndex = index;
+		},
+		onLoadSuccess:function(data){
+			
+		}
+	});
+	 if(exitContract){
+		 contractCallback(exitContract);
+	}else{
+		applyLoadSucess();
+	}
+	 
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($("#btn_fileId").length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+});	
+//作废审批调用
+function queryCancelApply(url){
+	var _contractId = $("#contractId").val();
+	$("#searchContractId").val(_contractId);
+	var param = Convert.getJson4Form('inputForm');
+	$('#relaTable').datagrid('options').queryParams = param;
+	$("#relaTable").datagrid({url:url});
+}
+function chooseCallback(contractRows){
+	var contract = contractRows[0];
+	contractCallback(contract);
+}
+function contractCallback(contract){
+	if (contract!=undefined){
+		var contId = contract.id;
+		var contractType = contract.contractType;
+		curContract ={"oldApproveNo":"","oldApproveDate":contract.createdDate,"cancelNum":contract.totalNumber,"cancelAmount":contract.totalAmount,"oldApproveId":contract.approveId};
+		$("#contractId").val(contId);//合同id
+		$("#contractNo").val(contract.contractNo);//合同编号
+		$("#contractStatus").val(contract.contractStatus);//合同状态
+		var _i = 1;
+		var arr = {"dictCd":"CN","dictName":"合同作废","order":_i};
+		_i++;
+		_cancelTypeJson.push(arr);
+		var _curStatus = $("#entityStatus").val();
+		var _editFlg = true;
+		if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+	/* 		$.ajax({
+				 //url: _ctx+"/ctr/contractApply/findByContractId?contractId="+contId,
+				 url: _ctx + "/ctr/contract/findById?contractId="+contId,
+				 async: false,
+				 success:function(data){
+					 dealedAmount=data.dealedAmount;
+					 billedAmount=data.billedAmount;
+					 warehouseNumber=data.warehouseNumber;
+					 refundAmount=data.refundAmount;
+				 }
+			}); */
+ 	 		if(contId){
+				$.ajax({  
+			        url:_ctx+"/ctr/contract/findById?contractId="+contId,  
+			        type:"post",  
+			        async:false,  
+			        success:function(data){	
+			        	dealedAmount=data.dealedAmount;
+						billedAmount=data.billedAmount;
+						warehouseNumber=data.warehouseNumber;
+						refundAmount=data.refundAmount;
+			        }  
+		     	});  		
+			}
+		}else{
+			_editFlg = false;
+		}
+		
+		
+		if(Number(dealedAmount)>0||!_editFlg){
+			if("B"==contractType){
+				arr = {"dictCd":"P","dictName":"付款作废","order":_i};
+			}else{
+				arr = {"dictCd":"E","dictName":"收款作废","order":_i};
+			}
+			_i++;
+			_cancelTypeJson.push(arr);
+		}
+		if(Number(warehouseNumber)>0||!_editFlg){
+			if("B"==contractType){
+				arr = {"dictCd":"I","dictName":"入库作废","order":_i};
+			}else{
+				arr = {"dictCd":"O","dictName":"出库作废","order":_i};
+			}
+			_i++;
+			_cancelTypeJson.push(arr);
+		}
+		if(Number(billedAmount)>0||!_editFlg){
+			if("B"==contractType){
+				arr = {"dictCd":"V","dictName":"收票作废","order":_i};
+			}else{
+				arr = {"dictCd":"N","dictName":"开票作废","order":_i};
+			}
+			_i++;
+			_cancelTypeJson.push(arr);
+		}
+		if(Number(refundAmount)>0||!_editFlg){
+			if("B"==contractType){
+				arr = {"dictCd":"BU","dictName":"采购退款","order":_i};
+			}else{
+				arr = {"dictCd":"SU","dictName":"销售退款","order":_i};
+			}
+			_i++;
+			_cancelTypeJson.push(arr);
+		}
+		
+		if (_curStatus=='N'||_curStatus=='B'||_curStatus=='C'){
+			//可编辑
+			editCombo();
+		}else{
+			//不可编辑
+			loadCombo();
+			$('#cancelType').combobox({readonly:true,hasDownArrow:false});
+		}
+		
+	}
+}
+
+function editCombo(){
+	//作废类型
+	$('#cancelType').combobox({
+		data:_cancelTypeJson, 
+		valueField:'dictCd',
+		textField:'dictName',
+		panelHeight:"auto",
+		required: true,
+		editable: false,
+		onSelect:function(select){
+			var _cancelType = select.dictCd;
+			_curOrder = select.order;
+			/* if(_onLoadValueFlg){
+				_onLoadValueFlg = false;
+				return false;
+			} */
+			
+			if("CN"==_cancelType){
+				//合同作废
+				addRowByContract();
+			}else{
+				if("P"==_cancelType){
+					//付款作废，查找付款作废相关数据
+					_url = _ctx+"/apply/pay/";
+				}else if("E"==_cancelType){
+					//收款作废
+					_url = _ctx+"/apply/receive/";
+				}else if("I"==_cancelType){
+					//入库作废
+					_url = _ctx+"/apply/deliveryIn/";
+				}else if("O"==_cancelType){
+					//出库作废
+					_url = _ctx+"/apply/deliveryOut/";
+				}else if("N"==_cancelType){
+					//开票作废
+					_url = _ctx+"/apply/invoice/";
+				}else if("V"==_cancelType){
+					//收票作废
+					_url = _ctx+"/apply/invoiceReceived/";
+				}else if("BU"==_cancelType){
+					//采购退款作废
+					_url = _ctx+"/apply/payRefund/";
+				}else if("SU"==_cancelType){
+					//销售退款作废
+					_url = _ctx+"/apply/receiveRefund/";
+				}
+				//查询是否有逻辑上没作废的单子
+				queryCancelApply(_url+"queryCancelList");
+			}
+		}
+	});
+}
+
+function loadCombo(){
+	$('#cancelType').combobox({
+		data:_cancelTypeJson, 
+		valueField:'dictCd',
+		textField:'dictName',
+		panelHeight:"auto",
+		required: true,
+		editable: false
+	});
+	$('#remark').attr('readonly',true);
+}
+
+function addRowByContract(){
+	if(""==curContract.oldApproveNo){
+		$.ajax({
+			 url: _ctx+"/pm/approve/findByApproveNo?id="+curContract.oldApproveId,
+			 async: false,
+			 success:function(data){
+				 if(data.success){
+					 curContract.oldApproveNo = data.success;
+				 }
+			 }
+		});
+	}
+	var rows =$('#relaTable').datagrid("getRows");
+	var copyRows = [];
+	for ( var j= 0; j < rows.length; j++) {
+		copyRows.push(rows[j]);
+	}
+	for(var j=0;j<copyRows.length;j++){
+		var index = $('#relaTable').datagrid('getRowIndex',copyRows[j]);
+		$('#relaTable').datagrid('deleteRow',index);
+	}
+	$('#relaTable').datagrid('insertRow',{
+		index: 1,	
+		row: {
+			oldApproveId:curContract.oldApproveId,
+			oldApproveNo: curContract.oldApproveNo,
+			oldApproveDate: curContract.oldApproveDate,
+			cancelNum: curContract.cancelNum,
+			cancelAmount:curContract.cancelAmount
+		}
+	});
+}
+
+//发起申请前操作	
+ function beforSaveOper(){
+	var rows = $('#relaTable').datagrid("getRows");
+	if (rows.length==0){
+		$.messager.alert('提示','操作明细不存在，不能申请！','info');
+		return false;
+	}
+	var _cancelType = $("#cancelType").val();
+	var _length = _cancelTypeJson.length;
+ 	var fileId = $('#fileId').val();
+	if(!fileId){
+		$.messager.alert('提示','请上传附件！','info');
+		return false;
+	} 
+	if(_curOrder==0){
+		$.messager.alert('提示','请选择作废类型！','warning');
+		return false;
+	}
+	if(_length==_curOrder){
+		//查询是否有审批明细
+		setGirdForm("inputFormApprove","relaTable");
+		//发起验证
+		return true;
+	}else{
+		//$.messager.alert('提示','请先作废其他审批！','warning');
+		setGirdForm("inputFormApprove","relaTable");
+		return true;
+	}
+	return false;
+}
+function setGirdForm(formId,gridI){
+	var rows = $('#relaTable').datagrid('getRows');
+	var result ={'_inserted':rows,"_updated":[],"_deleted":[]};
+	var childrenData = Convert.ToJSONString(result);
+	
+	if($('#_easy_grid').length == 0){
+		$('#'+formId).append('<input type="hidden" id="_easy_grid" name="_easy_grid"/>');
+	}
+	$('#_easy_grid').val(childrenData);
+}
+ function remove(id,event,target){
+		var row , index;
+		index = getRowIndex(target);
+		if(id=='0' ||id =='' || id == "undefined") {
+			$('#relaTable').datagrid('deleteRow',index);
+		}else{
+			$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+				if(t){
+					$.post(_ctx+"/apply/cancel/deleteDetail/"+id, function(result) {
+						$('#relaTable').datagrid('reload');
+					});
+					/* $('#relaTable').datagrid('deleteRow', index);
+					var nextSelect=index>0?index-1:0;
+					$('#relaTable').datagrid('selectRow', nextSelect); */
+				}
+			});
+		}
+	}
+ function lastStepOperFlgFun(){
+	 var rtn = false;
+	 //查询是否是最后一步
+	 var _process = $("#pm_process_div");
+	 var _total = _process.find(".process-step").length;
+	 var _curFinish = _process.find(".process-step-finished").length;
+	 if(_curFinish==(_total-2)){
+		 //即将审批结束，调用作废审批流程
+		rtn = doCancelFun();
+	 }
+	return rtn;
+ }
+ function doCancelFun(){
+	 var rows = $('#relaTable').datagrid('getRows');
+	 var rtn = true;
+	 for(var i in rows){
+		 if(rows[i].oldApproveId);
+		  $.ajax({
+			 url: _ctx+"/pm/approve/doWithdraw?approveId="+rows[i].oldApproveId,
+			 async: false,
+			 success:function(data){
+				 if(data.success){
+					 curContract.oldApproveNo = data.success;
+				 }else{
+					 $.messager.alert('提示','审批编号：'+rows[i].oldApproveNo+"作废失败",'warning'); 
+					 rtn = false;
+				 }
+			 }
+		});
+		if(!rtn){
+			break;
+		} 
+	 }
+	return rtn;
+ }
+</script>
+</html>

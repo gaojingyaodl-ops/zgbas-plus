@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>库存查询</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <div region="north" class="search_div" border="false" style="overflow: hidden;">
+        <form id="fm_contract_choose" class="form-search from-input-layout" method="post">
+            <input type="hidden" name="search_EQS_businessType" value="ZY-BB"/>
+            <input type="hidden" name="search_EQB_matchCreditFlg" value="true">
+            <input type="hidden" name="search_EQS_contractType" value="S">
+            <input type="hidden" name="search_NEQS_status" value="C">
+            <input type="hidden" name="search_NEQS_contractStatus" value="C">
+            <div class="mt10 mb10">
+                <p class="yw-table-filter">
+                    <label>合同编号</label>
+                    <input id="contractNo_query" type="text" name="search_LIKES_contractNo"/>
+                </p>
+                <p class="yw-table-filter">
+                    <label>客户名称</label>
+                    <input type="text" id="companyName_query" name="search_LIKES_companyName"/>
+                </p>
+                <p class="yw-table-filter mobile-display-none">
+                    <label>我方抬头</label>
+                    <input type="text" id="ourCompanyName_query" class="control text_padding" name="search_LIKES_ourCompanyName"/>
+                </p>
+                <p class="yw-table-filter mobile-display-none">
+                    <label>确认收货状态</label>
+                    <input type="text" id="confirmReceiveFlgSrh" class="control text_padding" name="search_EQB_confirmReceiptFlg"/>
+                </p>
+                <p class="yw-table-filter mobile-display-none" id="performanceStatus_src">
+                    <label>履约状态</label>
+                    <input type="text" id="performanceStatus_query" class="control text_padding" name="search_EQS_performanceStatus"/>
+                </p>
+            </div>
+            <div class="mt10 mb10">
+                <p class="yw-table-filter mobile-display-none">
+                    <label>签订日期</label>
+                    <input  id="srh_contractTime_from" name="search_GTED_contractTime" class="easyui-datebox"/>
+                </p>
+                <span style="margin-left: -15px;" class="mobile-display-none">
+				    <label>~</label>
+			    </span>
+                <p class="yw-table-filter mobile-display-none">
+                    <input  id="srh_contractTime_to"  name="search_LTD_contractTime" class="easyui-datebox" />
+                </p>
+                <p class="yw-table-filter" id="userCombobox">
+                    <label>业务员</label>
+                    <input id="matchUserName_query" type="text" name="search_EQS_matchUserId"/>
+                </p>
+                <a href="#" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('fm_contract_choose','list');">查询</a>
+                <a href="#" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#fm_contract_choose').form('reset');">清空</a>
+            </div>
+        </form>
+    </div>
+    <div style="height: 300px">
+        <table id="list" fit="true"
+               title="" iconCls="icon-edit"
+               idField="id">
+        </table>
+    </div>
+    <div region="south" border="false" style="overflow: hidden;height: 40px;">
+        <div class="actions_bar">
+            <a href="#" class="easyui-linkbutton btn-solid btn64 ml6" onclick="ContractChoose.confirmChoose();">确&nbsp;认</a>
+            <a href="#" class="easyui-linkbutton btn-solid btn64 ml6" onclick="ContractChoose.closeAndCancel();">取&nbsp;消</a>
+        </div>
+    </div>
+
+</div>
+<script type="text/javascript">
+    var businessKindJson=eval('[(${businessKindJson})]');
+    var deptJson =eval('[(${deptJson})]');
+    var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+    var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+    var performanceStatusJson=eval('[(${performanceStatusJson})]');
+    var _confirmReceiveFlgSrhJson = [{id:'true',text:'已确认收货'},{id:'false',text:'未确认收货'}];
+    $(function(){
+        $("#confirmReceiveFlgSrh").combobox({
+            data:_confirmReceiveFlgSrhJson,
+            textField:'text',
+            valueField:'id',
+            panelHeight:"auto"
+        });
+        $("#performanceStatus_query").combobox({
+            data:performanceStatusJson,
+            multiple : false,
+            textField:'dictName',
+            valueField:'dictCd',
+            panelHeight:"auto",
+            editable:false
+        });
+        $('#matchUserName_query').combotree({
+            data : matchUserNameTreeJson,
+            multiple : false,
+            editable : true,
+            onSelect : function(node) {
+                if (node.children.length != 0) {
+                    $('#matchUserName').combotree('clear');
+                }
+            }
+        })
+        $('#ourCompanyName_query').combobox({
+            data:_ourCompanyJson,
+            valueField:'dictName',
+            textField:'dictName',
+            panelWidth:250,
+            panelHeight:"auto"
+        });
+        $('#list').datagrid({
+            pagination:true,
+            pageSize:10,
+            height: 450,
+            rownumbers:true,
+            pageList:[10,20,30,40,50],
+            checkOnSelect: true,
+            multiselect: true,
+            queryParams:Convert.getJson4Form('fm_contract_choose'),
+            url:_ctx+"/ctr/contract/findSellContract",
+            columns:[ [
+                { field: 'ck', checkbox: true },
+                {field:'contractNo',title:'合同编号',align:'center', width:120},
+                {field:'businessKind',title:'业务类型', width:80,align:'center',formatter:function(value,row,index){
+                        return Convert.findValueByKey(businessKindJson,"dictCd",value,"dictName");
+                    }},
+                {field:'productsName',title:'货名', width:140,align:'left',formatter:function(value,row){
+                        if (value){
+                            var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                            return content;
+                        }
+                    }} ,
+                {field:'companyName',title:'客户名称',align:'left', width:150,formatter:function(value,row){
+                        if (value){
+                            var s_str = value.split("有限公司");
+                            if (s_str) {
+                                value = s_str[0];
+                            }
+                            var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                            return content;
+                        }
+                    }},
+                {field:'ourCompanyName',title:'我方名称',align:'left', width:150,formatter:function(value,row){
+                        if (value){
+                            var s_str = value.split("有限公司");
+                            if (s_str) {
+                                value = s_str[0];
+                            }
+                            var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                            return content;
+                        }
+                    }},
+                {field:'dealPrice',title:'合同单价(元)',align:'center',width: 90},
+                {field:'totalNumber',title:'合同数量(吨)',align:'center',width: 90},
+                {field:'totalAmount',title:'合同总价(元)',align:'right', width:100,formatter:formateNum},
+                {field:'warehouseNumber',title:'出库数量(吨)',align:"right", width:110},
+                {field:'warehouseAmount',title:'仓储费(元)',align:"right", width:90,formatter:formateNum},
+                {field:'transportAmount',title:'运输费(元)',align:"right", width:90,formatter:formateNum},
+                {field:'stevedorage',title:'装卸费(元)',align:"right", width:90,formatter:formateNum},
+                {field:'confirmReceiveNumber',title:'确认收货数量(吨)',align:"right", width:120},
+                {field:'confirmDate',title:'确认收货时间',align:"center", width:100},
+                {field:'breachAmount',title:'逾期罚息(元)',align:"right", width:110,formatter:formateNum},
+                {field:'receiveBreachAmount',title:'已收逾期罚息(元)',align:"right", width:110,formatter:formateNum},
+                {field:'breachDays',title:'逾期天数(天)',align:"right", width:110},
+                {field:'receivablePrincipal',title:'应收本金(元)',align:"right", width:110,formatter:function (value,row){
+                        let totalAmount= row.totalAmount||0;
+                        let dealedAmount= row.dealedAmount||0;
+                        return totalAmount-dealedAmount;
+                    }},
+                {field:'receivableBalance',title:'应收余额(元)',align:"right", width:110,formatter:function (value,row){
+                        let totalAmount= row.totalAmount||0;
+                        let dealedAmount= row.dealedAmount||0;
+                        let breachAmount= row.breachAmount||0;
+                        let receiveBreachAmount= row.receiveBreachAmount||0;
+                        return totalAmount-dealedAmount+breachAmount-receiveBreachAmount;
+                    }},
+                {field:'dealedAmount',title:'已收金额(元)',align:"right", width:110,formatter:formateNum},
+                {field:'billedAmount',title:'开票金额（元）',align:"right", width:110,formatter:formateNum},
+                {field:'contractTime',title:'签订日',width:130,align:'center'} ,
+                {field:'sealDate',title:'双签日',width:130,align:'center'} ,
+                {field:'matchUserName',title:'业务员',align:"left", width:70},
+                {field:'deptId',title:'业务部门',align:"left", width:90,formatter:function (value, row, index) {
+                        return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+                    } },
+                {field:'contractStatus', title: '合同状态', width: 200,align:'left',formatter:function(value,row,index){
+                        return contractStatusView(value, row);
+                    }},
+
+            ]],
+            onSelect:function(index,row){
+                ContractChoose.selected.push(row)
+            },
+            onUnselect:function(index,row){
+                ContractChoose.removeSelected(row);
+            },
+            onLoadSuccess:function(data){
+            }
+        });
+    });
+    function contractStatusView(value, row) {
+        let str = '';
+        let contractType = row.contractType;
+        let virtualBillFlag = row.virtualBillFlag;
+        let virtualContractNo = row.virtualContractNo;
+        var _totalAmount = row.totalAmount;
+        if (row.finalTotalAmount){
+            _totalAmount = row.finalTotalAmount;
+        }
+        if (!row.id){
+            return str;
+        }
+        if (value === 'B') {
+            // 已审批
+            str += '<img class="icon-contract-approve"/>';
+        } else if (value === 'S') {
+            // 已签约
+            str += '<img class="icon-contract-sign"/>';
+        } else if (value === 'D') {
+            // 已完成
+            str += '<img class="icon-contract-complete"/>';
+        } else if (value === 'C') {
+            // 作废
+            return '<img class="icon-contract-invalid"/>';
+        } else {
+            str += '<img class="icon-contract-sign"/>';
+        }
+        // 出入库
+        if (row.warehouseNumber >= row.totalNumber){
+            str += contractType === 'B' ?  '<img class="icon-deliveryIn"/>' : '<img class="icon-deliveryOut"/>';
+        }
+
+        // 确认收货
+        if (row.confirmReceiveNumber >= row.totalNumber){
+            str += '<img class="icon-confirmReceipt"/>';
+        }
+
+        // 收付款
+        if (row.dealedAmount >= _totalAmount) {
+            str += contractType === 'B' ? '<img class="icon-pay"/>' : '<img class="icon-receive"/>';
+        }
+
+        // 收开票
+        if (row.billedAmount >= _totalAmount) {
+            str += contractType === 'B' ?  '<img class="icon-invoiceReceive"/>' : '<img class="icon-invoice"/>';
+        }
+
+        // 罚金
+        if (contractType === 'S' && row.breachAmount > 0 && row.receiveBreachAmount < row.breachAmount) {
+            str += '<img class="icon-fine"/>';
+        }
+
+        if (row.performanceStatus === 'B'){
+            // 履约状态-宽限
+            str += '<img class="icon-grace"/>';
+        }else if (row.performanceStatus === 'D'){
+            // 履约状态-催告
+            str += '<img class="icon-interpellation"/>';
+        }else if (row.performanceStatus === 'S'){
+            // 履约状态-逾期
+            str += '<img class="icon-overdue"/>';
+        }else if (row.performanceStatus === 'P'){
+            // 履约状态-违约
+            str += '<img class="icon-breach"/>';
+        }
+        return str;
+    }
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+    var ContractChoose={
+        selected:[],
+        ischeckItem:function () {
+            for (var i = 0; i < ContractChoose.selected.length; i++) {
+                $('#list').datagrid('selectRecord', ContractChoose.selected[i]); //根据id选中行
+            }
+        },
+        removeSelected:function(row){
+            for(var i=0; i<ContractChoose.selected.length; i++) {
+                if(ContractChoose.selected[i].id == row.id) {
+                    ContractChoose.selected.splice(i, 1);
+                    break;
+                }
+            }
+        },
+        confirmChoose:function(){
+            var selectedRows=ContractChoose.selected;
+            if (selectedRows.length==0){
+                $.messager.alert('提示','请选择合同！','info');
+                return;
+            }
+            // 判断多个合同我方、客户名称要一致
+            const allSameCompany = selectedRows.every(company => company.ourCompanyName === selectedRows[0].ourCompanyName);
+            if(!allSameCompany){
+                $.messager.alert('提示','我方名称不一致！','info');
+                return;
+            }
+            var callbackExec = $('#w_contract_choose').attr('callbackExec');
+            var myfunc = eval(callbackExec);
+            if(typeof(myfunc) == "function"){
+                myfunc(selectedRows);
+            }
+            ContractChoose.closeCurrentWin();
+        },
+        closeCurrentWin:function(){
+            $('#w_contract_choose').window('close');
+        },
+        closeAndCancel(){
+            $('#w_contract_choose').window('close');
+        }
+    }
+</script>
+</body>
+</html>

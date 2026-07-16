@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+<style>
+.webuploader-pick{background: #ffffff!important;}
+.webuploader-pick-hover{background: #ffffff!important;}
+.showImg span img{width: 60px;height: 60px;border: 1px solid #e5e5e5;cursor:pointer;}
+.showImg span a{font-size: 12px;text-align: center;cursor: pointer;display: block;margin-top: 2px;height: 16px;}
+.date .datebox {width:220px!important;height:30px!important;border-radius: 4px!important;}
+.date input {width:220px;height:30px!important;font-size:14px!important;}
+</style>
+</head>
+<div class="easyui-layout" fit="true">
+	<div region="center" style="padding:20px 20px 5px 5px;+position: relative;overflow:hidden;" border="false">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<input type="hidden" name="status" id="entityStatus" th:value="${entity.status}" />
+			<input type="hidden" id="contractNoOld" th:value="${entity.id>0?entity.contractNo:''}" />
+			<p  class="dis_margin">
+			<span>
+			<label for="contractType"  class="control-label">类别:</label>
+			<input name="contractType" id="contractType" class="control" type="text" th:value="${entity.contractType}"></input>
+			</span>
+			<span>
+			<label for="productName"  class="control-label">品名:</label>
+			<input name="productName" id="productName" class="control" type="text" th:value="${entity.productName}"></input>
+			</span>
+			<span>
+			<label for="oppCompanyId"  class="control-label">对方企业:</label>
+			<input type="hidden" name="ourCompanyName" id="ourCompanyName" />
+			<input type="hidden" name="oppCompanyName" id="oppCompanyName" />
+			<input name="oppCompanyId" id="oppCompanyId" class="control" type="text" th:value="${entity.oppCompanyId}"></input>
+			</span>
+
+			</p>
+
+			<p class="dis_margin">
+			<span>
+			<label for="businessNo"  class="control-label">业务编号:</label>
+			<input name="businessNo" id="businessNo" class="control readonly" readonly="readonly" type="text" th:value="${entity.businessNo}"></input>
+			</span>
+			<span>
+			<label for="contractNo"  class="control-label">合同编号:</label>
+			<input name="contractNo" id="contractNo" class="control" type="text" th:value="${entity.contractNo}"></input>
+			</span>
+			<span>
+			<label for="contractTime"  class="control-label">合同时间:</label>
+			<input name="contractTime" id="contractTime" class="control" type="text" th:value="${entity.contractTime}"></input>
+			</span>
+			</p>
+
+			<p  class="dis_margin">
+			<span>
+			<label for="dealPrice"  class="control-label">单价:</label>
+			<input name="dealPrice" id="dealPrice" class="control" type="text" th:value="${entity.dealPrice}"></input>
+			</span>
+			<span>
+			<label for="dealNumber"  class="control-label">数量:</label>
+			<input name="dealNumber" id="dealNumber" class="control" type="text" th:value="${entity.dealNumber}"></input>
+			</span>
+			<span>
+			<label for="numberUnit"  class="control-label">数量单位:</label>
+			<input name="numberUnit" id="numberUnit" class="control" type="text" th:value="${entity.numberUnit}"></input>
+			</span>
+			</p>
+
+			<p class="dis_margin">
+
+			<span>
+			<label for="dealAmount"  class="control-label">合同总价:</label>
+			<input name="dealAmount" id="dealAmount" class="control readonly"  readonly="readonly" type="text"  th:value="${entity.dealAmount}"></input>
+			</span>
+			<span>
+			<label for="dealAmountNotax"  class="control-label">不含税价:</label>
+			<input name="dealAmountNotax" id="dealAmountNotax" class="control readonly"  readonly="readonly" type="text" th:value="${entity.dealAmountNotax}"></input>
+			</span>
+			<span>
+			<label for="taxAmount"  class="control-label">税:</label>
+			<input name="taxAmount" id="taxAmount" class="control readonly"  readonly="readonly" type="text" th:value="${entity.taxAmount}"></input>
+			</span>
+
+			</p>
+			<p  class="dis_margin">
+
+			<span>
+			<label for="deliveryDateFrom"  class="control-label">交货期开始:</label>
+			<input name="deliveryDateFrom" id="deliveryDateFrom" class="control " type="text"  th:value="${#dates.format(entity.deliveryDateFrom,'yyyy-MM-dd')}"></input>
+			</span>
+			<span>
+			<label for="deliveryDateTo"  class="control-label">交货期结束:</label>
+			<input name="deliveryDateTo" id="deliveryDateTo" class="control" type="text" th:value="${#dates.format(entity.deliveryDateTo,'yyyy-MM-dd')}"></input>
+			</span>
+			<span>
+			<label for="warehouse"  class="control-label">仓库:</label>
+			<input name="warehouse" id="warehouse" class="control " type="text"  th:value="${entity.warehouse}"></input>
+			</span>
+			</p>
+
+			<p  class="dis_margin">
+			<span>
+			<label for="deliveryMode"  class="control-label">交货方式:</label>
+			<input name="deliveryMode" id="deliveryMode" class="control " type="text"  th:value="${entity.deliveryMode}"></input>
+			</span>
+			<span>
+			<label for="remark"  class="control-label">备注:</label>
+			<input name="remark" id="remark" class="control large" type="text" th:value="${entity.remark}"></input>
+			</span>
+			</p>
+			<p  class="dis_margin">
+			<label class="control-label">&nbsp;</label>
+			<span class="" th:if="${param.hasEditFile}" id="btn_fileId"><input type="button" value="附件上传"></input></span>
+			<input class="control" id="btn_fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId  p_text" id="span_fileId">
+
+			</p>
+
+	</div>
+	</div>
+</div>
+
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+	var isExists=false;
+	var imgShowUrl =_filePath+'/view/small/';
+	var companyJson =eval('[(${companyJson})]');
+	var contractTypeJson =eval('[(${contractTypeJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/bas/contract/updateFileId',[[${param.hasEditFile}]]);
+
+	$(function(){
+		$("#contractType").combobox({
+			data:contractTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			required: true,
+			editable:false,
+			width:128,
+			height:24
+		});
+		$("#status").combobox({
+			data:contractStatusJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			readonly: true,
+			editable:false,
+			width:128,
+			height:24
+		});
+		$("#oppCompanyId").combobox({
+			data:companyJson,
+			textField:'companyName',
+			valueField:'id',
+			required: true,
+			editable:false,
+			width:128,
+			height:24,
+			onSelect:function(record){
+				$('#oppCompanyName').val(record.companyName);
+			}
+		});
+
+
+ 		$('#dealPrice,#dealNumber').numberbox({
+ 		    min:0,
+ 		    precision:4,
+ 		    width:128,
+ 		   required: true
+ 		});
+
+
+		$('#productName,#numberUnit').validatebox({
+			required: true
+		});
+
+
+		$('#contractNo').validatebox({
+			validType:{length:[1,20],remote:[_ctx+"/bas/contract/checkContractNo?contractNoOld=" + encodeURIComponent($('#contractNoOld').val()),'contractNo']}
+		});
+
+		$('#contractTime,#deliveryDateFrom').datebox({
+		    required:true,
+		    width:128,
+			height:27
+		});
+		$('#deliveryDateTo').datebox({
+		    required:true,
+		    width:128,
+			height:27
+		});
+
+			$(".insertContent").show();
+		var _curStatus = $("#entityStatus").val();
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='B')){
+		}
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+// 		window.setTimeout(function(){
+// 		},2000);
+
+	});
+
+
+
+		function save(){
+			var url =_ctx+'/bas/contract/save';
+
+
+			var options={
+			        url:url,
+			        onSubmit: function(){
+			        	var flag=true;
+			        	if(!$("#inputForm").form('validate'))
+			        		flag=false;
+			        	if (!flag){
+			        		$.messager.alert('提示','保存失败，请输入必输项！','warning');
+			        	}
+			        	return flag;
+			        },
+			        success:function(data){
+			        	var rObj = eval('('+data+')');
+						if(rObj.success){
+							var rtnEntity = eval('('+rObj.success+')');
+			        		 $.messager.show({
+			                     title:'Tip',
+			                     msg:'保存成功',
+			                     timeout:2000,
+			                     showType:'show'
+			                 });
+			        		 var id =$("#entityId").val();
+			        		$("#entityId").val(rtnEntity.id);
+			        		$("#contractNoOld").val(rtnEntity.contractNo);
+
+			        		$('#contractNo').validatebox({
+			    				validType:{length:[1,20],remote:[_ctx+"/bas/contract/checkContractNo?contractNoOld=" + encodeURIComponent($('#contractNoOld').val()),'contractNo']}
+			    			});
+
+							if (id == '0'){
+//	 				        	$('#w').window("close");
+								$('#w').window('setTitle',"合同详情");
+							}
+
+							var saveAndCopy = $('#saveAndCopy').val();
+							if (saveAndCopy=='1'){
+					        	var url=_ctx+"/bs/goods/detail/"+id+"?saveAndCopy=1";
+					        	var title="新增合同";
+					    		$('#w').window('refresh',url);
+					    		$('#w').window('setTitle',title);
+							}
+			        	}else{
+			        		$.messager.alert('error',rObj.failure,'warning');
+			        	}
+			        }
+				};
+			$('#inputForm').form('submit', options);
+		}
+
+	 	$('#dealPrice').numberbox('textbox').on('keyup',function(){
+	 		var dealNumber =$('#dealNumber').numberbox('getValue');
+	 		var dealPrice = $(this).val();
+	 		var dealAmount = (dealNumber*dealPrice).toFixed(2);
+	 		$('#dealAmount').val(dealAmount);
+	 		var dealAmountNotax = (dealAmount/1.17).toFixed(2);
+	 		$('#dealAmountNotax').val(dealAmountNotax);
+	 		$('#taxAmount').val((dealAmountNotax*0.17).toFixed(2));
+
+	 	});
+	 	$('#dealNumber').numberbox('textbox').on('keyup',function(){
+	 		var dealPrice =$('#dealPrice').numberbox('getValue');
+	 		var dealNumber = $(this).val();
+	 		var dealAmount = (dealNumber*dealPrice).toFixed(2);
+	 		$('#dealAmount').val(dealAmount);
+	 		var dealAmountNotax = (dealAmount/1.17).toFixed(2);
+	 		$('#dealAmountNotax').val(dealAmountNotax);
+	 		$('#taxAmount').val((dealAmountNotax*0.17).toFixed(2));
+
+	 	});
+
+
+</script>

@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>企业管理</title>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+<script th:src="@{/static/js/file.js}" type="text/javascript"></script>
+	<style>
+		.datagrid-row {
+			height: 75px !important; /* 设置表格行高为40px */
+		}
+	</style>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input type="hidden" id="currentUserId" th:value="${currentUserId}">
+		<input type="hidden" id="canDelete" th:value="${canDelete}">
+		<input type="hidden" id="canExcel" th:value="${canExcel}">
+		<input type="hidden" id="zgbasRiskFlag" th:value="${zgbasRiskFlag}">
+		<input type="hidden" id="lookAllCompany" th:value="${lookAllCompany}">
+		<input type="hidden" id="companyDeptLeaderPerm" th:value="${companyDeptLeaderPerm}">
+		<input type="hidden" id="companyAssignedPerm" th:value="${companyAssignedPerm}">
+		<input type="hidden" id="companySharePerm" th:value="${companySharePerm}">
+		<input type="hidden" id="companyReleasePerm" th:value="${companyReleasePerm}">
+		<input type="hidden" id="operationFlg" th:value="${operationFlg}">
+		<input type="hidden" id="editFlg" th:value="${editFlg}">
+		<input type="hidden" id="wfqAuthFlg" th:value="${wfqAuthFlg}">
+		<input type="hidden" id="showWfqData" th:value="${showWfqData}">
+		<input type="hidden" id="importPiccDataPerm" th:value="${importPiccDataPerm}">
+		<input type="hidden" id="viewdetail" th:value="${viewdetail}">
+		<input type="hidden" id="additionalmanagerPermission" th:value="${additionalmanagerPermission}">
+		<input type="text" id="merach_matchUserId" hidden="hidden" th:value="${@shiroUtil.getCurrentUserId()}"/>
+		<input type="text" id="companyAssignPermId" hidden="hidden" th:value="${companyAssignPerm}"/>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>客户名称:</label>
+				<input name="search_LIKES_companyName" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<lable>客户分类</lable>
+				<input name="search_EQS_creditRating" type="text" id="credit_rating"/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>客户类型:</label>
+				<input name="search_EQS_companyType" id="company_type" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>客户等级:</label>
+				<input name="search_EQS_companyGrade" id="company_grade" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>所属部门:</label>
+				<input name="search_muDeptName" id="deptName" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label>授信类别:</label>
+				<input name="search_LIKES_creditCategory" id="creditCategory"  value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>范围:</label>
+				<input id="checkbox1" type="checkbox" name="search_INS_status" value="F">  <span style="position:relative;top: 1px;">私海</span>
+				<input id="checkbox2" type="checkbox" name="search_INS_status" value="N" style="margin-left: 20px;">  <span style="position:relative;top: 1px;">公海</span>
+			</p>
+			</div>
+			<div class="mb6 mobile-display-none">
+				<p class="yw-table-filter">
+					<label>线上化查询</label>
+					<input name="search_EQB_onLineFlg" id="onLineFlg" type="text" value=""/>
+				</p>
+
+				<!-- <p class="yw-table-filter">
+					<label>状态:</label>
+					<input name="search_EQS_status" id="status_srh" type="text" value=""/>
+				</p> -->
+				<p class="yw-table-filter">
+					<label>地址:</label>
+					<input type="text" name="search_LIKES_address"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>业务员:</label>
+					<input name="search_EQL_matchUserId" id="ass_matchUserId" type="text" value=""/>
+				</p>
+				<p class="yw-table-filter">
+					<label>开户人:</label>
+					<input name="search_EQL_ownerOfAccountId" id="ownerOfAccountId" type="text" value=""/>
+				</p>
+				<p class="yw-table-filter">
+					<label>访厂报告</label>
+					<input name="accessReportFlgExist" id="accessReportFlgExist" type="text" value=""/>
+				</p>
+				<p class="yw-table-filter">
+					<label>塑料分类</label>
+					<input name="search_EQS_plasticType" id="plasticTypeSer" type="text" value=""/>
+				</p>
+				<p class="yw-table-filter">
+					<label>塑料分类:</label>
+					<input type="checkbox" name="approvePlasticTypeFlag" value="true">  <span style="position:relative;top: 1px;">待审批</span>
+				</p>
+			</div>
+
+		<div class="mb6">
+			
+			<p class="yw-table-filter mobile-display-none">
+				<label>录入日期</label>
+				<input  id="srh_createdDate_from" name="search_GTED_createdDate" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input  id="srh_createdDate_to"  name="search_LTD_createdDate" class="easyui-datebox" />
+			</p>
+			
+			<p class="yw-table-filter mobile-display-none">
+				<label>访厂报告上传日期</label>
+				<input  id="srh_accessReportUploadDate_from" name="search_GTED_accessReportUploadDate" class="easyui-datebox"/>
+			</p>
+			<span style="margin-left: -15px;" class="mobile-display-none">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter mobile-display-none">
+				<input  id="srh_accessReportUploadDate_to"  name="search_LTD_accessReportUploadDate" class="easyui-datebox" />
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label style="width: 100px;">是否标记供应商:</label>
+				<input id="markSupplierFlagSer" name="search_EQB_markSupplierFlag" type="text" value=""/>
+			</p>
+			<a href="#" class="easyui-linkbutton btn64 ml10" onclick="Convert.search('searchForm','tt1');">查询</a>
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<span class="" th:if="${companyExportPerm == true}">
+				<a href="#" id="uploadExcelFile" class="easyui-linkbutton btn-empty btn64 ml10 mobile-display-none" style="" onclick="exportExcel()">导出</a>
+			</span>
+			<span class="" th:if="${importPiccDataPerm == true}">
+					<a href="#" class="easyui-linkbutton btn-empty btn110 ml10 mobile-display-none" style="" onclick="showImportPiccExcel()">人保授信数据导入</a>
+        		</span>
+			<span class="" th:if="${importDaDiDataPerm == true}">
+					<a href="#" class="easyui-linkbutton btn-empty btn90 ml10 mobile-display-none" style="" onclick="showImportDaDiExcel()">大地额度导入</a>
+        		</span>
+			<span class="" th:if="${importZhongYinDataPerm == true}">
+					<a href="#" class="easyui-linkbutton btn-empty btn90 ml10 mobile-display-none" style="" onclick="showImportZhongYinExcel()">中银额度导入</a>
+			</span>
+			<span class="" th:if="${importCreditReportPerm == true}">
+					<a href="#" class="easyui-linkbutton btn-empty btn90 ml10 mobile-display-none" style="" onclick="showImportCreditReport()">征信报告导入</a>
+        		</span>
+			<span class="" th:if="${companyExportAccessReportPerm == true}">
+				<a href="#" class="easyui-linkbutton btn-empty btn90 ml6 mobile-display-none" onclick="downloadAccessReportFileZip()">导出访厂报告</a>
+			</span>
+			<span class="" th:if="${companyExportCreditInfo0 == true}">
+				<a href="#" class="easyui-linkbutton btn-empty btn90 ml6 mobile-display-none" onclick="downloadCreditInfo0FileZip()">导出人保</a>
+			</span>
+		</div>
+	</form>
+</div>
+<!-- 申请线上化 -->
+<div id="win" class="easyui-dialog hide" title="提示"  style="padding: 10px 20px;" closed="true">
+	<form id="inputForm" method="post" >
+		<input type="hidden" name="id" id="entityId" value="0"/>
+		<input type="hidden" name="companyId" id="companyId" value="0"/>
+		<input type="hidden" name="cardType" id="cardType" value="0" />
+		<input type="hidden" name="ukeyNumber" id="ukeyNumber" />
+		<!--  企业名称，营业执照号，法人姓名 -->
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="cfcaName"  class="control-label">企业名称:</label>
+				<input name="cfcaName" id="cfcaName" readonly type="text"/>
+			</p>
+			<p class="yw-table-filter">
+				<label for="licenseNumber"  class="control-label">营业执照号:</label>
+				<input name="licenseNumber" id="licenseNumber"  readonly  type="text"/>
+			</p>
+			<p class="yw-table-filter">
+				<label for="legalRepresent"  class="control-label">法人姓名:</label>
+				<input type="text" name="legalRepresent" readonly id="legalRepresent" />
+			</p>
+		</div>
+		<!-- 法人信息 -->
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label class="control-label">法人手机号:</label>
+					<input type="text" name="phone" id="phone" class="easyui-textbox" data-options="required:true"/>
+				</p>
+				<p class="yw-table-filter">
+					<label class="control-label">法人邮箱:</label>
+					<input name="email" id="email" type="text"></input>
+				</p>
+				<p class="yw-table-filter">
+					<label class="control-label">法人身份证:</label>
+					<input name="identityCardNumber" id="identityCardNumber" class="easyui-textbox" type="text"
+						   data-options="required:true"></input>
+				</p>
+			</div>
+
+		<!--  经办人信息，营业执照 -->
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="managerPhone"  class="control-label">经办人手机号:</label>
+				<input type="text" name="managerPhone" id="managerPhone" class="easyui-textbox" data-options="required:true" />
+			</p>
+			<p class="yw-table-filter">
+				<label for="managerEmail"  class="control-label">经办人邮箱:</label>
+				<input name="managerEmail" id="managerEmail" type="text"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label class="control-label">经办人身份证:</label>
+				<input name="managerIdCardNumber" id="managerIdCardNumber" class="easyui-textbox" type="text" data-options="required:true"></input>
+			</p>
+		</div>
+			<!-- 营业执照附件 -->
+			<div class="mb6" style="margin-top: 10px">
+				<p class="yw-table-filter">
+					<a href="#" id="fileBtn" class="easyui-linkbutton addBtn btn150">上传企业营业执照</a>
+				</p>
+
+				<p class="yw-table-filter">
+					<input type="hidden" name="businessLicenseWithSealUrl" id="businessLicenseWithSealUrl" />
+					<label style="width: 300px" class="control-label" id="filePath"></label>
+				</p>
+			</div>
+			<!-- 合同章或公章拍照 -->
+			<div class="mb6" style="margin-top: 10px">
+				<p class="yw-table-filter">
+					<a href="#" id="contractBtn" class="easyui-linkbutton addBtn btn150">合同章或公章拍照</a>
+				</p>
+				<p class="yw-table-filter">
+					<input type="hidden" name="electronicSignFileId" id="electronicSignFileId"/>
+					<label style="width: 300px" class="control-label" id="contractIdPath"></label>
+				</p>
+				<p class="yw-table-filter">
+					<label class="control-label" style="text-align:center;font-weight:bold"></label>
+				</p>
+			</div>
+			<!-- 上传法人身份证正面 -->
+			<div class="mb6" style="margin-top: 10px">
+				<p class="yw-table-filter">
+					<a href="#" id="cardFrontBtn" class="easyui-linkbutton addBtn btn150">上传法人身份证正面</a>
+				</p>
+
+				<p class="yw-table-filter">
+					<input type="hidden" name="legalPersonPicUrl" id="legalPersonPicUrl"/>
+					<label style="width: 300px" class="control-label" id="cardFrontPath"></label>
+				</p>
+				<p class="yw-table-filter">
+					<label class="control-label" style="text-align:center;font-weight:bold"></label>
+				</p>
+			</div>
+			<!-- 法人身份证反面 -->
+			<div class="mb6" style="margin-top: 10px">
+				<p class="yw-table-filter">
+					<a href="#" id="cardReverseBtn" class="easyui-linkbutton addBtn btn150">上传法人身份证反面</a>
+				</p>
+
+				<p class="yw-table-filter">
+					<input type="hidden" name="legalPersonOppositePicUrl" id="legalPersonOppositePicUrl"/>
+					<label style="width: 300px" class="control-label" id="cardReversePath"></label>
+				</p>
+				<p class="yw-table-filter">
+					<label class="control-label" style="text-align:center;font-weight:bold"></label>
+				</p>
+			</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label class="control-label" style="text-align:center;font-weight:bold"></label>
+			</p>
+			<p class="yw-table-filter">
+				<label class="control-label" style="text-align:center;font-weight:bold"></label>
+			</p>
+		</div>
+	</form>
+		<div class="actions_bar" style="text-align: center;margin-top: 40px">
+			<span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="save();" id="onlineApply">协助线上化申请</span>
+			<span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="save();" id="appendApply">追加经办人申请</span>
+		</div>
+</div>
+
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt1" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div id="w" class="easyui-window" title="企业详情" data-options="width:1040,height:750"></div>
+<div id="w_share" title="共享企业" data-options="width:550,height:320,collapsible: false,minimizable: false">
+<div id="w_import_excel" title="人保授信excel" class="easyui-window" data-options="width:400,height:250">
+<div id="w_import_daDi_excel" title="大地额度excel" class="easyui-window" data-options="width:400,height:250">
+<div id="w_import_zhongYin_excel" title="中银额度excel" class="easyui-window" data-options="width:400,height:250">
+<div id="w_import_credit_report_zip" title="征信报告zip" class="easyui-window" data-options="width:400,height:250">
+</div>
+<div id="w_assigned" title="指派人员" data-options="width:500,height:250,collapsible: false,minimizable: false">
+	<form id="assigned" class="from-input-layout hide" method="post" style="margin:50px 100px;">
+		<span class="input-colspan">
+			<label>业务员:</label>
+			<input name="companyId" id="ass_companyId" type="hidden" value=""/>
+			<input name="matchUserId" id="ass_matchUserId1" type="text" value=""/>
+		</span>
+		<div style="margin:30px 60px;width:200px;">
+			<a href="#" class="easyui-linkbutton" onclick="assigned()" style="width:80px;">指派</a>
+			<a href="#" class="easyui-linkbutton" onclick="$('#w_assigned').window('close')" style="width:80px;">取消</a>
+		</div>
+	</form>
+</div>
+<div id="w_history" title="操作历史" data-options="width:800,height:500,collapsible: false,minimizable: false">
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/filePlus.js?v=220125}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    /*弹框垂直居中*/
+	var easyuiPanelOnOpen = function(left, top) {
+		var iframeWidth = $(this).parent().parent().width();
+		var iframeHeight = $(this).parent().parent().height();
+		var windowWidth = $(this).parent().width();
+		var windowHeight = $(this).parent().height();
+		var setWidth = (iframeWidth - windowWidth) / 2;
+		var setHeight = (iframeHeight - windowHeight) / 2;
+		$(this).parent().css({
+			left : setWidth,
+			top : setHeight
+		});
+		if (iframeHeight < windowHeight) {
+			$(this).parent().css({
+				left : setWidth,
+				top : 0
+			});
+		}
+		$(".window-shadow").hide();
+	};
+	$.fn.window.defaults.onOpen = easyuiPanelOnOpen;
+	var lastIndex;
+	// var allowedJson = eval('[(${allowedJson})]');
+	var companyStatus = eval('[(${companyStatus})]');
+	var _plasticTypeJson = eval('[(${plasticTypeJson})]');
+	var creditRating = eval('[(${creditRating})]');
+	var companyGrade = eval('[(${companyGrade})]');
+	var companyType = eval('[(${companyType})]');
+	var logisticsSealTypeJson = eval('[(${logisticsSealTypeJson})]');
+	var onLineFlg = eval('[(${onLineFlg})]');
+	var userJson = eval('[(${userJson})]');
+	var areaJson = eval('[(${areaJson})]');
+	var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');// 业务员树
+	var deptNameTreeJson = eval('[(${deptNameTree})]');// 机构树
+	var deptAllJson = eval('[(${deptAllJson})]');// 事业部
+	var currentUserId = $("#currentUserId").val();
+	var isAdmin = $("#canDelete").val();// 删除权限
+	var canExcel = $('#canExcel').val();
+	var viewdetail = $('#viewdetail').val();
+	var additionalmanagerPermission = $('#additionalmanagerPermission').val();
+	// 查看所有企业权限
+	var canLookAll = $("#lookAllCompany").val();
+	// 企业指派权限
+	var companyAssignedPerm = $("#companyAssignedPerm").val();
+	// 企业分享权限
+	var companySharePerm = $("#companySharePerm").val();
+	var zgbasRiskFlag = $("#zgbasRiskFlag").val();
+	// 企业释放权限
+	var companyReleasePerm = $("#companyReleasePerm").val();
+	// 部门负责人权限
+	var companyDeptLeaderPerm = $("#companyDeptLeaderPerm").val();
+	// 企业分配权限
+	var companyAssignPerm = $("#companyAssignPermId").val();
+	var operationFlg = $("#operationFlg").val();// 不可操作权限
+	var editFlg = $("#editFlg").val();
+	var wfqAuthFlg = $("#wfqAuthFlg").val();
+	var showWfqData = $("#showWfqData").val();
+	var importPiccDataPerm = $("#importPiccDataPerm").val();
+//	var industryModeJson = eval('[(${industryModeJson})]');
+	var companyIndustryJson = eval('[(${companyIndustryJson})]');
+	var filePlugin = new FilePluginPlus('#businessLicenseWithSealUrl',$('#entityId').val(),'/bs/company/updateFileId',true);
+	var contractPlugin = new FilePluginPlus('#electronicSignFileId',$('#entityId').val(),'/bs/company/updateFileId',true);
+	var cardFrontPlugin = new FilePluginPlus('#legalPersonPicUrl',$('#entityId').val(),'/bs/company/updateFileId',true);
+	var cardReversePlugin = new FilePluginPlus('#legalPersonOppositePicUrl',$('#entityId').val(),'/bs/company/updateFileId',true);
+    // console.log("allowedJson - ", allowedJson);
+	var sta = [{dictCd:'F',dictName:'私海'},{dictCd:'N',dictName:'公海'}];
+	var creditCategoryJson = [{dictCd:'',dictName:'--全部--'},{dictCd:'0',dictName:'人保授信'},{dictCd:'1',dictName:'大地授信'},{dictCd:'2',dictName:'中银授信'},{dictCd:'9',dictName:'自主授信'}];
+	var _mark_flag_json = [{dictCd: '', dictName: '--全部--'}, {dictCd: 'false', dictName: '否'}, {dictCd: 'true', dictName: '是'}];
+    $(function() {
+		$('input[name="search_INS_status"]').click(function() {
+			var selectedValue = $(this).val();
+			$('input[name="search_INS_status"]').not(this).prop('checked', false);
+			console.log('Selected option: ' + selectedValue);
+			Convert.search('searchForm','tt1');
+			// 在这里可以编写处理选中事件的逻辑代码
+		});
+		$("#onLineFlg").combobox({
+			data:onLineFlg,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto",
+			onSelect:function(data){
+			}
+		});
+		$("#markSupplierFlagSer").combobox({
+			data:_mark_flag_json,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto",
+			editable:false
+		});
+		$("#accessReportFlgExist").combobox({
+			data:[{dictCd:'',dictName:"全部"},{dictCd:'true',dictName:"通过"},{dictCd:'false',dictName:"未通过"}],
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto",
+			onSelect:function(data){
+			}
+		});
+		$("#plasticTypeSer").combobox({
+			data: [{ dictCd: '', dictName: "全部" }].concat(_plasticTypeJson),
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto",
+		});
+		$("#company_type").combobox({
+			data:companyType,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto"
+		});
+
+		// $("#deptName").combobox({
+		// 	data:deptAllJson,
+		// 	textField:'deptName',
+		// 	valueField:'deptId',
+		// 	editable:true,
+		// });
+		$('#deptName').combotree({
+			data : deptNameTreeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+			}
+		});
+		$("#company_grade").combobox({
+			data:companyGrade,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto"
+		});
+		$("#creditCategory").combobox({
+			data:creditCategoryJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto"
+		});
+		$("#credit_rating").combobox({
+			data:creditRating,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto"
+		});
+		$("#status_srh").combobox({
+			data : companyStatus,
+			textField : 'dictName',
+			valueField : 'dictCd',
+			width : 150,
+			panelHeight:"auto",
+			editable : false
+		});
+		$("#search_INS_status").combobox({
+			data:sta,
+			textField:'dictName',
+			valueField:'dictCd',
+			editable:false,
+			panelHeight:"auto"
+		});
+		// $("#allowed").combobox({
+		// 	data : allowedJson,
+		// 	textField : 'dictName',
+		// 	valueField : 'dictCd',
+		// 	width : 150,
+		// 	panelHeight:"auto",
+		// 	editable : false
+		// });
+		$('#tt1').datagrid(
+			{
+				pagination : true,
+				pageSize : 30,
+				rownumbers : true,
+				remoteSort : false,
+				pageList : [ 50, 40, 30, 20, 10 ],
+				singleSelect:true,
+				url : _ctx + "/bs/company/listCompany",
+				frozenColumns:[ [
+					{
+						field : 'companyName',
+						title : '客户名称',
+						sortable : false,
+						width : 140,
+						align: 'left',
+						formatter : function(value, row, index) {
+							if(row.creditRating == "W" ||  row.supplierRating == "W"){
+								return '<p title="' + row.companyName + '" class="note" style="color:green">' + value + '</p>';
+							}else if(row.creditRating == "G"){
+								return '<p title="' + row.companyName + '" class="note" style="color:#ccc">' + value + '</p>'
+							}else{
+								return '<p title="' + row.companyName + '" class="note" style="color:red">' + value + '</p>'
+							}
+
+						}
+					}
+				] ],
+				columns : [ [
+						{
+							field : 'creditRating',
+							title : '客户分类',
+							width : 90,
+							align:'center',
+							formatter : function(value, row, index) {
+								return Convert.findValueByKey(creditRating, "dictCd",value, "dictName");
+							}
+						},
+						{
+							field : 'supplierRating',
+							title : '供应商分类',
+							width : 90,
+							align:'center',
+							formatter : function(value, row, index) {
+								return Convert.findValueByKey(creditRating, "dictCd",value, "dictName");
+							}
+						},
+                        // {
+                        //     field : 'allowed',
+                        //     title : '是否准入',
+                        //     width : 120,
+                        //     align:'center',
+                        //     formatter : function(value, row, index) {
+                        //         if(canLookAll=='false' && row.status !=='N' && row.matchUserId != currentUserId && row.shareFlag == false && row.myDeptFlg == false){
+                        //             return '******';
+                        //         }else{
+                        //             return Convert.findValueByKey(allowedJson, "dictCd",value, "dictName");
+                        //         }
+                        //     }
+                        // },
+					{
+						field : 'companyGrade',
+						title : '客户等级',
+						width : 80,
+						align:'left',
+						formatter : function(value, row, index) {
+							return value;
+							// if(row.matchUserId == currentUserId || row.myDeptFlg == true){
+							// 	return value;
+							// }else{
+							// if(canLookAll=='false' && row.status !=='N' && row.shareFlag == false){
+							// 	return '******';
+							// }else{
+							// 	return value;
+							// }
+						  // }
+						}
+					},
+					{
+						field : 'creditScore',
+						title : '信用评分',
+						width : 80,
+						align:'left',
+					},
+					{
+						field : 'creditInfo',
+						title : '授信信息',
+						width : 400,
+						align:'left',
+						formatter: function(value, row, index) {
+							// 针对 "人保" 和 "大地" 设置不同的颜色
+							if (value) {
+								value = value.replace(/人保/g, '<span style="color: #005977;">人保</span>');
+								value = value.replace(/大地/g, '<span style="color: #5e00b3;">大地</span>');
+								value = value.replace(/中银/g, '<span style="color: #f3bc0a;">中银</span>');
+								value = value.replace(/自主/g, '<span style="color: #e3142c;">自主</span>');
+							}
+
+							return value;
+						}
+					},
+					// {
+					// 	field : 'piccCreditAmount',
+					// 	title : '人保额度',
+					// 	width : 120,
+					// 	align:'left',
+					// },
+					// {
+					// 	field : 'daDiCreditAmount',
+					// 	title : '大地额度',
+					// 	width : 120,
+					// 	align:'left',
+					// },
+					// {
+					// 	field : 'totalCreditAmount',
+					// 	title : '授信额度(元)',
+					// 	width : 100,
+					// 	align:'left',
+					// },
+					// {
+					// 	field : 'usedCreditAmount',
+					// 	title : '已用授信额度(元)',
+					// 	width : 120,
+					// 	align:'left',
+					// },
+					// {
+					// 	field : 'remainCreditAmount',
+					// 	title : '剩余授信额度(元)',
+					// 	width : 120,
+					// 	align:'left',
+					// },
+					// {
+					// 	field : 'approveCreditAmount',
+					// 	title : '审批占用额度(元)',
+					// 	width : 120,
+					// 	align:'left',
+					// },
+					{
+						field : 'creditDays',
+						title : '账期(天)',
+						width : 90,
+						align:'left',
+					},
+					{
+						field : 'supplierGrade',
+						title : '供应商等级',
+						width : 80,
+						align:'left',
+					},
+					{
+						field : 'supplierScore',
+						title : '供应商评分',
+						width : 80,
+						align:'left',
+					},
+					{
+							field : 'companyType',
+							title : '企业类型',
+							sortable : false,
+							width : 100,
+							align:'left',
+							formatter : function(value, row, index) {
+								return Convert.findValueByKey(companyType, "dictCd",value, "dictName");
+							}
+						},
+					{
+						field : 'plasticType',
+						title : '塑料分类',
+						width : 80,
+						align:'left',
+						formatter : function(value, row, index) {
+							return Convert.findValueByKey(_plasticTypeJson, "dictCd",value, "dictName");
+						}
+					},
+						{
+							field : 'logisticsSealType',
+							title : '物流章类型',
+							width : 80,
+							align:'left',
+							formatter : function(value, row, index) {
+								return Convert.findValueByKey(logisticsSealTypeJson, "dictCd",value, "dictName");
+							}
+						},
+						{
+							field : 'contactName',
+							title : '联系人',
+							width : 100,
+							align:'left',
+						},
+						{
+							field : 'contactPhone',
+							title : '联系电话',
+							align : 'left',
+							width : 120,
+						},
+						{
+							field : 'matchUserId',
+							title : '领用人',
+							width : 90,
+							align : 'left',
+							formatter : function(value, row, index) {
+								return Convert.findValueByKey(userJson, "userId",value, "nickName");
+							}
+						},
+						// {
+						// 	field : 'muDeptName',
+						// 	title : '领用部门',
+						// 	width : 110,
+						// 	align : 'left'
+						// },
+					{
+						field : 'ownerOfAccountId',
+						title : '开户人',
+						width : 80,
+						align : 'left',
+						formatter : function(value, row, index) {
+							return Convert.findValueByKey(userJson, "userId",value, "nickName");
+						}
+					},
+					{
+						field : 'shareUserNames',
+						title : '共享人',
+						width : 180,
+						align : 'left'
+					},
+					{
+						field : 'deptName',
+						title : '所属部门',
+						width : 110,
+						align : 'left'
+					},
+					{
+							field : 'matchFllowDate',
+							title : '领用时间',
+							width : 120,
+						},
+						 {
+							field : 'onLineFlg',
+							title : '是否线上化',
+							width : 80,
+							align:'center',
+							formatter : function(value, row, index) {
+								var str = "否";
+								if (value=='true'){
+									str = "是";
+									return '<p  class="note" style="color:#8bd898">' + str + '</p>';
+								}
+								return str;
+							}
+						},
+					{
+						field : 'uploadData',
+						title : '上传资料',
+						width : 80,
+						align:'center',
+						formatter : function(value, row, index) {
+							var str = "未开始";
+							if (row.companyApplyStatus=='4'){
+								str = "完成";
+								return '<p  class="note" style="color:#8bd898">' + str + '</p>';
+							}else if(row.companyApplyStatus=='1'){
+								str = "审批中";
+								return str;
+							}else if(row.companyApplyStatus=='2'){
+								str = "未确认";
+								return str;
+							}else if(row.companyApplyStatus=='3'){
+								str = "审批驳回";
+								return str;
+							}else {
+								str = "未开始"
+								return str;
+							}
+						}
+					},
+					{
+						field : 'applyCFCA',
+						title : '申请CFCA',
+						width : 80,
+						align:'center',
+						formatter : function(value, row, index) {
+							var str = "未开始";
+							if (row.cfcaApprovedStatus=='4'){
+								str = "完成";
+								return '<p  class="note" style="color:#8bd898">' + str + '</p>';
+							}else if(row.cfcaApprovedStatus=='1'){
+								str = "审批中";
+								return str;
+							}else if(row.cfcaApprovedStatus=='2'){
+								str = "未确认";
+								return str;
+							}else if(row.cfcaApprovedStatus=='3'){
+								str = "审批驳回";
+								return str;
+							}else {
+								str = "未开始"
+								return str;
+							}
+						}
+					},
+					{
+						field : 'delegatedAuthorization',
+						title : '委托授权',
+						width : 80,
+						align:'center',
+						formatter : function(value, row, index) {
+							var str = "未开始";
+							if (row.entrustApplyStatus=='4'){
+								str = "完成";
+								return '<p  class="note" style="color:#8bd898">' + str + '</p>';
+							}else if(row.entrustApplyStatus=='1'){
+								str = "审批中";
+								return str;
+							}else if(row.entrustApplyStatus=='2'){
+								str = "未确认";
+								return str;
+							}else if(row.entrustApplyStatus=='3'){
+								str = "审批驳回";
+								return str;
+							}else {
+								str = "未开始"
+								return str;
+							}
+						}
+					},
+					{
+						field : 'accessReportFlg',
+						title : '访厂报告',
+						width : 120,
+						formatter : function(value, row, index) {
+							if(row.accessReportFlg == 'true') {
+								return '通过';
+							} else {
+								return '未通过';
+							}
+						}
+					},
+					{
+						field : 'accessReportUploadDate',
+						title : '访厂报告上传日期',
+						width : 130,
+					},
+					{
+						field : 'createdDate',
+						title : '录入日期',
+						width : 130,
+					},
+					{
+						field : 'action',
+						title : '操作',
+						width : 280,
+						align : 'left',
+						formatter : function(value, row, index) {
+							if(row.enableFlg=='false'){
+								return;
+							}
+							var control = "";
+							if(canLookAll == 'true') {
+								if (row.status == "N") {
+									// 企业指派权限
+									if (companyAssignedPerm == 'true') {
+										control += "<a onclick='open_w_assigned(\""+ row.id+ "\")' style='color:#ff8153'>指派</a>"
+									}
+									control += "&nbsp;&nbsp;<a onclick='fllow(\""+ row.id+ "\")' style='color:#8bd898'>领用</a>"
+								} else {
+									// 私海，区域总权限 且 当前客户属于区域总
+									if(companyDeptLeaderPerm == 'true' && row.matchUserId == currentUserId){
+										control += "<a onclick='open_w_assigned(\""+ row.id+ "\")' style='color:#ff8153'>指派</a>&nbsp;&nbsp;"
+									}
+									// shareFlag 共享给我的客户
+									if(row.shareFlag == true){
+										control += "<a onclick='backShare(\""+ row.id+ "\")' style='color:#8bd898'>退回共享</a>"
+									} else {
+										// 企业释放权限
+										if (companyReleasePerm == 'true') {
+											control += "<a onclick='release(\""+ row.id+ "\")' style='color:silver'>释放</a>"
+										}
+										// 有共享权限、或部门负责人、或当前领用人，且私海客户
+										if(companySharePerm == 'true' || companyDeptLeaderPerm == 'true' || row.matchUserId == currentUserId){
+											control += "&nbsp;&nbsp;<a onclick='openShare(\""+row.id+"\",\""+row.matchUserId+"\")' style='color:#ff8153'>共享</a>"
+										}
+									}
+								}
+							} else {
+								if(companyDeptLeaderPerm == 'true' && row.matchUserId == currentUserId){
+									control += "<a onclick='open_w_assigned(\""+ row.id+ "\")' style='color:#ff8153'>指派</a>"
+								}
+								if (row.status == "N") {
+									control += "<a onclick='fllow(\""+ row.id+ "\")' style='color:#ff8153'>领用</a>"
+								} else {
+									// 私海
+									if(_curUserId == row.matchUserId){
+										// 属于自己的客户
+										control += "<a onclick='release(\""+ row.id+ "\")' style='color:#8bd898'>退回</a>"
+										if(companyDeptLeaderPerm != 'true' || row.matchUserId != currentUserId){
+											control += "&nbsp;&nbsp;<a onclick='openShare(\""+row.id+"\",\""+row.matchUserId+"\")' style='color:#ff8153'>共享</a>"
+										}
+									}
+									// 共享给自己的客户
+									if(row.shareFlag == true){
+										control += "<a onclick='backShare(\""+ row.id+ "\")' style='color:#8bd898'>退回共享</a>"
+									}
+								}
+							}
+							if (zgbasRiskFlag === 'true' && row.temporaryPlasticType == 'PS'){
+								control += "&nbsp;&nbsp;<a onclick='approvePlasticType(\""+ row.id+ "\")' style='color:#eac121'>审核塑料分类</a>"
+							}
+							var merachMatchUserId = $('#merach_matchUserId').val();
+							if (merachMatchUserId == row.matchUserId  && row.onlineApplyFlg != "true" && row.onLineFlg != "true"){
+								control += "<a onclick='applyFor(" + index + "," + 1 + ")' style='color:#8bd898;margin-left: 3px'>协助线上化</a>"
+							}
+							if ((merachMatchUserId == row.matchUserId || additionalmanagerPermission == 'true') && row.onLineFlg == "true" ){
+								control += "<a onclick='applyFor("+ index + "," + 2 + ")' style='color:#8b89f9;margin-left: 3px'>追加经办人</a>"
+							}
+							// if(wfqAuthFlg == 'true'){
+							// 	control += "&nbsp;&nbsp;<a target='_blank' href="+row.wfqAuthH5url+">微风企授权</a>"
+							// }
+							// if(showWfqData == 'true'){
+							// 	control += "&nbsp;&nbsp;<a onclick='viewWfqData(\""+row.id+"\",\""+row.companyName+"\")'>微风企数据</a>"
+							// }
+							return control;
+						}
+					},
+					{
+						field : 'operate',
+						title : '数据操作',
+						width : 80,
+						hidden : true,
+						align : 'center',
+						formatter : function(value, row, index) {
+							var flg=row.enableFlg;
+							if(flg=='true'){
+								var id =row.id;
+								var str = '<img onclick=removeCompany("'+id+'") style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>';
+								return str;
+							}else{
+								var str = "<a onclick='recycle(\""+ row.id+ "\")' style='cursor:pointer;color:#8bd898';>回收</a>";
+								return str;
+							}
+						}
+					},
+				] ],
+				toolbar : '#toolbar',
+				onDblClickCell : function(index, field) {
+					var row = $('#tt1').datagrid('getSelected');
+					if (row.myDeptFlg == true || row.matchUserId == currentUserId ){
+							editrow1(row.id, row.companyName);
+					}else{
+						if(!(canLookAll=='false' && row.status !=='N' && row.shareFlag == false)){
+							console.log("company - onDblClickCell : " , row);
+							editrow1(row.id, row.companyName);
+						}else{
+							$.messager.alert('error', '没有查看企业详情的权限', 'warning');
+						}
+					}
+				},
+				onClickCell : function(index, field) {
+					lastIndex = index;
+				}
+			});
+		if(isAdmin == 'true'){
+			$('#tt1').datagrid('showColumn', 'operate');
+		}
+		if(operationFlg == 'true'){
+			$('#tt1').datagrid('hideColumn', 'operate');
+			$('#tt1').datagrid('hideColumn', 'action');
+		}
+		$('#w').window({
+			title : '新增企业',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			}
+		});
+
+		$('#w_share').window({
+			title : '共享企业',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			}
+		});
+
+		$('#w_assigned').window({
+			title : '指派人员',
+			modal : true,
+			closed : true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache : false,
+			onClose : function() {
+				$('#tt').datagrid('reload');
+			}
+		});
+		$('#w_import_excel').window({
+			title: '人保授信数据导入',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		$('#w_import_daDi_excel').window({
+			title: '大地额度导入',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		$('#w_import_zhongYin_excel').window({
+			title: '中银额度导入',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+		$('#w_import_credit_report_zip').window({
+			title: '征信报告导入',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false,
+			onClose:function(){
+				$('#tt').datagrid('reload');
+			}
+		});
+
+		$('#ass_matchUserId').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#ass_matchUserId').combotree('clear');
+				}
+			}
+		});
+		$('#ownerOfAccountId').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#ownerOfAccountId').combotree('clear');
+				}
+			}
+		});
+		$('#ass_matchUserId1').combotree({
+			data : matchUserNameTreeJson,
+			multiple : false,
+			editable : true,
+			height : 30,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#ass_matchUserId1').combotree('clear');
+				}
+			}
+		});
+	//	客户数据导出权限
+		if (canExcel == "true"){
+			$('#uploadExcelFile').show();
+		}else {
+			$('#uploadExcelFile').hide();
+		}
+	});
+	/* 导出Excel表格 */
+	function exportExcel() {
+		$('#searchForm').form('submit', {
+			url: _ctx + "/bs/company/exportExcel"
+		});
+	}
+	/** 导入人保数据 */
+	function showImportPiccExcel(){
+		var url=_ctx+"/bs/company/showImportPiccExcel";
+		$('#w_import_excel').window({href:url});
+		$('#w_import_excel').window("open");
+	}
+	/** 导入大地数据 */
+	function showImportDaDiExcel(){
+		var url=_ctx+"/bs/company/showImportDaDiExcel";
+		$('#w_import_daDi_excel').window({href:url});
+		$('#w_import_daDi_excel').window("open");
+	}
+	/** 导入中银数据 */
+	function showImportZhongYinExcel(){
+		var url=_ctx+"/bs/company/showImportZhongYinExcel";
+		$('#w_import_zhongYin_excel').window({href:url});
+		$('#w_import_zhongYin_excel').window("open");
+	}
+	/** 征信报告导入 */
+	function showImportCreditReport(){
+		var url=_ctx+"/bs/company/showImportCreditReport";
+		$('#w_import_credit_report_zip').window({href:url});
+		$('#w_import_credit_report_zip').window("open");
+	}
+	function downloadAccessReportFileZip() {
+		$.messager.confirm({
+			width: 540,
+			height: 200,
+			title: '提示',
+			msg: '<p style="padding-left:15px;padding-right:15px;line-height: 1.5;font-size: 15px;">为保证系统性能和用户体验，导出数据不宜过大，单次导出附件数量最多返回500条，如果您需要导出全部数据，请考虑缩小查询区间分批次进行操作！</p>',
+			ok: "导出",
+			cancel: "取消",
+			cls: 'c9',
+			border: 'thin',
+			fn: function (r) {
+				if (r) {
+					$('#searchForm').form('submit', {url:_ctx+"/bs/company/downloadAccessReportFileZip"});
+				}
+			}
+		});
+	}
+	function downloadCreditInfo0FileZip() {
+		$.messager.confirm({
+			width: 540,
+			height: 200,
+			title: '提示',
+			msg: '<p style="padding-left:15px;padding-right:15px;line-height: 1.5;font-size: 15px;">涉及很多企业营业执附件，会产生一定的耗时，请耐心等待！</p>',
+			ok: "导出",
+			cancel: "取消",
+			cls: 'c9',
+			border: 'thin',
+			fn: function (r) {
+				if (r) {
+					$('#searchForm').form('submit', {url:_ctx+"/bs/company/exportCreditInfo0Excel"});
+				}
+			}
+		});
+	}
+	/* 申请线上化 */
+	function save() {
+		if($("#inputForm").form('validate')){
+			$.ajax({
+				type:"POST",
+				dataType: "json",
+				url: _ctx + "/bs/company/saveApplyOnLineData",
+				data: $('#inputForm').serialize(),
+				success: function (data){
+					if (data.success == "success") {
+						$.messager.show({
+							title: 'Tip',
+							msg: '修改成功',
+							timeout: 2000,
+							showType: 'show'
+						});
+						$('#win').window("close");
+						$("#inputForm").form('clear');
+						$('#tt1').datagrid('reload');
+					} else {
+						$.messager.alert('error', data.success, 'warning');
+					}
+				},
+			})
+		}else{
+		$.messager.alert('操作提示','存在校验项未通过！',"warning");
+	}
+
+	}
+	function open_w_assigned(companyId) {
+		$('#assigned').removeClass("hide");
+		$('#w_assigned').window("open");
+		$('#ass_companyId').val(companyId);
+	}
+
+	function assigned() {
+		var companyId = $('#ass_companyId').val();
+		var matchUserId = $('#ass_matchUserId1').val();
+		if(matchUserId) {
+			$.post(
+				_ctx +"/bs/company/updateStatusByAssigned",
+				{companyId:companyId,matchUserId:matchUserId},
+				function(data){
+					if (data == "success") {
+						$.messager.alert('提示', '指派成功', 'info');
+					}
+					if (data == "upper") {
+						$.messager.alert('提示', '该业务员今日领用客户已达上限', 'info');
+					}
+					if (data == "alreadyFllow") {
+						$.messager.alert('提示', '该客户已被领用', 'info');
+					}
+					if (data == "fail") {
+						$.messager.alert('提示', '指派失败', 'info');
+					}
+					$('#w_assigned').window('close');
+					$('#tt1').datagrid('reload');
+			    }
+			);
+		} else {
+			$.messager.alert('提示', '请选择', 'info');
+		}
+	}
+
+	function openShare(id,matchUserId) {
+		var url = _ctx + "/bs/companyShare/openShare/" + id + "/" + matchUserId;
+		$('#w_share').window({
+			href : url
+		});
+		$('#w_share').window("open");
+	}
+	//操作历史
+	function openHis(id) {
+		var url = _ctx + "/bs/company/opreateHis/" + id;
+		$('#w_history').window({href : url});
+		$('#w_history').window("open");
+	}
+
+	function shareCompany(id) {
+		$.post(_ctx + "/bs/company/shareCompany", {
+			id : id
+		}, function(result) {
+			if (result == "success") {
+				$('#tt1').datagrid('reload');
+			} else {
+				$.messager.alert('提示', '共享失败', 'info');
+			}
+		});
+	}
+
+	function approvePlasticType(id){
+		$.messager.confirm({
+			width : 388,
+			height : 170,
+			title : '审核提示',
+			msg : '确定审核该客户塑料分类为【PS (热塑性塑料)】？',
+			ok : "确定",
+			cancel : "取消",
+			cls : 'c9',
+			border : 'thin',
+			fn : function(r) {
+				if(r){
+					$.post(_ctx + "/bs/company/approvePlasticType", {
+						id : id
+					}, function(result) {
+						if (result == "success") {
+							$.messager.alert('提示', '审核成功', 'info');
+						}
+						if (result == "missPermission") {
+							$.messager.alert('提示', '审核失败，无审核权限', 'info');
+						}
+						$('#tt1').datagrid('reload');
+					});
+				}
+			}
+		});
+	}
+
+	function fllow(id) {
+		$.messager.confirm({
+			width : 388,
+			height : 170,
+			title : '领用提示',
+			msg : '确定领用该客户？',
+			ok : "确定",
+			cancel : "取消",
+			cls : 'c9',
+			border : 'thin',
+			fn : function(r) {
+				if(r){
+					$.post(_ctx + "/bs/company/updateStatusByFllow", {
+						id : id
+					}, function(result) {
+						if (result == "success") {
+							$.messager.alert('提示', '领用成功', 'info');
+						}
+						if (result == "upper") {
+							$.messager.alert('提示', '当天领用客户已达上限', 'info');
+						}
+						if (result == "alreadyFllow") {
+							$.messager.alert('提示', '该客户已被领用', 'info');
+						}
+						if (result == "fail") {
+							$.messager.alert('提示', '领用失败', 'info');
+						}
+						if(result == "disUse"){
+							$.messager.alert('提示','弃用后,天数未满不可领用','info');
+						}
+						$('#tt1').datagrid('reload');
+					});
+				}
+			}
+		});
+	}
+
+	function release(id) {
+		$.messager.confirm({
+			width : 388,
+			height : 170,
+			title : '退回提示',
+			msg : '确定退回该客户？',
+			ok : "确定",
+			cancel : "取消",
+			cls : 'c9',
+			border : 'thin',
+			fn : function(r) {
+				if(r){
+					$.post(_ctx + "/bs/company/updateStatusByRelease", {
+						id : id
+					}, function(result) {
+						if (result == "success") {
+							$('#tt1').datagrid('reload');
+						} else {
+							$.messager.alert('提示', '修改失败', 'info');
+						}
+					})
+				}
+			}
+		});
+	}
+
+	function backShare(id) {
+		$.messager.confirm({
+			width : 388,
+			height : 170,
+			title : '退回共享提示',
+			msg : '确定退回共享该客户？',
+			ok : "确定",
+			cancel : "取消",
+			cls : 'c9',
+			border : 'thin',
+			fn : function(r) {
+				if(r){
+					$.post(_ctx + "/bs/company/backShare", {
+						id : id
+					}, function(result) {
+						if (result == "success") {
+							$('#tt1').datagrid('reload');
+						} else {
+							$.messager.alert('提示', '退回共享失败', 'info');
+						}
+					})
+				}
+			}
+		});
+	}
+
+	function saveEdit() {
+		var flag = true;
+		var row = $('#tt1').datagrid('getSelected');
+		if (row) {
+			var index = $('#tt1').datagrid('getRowIndex', row);
+			$('#tt1').datagrid('endEdit', index);
+		}
+		var changeRows = [];
+		var inserted = $('#tt1').datagrid('getChanges', 'inserted');
+		var updated = $('#tt1').datagrid('getChanges', 'updated');
+		changeRows = inserted.concat(updated);
+		for (var i = 0; i < changeRows.length; i++) {
+			var index = $('#tt1').datagrid('getRowIndex', changeRows[i]);
+			flag = $('#tt1').datagrid('validateRow', index);
+			if (!flag) {
+				$('#tt1').datagrid('selectRow', index);
+				$('#tt1').datagrid('beginEdit', index);
+				break;
+			} else {
+				$('#tt1').datagrid('endEdit', index);
+			}
+		}
+
+		if (flag) {
+			$.post(_ctx + "/bs/company/saveBatch", Convert.ToSaveParam("tt1"),
+					function(result) {
+						var rObj = eval(result);
+						if (rObj.success) {
+							$('#tt1').datagrid('reload');
+						} else {
+							$.messager.alert('error', rObj.failure, 'warning');
+						}
+					});
+		}
+	}
+	function editrow1(id,companyName) {
+		var url = _ctx + "/bs/company/detail/" + id;
+		window.parent.addTab(companyName,url);
+
+		// $('#w').window({href : url});
+		// $('#w').window("open");
+	}
+	function viewWfqData(id,companyName){
+		var url = _ctx + "/bs/company/viewWfqData/" + id;
+		window.parent.addTab(companyName+"-微风企",url);
+	}
+	/*function editrow2(id){
+		var url=_ctx+"/bs/companyAdmin/index?id="+id;
+		$('#w2').window({href:url});
+		$('#w2').window("open");
+	}*/
+	//回收功能
+	function recycle(id) {
+        $('#tt1').datagrid('selectRecord',id);
+		var row = $('#tt1').datagrid('getSelected');
+		if (row) {
+			var index = $('#tt1').datagrid('getRowIndex', row);
+			if (row.id == undefined) {
+				$('#tt1').datagrid('deleteRow', index);
+			} else {
+				$.messager.confirm({
+					width : 388,
+					height : 170,
+					title : '回收提示',
+					msg : '确定要回收该信息吗？',
+					ok : "确定",
+					cancel : "取消",
+					cls : 'c9',
+					border : 'thin',
+					fn : function(r) {
+						if (r) {
+							//TODO:如果该记录被引用,是否强制不允许删除?
+							$.post(_ctx + "/bs/company/recycle/" + row.id,
+									function(result) {
+										var rObj = eval(result);
+										if (rObj.success) {
+											$('#tt1').datagrid('reload');
+										} else {
+											$.messager.alert('error',
+													rObj.failure, 'warning');
+										}
+									})
+						}
+					}
+				})
+			}
+		}
+	}
+	//批量回收
+	function batchRecycle() {
+		var rows = $('#tt1').datagrid('getSelections');
+		var update;
+		var updateArr = new Array();
+		for(var i=0;i<rows.length;i++){
+			var enableFlg = rows[i].enableFlg;
+			if(enableFlg == "false"){
+				updateArr.push(rows[i].id);
+			}
+		}
+		update = updateArr.join("-");
+		if (updateArr.length > 0) {
+			$.messager.confirm({
+				width : 388,
+				height : 170,
+				title : '删除提示',
+				msg : '确定要回收该信息吗？',
+				ok : "确定",
+				cancel : "取消",
+				cls : 'c9',
+				border : 'thin',
+				fn : function(r) {
+					 if (r) {
+						 $('#tt1').datagrid('clearSelections');
+						//TODO:如果该记录被引用,是否强制不允许删除?
+						$.post(_ctx + "/bs/company/batchRecycle/" + update,
+								function(result) {
+									var rObj = eval(result);
+									if (rObj.success) {
+										$('#tt1').datagrid('reload');
+									} else {
+										$.messager.alert('error',
+												rObj.failure, 'warning');
+									}
+								})
+					}
+				}
+			})
+		}else{
+			$.messager.alert('提示',"请选择已删除的客户信息！", 'info');
+			$('#tt1').datagrid('clearSelections');
+		}
+	}
+	function removeCompany(id) {
+        $('#tt1').datagrid('selectRecord',id);
+		var row = $('#tt1').datagrid('getSelected');
+		if (row) {
+			var index = $('#tt1').datagrid('getRowIndex', row);
+			if (row.id == undefined) {
+				$('#tt1').datagrid('deleteRow', index);
+			} else {
+				$.messager.confirm({
+					width : 388,
+					height : 170,
+					title : '删除提示',
+					msg : '确定要删除该信息吗？',
+					ok : "确定",
+					cancel : "取消",
+					cls : 'c9',
+					border : 'thin',
+					fn : function(r) {
+						if (r) {
+							//TODO:如果该记录被引用,是否强制不允许删除?
+							$.post(_ctx + "/bs/company/delete/" + row.id,
+									function(result) {
+										var rObj = eval(result);
+										if (rObj.success) {
+											$('#tt1').datagrid('reload');
+										} else {
+											$.messager.alert('error', rObj.failure, 'warning');
+										}
+									})
+						}
+					}
+				})
+			}
+		}
+	}
+	/* 申请线上化表单 */
+	function applyFor(obj,flag){
+		let dialogName;
+		if (Number(flag) == 1) {
+			dialogName = '协助线上化';
+			$('#onlineApply').show();
+			$('#appendApply').hide();
+		} else {
+			dialogName = '追加经办人';
+			$('#onlineApply').hide();
+			$('#appendApply').show();
+		}
+		var rows=$('#tt1').datagrid('getRows')[obj];//获取所有当前加载的数据行
+		$.post(_ctx + "/bs/company/getInfoByCompanyId/" + rows.id, function(result) {
+				if (result == '' || result==null){
+					$('#legalPersonOppositePicUrl').val(rows.cardReverseId);//身份证正面
+					$("#companyId").val(rows.id);
+					$('#legalPersonPicUrl').val(rows.cardFrontId);//身份证反面
+					$('#entityId').val(rows.id);//企业id
+					$('#cfcaName').val(rows.companyName);//企业名称
+					$('#cardType').val(rows.cardType);//证件类型
+					$('#licenseNumber').val(rows.licenseNumber);//营业执照号
+					$('#legalRepresent').val(rows.legalRepresent);//法人邮箱
+					RederopenImg(dialogName);//打开对话框，图片回显
+				}else{
+					$('#legalPersonOppositePicUrl').val(result.legalPersonOppositePicUrl);//身份证正面
+					$("#electronicSignFileId").val(result.electronicSignFileId);//合同章、公章
+					$("#cardType").val(result.cardType);//证件类型
+					$('#legalPersonPicUrl').val(result.legalPersonPicUrl);//身份证反面
+					$("#companyId").val(rows.id);
+					$('#entityId').val(result.companyId);//企业id
+					$('#cfcaName').val(rows.companyName);//企业名称
+					$('#identityCardNumber').textbox('setValue',result.identityCardNumber);//证件号
+					$('#businessLicenseWithSealUrl').val(result.businessLicenseWithSealUrl)//营业执照id
+					$('#legalRepresent').val(result.legalRepresent);//法人姓名
+					$('#licenseNumber').val(rows.licenseNumber);//营业执照号
+					$('#email').val(result.email);//法人邮箱
+					$('#phone').textbox('setValue',result.phone);//法人联系方式
+					$('#managerEmail').val(result.managerEmail);// 经办人邮箱
+					$('#managerPhone').textbox('setValue',result.managerPhone);//经办人手机号
+					$('#managerIdCardNumber').textbox('setValue',result.managerIdCardNumber);//经办人身份证号
+					RederopenImg(dialogName);//打开对话框，图片回显
+				}
+		})
+        //$.parser.parse($('#win').parent());
+	}
+
+	/* 打开对话框，图片回显 */
+	function RederopenImg(dialogName){
+		$('#win').removeClass("hide");
+		/* 合同章或公章拍照 */
+		contractPlugin.load($('#electronicSignFileId').val(),'#contractIdPath');
+		if ($("#electronicSignFileId").length>0){
+			fileUploadPlus("contractBtn", "electronicSignFileId", "contractIdPath", contractPlugin);
+		}
+		/* 上传身份证正面 */
+		cardFrontPlugin.load($('#legalPersonPicUrl').val(),'#cardFrontPath');
+		if ($("#legalPersonPicUrl").length>0){
+			fileUploadPlus("cardFrontBtn", "legalPersonPicUrl", "cardFrontPath", cardFrontPlugin);
+		}
+		/* 上传身份证反面 */
+		cardReversePlugin.load($('#legalPersonOppositePicUrl').val(),'#cardReversePath');
+		if ($("#legalPersonOppositePicUrl").length>0){
+			fileUploadPlus("cardReverseBtn", "legalPersonOppositePicUrl", "cardReversePath", cardReversePlugin);
+		}
+		/* 营业执照附件 */
+		filePlugin.load($('#businessLicenseWithSealUrl').val(),'#filePath');
+		if ($("#businessLicenseWithSealUrl").length>0){
+			fileUploadPlus("fileBtn", "businessLicenseWithSealUrl", "filePath", filePlugin);
+		}
+		$('#win').dialog({
+			title: dialogName,
+			width: 550,
+			height: 450,
+			top:150,
+			closed: false,
+			cache: false,
+			modal: true,
+			onClose:function (){
+				$('#inputForm').form('clear');
+			}
+		});
+		$('#phone,#managerPhone').validatebox({required:true});
+		$('#identityCardNumber,#managerIdCardNumber').validatebox({required:true});
+	}
+</script>
+</body>
+</html>

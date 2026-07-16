@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<div class="easyui-layout" fit="true">	
+  <div style="height:150px;">
+   <input type="hidden" id="ctrContractId" th:value="${ctrContractId}" />
+   <input type="hidden" id="contractType" th:value="${contractType}" />
+			 <table id="payedTable" style="height:280px;" border="0"
+				title="" iconCls="icon-edit" singleSelect="true"
+				idField="id">
+			</table>
+	</div>
+</div>
+<script type="text/javascript">
+var _ctrContractId = $("#ctrContractId").val();
+var approveStatusJson =eval('[(${approveStatusJson})]');
+var payModeJson =eval('[(${payModeJson})]');
+var contractType = $("#contractType").val();
+var _$payDate = "付款日期";
+var _$Date = "payDate";
+var _$payAmount = "付款金额(元)";
+var _$amount = "payAmount"; 
+var _$companyName = "收款单位";
+var _$type = "payMode";
+var _$unType = "未付金额(元)";
+var url = _ctx+"/apply/pay/listVo?search_EQL_contractId="+_ctrContractId;
+if(contractType=="S"){
+	_$payDate = "收款日期";
+	_$Date = "receiveDate";
+	_$payAmount = "收款金额(元)";
+	_$amount = "receiveAmount";
+	_$companyName = "付款单位";
+	_$type = "receiveMode";
+	_$unType = "未收金额(元)";
+	url = _ctx+"/apply/receive/listVo?search_EQL_contractId="+_ctrContractId;
+}
+$(function(){
+	var columns = [ [
+		{field:_$Date,title:_$payDate,align:'center',width:130},
+		{field:_$amount,title:_$payAmount,align:'right',width:110},
+		{field:'unpayedAmount',title:_$unType,align:'right',width:110},
+		{field:'companyName',title:_$companyName, align:'center',width:220},
+		{field:_$type,title:'支付方式', align:'center',width:170,formatter:function(value,row,index){
+			return Convert.findValueByKey(payModeJson,"dictCd",value,"dictName");
+		}},
+		{field:'status',title:'状态',align:'center',width:120 ,formatter:function(value,row,index){
+			return Convert.findValueByKey(approveStatusJson,"dictCd",value,"dictName");
+		}}
+	]];
+	$('#payedTable').datagrid({
+		pageSize:5,
+		rownumbers:true,
+		url:url,
+		pagination:true,
+		columns:columns,
+		showFooter:true,
+		pageList:[20,15,10,5]
+	});
+	
+})
+
+
+function queryContract(id){
+	if(id){
+		var url=_ctx+"/ctr/contract/detail/"+id+"?from=stock";
+		$('#w_contract').window({href:url});
+		$('#w_contract').window("open");
+	}
+}
+</script>

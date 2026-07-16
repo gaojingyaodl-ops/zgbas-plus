@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+
+</head>
+<div class="easyui-layout" fit="true">
+	<div region="center" style="padding:20px 20px 5px 5px;+position: relative;overflow:hidden;" border="false">
+		<div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+			<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+			<input type="hidden" name="contractId" id="contractId" th:value="${entity.contractId}" />
+			<input type="hidden" name="contractNo" id="contractNo" th:value="${entity.contractNo}" />
+			<input type="hidden" name="status" id="entityStatus" th:value="${entity.status}" />
+			<input type="hidden" name="productCode" id="productCode" th:value="${entity.productCode}" />
+			<input type="hidden" name="closeFlg" id="closeFlg" th:value="${entity.closeFlg}" />
+			<input type="hidden" id="deliveryType" name="deliveryType" th:value="${entity.deliveryType}" />
+			<p class="dis_margin">
+			<span>
+			<label for="businessNo"  class="control-label">业务编号:</label>
+			<input name="businessNo" id="businessNo" class="control readonly" readonly type="text" style="width:290px;" th:value="${entity.businessNo}"></input>
+			<input type="button" value="选择" onclick="openChoose();" class="chooseBtn"/>
+			</span>
+
+			<span>
+			<label for="productName"  class="control-label" id="deliverypp">品名:</label>
+			<input name="productName" id="productName" class="control" readonly type="text" th:value="${entity.productName}"></input>
+			</span>
+			<span>
+			<label for="companyId"  class="control-label" id="qymc">企业名称:</label>
+			<input type="hidden" name="companyName" id="companyName" />
+			<input name="companyId" id="companyId" class="control" type="text" th:value="${entity.companyId}"></input>
+			</span>
+
+			<span>
+			<label for="deliveryMode"  class="control-label">提货方式:</label>
+			<input name="deliveryMode" id="deliveryMode" class="control" readonly type="text" th:value="${entity.deliveryMode}"></input>
+			</span>
+			</p>
+
+			<p  class="dis_margin">
+			<span>
+			<label for="deliveryDate"  class="control-label">交货日期:</label>
+			<input name="deliveryDate" id="deliveryDate" class="control" type="text" th:value="${#dates.format(entity.deliveryDate,'yyyy-MM-dd')}"></input>
+			</span>
+			<span class="maringSpan">
+			<label for="dealPrice"  class="control-label">单价:</label>
+			<input name="dealPrice" id="dealPrice" class="control" type="number" th:value="${entity.dealPrice}"></input>
+			</span>
+			<span class="maringSpan">
+			<label for="dealNumber"  class="control-label">数量:</label>
+			<input name="dealNumber" id="dealNumber" class="control" type="number" th:value="${entity.dealNumber}"></input>
+			</span>
+			<span>
+			<label for="numberUnit"  class="control-label">数量单位:</label>
+			<input name="numberUnit" id="numberUnit" class="control" readonly type="text" th:value="${entity.numberUnit}"></input>
+			</span>
+			<span>
+			<label for="brandNumber"  class="control-label">牌号:</label>
+			<input name="brandNumber" id="brandNumber"  class="control" readonly type="text" th:value="${entity.brandNumber}"></input>
+			</span>
+			</p>
+			<p class="dis_margin">
+			<span>
+			<label for="warehouse"  class="control-label">仓库:</label>
+			<input name="warehouse" id="warehouse" class="control " type="text"  th:value="${entity.warehouse}"></input>
+			</span>
+			<span>
+			<label for="deliveryNo"  class="control-label">交割凭证号:</label>
+			<input name="deliveryNo" id="deliveryNo" class="control " type="text"  th:value="${entity.deliveryNo}"></input>
+			</span>
+			<span>
+			<label for="remark"  class="control-label">备注:</label>
+			<input name="remark" id="remark" class="control large" type="text" th:value="${entity.remark}"></input>
+			</span>
+			<span>
+			<label for="warehouseAddress"  class="control-label">仓库地址:</label>
+			<input name="warehouseAddress" id="warehouseAddress" class="control"  type="text" th:value="${entity.warehouseAddress}"></input>
+			</span>
+			</p>
+			<p class="dis_margin">
+			<span>
+			<label for="plateNumber"  class="control-label">车牌号:</label>
+			<input name="plateNumber" id="plateNumber" class="easyui-validatebox control required" type="text" th:value="${entity.plateNumber}"></input>
+			</span>
+			<span>
+			<label for="driverCardNo"  class="control-label">身份证号:</label>
+			<input name="driverCardNo" id="driverCardNo" class="easyui-validatebox control required" required="required" type="text" th:value="${entity.driverCardNo}"></input>
+			</span>
+			</p>
+
+			<p  class="dis_margin">
+			<span class="btn_com float_left bgbai borderNone fjsc_span" id="btn_fileId">
+				 <i class="float_left i_scfj"></i>
+                <span class="float_left fontBlack fjsc_text">附件上传</span>
+             </span>
+			<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId">
+
+			</p>
+
+	</div>
+	</div>
+</div>
+<div id="w_contract_choose" class="easyui-window" style="width:900px;height:610px;"></div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript">
+	var isExists = false;
+	var imgShowUrl =_filePath+'/view/small/';
+	var companyJson =eval('[(${companyJson})]');
+	var approveStatusJson =eval('[(${approveStatusJson})]');
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/bas/pay/updateFileId',[[${param.hasEditFile}]]);
+	$(function(){
+		$('#w_contract_choose').window({
+			title: '请选择合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			cache:false,
+			iconCls:""
+		});
+		var _curStatus = $("#entityStatus").val();
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='B')){
+			$(".insertContent").show();
+			$("#companyId").combobox({
+				data:companyJson,
+				textField:'companyName',
+				valueField:'id',
+				required: true,
+				editable:false,
+				onSelect:function(record){
+					$('#companyName').val(record.companyName);
+				}
+			});
+
+	 		$('#dealPrice,#dealNumber').numberbox({
+	 		    min:0,
+	 		    precision:4,
+	 		   required: true
+	 		});
+
+			$('#businessNo').validatebox({
+				required: true
+			});
+
+			$('#warehouseAddress').validatebox({
+				required: true
+			});
+			$('#plateNumber').validatebox({
+				required: true
+			});
+			$('#driverCardNo').validatebox({
+				required: true
+			});
+
+			$('#warehouse,#deliveryNo').validatebox({
+				required: true
+			});
+
+			$('#invoiceDate').datebox({
+			    required:true,
+			    height:30
+			});
+			$('#deliveryDate').datebox({
+			    required:true,
+				height:30
+			});
+
+			var _productCode = $("#productCode").val();
+			if(_productCode){
+				updateGridTree(_productCode);
+			}
+
+			$('#dealPrice').numberbox('textbox').on('keyup',function(){
+		 		var dealNumber =$('#dealNumber').numberbox('getValue');
+		 		var dealPrice = $(this).val();
+		 	});
+		 	$('#dealNumber').numberbox('textbox').on('keyup',function(){
+		 		var dealPrice =$('#dealPrice').numberbox('getValue');
+		 		var dealNumber = $(this).val();
+		 	});
+		}
+		if(_curStatus&&(_curStatus=='A'||_curStatus=='D')){
+			$(".chooseBtn").hide();
+			$("#businessNo").attr("style","width:342px");
+			var _companyId = $("#companyId").val();
+			var ConvertcompanyId = Convert.findValueByKey(companyJson,"id",_companyId,"companyName");
+			$("#companyId").val(ConvertcompanyId);
+			$("#pm_content_div").find("input").not("[type='button']").attr("readonly",true);
+
+			/* $("#deliveryDate,#dealPrice,#dealNumber,#warehouse,#deliveryNo,#remark").combobox({
+				readonly: true,
+			})
+		 	$("#jgpzh").addClass("jgpzh");
+			$("#deliverypp").addClass("jgpzh");
+			$("#qymc").addClass("qymc");  */
+		}
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+// 		window.setTimeout(function(){
+// 		},2000);
+
+	});
+
+	function updateGridTree(id){
+		$.get( _ctx+"/bas/delivery/template/"+id,function(data){
+			if(data){
+				var _data =eval('('+ data+')' );
+				$("#warehouse").combobox({
+					data:_data.rows,
+					textField:'dictName',
+					valueField:'dictName',
+					height:32
+				});
+			}
+		});
+	}
+
+ 	//选择合同
+ 	function openChoose(){
+ 		var _deliveryType = $("#deliveryType").val();
+ 		var _contractType = "S"
+ 		if(_deliveryType=="I"){
+ 			//入库，采购合同
+ 			_contractType="B"
+ 		}
+		var url=_ctx+"/bas/contract/choose?contractType="+_contractType;
+		$('#w_contract_choose').attr('callbackExec', 'chooseCallback');
+		$('#w_contract_choose').window({href:url});
+		$('#w_contract_choose').window("open");
+	}
+	function chooseCallback(contractRows){
+		var contract = contractRows[0];
+		if (contract!=undefined){
+			$("#contractId").val(contract.id);
+			$("#businessNo").val(contract.businessNo);
+			$("#contractNo").val(contract.contractNo);
+			$("#productCode").val(contract.productCode);
+			$("#productName").val(contract.productName);
+			$("#dealPrice").numberbox('setValue',contract.dealPrice);
+			$("#dealNumber").numberbox('setValue',contract.dealNumber);
+			$("#taxAmount").val(contract.taxAmount);
+			$("#dealAmountNotax").val(contract.dealAmountNotax);
+			$("#numberUnit").val(contract.numberUnit);
+			$("#companyId").combobox('setValue',contract.oppCompanyId);
+			$("#companyName").val(contract.oppCompanyName);
+			$("#companyId").combobox('select',contract.oppCompanyId)
+			$("#closeFlg").val(contract.closeFlg);
+			$("#companyId").combobox('validate');
+			$("#businessNo").validatebox('validate');
+			$("#deliveryMode").val(contract.deliveryMode);
+			$("#brandNumber").val(contract.brandNumber);
+			if(contract.productCode){
+				updateGridTree(contract.productCode);
+			}
+		}
+	}
+</script>

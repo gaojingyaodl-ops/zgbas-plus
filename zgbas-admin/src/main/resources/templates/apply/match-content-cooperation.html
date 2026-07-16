@@ -1,0 +1,601 @@
+ <!--新建代采赊销预算-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css}" type="text/css" rel="stylesheet" />
+<div class="easyui-layout" id="inputForm" border="false" fit="true">
+	<div region="north" border="false" method="post"  style="margin-bottom:10px;">
+		<input type="hidden" name="id" id="entityId" th:value="${match.id}" />
+		<input type="hidden" name="pid" id="pid"  th:value="${pid}" />
+		<input type="hidden" name="status" id="entityStatus" th:value="${match.status}" />
+		<input type="hidden" name="defaultRate" id="defaultRate"  th:value="${defaultRate}" />
+		<input type="hidden" id="businessType" name="businessType" th:value="${match.businessType}">
+		<input type="hidden" id="stockContractId" name="stockContractId">
+		<input type="hidden" id="stockVirtualId" name="stockVirtualId">
+		<input type="hidden" id="current_userId" th:value = "${@shiroUtil.getCurrentUserId()}">
+		<input type="hidden" id="current_userName" th:value="${@shiroUtil.getCurrentUserName()}">
+		<input type="hidden" id="createdUserId" name="createdUserId" th:value="${match.createdUserId}">
+		<input type="hidden" id="usedSupplierPrepayAmount">
+		<input type="hidden" id="supplierPrepayAmount">
+	</div>
+	<div class="mb6" style="display: none">
+		<p class="yw-table-filter w2">
+			<input id="ourName" name="ourCompanyName" type="hidden"/>
+		</p>
+	</div>
+	<div class="mb6">
+		<p class="yw-table-filter w2">
+			<label>赊销模式</label>
+			<input id="contractModel" name="contractModel" class="inputCommon" th:value="${match.contractModel}" type="text"/>
+		</p>
+		<p class="yw-table-filter cooperation">
+			<label>合作模式</label>
+			<input id="cooperationMode" name="cooperationMode" class="inputCommon" th:value="${match.cooperationMode}" type="text"/>
+		</p>
+		<p class="yw-table-filter cooperation">
+			<label>合作业务员</label>
+			<input id="cooperationUserName" name="cooperationUserName" class="inputCommon" th:value="${match.cooperationUserName}" type="text"/>
+			<input id="cooperationUserId" name="cooperationUserId" class="inputCommon" th:value="${match.cooperationUserId}" type="hidden"/>
+		</p>
+	</div>
+	<div class="mb6">
+		<p class="yw-table-filter">
+			<label>品种</label>
+			<input id="productCd" name="productCd" class="inputCommon" th:value="${match.productCd}" type="text"/>
+			<input id="productName" name="productName" th:value="${match.productName}" type="hidden"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>牌号</label>
+			<input id="brandNumber" name="brandNumber" class="inputCommon" th:value="${match.brandNumber}" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>数量(吨)</label>
+			<input id="dealNumber" name="dealNumber" class="inputCommon" th:value="${match.dealNumber}" type="text"/>
+			<input id="maxNumber" name="maxNumber" type = "hidden">
+		</p>
+		<p class="yw-table-filter">
+			<label>厂商</label>
+			<input id="factoryId" name="factoryId" th:value="${match.factoryId}" type="hidden"/>
+			<input id="factoryName" name="factoryName" class="inputCommon" th:value="${match.factoryName}" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>包装规格</label>
+			<input id="wrapSpecs" name="wrapSpecs" class="inputCommon" th:value="${match.wrapSpecs}" type="text"/>
+		</p>
+		<p class="yw-table-filter">
+			<label>质量标准</label>
+			<input id="qualityStandard" name="qualityStandard" class="inputCommon" th:value="${match.qualityStandard}" type="text"/>
+		</p>
+	</div>
+
+	<div th:each="entity:${buyProductDetailList}">
+		<p id="buyTitle" class="form-section-title"><span class="approve_text">采购</span><i></i></p>
+		<form id="formB">
+			<div class="mb10">
+				<p class="yw-table-filter hide">
+					<label>采购来源</label>
+					<input id="buySource" name="buySource" th:value="${entity.buySource}" type="text"/>
+					<input id="bcontractType" name="contractType" value="B" type="hidden"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>采购业务员</label>
+					<input id="buyMatchUserName" name="matchUserName" class="inputB" th:value="${entity.matchUserName}" type="text"/>
+					<input id="buyMatchUserId" name="matchUserId" th:value="${entity.matchUserId}" type="hidden"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>合同编号</label>
+					<input id="bcontentNo" name="contractNo" type="text" th:value="${entity.contractNo}" readonly="readonly"/>
+					<input id="buyApplyId"  th:value="${entity.id}" type="hidden"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter w2">
+					<label>供应商</label>
+					<input id="buyCompanyName" name="companyName" class="inputB" th:value="${entity.companyName}" type="text"/>
+					<input id="buyCompanyId" name="companyId" th:value="${entity.companyId}" type="hidden"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>代采方</label>
+					<input id="buyOurCompanyName" name="ourCompanyName" class="inputB" th:value="${entity.ourCompanyName}" type="text"/>
+					<input id="buyOurCompanyId" name="ourCompanyId" type="hidden"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>仓储费(元)</label>
+					<input id="bwarehouseCost" name="warehouseCost" class="inputB" th:value="${#numbers.formatDecimal(entity.warehouseCost,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>运输费(元)</label>
+					<input id="btransportCost" name="transportCost" class="inputB" th:value="${#numbers.formatDecimal(entity.transportCost,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>装卸费(元)</label>
+					<input id="bstevedorage" name="stevedorage" class="inputB" th:value="${#numbers.formatDecimal(entity.stevedorage,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>结算方式</label>
+					<input id="deliveryModeB" name="deliveryMode" class="inputB" th:value="${entity.deliveryMode}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>支付方式</label>
+					<input id="payType" name="payType" class="inputB" th:value="${entity.payType}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>含税单价(元)</label>
+					<input id="bdealPrice" name="dealPrice" class="inputB" th:value="${#numbers.formatDecimal(entity.dealPrice,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>不含税单价(元)</label>
+					<input id="bdealAmountNotax" name="dealAmountNotax" class="inputB" th:value="${#numbers.formatDecimal(entity.dealAmountNotax,1,'COMMA',2,'POINT')}" readonly type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>采购总价(元)</label>
+					<input id="btotalAmount" name="totalAmount" class="inputB" th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+			</div>
+
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>付全款日期</label>
+					<input id="payFullTime" name="payFullTime" type="text" class="inputB" th:value="${#dates.format(entity.payFullTime, 'yyyy-MM-dd')}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>交货方式</label>
+					<input id="buyDeliveryType" name="deliveryType" class="inputB" th:value="${entity.deliveryType}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>交货日期</label>
+					<input id="buyDeliveryDate" name="deliveryDate" type="text" class="inputB" th:value="${#dates.format(entity.deliveryDate, 'yyyy-MM-dd')}"/>
+				</p>
+				<span style="margin-left: -10px;">
+				<label>-</label>
+				</span>
+				<p class="yw-table-filter">
+					<input id="BarrivalTimeExt" name="arrivalTimeExt" class="inputB" th:value="${entity.arrivalTimeExt}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>定金比例</label>
+					<input id="payRate" name="payRate" class="inputB" th:value="${entity.payRate}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>定金</label>
+					<input id="payRateAmount" name="payRateAmount" class="inputB" th:value="${#numbers.formatDecimal(entity.payBondAmount,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>付定金日期</label>
+					<input id="buyPayBondTime" name="payBondTime" class="inputB" th:value="${#dates.format(entity.payBondTime, 'yyyy-MM-dd')}" type="text" />
+				</p>
+			</div>
+			<div class="mb10">
+				<input id="deliveryAddr" name="deliveryAddr" type="hidden"/>
+				<p class="yw-table-filter">
+					<label>交货地点</label>
+					<input name="provinceName" id="provinceNames" class="inputB" th:value="${entity.provinceName}" type="text"/>
+					<input name="provinceNamesUtil" id="provinceNamesUtil" type="hidden"/>
+				</p>
+				<span style="margin-left: -10px;">
+				<label>-</label>
+			</span>
+				<p class="yw-table-filter">
+					<label>市</label>
+					<input name="cityName" id="cityNames" class="inputB" th:value="${entity.cityName}" type="text" />
+					<input name="cityNamesUtil" id="cityNamesUtil" type="hidden" />
+				</p>
+				<span style="margin-left: -10px;">
+				<label>-</label>
+			</span>
+				<p class="yw-table-filter">
+					<label>区</label>
+					<input name="areaCode" id="areaCodes" class="inputB" th:value="${entity.areaCode}" type="text" />
+					<input name="areaCodesUtil" id="areaCodesUtil"  type="hidden" />
+				</p>
+				<span style="margin-left: -10px;">
+				<label>-</label>
+			</span>
+				<p class="yw-table-filter w2">
+					<label for="b_contactAddr" class="control-label">详细地址</label>
+					<input id="b_contactAddr" name="contactAddr" class="inputB" th:value="${entity.contactAddr}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>承运商</label>
+					<input id="bcarrier" name="carrier" class="inputB" th:value="${entity.carrier}" type="text"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>补充条款</label>
+					<input id="bextraTerm" name="extraTerm" class="inputB" th:value="${entity.extraTerm}" type="text"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>备注</label>
+					<input id="payRemark" name="payRemark" class="inputB" th:value="${entity.payRemark}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter w2 buyTemplateClass">
+					<label>采购合同模板</label>
+					<input id="buyTemplateId" name="buyTemplateId" class="inputB" th:value="${entity.buyTemplateId}" type="text"/>
+				</p>
+
+				<p class="yw-table-filter upbtempBtnClass">
+					<a href="#" id="upbtempBtn" class="easyui-linkbutton btn-empty btn64 addBtn l-btn l-btn-small aReadOnlyB" >上传模板</a>
+				</p>
+
+				<p class="yw-table-filter bContractPreviewClass">
+					<a href="#" id="bContractPreviewBtn" class="easyui-linkbutton btn-empty btn64 addBtn l-btn l-btn-small">合同预览</a>
+				</p>
+
+				<p class="yw-table-filter w2">
+					<input type="hidden" name="buyContentTemplateId" th:value="${entity.buyContentTemplateId}" id="buyContentTemplateId" />
+					<label class="control-label" id="upbtempPath"></label>
+				</p>
+			</div>
+		</form>
+	</div>
+
+	<div  th:each="entity:${sellProductDetailList}">
+		<p id="sellTitle" class="form-section-title"><span class="approve_text">销售</span><i></i></p>
+		<form id="formS">
+			<div class="mb10">
+				<p class="yw-table-filter hide">
+					<label>销售来源</label>
+					<input id="sellSource" name="sellSource" type="text" th:value="${entity.sellSource}"/>
+					<input id="scontractType" name="contractType" value="S" type="hidden"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>销售业务员</label>
+					<input id="sellMatchUserName" name="matchUserName" class="inputS" type="text" th:value="${entity.matchUserName}"/>
+					<input id="sellMatchUserId" name="matchUserId" th:value="${entity.matchUserId}" type="hidden"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>合同编号</label>
+					<input id="contentNo" name="contentNo" th:value="${entity.contractNo}" type="text" readonly="readonly"/>
+					<input id="sellApplyId"  th:value="${entity.id}" type="hidden"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>中游代采方</label>
+					<input id="sellOurCompanyName" class="nested-validation inputS" name="sellOurCompanyName" th:value="${match.sellOurCompanyName}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter w2">
+					<label>客户</label>
+					<input id="sellCompanyName" name="companyName" class="inputS" th:value="${entity.companyName}" type="text"/>
+					<input id="sellCompanyId" name="companyId" th:value="${entity.companyId}" type="hidden"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>我方</label>
+					<input id="ourCompanyName" name="ourCompanyName" class="inputS" th:value="${entity.ourCompanyName}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>仓储费(元)</label>
+					<input id="swarehouseCost" name="warehouseCost" class="inputS" th:value="${#numbers.formatDecimal(entity.warehouseCost,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>运输费(元)</label>
+					<input id="stransportCost" name="transportCost" class="inputS" th:value="${#numbers.formatDecimal(entity.transportCost,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>装卸费(元)</label>
+					<input id="sstevedorage" name="stevedorage" class="inputS" th:value="${#numbers.formatDecimal(entity.stevedorage,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>结算方式</label>
+					<input id="deliveryModeS" name="settlementType" class="inputS" th:value="${entity.settlementType}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>交货日期</label>
+					<input id="sellDeliveryDate" name="deliveryDate" type="text" class="inputS" th:value="${#dates.format(entity.deliveryDate, 'yyyy-MM-dd')}"/>
+				</p>
+				<span style="margin-left: -10px;">
+				<label>-</label>
+			</span>
+				<p class="yw-table-filter">
+					<input id="SarrivalTimeExt" name="arrivalTimeExt" class="inputS" th:value="${entity.arrivalTimeExt}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>付全款日期</label>
+					<input id="receiveFullTime" name="receiveFullTime" type="text" class="inputS" th:value="${#dates.format(entity.receiveFullTime, 'yyyy-MM-dd')}"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>回款周期(天)</label>
+					<input id="creditDays" name="creditDays" class="inputS" th:value="${entity.creditDays}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>交货方式</label>
+					<input id="sellDeliveryType" name="deliveryType" class="inputS" th:value="${entity.deliveryType}" type="text" />
+				</p>
+<!--				<p class="yw-table-filter serviceAmount_p">-->
+<!--					<label>资金服务费(元)</label>-->
+<!--					<input id="serviceAmount" name="serviceAmount" class="inputS" th:value="${entity.serviceAmount}" type="text"/>-->
+<!--				</p>-->
+				<p class="yw-table-filter">
+					<label>销售价(元)</label>
+					<input id="sdealPrice" name="dealPrice" class="inputS" th:value="${#numbers.formatDecimal(entity.dealPrice,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<p class="yw-table-filter" id="premium_lable">
+					<label>加价(元)</label>
+					<input id="premium" name="premium" class="inputS" th:value="${#numbers.formatDecimal(entity.premium,1,'COMMA',2,'POINT')}" type="text" readonly="readonly"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>销售总价(元)</label>
+					<input id="stotalAmount" name="totalAmount" class="inputS" th:value="${#numbers.formatDecimal(entity.totalAmount,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>定金比例</label>
+					<input id="payRateSell" name="payRate" class="inputS" th:value="${entity.payRate}" type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>定金</label>
+					<input id="payRateAmountSell" name="payRateAmount" class="inputS" th:value="${#numbers.formatDecimal(entity.payBondAmount,1,'COMMA',2,'POINT')}"  type="text"/>
+				</p>
+				<p class="yw-table-filter">
+					<label>付定金日期</label>
+					<input id="sellPayBondTime" name="payBondTime" class="inputS" th:value="${#dates.format(entity.payBondTime, 'yyyy-MM-dd')}" type="text" />
+				</p>
+				<p class="yw-table-filter">
+					<label>毛利润(每吨)</label>
+					<input id="sgrossProfit" name="grossProfit" class="inputS" th:value="${entity.grossProfit}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<input id="sdeliveryAddr" name="deliveryAddr" type="hidden"/>
+				<p class="yw-table-filter">
+					<label>交货地点</label>
+					<input name="provinceName" id="provinceName" class="inputS" th:value="${entity.provinceName}" type="text" />
+					<input name="provinceNameUtil" id="provinceNameUtil" type="hidden" />
+				</p>
+				<span style="margin-left: -10px;">
+				<label>-</label>
+			</span>
+				<p class="yw-table-filter">
+					<label>市</label>
+					<input name="cityName" id="cityName" class="inputS" th:value="${entity.cityName}" type="text" />
+					<input name="cityNameUtil" id="cityNameUtil" type="hidden" />
+				</p>
+				<span style="margin-left: -10px;">
+				<label>-</label>
+			</span>
+				<p class="yw-table-filter">
+					<label>区</label>
+					<input name="areaCode" id="areaCode" class="inputS" th:value="${entity.areaCode}" type="text" />
+					<input name="areaCodeUtil" id="areaCodeUtil" type="hidden" />
+				</p>
+				<span style="margin-left: -10px;">
+				<label>-</label>
+			</span>
+				<p class="yw-table-filter w2">
+					<label for="s_contactAddr"  class="control-label">详细地址</label>
+					<input id="s_contactAddr" name="contactAddr" class="inputS" th:value="${entity.contactAddr}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter">
+					<label>承运商</label>
+					<input id="carrier" name="carrier" class="inputS" th:value="${entity.carrier}" type="text"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>补充条款</label>
+					<input id="sextraTerm" name="extraTerm" class="inputS" th:value="${entity.extraTerm}" type="text"/>
+				</p>
+				<p class="yw-table-filter w2">
+					<label>备注</label>
+					<input id="receiveRemark" name="receiveRemark" class="inputS" th:value="${entity.receiveRemark}" type="text"/>
+				</p>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter" style="display: none">
+					<label>不含险销售价(元)</label>
+					<input id="sdealPriceNoInsurance" name="dealPriceNoInsurance" class="inputS" th:value="${#numbers.formatDecimal(entity.dealPriceNoInsurance,1,'COMMA',2,'POINT')}" type="text"/>
+				</p>
+				<input id="basePrice" name="basePrice" type="hidden"/>
+			</div>
+			<div class="mb10">
+				<p class="yw-table-filter w2 sellTemplateClass">
+					<label>销售合同模板</label>
+					<input id="sellTemplateId" name="sellTemplateId" class="inputS" th:value="${entity.sellTemplateId}" type="text"/>
+				</p>
+				<p class="yw-table-filter upstempBtnClass">
+					<a href="#" id="upstempBtn" class="easyui-linkbutton btn-empty btn64 addBtn l-btn l-btn-small aReadOnlyS">上传模板</a>
+				</p>
+				<p class="yw-table-filter sContractPreviewClass">
+					<a href="#" id="sContractPreviewBtn" class="easyui-linkbutton btn-empty btn64 addBtn l-btn l-btn-small">合同预览</a>
+				</p>
+				<p class="yw-table-filter w2">
+					<input type="hidden" name="sellContentTemplateId" th:value="${entity.sellContentTemplateId}" id="sellContentTemplateId" />
+					<label class="control-label" id="upselltempPath"></label>
+				</p>
+			</div>
+		</form>
+	</div>
+</div>
+<div id="w_contract" class="easyui-window" title="电子合同" data-options="width:930,height:600"></div>
+<script th:src="@{/static/js/admin/apply_min_price.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_cooperation.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+	var filePlugin = new FilePlugin('#buyContentTemplateId',$('#entityId').val(),'/apply/match/updateFileId',true);
+	var sellFilePlugin = new FilePlugin('#sellContentTemplateId',$('#entityId').val(),'/apply/match/updateFileId',true);
+	var serviceFilePlugin = new FilePlugin('#serviceContentTemplateId',$('#entityId').val(),'/apply/match/updateFileId',true);
+	var _min_profit_rate = [[${minProfitRate}]];
+	var _cur_userId = '[[${currentUserId}]]';
+	//品名列表
+	var _productTypeJson = eval('[(${productTypeJson})]');
+	//
+	var _productChildrenJson = eval('[(${productChildrenJson})]');
+	//牌号名称
+	var _brandJson = eval('[(${brandJson})]');
+	//厂商列表
+	var _factoryJson = eval('[(${factoryJson})]');
+	//合同类型
+	var _contractTypeJson = eval('[(${contractTypeJson})]');
+	//付款方式
+	var _payTypeJson= eval('[(${payTypeJson})]');
+	//结算方式
+	var _deliveryModeJson =eval('[(${deliveryModeJson})]');
+	var _buyDeliveryModeJson =eval('[(${buyDeliveryModeJson})]');
+	var _sellDeliveryModeJson =eval('[(${sellDeliveryModeJson})]');
+	var _contractBondRateSellJson = eval('[(${contractBondRateSellJson})]');
+	//提货方式
+	var _deliveryTypeJson =eval('[(${deliveryTypeJson})]');
+	_deliveryTypeJson = _deliveryTypeJson.filter(function (a) {
+		return a.enableFlg == true;
+	});
+	//合同属性
+	var _contractAttrJson= eval('[(${contractAttr})]');
+	//交货日期补充
+	var _arrivalTimeExtJson= eval('[(${arrivalTimeExtJson})]');
+	// 下游仓库地址
+	var _warehouseJson= eval('[(${warehouseJson})]');
+	//质量标准
+	var _qualityStandardJson = eval('[(${qualityStandardJson})]');
+	//包装规格
+	var _packingSpecificaJson = eval('[(${packingSpecificaJson})]');
+	//我方企业抬头
+	var _ourCompanyNameJson =eval('[(${ourCompanyNameJson})]');
+	// 代采赊销-采购-我方
+	var _dcsxOurCompanyNameJson = eval('[(${dcsxOurCompanyNameJson})]');
+	//服务费收取方式
+	var _serviceTypeJson =eval('[(${serviceTypeJson})]');
+	// 合作模式
+	var _cooperationModeJson = eval('[(${cooperationModeJson})]');
+	//默认交货地址
+	var _defaultDeliveryAddr = eval('[(${defaultDeliveryAddr})]');
+	var _contractBondRateJson = eval('[(${contractBondRateJson})]');
+	var _buySourceJson = eval('[(${buySourceJson})]');
+	var _sellSourceJson = eval('[(${sellSourceJson})]');
+	var _matchUserNameTree = eval('[(${matchUserNameTree})]');// 业务员树
+	var _buyTemplateList = eval('[(${buyTemplateList})]');
+	var _sellTemplateList = eval('[(${sellTemplateList})]');
+	var _serviceTemplateList = eval('[(${serviceTemplateList})]');
+	var _curStatus = $("#entityStatus").val();
+	
+	var _matchCreateFlg = false;
+	_beforSaveOper=true;
+	var _deliveryAddrFlg = false;
+	// vip等级 0:不是vip
+	var _vipLevel = 0;
+	// 默认服务费费率：0.0003
+	var serverRate = Number(0.0003);
+	console.log("默认服务费率:" + serverRate);
+	var _deliveryModeJson_ = _deliveryModeJson;
+	// 1:可做远期
+	var _supplierFuture;
+	// 1:可配送
+	var _supplierDelivery;
+	var _oldBuyDealPrice = $("#sdealPrice").val();
+	var buyApplyId = $("#buyApplyId").val();
+	var sellApplyId = $("#sellApplyId").val();
+	var _dcFlg = false;
+	var buyShowFlg = eval('[(${buyShowFlg})]');
+	var sellShowFlg = eval('[(${sellShowFlg})]');
+	var hideApplyBtnFlg = eval('[(${hideApplyBtnFlg})]');
+	var _sellVirtualFlg = false;
+	var _$readonly = false;
+	var _$sell_readonly = false;
+	var _$buy_readonly = false;
+	$(function(){
+		// 按钮初始化
+		$('#addBtn').linkbutton();
+		$('#addBtnp').linkbutton();
+		$('.easyui-linkbutton').linkbutton();
+		$('#w_contract').window({
+			title: '电子合同',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+
+		if (_curStatus == "A" || _curStatus == "D"){
+			_$readonly = true;
+			_$sell_readonly = true;
+			_$buy_readonly = true;
+			$(".cooperation").addClass("hide");
+			$("#inputForm").find("input").not('.tags input').not("[type='button']").attr("readonly",true);
+
+			var _buyTemplateId = $('#buyTemplateId').val();
+			$(".upbtempBtnClass").hide();
+			$(".bContractPreviewClass").show();
+			$(".bContractPreviewClass").on("click",function () {
+				Cooperation.printContract(_buyTemplateId,$("#buyApplyId").val());
+			});
+
+			var _sellTemplateId = $('#sellTemplateId').val();
+			$(".upstempBtnClass").hide();
+			$(".sContractPreviewClass").show();
+			$(".sContractPreviewClass").on("click",function () {
+				Cooperation.printContract(_sellTemplateId,$("#sellApplyId").val());
+			});
+		} else {
+			var _createdUserId = $("#createdUserId").val();
+			var _curr_user_id = $("#current_userId").val();
+			var _cooperationUserId = $("#cooperationUserId").val();
+			var _cooperationMode = $("#cooperationMode").val();
+			if (!_createdUserId){
+				_$buy_readonly = false;
+				_$sell_readonly = false;
+				_$readonly = false;
+			} else if (_curr_user_id == _cooperationUserId && _cooperationMode == "B") {
+				_$buy_readonly = true;
+				_$readonly = true;
+			} else if (_curr_user_id == _cooperationUserId && _cooperationMode == "S") {
+				_$sell_readonly = true;
+				_$readonly = true;
+			} else if (_curr_user_id == _createdUserId && _cooperationMode == "B") {
+				_$sell_readonly = true;
+			} else if (_curr_user_id == _createdUserId && _cooperationMode == "S") {
+				_$buy_readonly = true;
+			} else {
+				_$buy_readonly = true;
+				_$sell_readonly = true;
+			}
+			if (hideApplyBtnFlg){
+				$("#btn_apply").addClass("hide");
+			}
+		}
+
+		// 初始化组件
+		Cooperation.initComponent(_$readonly);
+		// 采购、销售 明细显示逻辑
+		Cooperation.handleHide(buyShowFlg, sellShowFlg);
+	});
+
+	//发起申请前操作
+	function beforSaveOper() {
+		// 校验合同模板是否上传
+		if (!Cooperation.checkContractTemplate()) {
+			return false;
+		}
+
+		//参数array
+		var arr = new Array();
+		var strB = Convert.getJson4Form("formB");
+		var strS = Convert.getJson4Form("formS");
+		arr.push(strB);
+		arr.push(strS);
+
+		//基本数据
+		if ($("#contentStr").length == 0) {
+			$('#inputFormApprove').append('<input type="hidden" id="contentStr" name="contentStr">');
+		}
+		var resultArr = Convert.ToJSONString(arr);
+		$("#contentStr").val(resultArr);
+		console.log("formData:" + resultArr);
+		return true;
+	}
+</script>

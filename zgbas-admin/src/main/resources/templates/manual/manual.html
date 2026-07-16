@@ -1,0 +1,44 @@
+<!--用户手册-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>用户手册</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout" style="overflow: auto">
+  <div title="用户" style="width:380px;">
+      <ul id="tt">
+      </ul>
+  </div>
+</body>
+<script type="text/javascript">
+    var lastSelectNodeId;
+    $(function(){
+        $("#tt").tree({
+            checkbox:false,
+            animate:true,
+            url:_ctx+"/bas/manual/initTree",
+            formatter:function(node){
+                return node.text;
+            },
+            onClick: function (node) {
+                if (!isBlank(node.attributes.url)) {
+                    window.open(node.attributes.url)
+                }
+            }
+        });
+    });
+
+    // 判断是否为空
+    function isBlank(val) {
+        if (val == undefined
+            || val == ''
+            || val == null) {
+            return true;
+        }
+        return false;
+    }
+</script>
+
+
+</html>

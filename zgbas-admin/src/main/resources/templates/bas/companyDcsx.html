@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<title>带采方管理</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+
+</head>
+<body class="easyui-layout">
+ <div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post" >
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>企业名:</label>
+				<input id="company_name"  name="search_LIKES_companyName" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>联系人:</label>
+				<input type="text" name="search_LIKES_companyContact"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>代采方:</label>
+				<input name="search_EQB_dcsxFlg" id="dcsxFlg_id" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>是否有效:</label>
+				<input name="search_EQB_enableFlg" id="enableFlg_id" type="text" value=""/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<a  href="#" class="easyui-linkbutton btn-empty btn64 ml10" style="width: 24px" onclick="handles()">?</a>
+		</div>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		  <a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="insert()">新增</a>
+		  <a  href="#" class="easyui-linkbutton btn64 btn-info-empty ml10"  onclick="saveEdit()">保存</a>
+	</div>
+</div>
+ <div id="dlg" style="width:750px;">
+
+ </div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<script type="text/javascript">
+	var _creditTypeJson = eval('[(${creditTypeJson})]');
+	var lastIndex;
+	var productTypeJson=eval('[(${productTypeJson})]');
+	var productJson=eval('[(${productJson})]');
+	var listByCategory = eval('[(${listByCategory})]');
+	var chainPayType = eval('[(${chainPayType})]');
+	var defaultFlg =eval('[(${defaultFlg})]');
+	$(function(){
+		$("#dcsxFlg_id").combobox({
+			data:defaultFlg,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		});
+		$("#enableFlg_id").combobox({
+			data:defaultFlg,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		});
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:20,
+			rownumbers:true,
+			pageList:[50,40,30,20,10],
+			url:_ctx+"/bs/companyDcsx/list",
+			columns:[ [
+				{field:'companyName',title:'企业名称', width:200,align:'left',editor: { type: 'validatebox',options:{required:true}}},
+				{field:'companyAbbr',title:'企业简称', width:100,align:'left',editor: { type: 'validatebox',options:{required:true}}},
+				{field:'companyCd',title:'企业代码',align:'left', width:80,editor: { type: 'validatebox',options:{required:true}}},
+				{field:'address',title:'企业地址',align:'left', width:200,editor: { type: 'validatebox',options:{required:true}}},
+				{field:'calculateType',title:'单价计算类型',align:'left', width:150,editor: { type: 'combobox', options: { data:listByCategory,textField:'dictName',valueField:'dictCd', required: true}},
+					formatter:function(value,row,index){
+						if(value!=undefined){
+							return Convert.findValueByKey(listByCategory,'dictCd',value,'dictName');
+						}
+					}
+				},
+				{field:'chainPayType',title:'付款方式',align:'left', width:150,editor: { type: 'combobox', options: { data:chainPayType,textField:'dictName',valueField:'dictCd', required: true}},
+					formatter:function(value,row,index){
+						if(value!=undefined){
+							return Convert.findValueByKey(chainPayType,'dictCd',value,'dictName');
+						}
+					}
+				},
+				{field:'annualizedRevenue',title:'年化收益', width:100,editor: { type: 'validatebox'}},
+				{field:'chainRate',title:'中间链比率', width:100,editor: { type: 'numberbox',options:{validType:'length[1,16]',precision:6}}},
+				{field:'chainDays',title:'中间链账期', width:80,editor: { type: 'numberbox',options:{validType:'length[1,16]',precision:0}}},
+				{field:'premiumAmount',title:'加价金额', width:100,editor: { type: 'numberbox',options:{validType:'length[1,16]',precision:6}}},
+				{field:'premiumRate',title:'加价比率', width:100,editor: { type: 'numberbox',options:{validType:'length[1,16]',precision:6}}},
+				{field:'companyPerson',title:'法人代表',align:'left', width:120,editor: { type: 'validatebox',options:{required:true}}},
+				{field:'companyContact',title:'联系人',align:'left', width:120,editor: { type: 'validatebox',options:{required:true}}},
+				{field:'companyPhone',title:'电话', width:120,align:'left',editor: { type: 'validatebox',options:{required:true}}},
+				{field:'companyFax',title:'传真', width:120,align:'left',editor: { type: 'validatebox',options:{required:true}}},
+				{field:'companyTaxNo',title:'税号',align:'left',width:180,editor: { type: 'validatebox',options:{required:true}}},
+				{field:'companyBankName',title:'开户行',align:'left' ,width:250,editor: { type: 'validatebox',options:{required:true}}},
+				{field:'companyCardId',title:'账号', width:200,align:'left',editor: { type: 'validatebox',options:{required:true}}},
+				{field:'signingAddr',title:'签订地点', width:80,editor: { type: 'validatebox',options:{required:true}}},
+				{field:'ourCompanyFlag',title:'我司企业', width:80,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+						if(value=='true'){
+							return'是';
+						}else{
+							return'<span style="color:red">否</span>';
+						}
+					}},
+				{field:'dcsxFlg',title:'代采方', width:80,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+					if(value=='true'){
+							return'是';
+						}else{
+							return'<span style="color:red">否</span>';
+						}
+					}},
+				{field:'enableFlg',title:'是否有效', width:80,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+					if(value=='true'){
+							return'是';
+						}else{
+						return'<span style="color:red">否</span>';
+						}
+					}},
+				{field:'approverFlag',title:'参与审批', width:80,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+						if(value==true){
+							return'是';
+						}else{
+							return'<span style="color:red">否</span>';
+						}
+					}},
+				{field:'signFlg',title:'开通电子签', width:80,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+						if(value=='true'){
+							return'是';
+						}else{
+							return'<span style="color:red">否</span>';
+						}
+					}},
+				{field:'autoSignFlg',title:'是否自动签署', width:100,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+						if(value=='true'){
+							return'是';
+						}else{
+							return'<span style="color:red">否</span>';
+						}
+					}},
+				{field:'fundFlg',title:'是否开通余额', width:100,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+						if(value=='true'){
+							return'是';
+						}else{
+							return'<span style="color:red">否</span>';
+						}
+					}},
+				{field:'fundAmountQg',title:'余额-青光', width:120},
+				{field:'fundAmountWs',title:'余额-网塑宁波', width:120},
+				{field:'insuranceAmount',title:'保费余额', width:120,formatter:formateNum},
+				// 其他列配置...
+				{field:'creditType',title:'授信类别', width:100,align:'center',
+					editor: {
+						type: 'combobox',
+						options: {
+							valueField: 'dictCd',
+							textField: 'dictName',
+							data: _creditTypeJson,
+							required: true
+						}
+					},
+					formatter:function(value,row,index){
+						return Convert.findValueByKey(_creditTypeJson, "dictCd",value, "dictName");
+					}
+				},
+				{field:'dispOrderNo',title:'排序序号', width:80,editor: { type: 'validatebox',options:{required:true}}},
+				{field:'operate',title:'操作', width:85,align:'center',formatter:function(value, row, index){
+					return '<img onclick="remove(' + row.id + ')" style="cursor:pointer;width:16px;height:18px" src="../static/new-version/images/icon_delete.png"/>';
+				}}
+			]],
+			toolbar:'#toolbar',
+			onDblClickCell:function(index,field){
+				$('#tt').datagrid('endEdit', lastIndex);
+				$('#tt').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("tt",field,lastIndex)
+			},
+
+		});
+
+		$('#dlg').dialog({
+			title: '计算公式',
+			closed: true,
+			cache: false,
+			modal: true,
+			content: '<table id="myTable" class="my-table"><tr><th></th><th>年化收益</th><th>中间链比例</th><th>中间链账期</th><th>加价金额</th></tr>' +
+					'<tr><td>固定收益 * 账期</td><td style="background-color: #fdd49a"></td><td>0.0005</td><td>5</td><td style="background-color: #fdd49a"></td></tr>' +
+					'<tr><td>固定收益 * 周期（税后）</td><td style="background-color: #fdd49a"></td><td>0.0004</td><td>5</td><td style="background-color: #fdd49a"></td></tr>' +
+					'<tr><td>固定年化 * 账期</td><td>0.1</td><td style="background-color: #fdd49a"></td><td>-1</td><td style="background-color: #fdd49a"></td></tr>' +
+					'<tr><td>固定加单价</td><td style="background-color: #fdd49a"></td><td style="background-color: #fdd49a"></td><td style="background-color: #fdd49a"></td><td>12</td></tr>' +
+					'<tr><td>销售单价 - 固定年化 * 账期</td><td>0.1</td><td style="background-color: #fdd49a"></td><td>-1</td><td style="background-color: #fdd49a"></td></tr></table>',
+		});
+
+	});
+
+
+	function insert(){
+		$("#tt").datagrid("appendRow",{productCd:'',brandNumber:''});
+		var rows=$("#tt").datagrid('getRows');
+		$("#tt").datagrid('beginEdit', rows.length - 1);
+	}
+
+	function handles() {
+		$('#dlg').dialog('open');
+	}
+
+	function 	saveEdit(){
+		var flag=true;
+		var row = $('#tt').datagrid('getSelected');
+		if (row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			$('#tt').datagrid('endEdit', index);
+		}
+		var changeRows=[];
+		var inserted = $('#tt').datagrid('getChanges','inserted');
+		var updated = $('#tt').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#tt').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#tt').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#tt').datagrid('selectRow',index);
+    			$('#tt').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#tt').datagrid('endEdit', index);
+    		}
+		}
+		if (flag){
+
+		$.post(_ctx+"/bs/companyDcsx/saveBatch",Convert.ToSaveParam("tt") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+
+	function remove(id){
+ 	    $('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		if(row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			if (row.id==undefined){
+				$('#tt').datagrid('deleteRow',index);
+			}else{
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+		                if (r){
+		                	//TODO:如果该记录被引用,是否强制不允许删除?
+							$.post(_ctx+"/bs/companyDcsx/delete/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									$('#tt').datagrid('reload');
+									$('#tt').datagrid('clearSelections');
+								}else{
+									 $.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+		                }
+		            }
+		        });
+			}
+		}
+	}
+	function formateNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+</script>
+</body>
+</html>

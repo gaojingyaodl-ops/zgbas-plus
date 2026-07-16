@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true" style="width:100%;height:500px;margin-left:20px;margin-right: 20px;margin-top:10px;">
+<div region="north" class="search_div" border="false" style="overflow: hidden;">
+	<form id="frm_contract_choose" class="form-search" method="post">
+		<input type="hidden" name="search_EQS_status" value="D" />
+		<input type="hidden" name="search_EQS_contractType" th:value="${param.contractType}" id="ctrContractType"/>
+		<input type="hidden" name="search_INS_productStatus" th:value="${param.productStatus}" />
+		<input type="hidden" name="search_NEQS_contractStatus" th:value="${param.contractStatus}" />
+		<input type="hidden" name="search_EQS_contractStatus" th:value="${param.contract_Status}" />
+		<input type="hidden" name="search_EQS_businessType" th:value="${param.businessType}" />
+		<input type="hidden" name="search_EQB_fondFlg" th:value="${param.fondFlg}" />
+		<input type="hidden" name="search_EQB_billFlg" th:value="${param.billFlg}" />
+		<input type="hidden" name="search_INS_source" th:value="${param.source}" />
+		<input type="hidden" name="type" th:value="${param.type}"/>
+		<input type="hidden" id="title" th:value="${param.title}" />
+		<input type="hidden" id="processId" th:value="${param.processId}" />
+		<input type="hidden" name="cancelFlg" th:value="${param.cancelFlg}"/>
+		<input type="hidden" name="search_EQB_applyCancelFlg" value="false"/>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>合同编号:</label>
+				<input type="text" name="search_LIKES_contractNo"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>对方企业:</label>
+				<input type="text" name="search_LIKES_companyName"/>
+			</p>
+			<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('frm_contract_choose','tt_contract_choose');">查询</a>
+			<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#frm_contract_choose').form('reset');">清空</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" style="padding-right:35px;">
+	<table id="tt_contract_choose" style="height:340px;"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+	<table id="contractTable" style="min-height:120px;"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div region="south" border="false" style="overflow: hidden;height: 50px;">
+	<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn-solid btn64 ml6" onclick="ContractChoose.confirmChoose();">确&nbsp;认</a>
+		<a href="#" class="easyui-linkbutton btn-solid btn64 ml6" onclick="ContractChoose.closeCurrentWin();">关&nbsp;闭</a>
+	</div>
+</div>
+</div>
+<script type="text/javascript">
+	var lastIndex=0;
+	var contractTypeJson =eval('[(${contractTypeJson})]');
+	var contractStatusJson =eval('[(${contractStatusJson})]');
+	var productTypeJson =eval('[(${productTypeJson})]');
+	var _url = "";
+	$(function(){
+		$("#srh_choose_contractType").combobox({
+			data:contractTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			width:128,
+			editable:true
+		});
+		var ct = $("#ctrContractType").val();
+		/* if(ct=="B"){
+			_url = _ctx+"/ctr/contract/listChoose";
+		}else{
+			_url = _ctx+"/ctr/contract/findsellList";
+		} */
+		
+		$('#tt_contract_choose').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			pageList:[500,200,100,50,30,20],
+			singleSelect:true,
+			queryParams:Convert.getJson4Form('frm_contract_choose'),
+			url:_ctx+"/ctr/contract/listChoose",
+			columns:[ [
+				{field:'id',title:'id',hidden:true},
+				{field:'contractType',title:'合同类型', width:80,formatter:function(value,row,index){
+					return Convert.findValueByKey(contractTypeJson,"dictCd",value,"dictName");
+				}},
+				/* {field:'businessNo',title:'业务编号', width:130}, */
+				{field:'contractNo',title:'合同编号', width:130},
+				{field:'contractTime',title:'合同时间', width:140},
+				{field:'totalAmount',title:'合同总价(元)', width:100,align:'right'},
+				{field:'companyName',title:'对方企业', width:200,align:'left',formatter:function(value,row){
+					if (value){
+						var content = '<p title="' + value + '" class="note">' + value + '</p>';
+						return content;
+					}
+				}}
+			]],
+			onSelect:function(index,row){
+				ContractChoose.selected=[];
+				ContractChoose.selected.push(row);
+				ContractChoose.loadDetail(row);
+			},
+			onUnselect:function(index,row){
+				ContractChoose.removeSelected(row);
+				console.log(ContractChoose.selected);
+			},
+			onDblClickRow:function(index,row){
+				ContractChoose.confirmChoose();
+			}
+		});
+		var columns =[ [
+			{field:'id',title:'id',hidden:true},
+			{field:'productName',title:'品名',align:'center',width:130},
+			{field:'brandNumber',title:'牌号',align:'center',width:130},
+			{field:'factoryName',title:'厂商',align:'center',width:130},
+			{field:'warehouseName',title:'仓库',align:'center',width:190},
+			{field:'dealNumber',title:'数量(吨)', align:'right', width:120},
+			{field:'dealPrice',title:'单价(元)',align:'right',  width:110},
+			{field:'totalPrice',title:'总价(元)', align:'right', width:117}
+		]];
+		if (_industry.indexOf('SL')==-1){
+			for(var i in columns[0]){
+				var col =columns[0][i];
+				if (col.field=='brandNumber' || col.field=='factoryName'){
+					col.hidden = true;
+				}
+			}
+		}
+		
+		var _url = _ctx+"/ctr/product/list?search_EQL_ctrContractId="+$("#entityId").val();
+		$('#contractTable').datagrid({
+			pageSize:50,
+			rownumbers:true,
+			url:_url,
+			pagination:false,
+			columns:columns
+		});
+	});
+	
+	
+	var ContractChoose={
+			selected:[],
+			removeSelected:function(row){
+				for(var i=0; i<ContractChoose.selected.length; i++) {
+				    if(ContractChoose.selected[i].id == row.id) {
+				    	ContractChoose.selected.splice(i, 1);
+				      	break;
+				    }
+				  }
+			},
+			confirmChoose:function(){
+				var selectedRows=ContractChoose.selected;//$('#ttsimpleproduct').datagrid('getSelections');
+				//var title = $("#title").val();
+				var title = formatTitle($("#title").val());
+		    	var processId = $("#processId").val();
+		        if(selectedRows.length>0){
+			        if (title){
+			        	window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+processId+"?contractId="+selectedRows[0].id);
+				    }else{
+				    	setValueByContractId(selectedRows[0]);
+					}
+		        	ContractChoose.closeCurrentWin();
+		        }else{
+		    		$.messager.alert({
+						width:388,
+						height:170,
+						title: '提示',
+						msg: '请选择一条合同',
+						ok: "确定",
+						cls:'c9',
+						icon:'info',
+						border:'thin',
+						fn: function(r){
+			               
+			            }
+			        });				
+					return;
+		        }
+			
+			},
+			
+			closeCurrentWin:function(){
+				$('#w_contract_choose').window('close');
+			},
+			loadDetail:function(row){
+				var id =row.id;
+				if(id){
+					//重新加载该合同商品
+					var _url = _ctx+"/ctr/product/list?search_EQL_ctrContractId="+id;
+					$('#contractTable').datagrid("load",_url);
+				}
+				
+			}
+				
+			
+		}
+	function formatTitle(title){
+		if (title == 'pay'){
+			return "新建：付款申请";
+		}else if (title == 'receive'){
+			return "新建：收款申请";
+		}else if (title == 'deliveryIn'){
+			return "新建：入库申请";
+		}else if (title == 'deliveryOut'){
+			return "新建：出库申请";
+		}else if (title == 'invoice'){
+			return "新建：开票申请";
+		}else if (title == 'invoiceReceived'){
+			return "新建：收票申请";
+		}else if (title == 'cancel'){
+			return "新建：作废申请";
+		}else if (title == 'payRefund'){
+			return "新建：采购退款";
+		}else if (title == 'receiveRefund'){
+			return "新建：销售退款";
+		}
+	}
+</script>
+</html>

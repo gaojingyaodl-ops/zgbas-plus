@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true" style="width:100%;height:500px;">
+<div region="north" class="search_div" border="false" style="overflow: hidden;">
+	<form id="frm_deliveryIn_choose" class="form-search from-input-layout" method="post">
+		<p class="p_text">
+			<span class="input-colspan">
+					<label>合同编号:</label>
+					<input type="text" name="search_LIKES_contractNo" style="height:32px;width:140px;border:1px solid #c5c5c5;border-radius:4px;"/>
+			</span>
+			<span class="input-colspan">
+					<label>对方企业:</label>
+					<input type="text" name="search_LIKES_companyName" style="height:32px;width:140px;border:1px solid #c5c5c5;border-radius:4px;"/>
+			</span>
+			<span class="btn-group">
+				<a href="#" id="btn" iconCls="icon-search" class="easyui-linkbutton" onclick="Convert.search('frm_deliveryIn_choose','tt_deliveryIn');">查询</a>
+				<a href="#" id="btn" iconCls="icon-clear" class="easyui-linkbutton ml10" onclick="$('#frm_deliveryIn_choose').form('reset');">清空</a>
+			</span>
+		</p>
+	</form>
+</div>
+
+<div region="center" border="false">
+	<table id="tt_deliveryIn" style="height:340px;"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+	<table id="tt_productList" style="min-height:120px;"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<div region="south" border="false" style="overflow: hidden;height: 40px;">
+	<div class="actions_bar">
+		<a href="#" class="easyui-linkbutton btn-info" onclick="ContractChoose.confirmChoose();">确&nbsp;认</a>
+		<a href="#" class="easyui-linkbutton btn-danger" onclick="ContractChoose.closeCurrentWin();">关&nbsp;闭</a>
+	</div>
+</div>
+</div>
+<script type="text/javascript">
+	var _statusJson=eval('[(${statusJson})]');
+	var _deliveryTypeJson=eval('[(${deliveryTypeJson})]');
+	$(function(){
+		//var fileview = $.extend({}, $.fn.datagrid.defaults.view, { onAfterRender: function (target) { ContractChoose.ischeckItem(); } });
+
+		$('#tt_deliveryIn').datagrid({
+			pagination:true,
+			pageSize:20,
+			rownumbers:true,
+			//view: fileview,
+			pageList:[500,200,100,50,30,20],
+			singleSelect:true,
+			queryParams:Convert.getJson4Form('frm_deliveryIn_choose'),
+			url:_ctx+"/apply/deliveryIn/list?search_EQS_status=D",
+			columns:[ [
+				{field:'applyNo',title:'审批编号',width:150},
+				{field:'contractNo',title:'合同编号',align:'center',width:120},
+				{field:'deliveryType',title:'配送方式',width:120,formatter:function(value,row,index){
+					return Convert.findValueByKey(_deliveryTypeJson,"dictCd",value,"dictName");
+				}},
+				{field:'companyName',title:'上家企业',width:120},
+				{field:'status',title:'状态', width:80,formatter:function(value,row,index){
+					return Convert.findValueByKey(_statusJson,"dictCd",value,"dictName");
+				}},
+			]],
+			onSelect:function(index,row){
+				ContractChoose.selected=[];
+				ContractChoose.selected.push(row);
+				ContractChoose.loadDetail(row);
+			},
+			onUnselect:function(index,row){
+				ContractChoose.removeSelected(row);
+				console.log(ContractChoose.selected);
+			}
+		});
+
+		$('#tt_productList').datagrid({
+			pageSize:50,
+			rownumbers:true,
+			pagination:false,
+			columns:[ [
+				{field:'productName',title:'品名',align:'center',width:100},
+				{field:'brandNumber',title:'牌号',align:'center',width:100},
+				{field:'factoryName',title:'厂商',align:'center',width:110},
+				{field:'warehouseName',title:'仓库',align:'center',width:125},
+				{field:'dealNumber',title:'数量(吨)', align:'right', width:80},
+				{field:'dealPrice',title:'单价(元)',align:'right',  width:80},
+				{field:'totalPrice',title:'总价(元)', align:'right', width:80},
+				{field:'curNumber',title:'当前入库数量(吨)', align:'right', width:120}
+			]]
+		});
+
+	});
+
+	var ContractChoose={
+			selected:[],
+			ischeckItem:function () {
+		        for (var i = 0; i < ContractChoose.selected.length; i++) {
+		            $('#tt_contract_choose').datagrid('selectRecord', ContractChoose.selected[i]); //根据id选中行
+		        }
+			},
+			removeSelected:function(row){
+				for(var i=0; i<ContractChoose.selected.length; i++) {
+				    if(ContractChoose.selected[i].id == row.id) {
+				    	ContractChoose.selected.splice(i, 1);
+				      	break;
+				    }
+				  }
+			},
+			confirmChoose:function(){
+				var selectedRows=ContractChoose.selected;
+		    	var callbackExec = $('#deliveryIn_choose').attr('callbackExec');
+		    	var myfunc = eval(callbackExec);
+		    	if(typeof(myfunc) == "function"){
+		    		myfunc(selectedRows);
+		    	}
+		    	ContractChoose.closeCurrentWin();
+			},
+			closeCurrentWin:function(){
+				$('#deliveryIn_choose').window('close');
+			},
+			loadDetail:function(row){
+				var id =row.id;
+				if(id){
+					//重新加载该申请明细
+					var _url = _ctx+"/apply/productDetail/list?search_EQL_applyId="+id+"&search_EQS_applyType=I";
+					$('#tt_productList').datagrid("load",_url);
+				}
+
+			}
+		}
+</script>
+</html>

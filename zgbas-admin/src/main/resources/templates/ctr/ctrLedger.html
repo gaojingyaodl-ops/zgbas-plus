@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>出入库台账报表</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post" style="margin-left: 2px">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>合同编号:</label>
+                <input name="search_LIKES_contractNo" type="text" value=""/>
+            </p>
+            <p class="yw-table-filter">
+                <label>交货方式</label>
+                <input type="text" id="deliveryMode" class="control text_padding" name="search_EQS_deliveryMode"/>
+            </p>
+            <p class="yw-table-filter">
+                <lable>客户:</lable>
+                <input name="search_LIKES_companyName" type="text" value=""/>
+            </p>
+            <a href="#" id="btn1" class="easyui-linkbutton btn64 ml10" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" id="btn2" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+            <a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none" onclick="exportExcel()">导出</a>
+        </div>
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+    <table id="tt" fit="true"
+           title="" iconCls="icon-edit" singleSelect="true"
+           idField="id">
+    </table>
+</div>
+<div id="w" title="出入库台账报表" class="easyui-window" data-options="width:400,height:250">
+    <script type="text/javascript">
+        var lastIndex=0;
+        var deptJson=eval('[(${deptJson})]');
+        var deliveryModeJson = eval('[(${deliveryModeJson})]');
+        var outInLedgerTypeJson = eval('[(${outInLedgerTypeJson})]');
+        $(function(){
+            $("#deliveryMode").combobox({
+                data:deliveryModeJson,
+                textField:'dictName',
+                valueField:'dictCd',
+                panelHeight:"auto",
+                editable:true
+            });
+
+            $('#tt').datagrid({
+                pagination:true,
+                rownumbers:true,
+                pageSize:50,
+                pageList:[50,40,30,20,10],
+                queryParams:Convert.getJson4Form('searchForm'),
+                url:_ctx+"/ctr/ledger/selectByPage",
+                columns:[ [
+                    {field:'operTime',title:'时间',align:'center', width:80,editor: { type: 'validatebox',options:{required:true}}},
+                    {
+                        field : 'operation',
+                        title : '操作类型',
+                        width : 100,
+                        align:'left',
+                        formatter : function(value, row, index) {
+                            return Convert.findValueByKey(outInLedgerTypeJson, "dictCd",value, "dictName");
+                        }
+                    },
+                    {field:'productsName',title:'品名',align:'left', width:200,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'price',title:'单价',align:'right', width:100, formatter:formateNumTon, editor: { type: 'validatebox',options:{required:true}}},
+                    {
+                        field : 'deliveryMode',
+                        title : '交货方式',
+                        width : 120,
+                        align:'left',
+                        formatter : function(value, row, index) {
+                            return Convert.findValueByKey(deliveryModeJson, "dictCd",value, "dictName");
+                        }
+                    },
+                    {field:'contractNo',title:'系统合同号',align:'left', width:150, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'realContractNo',title:'实际合同号',align:'left', width:150, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'ourCompanyName',title:'我司名称',align:'left', width:200, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'deptId',title:'团队',align:"left", width:90,formatter:function (value, row, index) {
+                            return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+                        } },
+                    {field:'matchUserName',title:'业务员',align:'left', width:80, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'companyName',title:'对方单位', align:'left', width:200,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'companyFax',title:'对方传真',align:'left', width:150,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'totalNumber',title:'合同数量',align:'right', width:80,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'extractNumber',title:'可提数量',align:'right', width:80,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'warehouseNumber',title:'出入库数量',align:'right', width:80,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'surplusNumber',title:'结余数量',align:'right', width:80, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'carrier',title:'承运商名称',align:'left', width:200, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'deliveryAddr',title:'仓库地址/送达地址',align:'left', width:200, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'deliveryPhone',title:'仓库电话',align:'left', width:100, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'otherAmount',title:'其他费用',align:'right', width:100, formatter:formateNumTon, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'transportAmount',title:'运费',align:'right', width:100, formatter:formateNumTon, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'deliveryOutFee',title:'出库费',align:'right', width:100, formatter:formateNumTon, editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'plateNumber',title:'车号', align:'left', width:200,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'driverName',title:'司机',align:'left', width:200,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'driverCardNo',title:'身份证号', align:'left', width:200,editor: { type: 'validatebox',options:{required:true}}},
+                    {field:'driverPhone',title:'电话',align:'left', width:200,editor: { type: 'validatebox',options:{required:true}}}
+                ] ],
+                toolbar:'#toolbar',
+                onDblClickRow:function(index,row){
+                    lastIndex = index;
+                    editrow(row.id);
+                },
+                onClickRow:function(index,row){
+                    lastIndex = index;
+                },
+                onLoadSuccess:function(data){
+                    var total =$('#tt').datagrid('getData').total;
+                    if (lastIndex >total-1){
+                        lastIndex=total-1;
+                    }
+                    $('#tt').datagrid('selectRow', lastIndex);
+                }
+            });
+
+            $('#w').window({
+                modal:true,
+                closed: true,
+                collapsible : false,
+                minimizable : false,
+                cache:false,
+                onClose:function(){
+                    $('#tt').datagrid('reload');
+                }
+            });
+
+        });
+
+        function intiMonthBox(id){
+            var db = $('#'+id);
+            db.datebox({
+                onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+                    span.trigger('click'); //触发click事件弹出月份层
+                    if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+                        tds = p.find('div.calendar-menu-month-inner td');
+                        tds.click(function (e) {
+                            e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+                            var year = /\d{4}/.exec(span.html())[0]//得到年份
+                                , month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+                            db.datebox('hidePanel')//隐藏日期对象
+                                .datebox('setValue', year + '-' + month); //设置日期的值
+                        });
+                    }, 0);
+                    yearIpt.unbind();//解绑年份输入框中任何事件
+                },
+                parser: function (s) {
+                    if (!s) return new Date();
+                    var arr = s.split('-');
+                    return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+                },
+                formatter: function (d) {
+                    let year = d.getFullYear();
+                    let month = d.getMonth() + 1;
+                    if (month < 10) {
+                        month = '0' + month;
+                    }
+                    return year + '-' + month;
+                }
+            });
+            var p = db.datebox('panel'), //日期选择对象
+                tds = false, //日期选择对象中月份
+                yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+                span = p.find('span.calendar-text'); //显示月份层的触发控件
+        }
+
+        function formateNumTon(num, row, index) {
+            if (num) {
+                num = parseFloat(num).toFixed(2).toString().split(".");
+                num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+                return num.join(".");
+            } else {
+                return num;
+            }
+        }
+
+        function exportExcel(){
+            $('#searchForm').form('submit', {url:_ctx+"/ctr/ledger/exportExcel"});
+        }
+    </script>
+</body>
+</html>

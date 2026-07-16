@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="detail-content">
+
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>供方:</label>
+            <input name="targetCompanyName" id="targetCompanyName" th:value="${content.targetCompanyName}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>需方:</label>
+            <input name="ourCompanyName" id="our_company_name" th:value="${content.ourCompanyName}" type="text"/>
+        </p>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>协议编号:</label>
+            <input name="protocolNo" id="protocolNo" th:value="${content.protocolNo}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>协议日期:</label>
+            <input name="protocolDate" id="protocolDate" th:value="${content.protocolDate}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>签订日期:</label>
+            <input name="contractDate" id="contractDate" th:value="${content.contractDate}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>合同编号:</label>
+            <input name="contractNo" id="contractNo" th:value="${content.contractNo}" type="text"/>
+        </p>
+        <span class="syncClass" style="line-height: 28px;">
+        <a href="#" class="easyui-linkbutton btn-empty" onclick="applyProtocolDocRescission.syncContractDetail('SP')">同步合同信息</a>
+    </span>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>规格型号:</label>
+            <input name="productName" id="productName" th:value="${content.productName}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>数量（吨）:</label>
+            <input name="totalNumber" id="totalNumber" th:value="${content.totalNumber}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>单价（元/吨）:</label>
+            <input name="dealPrice" id="dealPrice" th:value="${content.dealPrice}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>总价（元）:</label>
+            <input name="totalAmount" id="totalAmount" th:value="${content.totalAmount}" type="text"/>
+        </p>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>变更交货方式:</label>
+            <input name="deliveryMode" id="deliveryMode" th:value="${content.deliveryMode}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>变更数量（吨）:</label>
+            <input name="alterTotalNumber" id="alterTotalNumber" th:value="${content.alterTotalNumber}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>变更单价（元/吨）:</label>
+            <input name="alterDealPrice" id="alterDealPrice" th:value="${content.alterDealPrice}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>变更总价（元）:</label>
+            <input name="alterTotalAmount" id="alterTotalAmount" th:value="${content.alterTotalAmount}" type="text"/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>变更牌号:</label>
+            <input name="brandNumber" id="brandNumber" th:value="${content.brandNumber}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>自动发起中游合同补充协议:</label>
+            <input name="autoDcsxSupAgreementFlg" id="autoDcsxSupAgreementFlg" th:value="${content.autoDcsxSupAgreementFlg}" type="text"/>
+        </p>
+        <p class="yw-table-filter">
+            <label>审批完成自动更新合同数据:</label>
+            <input name="autoRefreshContractFlg" id="autoRefreshContractFlg" th:value="${content.autoRefreshContractFlg}" type="text"/>
+        </p>
+    </div>
+</div>
+</body>
+</html>

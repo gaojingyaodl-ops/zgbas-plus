@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+
+<fieldset class="form-section" style="padding: 35px 30px 10px 20px;">
+	<legend class="form-section-title"><span class="approve_text">调整前</span><i></i></legend>
+	<div id="inputForm" method="post" class="editForm_approve firstDiv">
+		<input type="hidden" id="entityId" th:value="${entity.id}" />
+		<p class="p_text" style="margin-bottom: 5px">
+			<span class="input-colspan" style="width: initial;">
+				<label>出库编号:</label>
+				<input id="applyNo" class="chooseBtnStyle" readonly type="text" th:value="${entity.applyNo}"></input>
+			</span>
+			<span class="input-colspan">
+				<label for="contractNo" class="control-label">合同编号:</label>
+				<input id="contractNo" class="control chooseBtnStyle" readonly type="text" th:value="${entity.contractNo}"></input>
+			</span>
+		</p>
+
+		<div style="min-height: 120px;">
+			<table id="outTable" style="height: 120px;" title=""
+				iconCls="icon-edit" singleSelect="true" idField="id">
+			</table>
+		</div>
+
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>配送方式:</label>
+				<input id="deliveryType" readonly="readonly" type="text" th:value="${entity.deliveryType}"></input>
+			</span>
+				<span class="input-colspan"> <label>交货方式:</label>
+				<input id="deliveryMode" readonly="readonly" type="text" th:value="${entity.deliveryMode}"></input>
+			</span>
+				<span class="input-colspan"> <label>已付金额(元):</label>
+				<input id="payAmount" type="text" onkeyup="value=value.replace(/^(\d*\.?\d{0,2}).*/,'$1')" th:value="${entity.payAmount}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>车牌号:</label>
+				<input id="plateNumber" type="text" th:value="${entity.plateNumber}"></input>
+			</span>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>采购商名称:</label>
+				<input id="companyName" readonly="readonly" type="text" th:value="${entity.companyName}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>联系人:</label>
+				<input id="contactName" type="text" th:value="${entity.contactName}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>联系电话:</label>
+				<input id="contactPhone" type="text" th:value="${entity.contactPhone}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>联系地址:</label>
+				<input id="contactAddr" type="text" th:value="${entity.contactAddr}"></input>
+			</span>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>司机:</label>
+				<input id="driverName" type="text" th:value="${entity.driverName}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>身份证:</label>
+				<input id="driverCardNo" type="text" th:value="${entity.driverCardNo}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>司机电话:</label>
+				<input id="driverPhone" type="text" th:value="${entity.driverPhone}"></input>
+			</span>
+			<span class="input-colspan">
+				<label for="deliveryAddr">配送地:</label>
+				<input id="deliveryAddr" type="text" th:value="${entity.deliveryAddr}"></input>
+			</span>
+		</p>
+
+		<p class="p_text">
+			<span class="input-colspan">
+				<label>批号:</label>
+				<input id="warehouseBatchNo" type="text" th:value="${entity.warehouseBatchNo}"></input>
+			</span>
+			<span class="input-colspan">
+				<label>仓位/货位:</label>
+				<input id="warehousePosition" type="text" th:value="${entity.warehousePosition}"></input>
+			</span>
+		</p>
+
+		<p class="p_text" style="margin-top: 5px">
+			 <span class="input-colspan2"> <label for="remark" style='vertical-align: top;position: relative;top:-1px;'>备注:</label>
+				<textarea id="remark" th:text="${entity.remark}" readonly></textarea>
+			</span>
+		</p>
+	</div>
+</fieldset>
+
+<script type="text/javascript">
+    /*弹框垂直居中*/
+    var easyuiPanelOnOpen = function(left, top) {
+	var iframeWidth = $(this).parent().parent().width();
+
+	var iframeHeight = $(this).parent().parent().height();
+
+	var windowWidth = $(this).parent().width();
+	var windowHeight = $(this).parent().height();
+
+	var setWidth = (iframeWidth - windowWidth) / 2;
+	var setHeight = (iframeHeight - windowHeight) / 2;
+	$(this).parent().css({/* 修正面板位置 */
+		left : setWidth,
+		top : setHeight
+	});
+
+	if (iframeHeight < windowHeight) {
+		$(this).parent().css({/* 修正面板位置 */
+			left : setWidth,
+			top : 0
+		});
+	}
+	$(".window-shadow").hide();
+};
+$.fn.window.defaults.onOpen = easyuiPanelOnOpen;
+var lastIndex;
+var _deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+var _productDeliveryJson = eval('[(${productDeliveryJson})]');
+var _factoryJson = eval('[(${factoryJson})]');
+var _productType = eval('[(${productType})]');
+var _companyJson = eval('[(${companyJson})]');
+var _productTypeJson = eval('[(${productTypeJson})]');
+var _productJson = eval('[(${productJson})]');
+var _deliveryModeJson=eval('[(${deliveryMode})]');
+var prouctDetailJson;
+$(function(){
+	var _deliveryType = $('#deliveryType').val();
+	var _conDeliveryType = Convert.findValueByKey(_deliveryTypeJson,"dictCd",_deliveryType,"dictName");
+	$("#deliveryType").val(_conDeliveryType);
+	var _deliveryMode = $('#deliveryMode').val();
+	var _conDeliveryMode = Convert.findValueByKey(_deliveryModeJson,"dictCd",_deliveryMode,"dictName");
+	$("#deliveryMode").val(_conDeliveryMode);
+
+	$("#inputForm").find("input").attr("readonly",true);
+	var _url =  _ctx+"/apply/productDetail/productList?search_EQS_applyType=O&search_EQL_applyId="+$("#entityId").val();
+	$('#outTable').datagrid({
+		pageSize:10,
+		url:_url,
+		rownumbers:true,
+		pagination:false,
+		columns:[ [
+			{field:'id',title:'ID',hidden:true,
+				formatter:function(value,row,index){
+					return value;
+			}},
+			{field:'productCd',title:'品名',align:'center',width:120,
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_productJson,"typeCode",value,"typeName");
+			}},
+			{field:'ctrProductId',title:'商品id',width:120,hidden:true},
+			{field:'productName',title:'货品名',width:120,hidden:true},
+			{field:'brandNumber',title:'牌号',width:120},
+			{field:'factoryId',title:'厂商',width:120,
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_factoryJson,"id",value,"factoryName");
+			}},
+			{field:'warehouseName',title:'仓库', width:180,editor:{type:'combobox',options:{required:'true',valueField:'text',textField:'text',onHidePanel:function(){BasCombobox.onHidePanel(this);}}}},
+			{field:'productAttr',title:'在途/现货',align:'center', width:100,editor:{type:'combobox',options:{required:'true',readonly:'readonly',data:_productType,textField:'dictName',valueField:'dictCd'}},
+				formatter:function(value,row,index){
+					return Convert.findValueByKey(_productType,"dictCd",value,"dictName");}
+			},
+			{field:'dealNumber',title:'数量(吨)', width:80,align:'right',
+				formatter: function (value, row, index) {
+                    if (row != null) {
+                        return parseFloat(value).toFixed(3);
+                    }
+            }},
+			{field:'dealPrice',title:'单价(元)', width:80,align:'right'},
+			{field:'totalPrice',title:'总价(元)', width:80,align:'right'},
+			{field:'warehouseNumber',title:'已提数量', width:100,hidden:true},
+			{field:'curApproveNumber',title:'审批中数量', width:100,hidden:true},
+			{field:'curNumber',title:'出库数量(吨)', width:150,align:'right',editor:{type:'numberbox',options:{required:'true',validType:'length[1,20]',precision:4}},
+				formatter: function (value, row, index) {
+                    if (row != null) {
+                        return parseFloat(value).toFixed(3);
+                    }
+			}}
+		]]
+	});
+});
+</script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>

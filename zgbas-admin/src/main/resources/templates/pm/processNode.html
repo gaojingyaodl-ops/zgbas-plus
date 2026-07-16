@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>节点管理</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>负责人</label>
+				<input type="text" id="nodeUserId" class="control text_padding" name="search_LIKES_nodeUserId"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>节点名称:</label>
+				<input name="search_LIKES_nodeName" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter">
+				<label>节点类型:</label>
+				<input type="text" id="node_type_srh" name="search_EQS_nodeType"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>是否有效:</label>
+				<input name="search_EQB_enableFlg" type="text" value="" id="enableFlg_srh"/>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+		</div>
+	</form>
+	<div id="btn" class="add-btn" style="margin-top: 10px">
+		  <a  href="#" class="easyui-linkbutton btn64 addBtn" onclick="insert()">新增</a>
+		  <a  href="#" class="easyui-linkbutton btn64 btn-info-empty" onclick="saveEdit();">保存</a>
+	</div>
+</div>
+
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+<script type="text/javascript">
+	var lastIndex;
+	var enableFlgs =eval('[(${enableFlgs})]');
+	var nodeTypeJson =eval('[(${nodeTypeJson})]');
+	var deptTree = eval('[(${deptTree})]');
+	var matchUserNameTree = eval('[(${matchUserNameTree})]');
+	$(function(){
+		$("#enableFlg_srh").combobox({
+			data:enableFlgs,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"	
+		});
+		$("#node_type_srh").combobox({
+			data:nodeTypeJson,
+			textField:'dictName',
+			valueField:'dictCd',
+			panelHeight:"auto"
+		});
+		$('#nodeUserId').combotree({
+			data : matchUserNameTree,
+			multiple : false,
+			editable : true,
+			onSelect : function(node) {
+				if (node.children.length != 0) {
+					$('#nodeUserId').combotree('clear');
+				}
+			}
+		})
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:20,
+			rownumbers:true,
+			pageList:[50,40,30,20],
+			url:_ctx+"/pm/processNode/newList",
+			columns:[ [
+				{field:'nodeCode',title:'节点代码',align:'left',sortable:true,editor:{type:'validatebox',options:{required:'true',validType:'length[1,20]'}}, width:150},
+				{field:'nodeName',title:'节点名称',align:'left',sortable:true,editor:{type:'validatebox',options:{required:'true',validType:'length[1,20]'}}, width:150},
+				{field:'action',title:'负责人',align:'left',editor:{type:'combotree',options:{editable:true,panelHeight:400,panelWidth:200,multiple:true,onlyLeafCheck:true,data:deptTree,textField:'text',valueField:'id'}},
+					formatter:function(value,row,index){
+					var _val = row.nodeUserId;
+					var ids_array=[];
+					var names_array=[];
+					if(_val && _val.length>0){
+						var userIds = _val.split("|");
+						for(var i in userIds){
+							if (userIds[i]==''){
+								continue;
+							}
+							var userid  = "user"+userIds[i];
+							var username= Convert.findTreeValueByKey(deptTree,"id",userid,"text");
+							ids_array.push(userid);
+							names_array.push(username);
+						}
+					}
+					row.action = ids_array.join(',');
+					return names_array.join(',');
+					},
+				width:120},
+				{field:'nodeType',title:'类型',align:'center',editor:{type:'combobox',
+					options:{required:'true',panelHeight:"auto",data:nodeTypeJson,textField:'dictName',valueField:'dictCd'}
+				}, formatter:function(value,row,index){
+					return Convert.findValueByKey(nodeTypeJson,"dictCd",value,"dictName");
+				}, width:100},
+				{field:'enableFlg',title:'有效',editor:{type:'checkbox',options:{on:'true',off:'false'}}, width:80, align:'center',
+					formatter:function(value,row,index){
+						if(value=='true')
+							return '是';
+						else
+							return '否';
+					}
+				},
+				{field:'refInfo',title:'引用流程(次数)',width:800, align:'left',
+					formatter:function(value,row,index){
+						if(value && value.length>0){
+							return '<p style="color:#666;" class="note">'+value+'</p>';
+						}
+						return '<span style="color:#999;">无引用</span>';
+					}
+				},
+				{field:'updatedDate',title:'更新时间', width:140},
+				{field:'operate',title:'操作', width:80,align:'center',formatter:function(value, row, index){
+			        //var detail = '<img onclick= detail("'+row.id+'","/pm/process/detail/")" style="cursor:pointer;width:15px;hight:15px" src="../static/images/icon_delete.png"/>';
+					var str = '<img onclick="remove('+row.id+')" style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>';
+			        return str; }}
+			]],
+			toolbar:"#toolbar",
+			onDblClickCell:function(index,field){
+				$('#tt').datagrid('endEdit', lastIndex);
+				$('#tt').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("tt",field,lastIndex);
+			},
+			onClickCell:function(index,field){
+				/*if (lastIndex != index){
+					$('#tt').datagrid('endEdit', lastIndex);
+					$('#tt').datagrid('beginEdit', index);
+				}*/
+				lastIndex = index;
+				//Convert.focusEditor("tt",field,lastIndex);
+			},
+			onBeginEdit:function(index,row){
+				//自动合计商品总金额
+				var ed_nodeUserId = $('#tt').datagrid('getEditor', {index:index,field:'action'});//负责人
+				if (ed_nodeUserId==null){
+					return;
+				}
+				
+				$(ed_nodeUserId.target).combotree('options').onCheck=function(node,checked){
+// 					var _val =node.id+"";
+					if (node.id.indexOf("user")<0){
+// 						row.action="";
+						var t = $(ed_nodeUserId.target).combotree('tree')
+						t.tree('uncheck',node.target);
+						return;
+					}
+
+
+					var _val = $(ed_nodeUserId.target).combotree('getValues');
+					
+					console.log(_val);
+					console.log(array2str(_val,'user'));
+					var row = $('#tt').datagrid('getSelected');
+					row.nodeUserId = array2str(_val,'user');
+					
+// 					if(_val.indexOf("user")<0){
+// 						row.action="";
+// 						$(ed_nodeUserId.target).combotree('clear');
+// 					}else{
+// 						row.nodeUserId = Number(_val.replace("user",""));
+// 					}
+				};
+				$(ed_nodeUserId.target).combotree('textbox').on('keyup',function(){
+					var value =$(this).val();
+					if (value==''){
+						row.nodeUserId = '';
+						row.action = '';
+					}
+				});
+				
+				
+			}
+		});
+	});
+	
+	function array2str(array,prefix){
+		var a_new =[];
+		for(var index in array){
+			var str = array[index];
+			a_new.push(str.replace(prefix,""));
+		}
+		if (a_new.length > 0){
+			return a_new.join('|')+"|";
+		}
+		return '';
+	}
+	function saveEdit(){
+		var flag=true;
+		var row = $('#tt').datagrid('getSelected');
+		if (row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			$('#tt').datagrid('endEdit', index);
+		}
+		var changeRows=[];
+		var inserted = $('#tt').datagrid('getChanges','inserted');
+		var updated = $('#tt').datagrid('getChanges','updated');
+		changeRows = inserted.concat(updated);
+    	for(var i=0;i<changeRows.length;i++){
+			var index = $('#tt').datagrid('getRowIndex', changeRows[i]);
+			flag=$('#tt').datagrid('validateRow',index);
+    		if (!flag){
+    			$('#tt').datagrid('selectRow',index);
+    			$('#tt').datagrid('beginEdit', index);
+				break;
+    		}else{
+    			$('#tt').datagrid('endEdit', index);
+    		}
+		}
+		if (flag){
+			
+		$.post(_ctx+"/pm/processNode/saveBatch",Convert.ToSaveParam("tt") , function(result) {
+			var rObj = eval(result);
+			if(rObj.success){
+				$('#tt').datagrid('reload');
+			}else{
+				$.messager.alert('error',rObj.failure,'warning');
+			}
+		});
+		}
+	}
+	function getDeptShow(jsonObject,keyField,keyValue,valueField){
+		var rtnValue='';
+		for(var i in jsonObject){
+			var _dom=jsonObject[i];
+			if (_dom[keyField]==keyValue){
+				rtnValue = _dom[valueField];
+				break;
+			}
+			var children = _dom.children;
+			if(children!=null && children.length>0){
+				rtnValue = getDeptShow(children,keyField,keyValue,valueField);
+			}
+		}
+		return rtnValue;
+	}
+	//新增
+	function insert(){
+		$('#tt').datagrid('endEdit', lastIndex);
+		var field={};
+		$('#tt').datagrid('appendRow',field);
+		lastIndex = $('#tt').datagrid('getRows').length-1;
+		$('#tt').datagrid('selectRow', lastIndex);
+		$('#tt').datagrid('beginEdit', lastIndex);
+		Convert.focusEditor("tt",field,lastIndex);
+	}
+	function remove(id){
+		$('#tt').datagrid('selectRecord',id);
+		var row = $('#tt').datagrid('getSelected');
+		if(row){
+			var index = $('#tt').datagrid('getRowIndex', row);
+			if (row.id==undefined){
+				$('#tt').datagrid('deleteRow',index);
+			}else{
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+		                if (r){
+		                	//TODO:如果该记录被引用,是否强制不允许删除?
+							$.post(_ctx+"/pm/processNode/delete/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									$('#tt').datagrid('reload');
+									$('#tt').datagrid('clearSelections');
+								}else{
+									 $.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+		                }
+		            }
+		        });
+			}
+		}
+	}
+</script>
+</body>
+</html>

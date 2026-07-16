@@ -1,0 +1,367 @@
+<!--额度审批-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="center" border="false">
+        <div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden" id="hashEdit" th:value="${psv.hasEdit}"/>
+            <input type="hidden" name="canApproveEdit" id="canApproveEdit" th:value="${psv.canApproveEdit}" />
+            <input type="hidden" name="id" id="id" th:value="${companyVisit.id}" />
+            <input type="hidden" name="companyId" id="companyId" th:value="${companyVisit.companyId}" />
+            <input type="hidden" name="riskControlSurveyUserId" id="riskControlSurveyUserId" th:value="${companyVisit.riskControlSurveyUserId}" />
+            <input type="hidden" name="status" id="status" th:value="${companyVisit.status}" />
+            <input type="hidden" name="businessManagerUserId" id="businessManagerUserId" th:value="${companyVisit.businessManagerUserId}" />
+            <input type="hidden" name="businessDivisionId" id="businessDivisionId" th:value="${companyVisit.businessDivisionId}" />
+            <input type="hidden" name="createdUserId" id="createdUserId" th:value="${companyVisit.createdUserId}" />
+            <input type="hidden" name="companyCategory" id="companyCategory" th:value="${companyVisit.companyCategory}" />
+            <input type="hidden" name="createdDeptId" id="createdDeptId" th:value="${companyVisit.createdDeptId}" />
+            <input type="hidden" name="financialStatementFileId"  th:value="${companyVisit.financialStatementFileId}" />
+            <input type="hidden" name="vatTaxReturnFileId"  th:value="${companyVisit.vatTaxReturnFileId}" />
+            <input type="hidden" name="companySalesContractFileId"  th:value="${companyVisit.companySalesContractFileId}" />
+            <input type="hidden" name="companyLegalCreditFileId"  th:value="${companyVisit.companyLegalCreditFileId}" />
+            <input type="hidden" name="landPropertyLeasesFileId"  th:value="${companyVisit.landPropertyLeasesFileId}" />
+            <input type="hidden" name="equipmentFinanceLeaseFileId"  th:value="${companyVisit.equipmentFinanceLeaseFileId}" />
+            <input type="hidden" name="loanGuaranteeContractFileId"  th:value="${companyVisit.loanGuaranteeContractFileId}" />
+            <input type="hidden" name="billInformationFileId"  th:value="${companyVisit.billInformationFileId}" />
+            <input type="hidden" name="companyBankStatementFileId"  th:value="${companyVisit.companyBankStatementFileId}" />
+            <input type="hidden" name="closeLitigationMediateFileId"  th:value="${companyVisit.closeLitigationMediateFileId}" />
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>企业名称</label>
+                    <input name="companyName"  readonly type="text" th:value="${companyVisit.companyName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>企业期限</label>
+                    <input name="businessTerm" readonly type="text" th:value="${companyVisit.businessTerm}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>企业性质</label>
+                    <input name="companyCategoryName" readonly type="text" th:value="${companyVisit.companyCategoryName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>注册资本</label>
+                    <input name="registerCapital" readonly type="text" th:value="${companyVisit.registerCapital}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>实缴资本</label>
+                    <input name="paidCapital" readonly type="text" th:value="${companyVisit.paidCapital}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>法定代表人</label>
+                    <input name="legalRepresentative"  readonly type="text" th:value="${companyVisit.legalRepresentative}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>国籍</label>
+                    <input name="nationality" readonly type="text" th:value="${companyVisit.nationality}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>身份证号码</label>
+                    <input name="personIdNumber"  readonly type="text" th:value="${companyVisit.personIdNumber}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>电话</label>
+                    <input name="telephone"   readonly type="text" th:value="${companyVisit.telephone}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w6">
+                    <label>经营范围</label>
+                    <textarea name="businessScope" style="width: 100%" rows="4"    readonly type="text" th:text="${companyVisit.businessScope}"> </textarea>
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w3 ">
+                    <label>注册地址</label>
+                    <input  name="registerAddress"   readonly type="text" th:value="${companyVisit.registerAddress}">
+                </p>
+                <p class="yw-table-filter w3">
+                    <label>工厂地址</label>
+                    <input name="factoryAddress"  readonly type="text" th:value="${companyVisit.factoryAddress}">
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">调查结论</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter w6">
+                    <label>调查结果</label>
+                    <textarea  name="surveyResult"  rows="4" style="width: 100%" readonly type="text" th:text="${companyVisit.surveyResult}" />
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>风控调查人</label>
+                    <input name="riskControlSurveyUserName"  readonly type="text" th:value="${companyVisit.riskControlSurveyUserName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>业务经理</label>
+                    <input name="businessManagerUserName"  readonly type="text" th:value="${companyVisit.businessManagerUserName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>事业部</label>
+                    <input name="businessDivisionName"  readonly type="text" th:value="${companyVisit.businessDivisionName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>对接人姓名</label>
+                    <input name="contractPersonName" readonly type="text" th:value="${companyVisit.contractPersonName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>对接人职务</label>
+                    <input name="contractPersonPosition"  readonly type="text" th:value="${companyVisit.contractPersonPosition}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>调查时间</label>
+                    <input name="surveyTime"  readonly type="text" th:value="${#dates.format(companyVisit.surveyTime,'yyyy-MM-dd')}">
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>调查地点</label>
+                    <input name="surveySite" readonly type="text" th:value="${companyVisit.surveySite}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>调查目的</label>
+                    <input name="surveyObjective"  readonly type="text" th:value="${companyVisit.surveyObjective}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>人保批复额度</label>
+                    <input name="peopleInsuranceApproval"  readonly type="text" th:value="${companyVisit.peopleInsuranceApproval}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>公司现行额度</label>
+                    <input name="companyCurrentQuota"  readonly type="text" th:value="${companyVisit.companyCurrentQuota}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w6">
+                    <label>调查结论</label>
+                    <textarea name="surveryConclusion" readonly rows="4" style="width: 100%" th:text="${companyVisit.surveryConclusion}" />
+                </p>
+            </div>
+            <div class="mb6">
+                <th:block contenteditable='true'  th:replace="~{tags/apply :: recommendedAmount(${#maps.containsKey(psv.mapEdit, 'recommendedAmount')}?${psv.mapEdit['recommendedAmount'].require}:false,${#maps.containsKey(psv.mapEdit, 'recommendedAmount')}?${psv.mapEdit['recommendedAmount'].edit && psv.hasApprove}:${ psv.hasEdit})}"/>
+            </div>
+            <p class="form-section-title"><span class="approve_text">销售情况</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>主要产品</label>
+                    <input name="mainProduct" readonly type="text" th:value="${companyVisit.mainProduct}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>产品性质</label>
+                    <input name="productNature" readonly type="text" th:value="${companyVisit.productNature}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>销售规模</label>
+                    <input name="salesScale" readonly type="text" th:value="${companyVisit.salesScale}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>客户画像</label>
+                    <input name="clientPortrait"  readonly type="text" th:value="${companyVisit.clientPortrait}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>主要客户</label>
+                    <input name="majorCustomer" readonly type="text" th:value="${companyVisit.majorCustomer}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>客户质量</label>
+                    <input name="customerQuality" readonly type="text" th:value="${companyVisit.customerQuality}">
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">生产情况</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter">
+                    <label>原料名称</label>
+                    <input name="ingredientName" readonly type="text" th:value="${companyVisit.ingredientName}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>需求数量（吨/月）</label>
+                    <input name="quantityRequired"  readonly type="text" th:value="${companyVisit.quantityRequired}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>厂区地区</label>
+                    <input name="siteAddress" readonly type="text" th:value="${companyVisit.siteAddress}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>厂区面积</label>
+                    <input name="plantArea"  readonly type="text" th:value="${companyVisit.plantArea}">
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>厂区环境</label>
+                    <input name="plantEnvironment"  readonly type="text" th:value="${companyVisit.plantEnvironment}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>设备名称和数量</label>
+                    <input  name="deviceNameQuantity"  readonly type="text" th:value="${companyVisit.deviceNameQuantity}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>自动化程度</label>
+                    <input name="degreeOfAutomation"  readonly type="text" th:value="${companyVisit.degreeOfAutomation}">
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>开工情况</label>
+                    <input name="workSituation"  readonly type="text" th:value="${companyVisit.workSituation}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>产线人数</label>
+                    <input name="productionLineNumber"  readonly type="text" th:value="${companyVisit.productionLineNumber}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>车间环境</label>
+                    <input name="workshopEnvironment"   readonly type="text" th:value="${companyVisit.workshopEnvironment}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>仓库性质</label>
+                    <input name="natureOfWarehouse" readonly type="text" th:value="${companyVisit.natureOfWarehouse}">
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>成品库存情况</label>
+                    <input name="finishedGoodsInventory" readonly type="text" th:value="${companyVisit.finishedGoodsInventory}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>仓库管理</label>
+                    <input name="warehouseManagement" readonly type="text" th:value="${companyVisit.warehouseManagement}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>仓库环境</label>
+                    <input name="warehouseEnvironment" readonly type="text" th:value="${companyVisit.warehouseEnvironment}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>原料库存情况（吨）</label>
+                    <input name="stockOfRawMaterials"  readonly type="text" th:value="${companyVisit.stockOfRawMaterials}">
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">资产情况</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>土地厂房</label>
+                    <input name="landBuilding"  readonly type="text" th:value="${companyVisit.landBuilding}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>应收账款</label>
+                    <input name="accountsReceivable" readonly type="text" th:value="${companyVisit.accountsReceivable}">
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>机器设备</label>
+                    <input name="machineryEquipment"  readonly type="text" th:value="${companyVisit.machineryEquipment}">
+                </p>
+                <p class="yw-table-filter">
+                    <label>个人资产</label>
+                    <input name="personalAssets" readonly type="text" th:value="${companyVisit.personalAssets}">
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w3">
+                    <label>其他财产线索</label>
+                    <input name="otherPropertyClues" readonly type="text" th:value="${companyVisit.otherPropertyClues}">
+                </p>
+                <p class="yw-table-filter w3">
+                    <label>关联企业名称</label>
+                    <input name="associatedCompanyName" readonly type="text" th:value="${companyVisit.associatedCompanyName}">
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">负面信息情况（含实控人)</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter w3">
+                    <label>工商查询</label>
+                    <textarea name="businessInquiry" style="width: 100%" rows="4" readonly type="text" th:text="${companyVisit.businessInquiry}" />
+                </p>
+                <p class="yw-table-filter w3">
+                    <label>诉讼查询</label>
+                    <textarea name="litigationInquiry" style="width: 100%" rows="4"  readonly type="text" th:text="${companyVisit.litigationInquiry}" />
+                </p>
+            </div>
+            <div class="mb6">
+                <p class="yw-table-filter w3">
+                    <label>媒体查询</label>
+                    <textarea name="mediaInquiry" style="width: 100%" rows="4"   readonly type="text" th:text="${companyVisit.mediaInquiry}" />
+                </p>
+                <p class="yw-table-filter w3">
+                    <label>现场查询</label>
+                    <textarea name="sceneInquiry" style="width: 100%" rows="4"  readonly type="text" th:text="${companyVisit.sceneInquiry}" />
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">数据真实性分析</span><i></i></p>
+            <div class="mb6">
+                <p class="yw-table-filter w2">
+                    <label>实际与设计产能逻辑匹配</label>
+                    <input name="actualDesignedCapacityLogicMatch"  readonly type="text" th:value="${companyVisit.actualDesignedCapacityLogicMatch}">
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>用电量与产量逻辑匹配</label>
+                    <input name="electricityProductionLogicMatch" readonly type="text" th:value="${companyVisit.electricityProductionLogicMatch}">
+                </p>
+                <p class="yw-table-filter w2">
+                    <label>纳税申报与销售金额的逻辑匹配</label>
+                    <input name="taxSalesLoginMatch" readonly type="text" th:value="${companyVisit.taxSalesLoginMatch}">
+                </p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">现场照片</span><i></i></p>
+            <div class="editForm">
+                <p style="width:240px">
+                    <span class="upload-btn" id="btn_fileId">
+                         <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+                    </span>
+                    <input class="control" id="fileId" name="fileId" type="hidden" th:value="${companyVisit.fileId}"/>
+                </p>
+                <p class="controls showImg fileId" id="span_fileId"></p>
+            </div>
+            <p class="form-section-title"><span class="approve_text">出差申请单</span><i></i></p>
+            <div class="editForm">
+                <p style="width:240px">
+                    <span class="upload-btn" id="btn_travelFileId">
+                         <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+                    </span>
+                    <input class="control" id="travelFileId" name="travelFileId" type="hidden" th:value="${companyVisit.travelFileId}"/>
+                </p>
+                <p class="controls showImg fileId" id="span_travelFileId"></p>
+            </div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+    var companyVisit = [[${companyVisit}]];
+    var filePlugin = new FilePlugin('#fileId','','',[[${param.hasEditFile}]]);
+    var filePlugin1 = new FilePlugin('#travelFileId','','',[[${param.hasEditFile}]]);
+    var psv = [[${psv}]];
+    $(function(){
+        //加载附件列表
+        $('.easyui-linkbutton').linkbutton();
+        filePlugin.load($('#fileId').val(),'#span_fileId');
+        filePlugin1.load($('#travelFileId').val(),'#span_travelFileId');
+        if ($('#btn_fileId').length>0){
+            fileUpload("btn_fileId", "fileId");
+        }
+        if ($('#btn_travelFileId').length>0){
+            fileUpload("btn_travelFileId", "travelFileId");
+        }
+        var _curStatus = $("#entityStatus").val();
+
+        $("#mattersType").validatebox({
+            required: true,
+        })
+        applyLoadSucess();
+        _beforSaveOper = true;
+        _special_befor_flg = true;
+    });
+    function beforSaveOper() {
+        // 只有配置了必填的才校验
+        if(psv.mapEdit && psv.mapEdit.recommendedAmount && psv.mapEdit.recommendedAmount.require){
+            var _recommendedAmount=$('#recommendedAmount').val()
+            if (_recommendedAmount == '' || _recommendedAmount == undefined){
+                $.messager.alert('提示', '额度审核评估不可为空','warning');
+                return false;
+            }
+        }
+        return true;
+    }
+</script>

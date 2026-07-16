@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<link th:href="@{/static/ueditor/third-party/webuploader/webuploader.css?v=5565}" type="text/css" rel="stylesheet" />
+<div class="easyui-layout" fit="true" id="tab">	
+	<div region="center" border="false">
+		<form id="inputFormLoss" method="post"  enctype="multipart/form-data" class="from-input-layout" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="contractId" id="contractId" th:value="${contractEntity.id}" />
+		<input type="hidden" name="id" id="entityLossId" th:value="${lossEntity.id}" />
+			<p class="p_text">			
+			    <span class="input-colspan">
+					<label for="contractLossNum">损耗数量(吨):</label>
+					<input name="lossNum" id="lossNum" type="number" th:value="${lossEntity.lossNum}" ></input>
+				</span>
+				<span class="input-colspan">
+					<label for="contractLossAmount">损耗金额(元):</label>
+					<input name="lossAmount" id="lossAmount" type="number" th:value="${lossEntity.lossAmount}" ></input> 
+				</span>
+			</p>
+			
+			<p class="p_text">
+				<span class="input-colspan3">
+					<label for="remark">备注:</label>
+					<input name="remark" id="remark" type="text" th:value="${lossEntity.remark}" ></input>
+				</span>
+			</p>
+	
+		<div class="editForm pl16"> 
+				<p>
+					<span class="upload-btn" id="btn_upfileId">
+						<i></i>
+		               	<span>附件上传</span>
+		           	</span>
+					<input class="control" id="lossFileId" name="fileId" type="hidden" th:value="${lossEntity.fileId}" />
+				</p>
+				<p class="controls showImg fileId" id="span_lossFileId"></p>
+			</div>
+			
+	</form>
+	
+	</div>
+	 	<div region="south" border="false" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+			<span  class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" id="save" onclick="saveLoss()">保存</span>
+		</div>
+	</div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script type="text/javascript" th:inline="javascript">
+var filePlugin = new FilePlugin('#lossFileId',$('#entityLossId').val(),'/ctr/contractLoss/updateLossFileId',true);
+$(function(){
+	//加载附件列表
+	filePlugin.load($('#lossFileId').val(),'#span_lossFileId');
+	if ($("#btn_upfileId").length>0){
+		fileUpload("btn_upfileId", "lossFileId");
+	}
+	
+	$('#lossNum').textbox({
+		required: true,
+		precision: 3,
+	}); 
+	//合同编号
+	$("#lossAmount").textbox({
+		required: true
+	});
+	
+});
+
+function saveLoss() {
+	var options = {
+		url : _ctx + '/ctr/contractLoss/saveContractLoss',
+		onSubmit : function() {
+			var file = $('#lossFileId').val();
+			var flag = $("#inputFormLoss").form('validate');
+			if(!file){
+				$.messager.alert('提示','请上传附件！！','info');
+				flag = false;
+				return false;
+			}
+			if (!flag) {
+				$.messager.alert('提示','请填写完整!!','info');
+			}
+			return flag;
+		},
+		success : function(data) {
+			var result = eval('(' + data + ')');
+			if (result.success) {
+				$.messager.show({
+					title : 'Tip',
+					msg : '保存成功',
+					timeout : 2000,
+					showType : 'show'
+				});
+				$('#w_contractLoss').window("close");
+				$('#tt').datagrid('reload');
+			} else {
+				$.messager.alert('error', result.failure, 'warning');
+			}
+		}
+	}
+	$('#inputFormLoss').form('submit', options);
+}
+</script>

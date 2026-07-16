@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>合同管理</title>
+    <th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+    <form id="searchForm" class="form-search from-input-layout" method="post">
+        <input type="hidden" id="type" th:value="${type}"/>
+        <input type="hidden" name="search_EQS_businessType" th:value="${businessType}">
+        <input type="hidden" name="businessType" th:value="${businessType}">
+        <input type="hidden" name="search_EQB_matchCreditFlg" th:value="${matchCreditFlg}">
+        <input type="hidden" name="matchCreditFlg" id="matchCreditFlg" th:value="${matchCreditFlg}">
+        <div class="mb6">
+            <p class="yw-table-filter">
+                <label>合同编号</label>
+                <input  class="control" id="contractNo" type="text" name="search_LIKES_contractNo"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>企业名称</label>
+                <input  class="control" id="companyName" type="text" name="search_LIKES_companyName"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>业务员</label>
+                <input type="text" id="matchUserName" class="control text_padding" name="search_EQS_matchUserName"></input>
+            </p>
+            <p class="yw-table-filter">
+                <label>品名</label>
+                <input  class="control" id="productsName" type="text" name="search_LIKES_productsName"/>
+            </p>
+            <p class="yw-table-filter">
+                <label>我方抬头</label>
+                <input type="text" id="ourCompanyName" class="control text_padding" name="search_LIKES_ourCompanyName"></input>
+            </p>
+            <p class="yw-table-filter">
+                <label>签订日</label>
+                <input  id="srh_contractTime_from" name="search_GTED_contractTime" class="easyui-datebox"/>
+            </p>
+            <span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+            <p class="yw-table-filter">
+                <input  id="srh_contractTime_to"  name="search_LTD_contractTime" class="easyui-datebox" />
+            </p>
+        </div>
+        <div class="mb6 mt10">
+            <a href="#" id="btn" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+            <a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+            <input type="hidden" id="refreshColumns" value = "B"></input>
+        </div>
+
+    </form>
+</div>
+<div region="center" border="false" class="panel_padding"  style="padding-right:20px;padding-left:20px;">
+    <table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id">
+    </table>
+</div>
+
+<script type="text/javascript">
+    var lastIndex=0;
+    var companyJson =eval('[(${companyJson})]');
+    var contractStatusJson =eval('[(${contractStatusJson})]');
+    var approveStatusJson =eval('[(${approveStatusJson})]');
+    var productTypeJson = eval('[(${productTypeJson})]');
+    var deliveryTypeJson = eval('[(${deliveryTypeJson})]');
+    var applyTypeJson = eval('[(${applyTypeJson})]');
+    var processListJson = eval('[(${processListJson})]');
+    var matchUserNameTreeJson = eval('[(${matchUserNameTree})]');
+    var sellAndBuyStatusJson = eval('[(${sellAndBuyStatusJson})]');
+    var deliveryModeJson = eval('[(${deliveryModeJson})]');
+    var contractAttrJson = eval('[(${contractAttrJson})]');
+    var _ourCompanyJson=eval('[(${ourCompanyJson})]');
+    var businessTypeJson=eval('[(${businessTypeJson})]');
+    var preSellFlg = [[${preSellFlg}]];
+    var confirmFlg = [[${confirmFlg}]];
+    var signingFlg = [[${signingFlg}]];
+    var refreshFlg = [[${refreshFlg}]];
+    console.log('preSellFlg:'+preSellFlg);
+    console.log('confirmFlg:'+confirmFlg);
+    console.log('signingFlg:'+signingFlg);
+    console.log('refreshFlg:'+refreshFlg);
+    var _$warehouseNumber ='出/入库数量(吨)';
+    var _$dealedAmount='已收/付金额(元)';
+    var _$billedAmount='开/收票金额(元)';
+    var _$payType="收/付款状态";
+    var _$warehouseType="出/入库状态";
+    var _$billType="开/收票状态";
+    var _$bondTime="收/付定金日期";
+    var _$fullTime="收/付全款日期";
+    var _$amountTime="收/付款时间";
+    var _$warehouseTime="出/入库时间";
+    var _$billTime="开/收票时间";
+    var payTypeJson = [{id:'PY',text:'已收款'},{id:'PN',text:'未收款'}];
+    var warehouseTypeJson = [{id:'WY',text:'已出库'},{id:'WN',text:'未出库'}];
+    var billTypeJson = [{id:'BY',text:'已开票'},{id:'BN',text:'未开票'}];
+    var sourceModeJson = [{id:'ZY-XS',text:'自营销售'},{id:'ZY-BB',text:'背靠背'},{id:'SY-XS',text:'质押销售'},{id:'SX-SX',text:'赊销'},
+        {id:'SX-HK',text:'货到付款'},{id:'DL-KZ',text:'代理开证'},{id:'DL-DC',text:'国企代采'}];
+    var buyAndSell_status = [{id:'WN',text:'未出库'},{id:'PN',text:'未收款'},{id:'BN',text:'未开票'}];
+    var type=$("#type").val();
+    var matchCredit_flg = $("#matchCreditFlg").val();
+    if(type=='B'){
+        _$warehouseNumber='入库数量';
+        _$dealedAmount='已付金额(元)';
+        _$billedAmount='收票金额(元)';
+        _$payType="付款状态";
+        _$warehouseType="入库状态";
+        _$billType="收票状态";
+        _$bondTime="付定金日期";
+        _$fullTime="付全款日期";
+        _$amountTime="付款时间";
+        _$warehouseTime="入库时间";
+        _$billTime="收票时间";
+        payTypeJson = [{id:'PY',text:'已付款'},{id:'PN',text:'未付款'}];
+        warehouseTypeJson = [{id:'WY',text:'已入库'},{id:'WN',text:'未入库'}];
+        billTypeJson = [{id:'BY',text:'已收票'},{id:'BN',text:'未收票'}];
+        sourceModeJson = [{id:'ZY-CG',text:'自营采购'},{id:'ZY-JK',text:'自营进口'},{id:'ZY-BB',text:'背靠背'},{id:'SY-CG',text:'质押采购'},
+            {id:'DL-KZ',text:'代理开证'},{id:'DL-DC',text:'国企代采'}];
+        buyAndSell_status = [{id:'WN',text:'未入库'},{id:'PN',text:'未付款'},{id:'BN',text:'未收票'}];
+    }
+
+    var columns_brief = [ [
+        {field:'pairId', title:'',align:'center',hidden:false},
+        {field:'pairCode', title:'代采排序号', width:125,align:'center',hidden:true},
+        {field:'contractNo', title:'合同编号', width:140/* ,
+			formatter:function(value,row,index){
+				if(value){
+					return '<span class="c_blue_b yw-menu-section" onclick="showContract(\''+row.id+'\',\''+row.contractNo+'\')">'+value+'</span>';
+				}
+		} */},
+        {field:'contractAttr', title:'采/销',align:'center', width:70,formatter:function(value,row,index){
+                return Convert.findValueByKey(contractAttrJson,"dictCd",value,"dictName");
+            }},
+        {field:'productsName',title:'品名', width:130,formatter:function(value,row){
+                if (value){
+                    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                    return content;
+                }
+            }},
+        {field:'companyName',title:'对方企业名称',align:'left', width:130,formatter:function(value,row){
+                if (value){
+                    var content = '<p title="' + value + '" class="note">' + value + '</p>';
+                    return content;
+                }
+            }},
+        {field:'price',title:'单价(元)',align:"right", width:90,formatter:formateNum},
+
+        {field:'totalNumber',title:'合同数量(吨)',align:"right", width:90,formatter:formateNum},
+
+        {field:'totalAmount',title:'合同总价(元)', align:"right", width:90,formatter:formateNum},
+
+        {field:'creditDays',title:'回款周期(天)', align:"right", width:90,formatter:formateNum},
+
+        {field:'contractTime',title:'付全款日', width:120,align:'center'},
+
+        {field:'totalAmount',title:'逾期天数(天)', align:"right", width:90,formatter:formateNum},
+
+        {field:'totalAmount',title:'逾期罚金(元)', align:"right", width:90,formatter:formateNum},
+
+        {field:'contractTime',title:'签订日', width:120,align:'center'},
+
+        {field:'matchUserName',title:'业务员',align:"center", width:70},
+
+        {field:'option',title:'操作',align:'center',formatter:function(value, row, index){
+                if (row.id){
+                    var str = "";
+                    var saasContractNo = row.saasContractNo;
+                    if (refreshFlg && !saasContractNo){
+                        str = '<span onclick="refreshContract('+row.id+')" class="contract-btn contract-btn-9">催收</span>'
+                    }
+                    return str;
+                }
+            }
+        },
+    ]];
+    columns = columns_brief;
+    if (type=='B'){
+        for(var i in columns_detail[0]){
+            var col = columns_detail[0][i];
+            if (col.field=='confirmReceiveNumber'){
+                col.hidden = true;
+            }
+            if (col.field=='piccMessage'){
+                col.hidden = true;
+            }
+        }
+        for(var i in columns_brief[0]){
+            var col = columns_brief[0][i];
+            if (col.field=='confirmReceiveNumber'){
+                col.hidden = true;
+            }
+            if (col.field=='piccMessage'){
+                col.hidden = true;
+            }
+        }
+    }
+    $("#payTypeName").html(_$payType);
+    $("#warehouseTypeName").html(_$warehouseType);
+    $("#billTypeName").html(_$billType);
+    $(function() {
+        $("#contractNo,#companyName,#productsName").textbox({});
+
+        $("#source").combobox({
+            data: sourceModeJson,
+            textField: 'text',
+            valueField: 'id',
+            panelHeight: "auto",
+            editable: true
+        });
+        $("#payType").combobox({
+            data: payTypeJson,
+            textField: 'text',
+            valueField: 'id',
+            panelHeight: "auto"
+        });
+        $("#warehouseType").combobox({
+            data: warehouseTypeJson,
+            textField: 'text',
+            valueField: 'id',
+            panelHeight: "auto"
+        });
+        $("#billType").combobox({
+            data: billTypeJson,
+            textField: 'text',
+            valueField: 'id',
+            panelHeight: "auto"
+        });
+        $("#sellAndBuyStatusJson").combobox({
+            data: buyAndSell_status,
+            textField: 'text',
+            valueField: 'id',
+// 			width:150,
+            panelHeight: "auto"
+        });
+        $('#matchUserName').combotree({
+            data: matchUserNameTreeJson,
+            multiple: false,
+            editable: true,
+            //required:true,
+            formatter: function (node) {
+                var enableFlg = node.attributes.enableFlg;
+                if (enableFlg == false) {
+                    return '<span style="color:red;">' + node.text + '(无效)</span>';
+                }
+                return node.text;
+            },
+            onSelect: function (node) {
+                if (node.children.length != 0) {
+                    $('#matchUserName').combotree('clear');
+                } else {
+
+                    $('#matchUserName').combotree('setValue', node.text);
+                }
+            }
+        });
+        //我方抬头
+        $('#ourCompanyName').combobox({
+            data: _ourCompanyJson,
+            valueField: 'dictName',
+            textField: 'dictName',
+            //panelWidth:'220px',
+            panelHeight: "auto"
+        });
+        $('#tt').datagrid({
+            pagination: true,
+            pageSize: 30,
+            rownumbers: false,
+            showFooter: true,
+            queryParams: Convert.getJson4Form('searchForm'),
+            pageList: [500, 200, 100, 50, 30, 20],
+            url: _ctx + "/ctr/contract/contractList",
+            columns: columns,
+            onDblClickRow: function (index, row) {
+                lastIndex = index;
+                editrow(row.id, row.contractNo);
+            },
+            onClickRow: function (index, row) {
+                lastIndex = index;
+            },
+            onLoadSuccess: function (data) {
+                $(".tip").tooltip(
+                    {
+                        onShow: function () {
+                            $(this).tooltip('tip').css({
+                                width: '400',
+                                boxShadow: '1px 1px 3px #292929'
+                            });
+                        }
+                    }
+                );
+                var total = $('#tt').datagrid('getData').total;
+                if (lastIndex > total - 1) {
+                    lastIndex = total - 1;
+                }
+                if (lastIndex) {
+                    $('#tt').datagrid('selectRow', lastIndex);
+                }
+                if (type == 'S') {
+                    $("#tt").datagrid("hideColumn", "contractDifTime");
+                }
+                //合并datagrid行
+                var mark = 1;
+                for (var i = 1; i < data.rows.length; i++) {
+                    if (data.rows[i]['pairId'] == data.rows[i - 1]['pairId'] && data.rows[i]['pairId'] != null
+                        && data.rows[i]['pairId'] != "") {
+                        mark += 1;
+                        $("#tt").datagrid('mergeCells', {
+                            index: i + 1 - mark,
+                            field: 'pairId',
+                            rowspan: mark
+                        });
+                    } else {
+                        mark = 1;
+                    }
+                }
+            }/* ,
+			rowStyler:function(index,row){
+				var pairCode = row.pairCode;
+				var pairId = row.pairId;
+				//pairCode.substr(pairCode.length-1,pairCode.length-6);
+				if (pairCode){
+					if (pairId != null && pairId %2 > 0) {
+		                return 'background-color:#f2f2f2;';
+		            }else{
+		            	return 'background-color:#ffffff';
+			        }
+				}
+			} */
+        });
+
+        $.extend($.fn.datagrid.methods, {
+            autoMergeCells: function (jq, fields) {
+                return jq.each(function () {
+                    var target = $(this);
+                    if (!fields) {
+                        fields = target.datagrid("getColumnFields");
+                    }
+                    var rows = target.datagrid("getRows");
+                    var i = 0,
+                        j = 0,
+                        temp = {};
+                    for (i; i < rows.length; i++) {
+                        var row = rows[i];
+                        j = 0;
+                        for (j; j < fields.length; j++) {
+                            var field = fields[j];
+                            var tf = temp[field];
+                            if (!tf) {
+                                tf = temp[field] = {};
+                                tf[row[field]] = [i];
+                            } else {
+                                var tfv = tf[row[field]];
+                                if (tfv) {
+                                    tfv.push(i);
+                                } else {
+                                    tfv = tf[row[field]] = [i];
+                                }
+                            }
+                        }
+                    }
+                    $.each(temp, function (field, colunm) {
+                        $.each(colunm, function () {
+                            var group = this;
+
+                            if (group.length > 1) {
+                                var before,
+                                    after,
+                                    megerIndex = group[0];
+                                for (var i = 0; i < group.length; i++) {
+                                    before = group[i];
+                                    after = group[i + 1];
+                                    if (after && (after - before) == 1) {
+                                        continue;
+                                    }
+                                    var rowspan = before - megerIndex + 1;
+                                    if (rowspan > 1) {
+                                        target.datagrid('mergeCells', {
+                                            index: megerIndex,
+                                            field: field,
+                                            rowspan: rowspan
+                                        });
+                                    }
+                                    if (after && (after - before) != 1) {
+                                        megerIndex = after;
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
+            }
+        });
+    });
+
+    function showImg(value,row,index){
+        if(value!=undefined){
+            var arrayObj = new Array();
+            var j=0;
+            arrayObj.push(row.fileId);
+            arrayObj.push(row.invoiceFileId);
+            arrayObj.push(row.amountFileId);
+            arrayObj.push(row.warehouseFileId);
+            arrayObj.push(row.doubleCheckFileId);
+            var str = "";
+            for(i = 0,len=arrayObj.length; i < len; i++) {
+                if(arrayObj[i]){
+                    str += arrayObj[i];
+                }
+            }
+            if (str != null && str.length > 1){
+                str = str.substr(0,str.length-1);
+                var arr = str.split(",");
+                arr = arr.filter(n=>n);
+                j = arr.length;
+            }
+            return j;
+        }
+    }
+
+    function editrow(id,contractNo){
+        var url=_ctx+"/ctr/contract/detail/"+id;
+        var title=contractNo;
+        /* if (id ==0){
+            title="新增合同";
+        }
+        var headerCls = '';
+        $('#w').window({href:url,title:title,headerCls:headerCls});
+        $('#w').window("open"); */
+        window.parent.addTab(title,url);
+    }
+
+    //刷新合同
+    function refreshContract(contractId){
+        $.messager.confirm('提示','确定要刷新该合同么?',function(t){
+            if(t){
+                if(contractId){
+                    $.post(_ctx + "/ctr/contract/refreshContractText",
+                        {"contractId":contractId}, function(result) {
+                            var rObj = eval(result);
+                            if (rObj.success) {
+                                $.messager.show({title:'Tip',msg:'刷新成功',timeout:2000,showType:'show'});
+                                $('#tt').datagrid('reload');
+                            } else {
+                                $.messager.alert('error',rObj.failure,'warning');
+                            }
+                        }
+                    )
+                }
+            }
+        });
+    }
+
+    function doRedirect(title,processCode,contractId){
+        var processId = Convert.findValueByKey(processListJson,"processCode",processCode,"id");
+        window.parent.addTab(title,_ctx+'/pm/approve/newFlow/'+processId+'?contractId='+contractId);
+    }
+
+    function queryStockDetailHis(id){
+        if(id){
+            var url =_ctx+"/ctr/contractOphis/findBuyAndSellOphis/"+id;
+            $('#w_detail').window({href:url});
+            $('#w_detail').window("open");
+        }
+    }
+
+    //字符串转日期
+    function strDateForDate(str){
+        var strDate = str.split(" ");
+        var strDatepart = strDate[0].split("-");
+        var dtDate = new Date(strDatepart[0],strDatepart[1]-1,strDatepart[2]);
+        return dtDate;
+    }
+
+    //计算两个日期的天数差
+    function dateDiff(firstDate,secondDate){
+        var firstDate = new Date(firstDate);
+        var secondDate = new Date(secondDate);
+        var diff = Math.abs(firstDate.getTime() - secondDate.getTime())
+        var result = parseInt(diff / (1000 * 60 * 60 * 24));
+        return result
+    }
+
+    //刷新datagrid
+    function refresh_columns(){
+        var refreshValue = $("#refreshColumns").val();
+        var col;
+        var value = "";
+        var new_refresh = ""
+        if (refreshValue == "D"){
+            col = columns_brief;
+            value = "详细";
+            new_refresh = "B";
+        }else if (refreshValue == "B"){
+            col = columns_detail;
+            value = "概要";
+            new_refresh = "D";
+        }
+        $('#tt').datagrid({columns:col});
+        $('#tt').datagrid('reload');
+        $('#refreshText').text(value);
+        $('#refreshColumns').val(new_refresh);
+    }
+
+    function formateNum(num,row,index) {
+        if (num){
+            num = parseFloat(num).toFixed(2).toString().split(".");
+            num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+            return num.join(".");
+        }else{
+            return num;
+        }
+    }
+
+    /* function formateData(value,row,index){
+        if (value){
+            return value.substring(2,value.length);
+        }
+    } */
+</script>
+
+</body>
+</html>

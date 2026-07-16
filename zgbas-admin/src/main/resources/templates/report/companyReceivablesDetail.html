@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>客户应收款统计</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<input class="control" id="invoiceBillIds" type="hidden" name="invoiceBillIds"/>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>我方抬头</label>
+				<input type="text" id="ourCompanyName" class="control text_padding" name="ourCompanyName" readonly/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>客户名称</label>
+				<input  class="control" id="companyName" type="text" name="companyName" readonly/>
+			</p>
+			<p class="yw-table-filter">
+				<label>产品类型</label>
+				<input type="text" id="productType" class="control text_padding" name="productType" readonly/>
+			</p>
+
+			<a href="#" class="easyui-linkbutton btn64" onclick="Convert.search('searchForm','tt');">查询</a>
+<!--			<a href="#" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>-->
+			<a href="#" class="easyui-linkbutton btn-empty btn64 ml6 mobile-display-none"  onclick="exportExcel()">导出</a>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id"/>
+</div>
+ <script type="text/javascript">
+    var lastIndex=0;
+	var ourCompanyJson =eval('[(${ourCompanyJson})]');
+	var _ourCompanyName = '[[${ourCompanyName}]]';
+	var _companyName = '[[${companyName}]]';
+	var _productType = '[[${productType}]]';
+
+	$(function(){
+		//我方抬头
+		$('#ourCompanyName').combobox({
+			data:ourCompanyJson,
+			textField:'dictName',
+			valueField:'dictName',
+			panelWidth:'auto',
+			panelHeight:"auto"
+		});
+		if(!strIsNull(_ourCompanyName)){
+			$("#ourCompanyName").combobox('setValue',_ourCompanyName);
+		}
+		$("#companyName").textbox({
+
+		});
+		if(!strIsNull(_companyName)){
+			$("#companyName").textbox('setValue',_companyName);
+		}
+		
+		$("#productType").combobox({
+			data:[{id:'',text:'--全部--'},{id:'HG',text:'化工'},{id:'NHG',text:'非化工'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			onLoadSuccess:function(){
+				
+			}
+		});
+		if(!strIsNull(_productType)){
+			$("#productType").combobox('setValue',_productType);
+		}
+
+		
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:30,
+			rownumbers:true,
+			showFooter:true,
+			pageList:[500,200,100,50,30,20],
+			queryParams:Convert.getJson4Form('searchForm'),
+			url:_ctx+"/rpt/companyReceivables/findRptCompanyReceivablesDetailPage",
+			columns:[ [
+				{field:'contractNo',title:'合同编号', align:'left', width:100},
+				{field:'businessType',title:'业务类型',width:80,align:'center',formatter:function (value,row,index) {
+						if (row.matchCreditFlg == 'true' || row.matchCreditFlg == true){
+							if(row.id && value){
+								value = '<span>赊销</span>';
+							}
+
+						}else if (row.matchCreditFlg == 'false' || row.matchCreditFlg == false){
+							if(row.id && value){
+								value = '<span>代采</span>';
+							}
+						}
+						return value;
+					}  },
+				{field:'productName',title:'产品名称', align:'left', width:200},
+				{field:'ourCompanyName',title:'我方抬头', align:'left', width:200},
+				{field:'companyName', title: '企业名称',align:'left', width:200},
+				{field:'sealDate',title:'双签日期',align:'center', width:90},
+				{field:'tradeTonnes',title:'交易吨数',align:'right', width:130, formatter:formatNum},
+				{field:'totalAmount',title:'销售总价(元)',align:'right', width:130,formatter:formatNum},
+				{field:'receivablePrincipal',title:'应收本金(元)',align:'right', width:130,formatter:formatNum},
+				{field:'dealedAmount',title:'已收本金(元)',align:'right', width:130,formatter:formatNum},
+				{field:'breachAmount',title:'罚息(元)',align:'right', width:130,formatter:formatNum},
+				{field:'receivableBreachAmount',title:'应收罚息(元)',align:'right', width:130,formatter:formatNum},
+				{field:'receiveBreachAmount',title:'已收罚息(元)',align:'right', width:130,formatter:formatNum},
+				{field:'matchUserName',title:'业务员',align:'center', width:100},
+				{field:'deptName',title:'区域',align:'center', width:100},
+				
+			]],
+			//toolbar:toolbar,
+			onDblClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onClickRow:function(index,row){
+				lastIndex = index;
+			},
+			onLoadSuccess:function(data){
+				var total =$('#tt').datagrid('getData').total;
+				if (lastIndex >total-1){
+					lastIndex=total-1;
+				}
+				if (lastIndex){
+					$('#tt').datagrid('selectRow', lastIndex);
+				}
+			}
+		});
+
+
+	});
+	function exportExcel(){
+		$('#searchForm').form('submit', {
+			url: _ctx + "/rpt/companyReceivables/exportExcelDetail"
+		});
+	}
+	
+	
+	function formatNum(num,row,index) {
+		if (num){
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)','ig'),"$1,");
+			return num.join(".");
+		}else{
+			return num;
+		}
+	}
+	
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+    <div region="center" border="false">
+        <div id="inputForm" method="post" class="editForm_approve content_div" style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+            <input type="hidden" name="companyId" id="companyId" th:value="${entity.companyId}" />
+            <div class="editForm">
+                <div class="mb6">
+                    <!--公司名称-->
+                    <p class="yw-table-filter">
+                        <label>公司名称</label>
+                        <input readonly th:value="${entity.companyName}">
+                    </p>
+                    <!--是否自提-->
+                    <p class="yw-table-filter">
+                        <label>是否自提</label>
+                        <input readonly th:value="${entity.creditDelivery=='1'?'是':'否'}">
+                    </p>
+                    <p class="yw-table-filter w2">
+                        <label>备注</label>
+                        <input readonly th:value="${entity.remark}">
+                    </p>
+                     <!--上传附件-->
+                    <p style="width:240px">
+					<span class="upload-btn" id="btn_fileId">
+						 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+					</span>
+                        <input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+                    </p>
+                    <p class="controls showImg fileId" id="span_fileId"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<script th:src="@{/static/ueditor/third-party/webuploader/webuploader.min.js}" type="text/javascript"></script>
+<script th:src="@{/static/js/file.js?v=2}" type="text/javascript"></script>
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+
+    var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/applyTerminalPick/content/'+approveId,[[${param.hasEditFile}]]);
+    var _curStatus = '[[${status}]]';
+    $(function(){
+        $('.easyui-linkbutton').linkbutton();
+    });
+    function openImg(url) {
+        window.open(url, "_blank")
+    }
+    $('.easyui-linkbutton').linkbutton();
+    $("input[name='file']").attr("readonly", true);
+    //加载附件列表
+    filePlugin.load($('#fileId').val(),'#span_fileId');
+    if ($('#btn_fileId').length>0){
+        fileUpload("btn_fileId", "fileId");
+    }
+</script>
+</html>

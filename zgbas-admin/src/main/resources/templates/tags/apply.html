@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+	<p class="input-colspan tags yw-table-filter" th:fragment="contractNo(required,canEdit)">
+		<label>合同编号:</label>
+		<input  class="tags contractNo" th:name="${canEdit}?'contractNo':''"  id="contractNo" type="text" th:value="${entity.contractNo}"/>
+	</p>
+	<script type="text/javascript" th:fragment="contractNo">
+		$('.tags .contractNo').textbox({
+			readonly:true,
+		    required:false
+		});
+
+
+	</script>
+
+	<p class="input-colspan tags yw-table-filter" th:fragment="deliveryType(required,canEdit,deliveryTypeJson)">
+		<label>交货方式:</label>
+		<input  class="tags" th:name="${canEdit}?'deliveryType':''"  th:readonly="${canEdit==false}" id="deliveryType" type="text" th:value="${entity.deliveryType}"/>
+		<input type="hidden" th:if="${canEdit eq false}" name="deliveryType" th:value="${entity.deliveryType}" />
+	</p>
+	<script type="text/javascript" th:fragment="deliveryType" th:inline="javascript">
+	[# th:if="${canEdit}"]
+	$('#deliveryType').combobox({
+		data:[(${deliveryTypeJson})],
+		valueField:'dictCd',
+		textField:'dictName',
+		panelHeight:"auto",
+		editable:false,
+		onLoadSuccess:function(){
+			var _this = $(this);
+			var _val = _this.val();
+			if(""==_val){
+				_this.combobox("setValue","Z");
+			}else{
+				_this.combobox("setValue",_val);
+			}
+		}
+	});
+	[/]
+	</script>
+
+	<span class="input-colspan tags" th:fragment="deliveryTypeMatch (required,canEdit,deliveryTypeJson,randomNumber)">
+		<label>交货方式:</label>
+		<input  class="tags" th:name="${canEdit}?'deliveryType':''"  th:readonly="${canEdit==false}" th:id="deliveryType+${randomNumber}" type="text" th:value="${deliveryType}"/>
+		<input type="hidden" th:if="${canEdit eq false}" name="deliveryType" th:value="${deliveryType}" />
+	</span>
+	<script type="text/javascript" th:fragment="deliveryTypeMatch" th:inline="javascript">
+	[# th:if="${canEdit}"]
+	$('#deliveryType'+'[(${randomNumber})]').combobox({
+		data:[(${deliveryTypeJson})],
+		valueField:'dictCd',
+		textField:'dictName',
+		panelHeight:"auto",
+		editable:false,
+		onLoadSuccess:function(){
+			var _this = $(this);
+			var _val = _this.val();
+			if(""==_val){
+				_this.combobox("setValue","Z");
+			}else{
+				_this.combobox("setValue",_val);
+			}
+		}
+	});
+	[/]
+	</script>
+
+
+	<p class="input-colspan yw-table-filter" th:fragment="deliveryMode(required,canEdit,deliveryModeJson,labelName)">
+		<label>[[${labelName}]]:</label>
+		<input  class="tags" th:name="${canEdit}?'deliveryMode':''" th:readonly="${canEdit==false}"  id="deliveryMode" type="text" th:value="${entity.deliveryMode}"/>
+		<input type="hidden" th:if="${canEdit eq false}" name="deliveryMode" th:value="${entity.deliveryMode}"/>
+	</p>
+	<script type="text/javascript" th:fragment="deliveryMode" th:inline="javascript">
+	[# th:if="${canEdit}"]
+	$('#deliveryMode').combobox({
+		data:[(${deliveryModeJson})],
+		valueField:'dictCd',
+		textField:'dictName',
+		panelHeight:"auto",
+		editable:false,
+		onLoadSuccess:function(){
+			var value = $(this).val();
+			if (!value){
+				$(this).combobox('setValue','XKHH');
+			}
+		}
+	});
+	[/]
+	</script>
+
+	<span class="input-colspan" th:fragment="deliveryModeMatch (required,canEdit,deliveryModeJson)">
+		<label>交货方式:</label>
+		<input  class="tags" th:name="${canEdit}?'deliveryMode':''" th:readonly="${canEdit==false}"  id="deliveryMode" type="text" th:value="${deliveryMode}"/>
+		<input type="hidden" th:if="${canEdit eq false}" name="deliveryMode" th:value="${deliveryMode}"/>
+	</span>
+
+<!--	<p class="input-colspan yw-table-filter" th:fragment="payType(required,canEdit,payTypeJson,randomNumber)">-->
+<!--		<label>支付方式:</label>-->
+<!--		<input class="tags control" th:name="${canEdit}?'payType':''" th:id="payType+${randomNumber}" type="text" th:value="${entity.payType}"/>-->
+<!--		<input th:if="${canEdit eq false}" name="payType" type="hidden" th:value="${entity.payType}"/>-->
+<!--	</p>-->
+<!--	<script type="text/javascript" th:fragment="payType" th:inline="javascript">-->
+<!--	[# th:if="${canEdit}"]-->
+<!--	$('#payType'+'[(${randomNumber})]').combobox({-->
+<!--		data:[(${payTypeJson})],-->
+<!--		valueField:'dictCd',-->
+<!--		textField:'dictName',-->
+<!--		panelHeight:"auto",-->
+<!--		required: true,-->
+<!--		editable: false,-->
+<!--		onSelect:function(record){-->
+<!--			if(record.dictCd == 'A'){-->
+<!--				$.messager.alert('消息','请在备注中输入贴现率！','info');-->
+<!--				$("#remark"+'[(${randomNumber})]').numberbox({required: true});-->
+<!--			}else{-->
+<!--				$("#remark"+'[(${randomNumber})]').textbox({required: false});-->
+<!--			}-->
+<!--		},-->
+<!--		onHidePanel:function(){-->
+<!--			BasCombobox.onHidePanel(this);-->
+<!--		}-->
+<!--	});-->
+<!--	[/]-->
+<!--	</script>-->
+
+	<p class="yw-table-filter" th:fragment="receiveType(required,canEdit,receiveTypeJson,randomNumber)">
+		<label>支付方式:</label>
+		<input class="tags control" th:name="${canEdit}?'receiveType':''" th:id="receiveType+${randomNumber}"  type="text" th:value="${entity.receiveType}"/>
+		<input th:if="${canEdit eq false}" name="receiveType" type="hidden" th:value="${entity.receiveType}"/>
+	</p>
+	<script type="text/javascript" th:fragment="receiveType" th:inline="javascript">
+	[# th:if="${canEdit}"]
+	$('#receiveType'+'[(${randomNumber})]').combobox({
+		data:[(${receiveTypeJson})],
+		valueField:'dictCd',
+		textField:'dictName',
+		panelHeight:"auto",
+		editable:false,
+		required: true,
+		onSelect:function(record){
+			if(record.dictCd == 'A'){
+				$.messager.alert('消息','请在备注中输入贴现率！','info');
+				$("#remark"+'[(${randomNumber})]').numberbox({required: true});
+			}else{
+				$("#remark"+'[(${randomNumber})]').textbox({required: false});
+			}
+		},
+		onHidePanel:function(){
+			BasCombobox.onHidePanel(this);
+		}
+	});
+	[/]
+	[# th:if="${canEdit==false}"]
+	var _receiveType = $('#receiveType'+'[(${randomNumber})]').val();
+	var ConvertReceiveType = Convert.findValueByKey([(${receiveTypeJson})],"dictCd",_receiveType,"dictName");
+	$('#receiveType'+'[(${randomNumber})]').val(ConvertReceiveType);
+	[/]
+	</script>
+
+
+	<p class="yw-table-filter w2" th:fragment="companyId(required,canEdit,companyJson,randomNumber,labelName)">
+		<label>[[${labelName}]]:</label>
+		<input th:if="${canEdit eq true}" th:id="companyId+${randomNumber}" data-options="required:true" th:value="${entity.companyId}" th:name="${canEdit}?'companyId':''"  class="control companyId text_padding" type="text" />
+		<input th:if="${canEdit eq false}" id="companyName+${randomNumber}" class="control companyId text_padding" th:value="${entity.companyName}"/>
+	</p>
+	<script type="text/javascript" th:fragment="companyId" th:inline="javascript">
+	 [# th:if="${canEdit}"]
+	//供货商
+	var _companyId = $("#companyId"+'[(${randomNumber})]').val();
+    if(!_companyId){
+      _companyId = 0;
+    }
+    var processCode = $("#processCode").val();
+    var _company_url = _ctx+"/bs/company/listMyCompany/"+_companyId;
+    if (processCode == "APPLY_MATCH_IOUS"){
+    	_company_url = _ctx+"/bs/company/listMyCompany/"+_companyId+"?searchType=SX";
+    }
+	$("#companyId"+'[(${randomNumber})]').combobox({
+		url:_company_url,
+		mode:'remote',
+		limitToList:true,
+		textField:'text',
+		valueField:'id',
+		panelHeight:300,
+		formatter: function(row){
+			var text = row.text;
+			var myFlag = row.myFlag;
+			if (myFlag!=true){
+				text = '<span style="color:#ccc">'+text+'</span>';
+			}
+			return text;
+		},
+		onSelect:function(record){
+			var myFlag = record.myFlag;
+			if (myFlag!=true){
+				setTimeout(function () { $("#companyId"+'[(${randomNumber})]').combobox("clear"); }, 1)
+			}else{
+			    var _contactPhone = record.contactPhone;
+			    var _address = record.address;
+			    var _number = '[(${randomNumber})]';
+			    var _contactPhoneDom = $("#contactPhone"+_number);
+			    if(_contactPhone){
+			    	_contactPhoneDom.val(_contactPhone);
+			    }else{
+			    	_contactPhoneDom.val("");
+				}
+			    var _contactAddrDom = $("#contactAddr"+_number);
+			    if(_address){
+			    	_contactAddrDom.val(_address);
+			    }else{
+			    	_contactAddrDom.val("");
+				}
+			    if (processCode == "APPLY_MATCH_IOUS"){
+					var max_creditDays = record.creditAmountDays;
+					if (!max_creditDays){
+						max_creditDays = 30;
+					}
+					$('#creditDays'+'[(${randomNumber})]').numberbox({
+						min:1,
+						max:max_creditDays
+					});
+					var credit_days = $('#creditDays'+'[(${randomNumber})]').numberbox('getValue');
+					if (!credit_days){
+						$('#creditDays'+'[(${randomNumber})]').numberbox('setValue',max_creditDays);
+					}
+				}
+			}
+		}/* ,
+		onLoadSuccess:function(data){
+			var value = $(this).combobox('getValue');
+		    var name = Convert.findValueByKey(data,"id",value,"companyName");
+		    if (name == null){
+		    	var companyName = [[${entity.companyName}]];
+		    	if (companyName != null){
+		    		$(this).combobox("setValue",companyName);
+				}
+		    }
+		} */
+	});
+	[/]
+	</script>
+
+	<span class="input-colspan" th:fragment="totalAmount(required)">
+		<label>合同总价(元):</label>
+		<input id="totalAmount" type="text" th:value="${entity.totalAmount}"/>
+	</span>
+	<script type="text/javascript" th:fragment="totalAmount">
+
+		$('#totalAmount').numberbox({
+		    min:0,
+		    precision:2,
+		    required: [(${required})],
+		});
+	</script>
+
+	<p class="yw-table-filter w2" th:fragment="remark(canEdit)">
+		<label>备注:</label>
+		<input id="remark" type="text" th:value="${entity.remark}" th:readonly="${canEdit==false}" name="remark"/>
+	</p>
+
+	<p class="yw-table-filter" th:fragment="deliveryModeForMatch(required,canEdit,deliveryModeJson,randomNumber,labelName)">
+		<label>[[${labelName}]]:</label>
+		<input  class="tags control" th:name="${canEdit}?'deliveryMode':''" th:id="deliveryMode+${randomNumber}" type="text" th:value="${entity.deliveryMode}"/>
+		<input type="hidden" th:if="${canEdit eq false}" name="deliveryMode" th:value="${entity.deliveryMode}"/>
+	</p>
+	<script type="text/javascript" th:fragment="deliveryModeForMatch" th:inline="javascript">
+	[# th:if="${canEdit}"]
+	$('#deliveryMode'+'[(${randomNumber})]').combobox({
+		data:[(${deliveryModeJson})],
+		valueField:'dictCd',
+		textField:'dictName',
+		required: true,
+		panelHeight:"auto",
+		editable:false,
+		onLoadSuccess:function(){
+			var value = $(this).val();
+			if (!value){
+				$(this).combobox('setValue','XKHH');
+			}
+		},
+		onHidePanel:function(){
+			BasCombobox.onHidePanel(this);
+		}
+	});
+	[/]
+	</script>
+		<span class="input-colspan" th:fragment="deliveryModeForImport(required,canEdit,deliveryModeJson,randomNumber,labelName)">
+		<label>[[${labelName}]]:</label>
+		<input  class="tags control" th:name="${canEdit}?'deliveryMode':''" th:id="deliveryMode+${randomNumber}" type="text" th:value="${entity.deliveryMode}"/>
+		<input type="hidden" th:if="${canEdit eq false}" name="deliveryMode" th:value="${entity.deliveryMode}"/>
+	</span>
+	<script type="text/javascript" th:fragment="deliveryModeForImport" th:inline="javascript">
+	[# th:if="${canEdit}"]
+	$('#deliveryMode'+'[(${randomNumber})]').combobox({
+		data:[(${deliveryModeJson})],
+		valueField:'dictCd',
+		textField:'dictName',
+		required: true,
+		panelHeight:"auto",
+		editable:false,
+		hasDownArrow:false,
+		readonly:true,
+		onLoadSuccess:function(){
+			var _this = $(this);
+			var _val = _this.val();
+			if(""==_val){
+				_this.combobox("setValue","XKHH");
+			}else{
+				_this.combobox("setValue",_val);
+			}
+		},
+		onHidePanel:function(){
+			BasCombobox.onHidePanel(this);
+		}
+	});
+	[/]
+	</script>
+<!--	代采赊销收票 收票金额-->
+	<p class="yw-table-filter" th:fragment="invoiceAmount(required,canEdit)">
+		<label><i>*</i>收票金额(元):</label>
+		<input name="invoiceAmount" id="invoiceAmount" class="tags invoiceAmount" th:readonly="${canEdit==false}" th:value="${#numbers.formatDecimal(entity.invoiceAmount,1,'COMMA',2,'POINT')}">
+	</p>
+	<script type="text/javascript" th:fragment="invoiceAmount">
+		$('.tags .invoiceAmount').textbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+	</script>
+
+<!--	代采赊销收票 发票号码-->
+	<p class="yw-table-filter w2" th:fragment="inInvoiceNo(required,canEdit)">
+		<label><i>*</i>发票号码:</label>
+		<input class="tags inInvoiceNo" th:name="${canEdit}?'inInvoiceNo':''" th:readonly="${canEdit==false}" id="inInvoiceNo" type="text"  th:value="${entity.inInvoiceNo}">
+	</p>
+	<script type="text/javascript" th:fragment="inInvoiceNo">
+		$('.tags .inInvoiceNo').textbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})]
+		});
+	</script>
+
+	<!--  发票号码-开票申请	-->
+	<p class="yw-table-filter tags" th:fragment="invoiceNo(required,canEdit)">
+		<label>发票号码:</label>
+		<input  class="tags invoiceNo" th:name="${canEdit}?'invoiceNo':''" th:readonly="${canEdit==false}" id="invoiceNo" type="text" th:value="${entity.invoiceNo}"/>
+	</p>
+	<script type="text/javascript" th:fragment="invoiceNo">
+		$('.tags .invoiceNo').textbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})]
+		});
+	</script>
+
+	<!-- 收款单收款日期	-->
+	<p class="yw-table-filter" th:fragment="receiveDate(required,canEdit)">
+		<label><i>*</i>收款日期:</label>
+		<input name="receiveDate" id="receiveDate" class="easyui-datebox"  th:value="${#dates.format(entity.receiveDate,'yyyy-MM-dd')}">
+	</p>
+
+	<!-- 收款单收承兑日期	-->
+	<p class="yw-table-filter hide discountDom" th:fragment="billDueTime(required,canEdit)">
+		<label><i>*</i>收承兑日期:</label>
+		<input name="billDueTime" id="billDueTime" class="easyui-datebox"  th:value="${#dates.format(entity.billDueTime,'yyyy-MM-dd')}">
+	</p>
+
+	<p class="yw-table-filter hide discountDom" th:fragment="dueTime(required,canEdit)">
+		<label><i>*</i>承兑到期日:</label>
+		<input name="dueTime" id="dueTime" class="easyui-datebox"  th:value="${#dates.format(entity.dueTime,'yyyy-MM-dd')}">
+	</p>
+
+    <!--摘要-->
+	<p class="yw-table-filter" th:fragment="subject(required,canEdit)">
+		<label>摘要:</label>
+		<input name="subject" id="subject" class="easyui-textbox" th:value="${entity.subject}">
+	</p>
+
+   <!--备注-->
+	<p class="yw-table-filter w2" th:fragment="remarks(required,canEdit)">
+		<label>备注:</label>
+		<input name="remark" id="remarks" class="easyui-textbox"  th:value="${entity.remark}">
+	</p>
+    <!-- 收货单收款金额-->
+	<p class="yw-table-filter" th:fragment="receiveAmount(required,canEdit)">
+		<label><i>*</i>收款总金额（元）:</label>
+		<input name="receiveAmount" id="receiveAmount" class="easyui-numberbox" th:value="${#numbers.formatDecimal(entity.receiveAmount,1,'COMMA',2,'POINT')}">
+	</p>
+	<!-- 金额-->
+	<p class="yw-table-filter" th:fragment="dealAmount(required,canEdit)">
+		<label>金额(元):</label>
+		<input name="dealAmount" id="dealAmount" class="easyui-numberbox" th:value="${#numbers.formatDecimal(entity.dealAmount,1,'COMMA',2,'POINT')}">
+	</p>
+	<!-- 贴息费用承担方-->
+	<p class="yw-table-filter hide discountDom" th:fragment="discountTarget(required,canEdit)">
+		<label>贴息费用承担方:</label>
+		<input name="discountTarget" id="discountTarget" th:value="${entity.discountTarget}">
+	</p>
+	<p class="yw-table-filter" th:fragment="payType(required,canEdit)">
+		<label><i>*</i>付款类型:</label>
+		<input name="payType" id="payType" type="text" th:value="${entity.payType}"></input>
+	</p>
+	<!-- 贴现费用-->
+	<p class="yw-table-filter hide discountDom" th:fragment="discountAmount(required,canEdit)">
+		<label>收贴现总费用（元）:</label>
+		<input name="discountAmount" id="discountAmount" class="easyui-numberbox" th:value="${#numbers.formatDecimal(entity.discountAmount,1,'COMMA',2,'POINT')}">
+	</p>
+	<!-- 贴现利率-->
+	<p class="yw-table-filter hide discountDom" th:fragment="discountRate(required,canEdit)">
+		<label>贴现利率:</label>
+		<input name="discountRate" id="discountRate" class="easyui-numberbox" th:value="${#numbers.formatDecimal(entity.discountRate,1,'COMMA',6,'POINT')}">
+	</p>
+
+	<!-- 代采赊销付款日期	-->
+	<p class="yw-table-filter" th:fragment="payDate(required,canEdit)">
+		<label><i>*</i>付款日期:</label>
+		<input name="payDate" id="payDate" class="easyui-datebox"  th:value="${#dates.format(entity.payDate,'yyyy-MM-dd')}">
+	</p>
+
+	<!-- 代采赊销付退款日期	-->
+	<p class="yw-table-filter" th:fragment="refundDate(required,canEdit)">
+		<label><i>*</i>付款日期:</label>
+		<input name="refundDate" id="refundDate" class="easyui-datebox"  th:value="${#dates.format(entity.refundDate,'yyyy-MM-dd')}">
+	</p>
+
+	<!-- 付款金额-->
+	<p class="yw-table-filter" th:fragment="payAmount(required,canEdit)">
+		<label><i>*</i>付款金额(元):</label>
+		<input name="payAmount" id="payAmount" class="easyui-numberbox" th:value="${#numbers.formatDecimal(entity.payAmount,1,'COMMA',2,'POINT')}">
+	</p >
+<!--    代采赊销收票发票日期-->
+	<p class="yw-table-filter" th:fragment="inInvoiceDate(required,canEdit)">
+		<label><i>*</i>发票日期:</label>
+		<input name="inInvoiceDate" id="inInvoiceDate" class="tags easyui-datebox"  th:value="${#dates.format(entity.inInvoiceDate,'yyyy-MM-dd')}">
+	</p>
+<!--    收款收款类型-->
+	<p class="yw-table-filter" th:fragment="receiveTypes(required,canEdit)">
+		<label><i>*</i>收款类型:</label>
+		<input name="receiveType" id="receiveType" th:readonly="${canEdit==false}" class="easyui-textbox"  th:value="${entity.receiveType}">
+	</p>
+	<!-- 额度审核评估-->
+	<p class="yw-table-filter w6" th:fragment="recommendedAmount(required,canEdit)">
+		<label><i>*</i>额度审批评估（元）:</label>
+		<input name="recommendedAmount" id="recommendedAmount" th:readonly="${canEdit==false}" th:value="${companyVisit.recommendedAmount}">
+	</p>
+
+	<script type="text/javascript" th:fragment="receiveTypes" th:inline="javascript">
+		[# th:if="${canEdit}"]
+		$('#receiveType').combobox({
+			readonly:[(!${canEdit})],
+			required:[(${required})]
+		});
+		[/]
+	</script>
+
+	<script type="text/javascript" th:fragment="inInvoiceDate">
+
+		$('#inInvoiceDate').datebox({
+			readonly:[(!${canEdit})],
+
+		});
+	</script>
+
+	<script type="text/javascript" th:fragment="subject">
+
+		$('#subject').textbox({
+			readonly:[(!${canEdit})],
+
+		});
+	</script>
+
+	<script type="text/javascript" th:fragment="remarks">
+
+		$('#remarks').textbox({
+			readonly:[(!${canEdit})],
+
+		});
+	</script>
+	<script type="text/javascript" th:fragment="payDate">
+
+		$('#payDate').datebox({
+			readonly:[(!${canEdit})],
+			required:[(${required})]
+		});
+	</script>
+	<script type="text/javascript" th:fragment="refundDate">
+
+		$('#refundDate').datebox({
+			readonly:[(!${canEdit})],
+			required:[(${required})]
+		});
+	</script>
+
+	<script type="text/javascript" th:fragment="receiveDate">
+		$('#receiveDate').datebox({
+			readonly:[(!${canEdit})],
+			required:[(${required})]
+		});
+	</script>
+
+	<script type="text/javascript" th:fragment="billDueTime">
+		$('#billDueTime').datebox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			onChange: function (){
+                Discount.calculateDiscountAmount();
+            }
+		});
+	</script>
+
+	<script type="text/javascript" th:fragment="dueTime">
+		$('#dueTime').datebox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			onChange: function (){
+				Discount.calculateDiscountAmount();
+			}
+		});
+	</script>
+
+    <script type="text/javascript" th:fragment ="receiveAmount">
+		$('#receiveAmount').numberbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+	</script>
+	<script type="text/javascript" th:fragment ="dealAmount">
+		$('#dealAmount').numberbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			min:0,
+			precision:2,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+	</script>
+	<script type="text/javascript" th:fragment ="discountAmount">
+		$('#discountAmount').numberbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			min:0,
+			precision:2,
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+	</script>
+	<script type="text/javascript" th:fragment ="discountRate">
+		$('#discountRate').numberbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			min:0,
+			precision:6,
+			onChange: function (){
+				Discount.calculateDiscountAmount();
+			},
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(6).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+	</script>
+	<script type="text/javascript" th:fragment ="discountTarget">
+		$('#discountTarget').combobox({
+			data:[(${discountTargetJson})],
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false,
+			readonly:[(!${canEdit})],
+			required:true
+		});
+	</script>
+	<script type="text/javascript" th:fragment ="payType">
+		$('#payType').combobox({
+			data:[(${applyPayTypeJson})],
+			valueField:'dictCd',
+			textField:'dictName',
+			panelHeight:"auto",
+			editable:false,
+			readonly:[(!${canEdit})],
+			required:true
+		});
+	</script>
+	<script type="text/javascript" th:fragment ="payAmount">
+		$('#payAmount').numberbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+	</script>
+	<script type="text/javascript" th:fragment ="recommendedAmount">
+		$('#recommendedAmount').numberbox({
+			readonly:[(!${canEdit})],
+			required:[(${required})],
+			parser: function(val) {
+				// 解析时去除千分位分隔符
+				if(val) {
+					return parseFloat(String(val).replace(/,/g, ''));
+				} else {
+					if(isNaN(val)) {
+						return '';
+					} else {
+						return val;
+					}
+				}
+			},
+			formatter: function(val) {
+				if (val || val === 0) {
+					val = parseFloat(val).toFixed(2).toString().split(".");
+					val[0] = val[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+					return val.join(".");
+				} else {
+					if(isNaN(val)){
+						return ""
+					} else {
+						return val;
+					}
+				}
+			}
+		});
+	</script>
+
+</html>
+

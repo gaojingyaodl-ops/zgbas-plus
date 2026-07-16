@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+	<title>费用查询</title>
+	<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>申请人</label>
+				<input  class="control" id="applyUserName" type="text" name="applyUserName"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>费用类型(小类)</label>
+				<input type="text" id="costType" style="width: 180px" class="control text_padding" name="costType"></input>
+			</p>
+			<p class="yw-table-filter" style="margin-left: 20px">
+				<label>费用类型(大类)</label>
+				<input type="text"  id="costType2" class="control text_padding" name="costType2"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label>公司名称</label>
+				<input type="text" id="companyName" style="width: 180px" class="control text_padding" name="companyName"></input>
+			</p>
+			<p class="yw-table-filter" style="margin-left: 20px">
+				<label>摘要</label>
+				<input type="text"class="control text_padding" id="subject" name="subject" />
+			</p>
+			<div class="mb6">
+				<p class="yw-table-filter">
+					<label style="width: 60px;">申请日期:</label>
+					<input name="beginTime" id="beginTime" class="easyui-datebox" />
+			</p>
+				<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+				<p class="yw-table-filter">
+					<label style="width: 60px;"></label>
+					<input name="endTime"  id="endTime" class="easyui-datebox" />
+			</p>
+			<p class="yw-table-filter">
+				<label>金额</label>
+				<input type="text" id="amount" class="control text_padding" name="amount"></input>
+			</p>
+				<span style="margin-left: -15px;">
+				<label>~</label>
+			</span>
+			<p class="yw-table-filter">
+				<label></label>
+				<input type="text" id="amount2" class="control text_padding" name="amount2"></input>
+			</p>
+				<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="select();">查询</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64" onclick="clearType();">清空</a>
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64" onclick="exportExcel();">导出</a>
+				<input type="hidden" id="refreshColumns" value = "B"></input>
+			</div>
+		</div>
+	</form>
+</div>
+</div>
+<div region="center" border="false" class="panel_padding" style="padding-right:20px;padding-left:20px;">
+	<table id="tt" fit="true"
+		   title="" iconCls="icon-edit" singleSelect="true"
+		   idField="id">
+	</table>
+</div>
+<div id="w" title="附件列表" class="easyui-window" data-options="width:500,height:350"></div>
+<script type="text/javascript">
+	var CostTypeJson =eval('[(${CostTypeJson})]');
+	var ourCompanyJson =eval('[(${ourCompanyJson})]');
+
+	// 概要
+	var columns_brief = [ [
+		{field:'pairId', title:'',align:'center',width: 50},
+		// {field:'belogDept',title:'所属部门',align:'center', width:150},
+		{field:'applyUserName',title:'申请人',align:'center', width:150},
+		{field:'costType',title:'费用类型',align:'center', width:300},
+		{field:'costType2',title:'费用类型（大类）',align:'center', width:150},
+		{field:'dealAmount',title:'金额',align:'right', width:120},
+		{field: 'companyName', title: '公司名称', width: 300},
+		{field:'applyDate',title:'申请日期',align:'center', width:100,},
+		{field:'subject',title:'摘要',align:"center", width:150,},
+		{field:'receiveCompanyName',title:'收款方', align:"center", width:130,},
+		{field:'bankName',title:'银行名称',align:"center", width:150,},
+		{field:'bankAccount',title:'银行账户',align:"center", width:150,},
+		{field:'remark',title:'备注',align:"center", width:250,},
+		{
+			field: 'option', title: '附件', align: 'left', width: 100, formatter: function (value, row, index) {
+				var str = "";
+				if (row.fileId != "" && row.fileId != null) {
+					 str += '<span onclick="fileList(' + row.id + ')" class="contract-btn contract-btn-5">查看附件</span>';
+				}
+				return  str;
+			}
+		},
+	]];
+	function fileList(fileId) {
+		debugger;
+		var url=_ctx+"/apply/businessPay/fileList?fileId="+fileId;
+		$('#w').window({href:url});
+		$('#w').window("open");
+	}
+	costType();
+	// 默认概要列
+	columns = columns_brief;
+	$(function() {
+		$('#tt').datagrid({
+			pagination: true,
+			pageSize: 30,
+			showFooter:true,
+			rownumbers: false,
+			pageList: [500, 200, 100, 50, 30, 20],
+			queryParams: Convert.getJson4Form('searchForm'),
+			url: _ctx + "/apply/businessPay/applyBusinessPayList",
+			columns: columns,
+			onDblClickRow: function (index, row) {
+			},
+			onClickRow: function (index, row) {
+			},
+		});
+
+
+		$('#w').window({
+			title: '附件列表',
+			modal:true,
+			closed: true,
+			collapsible : false,
+			minimizable : false,
+			maximizable : false,
+			cache:false
+		});
+		// 判断是否为空
+		function isBlank(val) {
+			if (val == undefined
+					|| val == ''
+					|| val == null) {
+				return true;
+			}
+			return false;
+		}
+	});
+	function exportExcel() {
+		$('#searchForm').form('submit', {url: _ctx + "/apply/businessPay/exportExcel"});
+	}
+	function select() {
+		debugger;
+		var cos1=$("#costType").combobox('getText');
+		var cos2=$("#costType2").combobox('getText');
+		if(isBlank(cos1)==false){
+			if(isBlank(cos2)==true){
+				// 弹窗提示
+				$.messager.confirm('提示','通过费用类型筛选需要大类和小类同时勾选');
+				return;
+			}
+		}
+		if(isBlank(cos2)==false){
+			if(isBlank(cos1)==true){
+				$.messager.confirm('提示','通过费用类型筛选需要大类和小类同时勾选');
+				return;
+			}
+		}
+		var param = Convert.getJson4Form('searchForm');
+		$('#tt').datagrid('options').queryParams = param;
+		$('#tt').datagrid('reload');
+	}
+	function clearType() {
+		$('#searchForm').form('reset');
+		costType();
+	}
+
+	function isBlank(val) {
+		if (val == undefined
+				|| val == ''
+				|| val == null) {
+			return true;
+		}
+		return false;
+	}
+
+	$("#costType2").combobox({
+		data: [
+			{
+				"value": "经营费用申请",
+				"text": "经营费用申请"
+			},
+			{
+				"value": "管理费用申请",
+				"text": "管理费用申请"
+			},
+			{
+				"value": "费用申请",
+				"text": "费用申请"
+			},
+			{
+				"value": "业务退款申请",
+				"text": "业务退款申请"
+			},
+		],
+		valueField: 'value',
+	    textField: 'text',
+		panelHeight: 200,
+		editable: false,
+
+	});
+
+	$("#companyName").combobox({
+		data: ourCompanyJson,
+		textField: 'dictName',
+		valueField:'dictCd',
+		panelHeight:'auto',
+		panelWidth:'auto',
+		editable: false
+	});
+
+	function costType() {
+		$("#costType").combobox({
+			data:CostTypeJson ,
+			textField:'dictName',
+			valueField:'dictName',
+			panelHeight: 200,
+			panelWidth:180,
+			editable: false,
+			multiple: true,
+			formatter: function (row) {
+
+				var opts = $(this).combobox('options');
+				return '<input type="checkbox" class="combobox-checkbox" id="' + row[opts.valueField] + '">' + row[opts.textField]
+			},
+
+			onShowPanel: function () {
+
+				var opts = $(this).combobox('options');
+				var target = this;
+				var values = $(target).combobox('getValues');
+				$.map(values, function (value) {
+					var el = opts.finder.getEl(target, value);
+					el.find('input.combobox-checkbox')._propAttr('checked', true);
+				})
+			},
+			onLoadSuccess: function () {
+
+				var opts = $(this).combobox('options');
+				var target = this;
+				var values = $(target).combobox('getValues');
+				$.map(values, function (value) {
+					var el = opts.finder.getEl(target, value);
+					el.find('input.combobox-checkbox')._propAttr('checked', true);
+				})
+			},
+			onSelect: function (row) {
+
+				var opts = $(this).combobox('options');
+				var el = opts.finder.getEl(this, row[opts.valueField]);
+				el.find('input.combobox-checkbox')._propAttr('checked', true);
+			},
+			onUnselect: function (row) {
+
+				var opts = $(this).combobox('options');
+				var el = opts.finder.getEl(this, row[opts.valueField]);
+				el.find('input.combobox-checkbox')._propAttr('checked', false);
+			}
+		});
+	}
+</script>
+</body>
+</html>

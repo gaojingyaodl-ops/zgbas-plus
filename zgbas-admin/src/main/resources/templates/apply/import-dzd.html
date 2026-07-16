@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="detail-content">
+    <div class="mb6">
+        <input type="hidden" id="dzdDetailListStr" name="dzdDetailListStr" th:value="${content.dzdDetailListStr}"/>
+        <p class="yw-table-filter w2">
+            <label>客户名称:</label>
+            <input name="dzdCompanyName" id="dzdCompanyName" th:value="${content.dzdCompanyName}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>客户联系人:</label>
+            <input name="dzdCompanyContact" id="dzdCompanyContact" th:value="${content.dzdCompanyContact}" type="text"/>
+        </p>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>供应商名称:</label>
+            <input name="ourCompanyName" id="ourCompanyName" th:value="${content.ourCompanyName}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>供应商对账人:</label>
+            <input name="ourCompanyContact" id="ourCompanyContact" th:value="${content.ourCompanyContact}"
+                   type="text"/>
+        </p>
+    </div>
+
+    <div class="mb6">
+        <p class="yw-table-filter">
+            <label>对账周期:</label>
+            <input name="dzDateBegin" id="dzDateBegin" th:value="${content.dzDateBegin}" type="text"/>
+        </p>
+        <span style="margin-left: -15px;" class="mobile-display-none">
+        <label>~</label>
+    </span>
+        <p class="yw-table-filter">
+            <input name="dzDateEnd" id="dzDateEnd" th:value="${content.dzDateEnd}" type="text"/>
+        </p>
+        <a  href="#" class="easyui-linkbutton-self mb10 mt10 " id="syncContractDetail"  onclick="applyProtocolDocDzd.syncContractDetail()">同步合同明细</a>
+
+    </div>
+    <div class="mb6 rep-view" style="margin-top: 10px">
+            <a  href="#" class="easyui-linkbutton-self mb10 mt20 " id="addTable"  onclick="applyProtocolDocDzd.insertRepTableRow()">新增</a>
+            <a  href="#" class="easyui-linkbutton-self mb10 mt20 ml10" id="removeTable"    onclick="applyProtocolDocDzd.removeRepTableRow()">删除</a>
+        <table id="repTable" ></table>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>本期发生总额:</label>
+            <input name="totalAmountSum" id="totalAmountSum" th:value="${content.totalAmountSum}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>本期发生总额（大写）:</label>
+            <input name="totalAmountSumCN" id="totalAmountSumCN" th:value="${content.totalAmountSumCN}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>未付金额合计:</label>
+            <input name="needReceiveAmountSum" id="needReceiveAmountSum" th:value="${content.needReceiveAmountSum}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>未付金额合计（大写）:</label>
+            <input name="needReceiveAmountSumCN" id="needReceiveAmountSumCN" th:value="${content.needReceiveAmountSumCN}" type="text"/>
+        </p>
+    </div>
+    <div class="mb6">
+        <p class="yw-table-filter w2">
+            <label>账户名称:</label>
+            <input name="dzdBankAccountName" id="dzdBankAccountName" th:value="${content.dzdBankAccountName}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>开户银行:</label>
+            <input name="dzdBankName" id="dzdBankName" th:value="${content.dzdBankName}" type="text"/>
+        </p>
+        <p class="yw-table-filter w2">
+            <label>银行账户:</label>
+            <input name="dzdBankAccountNo" id="dzdBankAccountNo" th:value="${content.dzdBankAccountNo}" type="text"/>
+        </p>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<div>
+    <input type="hidden" id="process_id" th:value="${processId}"/>
+    <input type="hidden" id="conditionListJson" th:value="${conditionListJson}"/>
+    <input type="hidden" id="processNodeListJson" th:value="${processNodeListJson}"/>
+    <div style="height: 470px;">
+        <a href="#" class="easyui-linkbutton mb6" data-options="iconCls:'icon-add'," onclick="insertAutoStep()">新增额外条件</a>
+        <table id="processAutoStepTable" fit="true" title="" iconCls="icon-edit" singleSelect="true" idField="id" class="mt20 yw-menu-section"></table>
+    </div>
+    <div class="mt15">
+        <a href="#" class="easyui-linkbutton btn-info-empty" data-options="iconCls:'icon-save'" onclick="saveAutoStep();">保存</a>
+    </div>
+</div>
+<script type="text/javascript">
+    var _auto_last_index;
+    var conditionListJson = JSON.parse($("#conditionListJson").val());
+    var processNodeListJson = JSON.parse($("#processNodeListJson").val());
+    var conditionTypeJson = [{id:'A',text:'增加步骤'},{id:'S',text:'减少步骤'}];
+    $(function () {
+        var _process_id = $("#process_id").val();
+        var _auto_step_url = _ctx + "/pm/processAutoStep/list?page=1&rows=50&search_EQL_processId=" + _process_id;
+        $('#processAutoStepTable').datagrid({
+            pageSize:100,
+            pageList:[500,400,300,200,100],
+            rownumbers:true,
+            pagination:true,
+            url: _auto_step_url,
+            columns: [ [
+                {
+                    field: 'conditionType', title: '条件类型', align: 'left', width: 80, editor: {
+                        type: 'combobox',
+                        options: {
+                            required: true,
+                            data: conditionTypeJson,
+                            textField: 'text',
+                            panelWidth: 75,
+                            panelHeight: 'auto',
+                            valueField: 'id'
+                        }
+                    }, formatter: function (value) {
+                        return Convert.findValueByKey(conditionTypeJson, "id", value, "text");
+                    }
+                },
+                {
+                    field: 'referConditionId', title: '参照流程条件', align: 'left', width: 120, editor: {
+                        type: 'combobox',
+                        options: {
+                            required: false,
+                            data: conditionListJson,
+                            textField: 'conditionName',
+                            panelWidth: 150,
+                            valueField: 'id'
+                        }
+                    }, formatter: function (value) {
+                        return Convert.findValueByKey(conditionListJson, "id", value, "conditionName");
+                    }
+                },
+                {
+                    field: 'referNodeId', title: '参照流程节点', align: 'left', width: 120, editor: {
+                        type: 'combobox',
+                        options: {
+                            required: false,
+                            data: processNodeListJson,
+                            textField: 'nodeName',
+                            panelWidth: 150,
+                            valueField: 'id'
+                        }
+                    }, formatter: function (value) {
+                        return Convert.findValueByKey(processNodeListJson, "id", value, "nodeName");
+                    }
+                },
+                {
+                    field: 'conditionValue',
+                    title: '条件',
+                    align: 'left',
+                    width: 190,
+                    editor: {type: 'textbox', options: {required: false, validType: 'length[0,200]'}},
+                    formatter: function (value) {
+                        var showValue = "";
+                        if (value) {
+                            showValue = value;
+                        }
+                        return '<span href="#" title="' + showValue + '" class="note">' + showValue + '</span>';
+                    }
+                },
+                {
+                    field: 'conditionName',
+                    title: '条件名称',
+                    width: 120,
+                    align: 'left',
+                    editor: {type: 'textbox', options: {required: false, validType: 'length[1,200]'}},
+                    formatter: function (value) {
+                        var showValue = "";
+                        if (value) {
+                            showValue = value;
+                        }
+                        return '<span href="#" title="' + showValue + '" class="note">' + showValue + '</span>';
+                    }
+                },
+                {
+                    field: 'autoNodeId', title: '条件节点', align: 'left', width: 100, editor: {
+                        type: 'combobox',
+                        options: {
+                            required: true,
+                            data: processNodeListJson,
+                            textField: 'nodeName',
+                            panelWidth: 150,
+                            valueField: 'id'
+                        }
+                    }, formatter: function (value) {
+                        return Convert.findValueByKey(processNodeListJson, "id", value, "nodeName");
+                    }
+                },
+                {
+                    field: 'remark',
+                    title: '备注',
+                    align: 'left',
+                    width: 190,
+                    editor: {type: 'textbox', options: {required: false, validType: 'length[0,200]'}},
+                    formatter: function (value) {
+                        var showValue = "";
+                        if (value) {
+                            showValue = value;
+                        }
+                        return '<span href="#" title="' + showValue + '" class="note">' + showValue + '</span>';
+                    }
+                },
+                {
+                    field: 'dispOrderNo',
+                    title: '序号',
+                    align: 'center',
+                    width: 70,
+                    editor: {type: 'numberbox', options: {required: 'true', validType: 'length[1,20]', precision: 0}}
+                },
+                {
+                    field: 'autoOffSet',
+                    title: '偏移量',
+                    align: 'center',
+                    width: 70,
+                    editor: {type: 'numberbox', options: {required: 'true', validType: 'length[1,20]', precision: 0}}
+                },
+                {field:'autoSignLimit',title:'自动签时限(分钟)',editor:{type:'validatebox',options:{validType:'length[0,20]'}},  width:120},
+                {field:'enableFlg',title:'是否有效',editor:{type:'checkbox',options:{on:'true',off:'false'}}, width:60, align:'center',
+                    formatter:function(value,row,index){
+                        if(value=='true')
+                            return '是';
+                        else
+                            return '否';
+                    },
+                    width:60},
+                // {
+                //     field: 'remark',
+                //     title: '备注',
+                //     width: 90,
+                //     align: 'left',
+                //     editor: {type: 'textbox', options: {required: false, validType: 'length[1,200]'}},
+                //     formatter: function (value) {
+                //         var showValue = "";
+                //         if (value) {
+                //             showValue = value;
+                //         }
+                //         return '<span href="#" title="' + showValue + '" class="note">' + showValue + '</span>';
+                //     }
+                // },
+                {
+                    field: 'operate', title: '操作', width: 60, align: 'center', formatter: function (value, row, index) {
+                        return '<img onclick="deleteAutoStep()" style="cursor:pointer;width:16px;height:18px" src="../static/new-version/images/icon_delete.png"/>';
+                    }
+                }
+            ]],
+            onDblClickCell: function (index, field) {
+                $('#processAutoStepTable').datagrid('endEdit', _auto_last_index);
+                $('#processAutoStepTable').datagrid('beginEdit', index);
+                _auto_last_index = index;
+                Convert.focusEditor("processAutoStepTable", field, _auto_last_index);
+            },
+            onClickCell:function(index){
+                _auto_last_index = index;
+            },
+            onSelect:function(rowIndex){
+                _auto_last_index = rowIndex;
+            },
+            onLoadSuccess:function(){
+                $('#processAutoStepTable').datagrid("selectRow", 0);
+            },
+            onBeginEdit: function (index, row) {
+                var ed_referConditionId = $('#processAutoStepTable').datagrid('getEditor', {
+                    index: index,
+                    field: 'referConditionId'
+                });
+                var ed_referNodeId = $('#processAutoStepTable').datagrid('getEditor', {
+                    index: index,
+                    field: 'referNodeId'
+                });
+                $(ed_referConditionId.target).combobox('options').onClick = function (record) {
+                    var conditionId = record.id;
+                    if (conditionId) {
+                        $.post(_ctx + "/pm/processAutoStep/findProcessStep?conditionId=" + conditionId, function (data) {
+                            $(ed_referNodeId.target).combobox({
+                                data: data,
+                                valueField: "nodeId",
+                                textField: 'stepName'
+                            });
+                        });
+                    }
+                };
+            }
+        });
+
+    })
+
+    function insertAutoStep() {
+        var _$ta = $('#processAutoStepTable');
+        _$ta.datagrid('endEdit', _auto_last_index);
+        var field = {
+            conditionType: '',
+            referConditionId: '',
+            referNodeId: '',
+            conditionValue: '',
+            conditionName: '',
+            dispOrderNo: '',
+            autoNodeId: '',
+            autoOffSet: '',
+            enableFlg: 'true'
+        };
+        _$ta.datagrid('appendRow', field);
+        _auto_last_index = _$ta.datagrid('getRows').length - 1;
+        _$ta.datagrid('selectRow', _auto_last_index);
+        var row = _$ta.datagrid('getSelected')
+        row.dispOrderNo = _auto_last_index + 1;
+        _$ta.datagrid('beginEdit', _auto_last_index);
+        Convert.focusEditor("processAutoStepTable", field, _auto_last_index);
+    }
+
+    function deleteAutoStep() {
+        var row = $('#processAutoStepTable').datagrid('getSelected');
+        if (row) {
+            var index = $('#processAutoStepTable').datagrid('getRowIndex', row);
+            if (row.id == undefined) {
+                $('#processAutoStepTable').datagrid('deleteRow', index);
+            } else {
+                $.messager.confirm({
+                    width: 388,
+                    height: 170,
+                    title: '删除提示',
+                    msg: '确定要删除该信息吗？',
+                    ok: "确定",
+                    cancel: "取消",
+                    cls: 'c9',
+                    border: 'thin',
+                    fn: function (r) {
+                        if (r) {
+                            $.post(_ctx + "/pm/processAutoStep/delete/" + row.id, function (result) {
+                                var rObj = eval(result);
+                                if (rObj.success) {
+                                    $('#processAutoStepTable').datagrid('reload');
+                                } else {
+                                    $.messager.alert('error', rObj.failure, 'warning');
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    function saveAutoStep() {
+        var flag = true;
+        var _processId = $("#process_id").val();
+        if (_processId == "" || _processId == "0") {
+            flag = false;
+            alert("请添加流程代码、流程名称并保存");
+        }
+        var rows = $('#processAutoStepTable').datagrid('getRows');
+        for (var i in rows) {
+            var row = rows[i];
+            if (row) {
+                var index = $('#processAutoStepTable').datagrid('getRowIndex', row);
+                $('#processAutoStepTable').datagrid('endEdit', index);
+                row.processId = Number(_processId);
+            }
+        }
+        var changeRows = [];
+        var inserted = $('#processAutoStepTable').datagrid('getChanges', 'inserted');
+        var updated = $('#processAutoStepTable').datagrid('getChanges', 'updated');
+        changeRows = inserted.concat(updated);
+        for (var i = 0; i < changeRows.length; i++) {
+            var index = $('#processAutoStepTable').datagrid('getRowIndex', changeRows[i]);
+            flag = $('#processAutoStepTable').datagrid('validateRow', index);
+            if (!flag) {
+                $('#processAutoStepTable').datagrid('selectRow', index);
+                $('#processAutoStepTable').datagrid('beginEdit', index);
+                break;
+            } else {
+                $('#processAutoStepTable').datagrid('endEdit', index);
+            }
+        }
+        if (flag) {
+            $.post(_ctx + "/pm/processAutoStep/saveBatch", Convert.ToSaveParam("processAutoStepTable"), function (result) {
+                var rObj = eval(result);
+                if (rObj.success) {
+                    $('#processAutoStepTable').datagrid('reload');
+
+                    $.messager.show({
+                        title:'Tip',
+                        msg:'保存成功',
+                        timeout:2000,
+                        showType:'show'
+                    });
+                } else {
+                    $.messager.alert('error', rObj.failure, 'warning');
+                }
+            });
+        }
+
+    }
+</script>

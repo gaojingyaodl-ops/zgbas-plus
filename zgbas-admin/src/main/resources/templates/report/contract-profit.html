@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+<title>赊销收款明细表</title>
+<th:block th:replace="~{layouts/include :: include}"></th:block>
+</head>
+<body class="easyui-layout">
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false" >
+	<form id="searchForm" class="form-search from-input-layout" method="post">
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label style="width: 80px;">事业部:</label>
+				<input id="deptId" name="deptId" type="text" value=""/>
+			</p>
+			<p class="yw-table-filter" id="columns_type">
+				<label style="width: 80px;">业务类型:</label>
+				<input type="text" id="businessCode" class="control text_padding" name="businessCode"></input>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label style="width: 80px;">签订日期:</label>
+				<input  id="contractTimeStart" name="contractTimeStart" class="easyui-datebox" th:value="${lastMonthStart}"></input>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label style="width: 80px;">到:</label>
+				<input  id="contractTimeEnd"  name="contractTimeEnd" class="easyui-datebox" ></input>
+			</p>
+			<p class="yw-table-filter mobile-display-none">
+				<label></label>
+				<input id="noBusinessTypeId" type="checkbox" name="noBusinessType" value="Y">  <span style="position:relative;top: 1px;">不区分业务类型</span>
+			</p>
+			<a href="#" id="btn" class="easyui-linkbutton btn64" onclick="searchData()">查询</a>
+			<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="$('#searchForm').form('reset');">清空</a>
+			<span class="" th:if="${permReportServiceDataSumExport == true}">
+				<a href="#" id="btn" class="easyui-linkbutton btn-empty btn64 ml10" onclick="exportExcel()">导出</a>
+			</span>
+			<input type="hidden" name="searchType" id="refreshColumns" value = "T"></input>
+		</div>
+	</form>
+</div>
+<div region="center" border="false" class="panel_padding pl20 pr20">
+	<table id="tt" fit="true"
+			title="" iconCls="icon-edit" singleSelect="true"
+			idField="id">
+	</table>
+</div>
+</div>
+<div id="tooltip-templates" style="display: none;">
+	<div id="tip-buyTotalAmount">
+		<p>采购额：采购合同金额</p>
+	</div>
+	<div id="tip-sellTotalAmount">
+		<p>销售额：销售合同金额</p>
+	</div>
+	<div id="tip-profit">
+		<p>毛利：销售总额-采购总额-仓储费-装卸费-出库费-运输费</p>
+	</div>
+	<div id="tip-profitRate">
+		<p>毛利率：毛利/采购总额</p>
+	</div>
+	<div id="tip-cost">
+		<p>保险费：销售总额*保险费率/1.06<p>
+		<p>增值税：（销售总价-采购总价)/1.13*0.13-运费/1.09*0.09-（仓储费+出库费+装卸费）/1.06*0.06-保险费<p>
+		<p>费用：运输费/1.09+(仓储费+出库费+装卸费)/1.06+增值税*0.12+保险费/1.06</p>
+	</div>
+	<div id="tip-margin">
+		<p>保险费：销售总额*保险费率/1.06<p>
+		<p>增值税：（销售总价-采购总价)/1.13*0.13-运费/1.09*0.09-（仓储费+出库费+装卸费）/1.06*0.06-保险费<p>
+		<p>附加税：增值税*0.12</p>
+		<p>支付给资金方的逾期利息：逾期金额*逾期天数*0.1/365-已收客户逾期罚息</p>
+		<p>金融服务费：我司企业处于中游甲方：下游合同金额-中游合同金额；我司企业处于中游乙方：中游合同金额-上游合同金额</p>
+		<p>代采赊销资金成本：（金融服务费+支付给资金方的逾期利息）/1.13</p>
+		<p>普通赊销资金成本：（金融服务费（利润表结算表中获取））/1.13</p>
+		<p>净毛利：(销售总额-采购总额)1.13-运费11.09-(仓储费+出库费+装卸费)/1.06-保险费-附加税-资金成本</p>
+	</div>
+	<div id="tip-grossProfit">
+		<p>净毛利率(%)：净毛利/采购总额</p>
+	</div>
+</div>
+
+<script type="text/javascript">
+	var lastIndex=0;
+	var deptJson=eval('[(${deptJson})]');
+	var matchUserJson = eval('[(${matchUserNameTree})]');
+	$(function(){
+		$('input[name="noBusinessType"]').click(function() {
+			$("#businessCode").combobox('setValue','');
+			var isChecked = $("#noBusinessTypeId").prop("checked");
+			if(isChecked) {
+				$("#businessCode").combobox("disable");
+			} else {
+				$("#businessCode").combobox("enable");
+			}
+			searchData();
+		});
+		findByDept();//查询业务部门
+		// 业务类型
+		$('#businessCode').combobox({
+			data:[{id:'SX',text:'赊销'},{id:'DC',text:'代采'}],
+			textField:'text',
+			valueField:'id',
+			panelHeight:"auto",
+			editable:false
+		});
+		// intiMonthBox('contractTimeStart');
+		// intiMonthBox('contractTimeEnd');
+		var day=new Date();
+		var month=day.getMonth();
+		if(month==0){
+			month=12;
+		}
+		// $('#contractTimeStart').datebox('setValue', day.getFullYear() + '-' +month+'-1'); //设置日期的值
+		$('#tt').datagrid({
+			pagination:true,
+			pageSize:500,
+			rownumbers:true,
+			showFooter:true,
+			queryParams:Convert.getJson4Form('searchForm'),
+			pageList:[1000,500],
+			url:_ctx+"/rpt/contractReport/findProfitPage",
+			columns:[ [
+				{field:'deptId',title:'事业部', width:200,formatter:function(value,row,index){
+						return Convert.findValueByKey(deptJson,"deptId",value,"deptName");
+				}},
+				{field:'businessName',title:'业务类型', width:70},
+				{field:'buyTotalAmount',title:'采购额(元) <a href="javascript:void(0)" class="tip-icon" data-tip-id="tip-buyTotalAmount" style="color: red;margin-left: 2px;"> ？</a>',align:"right", width:140,formatter:formateNumTon},
+				{field:'sellTotalAmount',title:'销售额(元) <a href="javascript:void(0)" class="tip-icon" data-tip-id="tip-sellTotalAmount" style="color: red;margin-left: 2px;"> ？</a>',align:"right", width:140,formatter:formateNumTon},
+				{field:'profit',title:'毛利(元)  <a href="javascript:void(0)" class="tip-icon" data-tip-id="tip-profit" style="color: red;margin-left: 2px;"> ？</a>', align:"right",width:120,formatter:formateNumTon},
+				{field:'profitRate',title:'毛利率(%) <a href="javascript:void(0)" class="tip-icon" data-tip-id="tip-profitRate" style="color: red;margin-left: 2px;"> ？</a>', align:"right", width:120,formatter:function (value,row,index){
+					if (row.profit != 0){
+						return ((row.profit / row.buyTotalAmount)*100).toFixed(3) + "%";
+					}else{
+						return "0%";
+					}
+				}},
+				{field:'cost',title:'费用(元) <a href="javascript:void(0)" class="tip-icon" data-tip-id="tip-cost" style="color: red;margin-left: 2px;"> ？</a>',align:"right", width:120,formatter:formateNumTon},
+			    {field:'margin',title:'净毛利(元) <a href="javascript:void(0)" class="tip-icon" data-tip-id="tip-margin" style="color: red;margin-left: 2px;"> ？</a>', align:"right", width:120,formatter:formateNumTon},
+			    {field:'grossProfit',title:'净毛利率(%) <a href="javascript:void(0)" class="tip-icon" data-tip-id="tip-grossProfit" style="color: red;margin-left: 2px;"> ？</a>', align:"right", width:120,formatter:function (value,row,index){
+						if (row.margin != 0){
+							return ((row.margin / row.buyTotalAmount)*100).toFixed(3) + "%";
+						}else{
+							return "0%";
+						}
+				}},
+				{field:'businessUserCount',title:'业务人数',align:"right", width:70,hidden:true},
+				{field:'orderCount',title:'订单数',align:"right", width:70,hidden:true},
+				{field:'tonnes',title:'吨数',align:"right", width:140,formatter:formateNumTon,hidden:true},
+				{field:'sellMoney',title:'销售额(万元)', align:"right",width:120,formatter:formateNumTon,hidden:true},
+				{field:'sellLabor',title:'销售额人效', align:"right",width:120,formatter:formateNumTon,hidden:true},
+				{field:'gross',title:'毛利(万元)', align:"right",width:120,formatter:formateNumTon,hidden:true},
+				{field:'grossLabor',title:'毛利人效', align:"right",width:120,formatter:formateNumTon,hidden:true},
+				{field:'grossAvg',title:'毛利率均值', align:"right",width:120,formatter:formateNumTon,hidden:true},
+				{field:'operate',title:'', width:10,align:'center',formatter:function(value, row, index){
+					return "";
+				}}
+
+			]]
+
+		});
+	});
+	function searchData(){
+		showRoi();
+		Convert.search('searchForm','tt');
+	}
+	// 绑定 tooltip 提示
+	setTimeout(function () {
+		$('.tip-icon').each(function () {
+			const tipId = $(this).data('tip-id');
+			const contentHtml = $('#' + tipId).html(); // 从隐藏模板中获取 HTML 内容
+
+			$(this).tooltip({
+				position: 'top',
+				content: contentHtml,
+				trackMouse: true,
+				onShow: function () {
+					$(this).tooltip('tip').css({
+						'max-width': '700px', // 可选：限制宽度
+						'word-break': 'break-word',
+						'pointer-events': 'auto'
+					});
+				}
+			});
+		});
+	}, 300);
+
+
+	function showRoi(){
+		var showFlg = checkShowRoiFlg();
+		if(showFlg) {
+			// 显示指定列
+			$('#tt').datagrid('showColumn', 'businessUserCount');
+			$('#tt').datagrid('showColumn', 'orderCount');
+			$('#tt').datagrid('showColumn', 'tonnes');
+			$('#tt').datagrid('showColumn', 'sellMoney');
+			$('#tt').datagrid('showColumn', 'sellLabor');
+			$('#tt').datagrid('showColumn', 'gross');
+			$('#tt').datagrid('showColumn', 'grossLabor');
+			$('#tt').datagrid('showColumn', 'grossAvg');
+		} else {
+			// 隐藏指定列
+			$('#tt').datagrid('hideColumn', 'businessUserCount');
+			$('#tt').datagrid('hideColumn', 'orderCount');
+			$('#tt').datagrid('hideColumn', 'tonnes');
+			$('#tt').datagrid('hideColumn', 'sellMoney');
+			$('#tt').datagrid('hideColumn', 'sellLabor');
+			$('#tt').datagrid('hideColumn', 'gross');
+			$('#tt').datagrid('hideColumn', 'grossLabor');
+			$('#tt').datagrid('hideColumn', 'grossAvg');
+		}
+
+	}
+	function isSameMonth(date1, date2) {
+		return date1.getFullYear() === date2.getFullYear() &&
+				date1.getMonth() === date2.getMonth();
+	}
+
+	function isInCurrentMonth(date) {
+		const currentDate = new Date();
+		return date.getFullYear() === currentDate.getFullYear() &&
+				date.getMonth() === currentDate.getMonth();
+	}
+
+	function checkShowRoiFlg() {
+		const contractTimeStart = $('#contractTimeStart').datebox('getValue');
+		const contractTimeEnd = $('#contractTimeEnd').datebox('getValue');
+
+		var isChecked = $("#noBusinessTypeId").prop("checked");
+		if(isChecked) {
+			if (contractTimeEnd) {
+				const startDate = new Date(contractTimeStart);
+				const endDate = new Date(contractTimeEnd);
+
+				if (isSameMonth(startDate, endDate)) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				const startDate = new Date(contractTimeStart);
+				if (isInCurrentMonth(startDate)) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+
+		}
+	}
+	/*  导出Excel表格 */
+	function exportExcel(){
+    	$('#searchForm').form('submit', {url:_ctx+"/rpt/contractReport/profitExportTypeExcel"});
+	}
+	/*  获取事业部列表 */
+	 function findByDept(){
+		$.ajax({
+			type: 'POST',
+			url: _ctx+'/rpt/contractReport/findProfitByDeptId',
+			data: Convert.getJson4Form('searchForm'),
+			success: function (result) {
+				var sc  = eval('('+result+')');//由Json字符串转换成Javascript对象
+				var deptByIdJson = sc.rows;
+					$('#deptId').combobox({
+						data : deptByIdJson,
+						multiple : true,
+						textField:'deptName',
+						valueField:'deptId',
+						panelHeight:"auto",
+						editable:false
+					});
+			},
+		});
+	 }
+
+	function formateNumTon(num, row, index) {
+		if (num) {
+			num = parseFloat(num).toFixed(2).toString().split(".");
+			num[0] = num[0].replace(new RegExp('(\\d)(?=(\\d{3})+$)', 'ig'), "$1,");
+			return num.join(".");
+		} else {
+			return num;
+		}
+	}
+	// 只显示年月，不显示日
+	var intiMonthBox = function(id){
+		var db = $('#'+id);
+		db.datebox({
+			onShowPanel: function () {//显示日趋选择对象后再触发弹出月份层的事件，初始化时没有生成月份层
+				span.trigger('click'); //触发click事件弹出月份层
+				if (!tds) setTimeout(function () {//延时触发获取月份对象，因为上面的事件触发和对象生成有时间间隔
+					tds = p.find('div.calendar-menu-month-inner td');
+					tds.click(function (e) {
+						e.stopPropagation(); //禁止冒泡执行easyui给月份绑定的事件
+						var year = /\d{4}/.exec(span.html())[0]//得到年份
+								, month = parseInt($(this).attr('abbr'), 10); //月份，这里不需要+1
+						db.datebox('hidePanel')//隐藏日期对象
+								.datebox('setValue', year + '-' + month); //设置日期的值
+					});
+				}, 0);
+				yearIpt.unbind();//解绑年份输入框中任何事件
+			},
+			parser: function (s) {
+				if (!s) return new Date();
+				var arr = s.split('-');
+				return new Date(parseInt(arr[0], 10), parseInt(arr[1], 10) - 1, 1);
+			},
+			formatter: function (d) {
+				return d.getFullYear() + '-' + (d.getMonth() + 1);
+			}
+		});
+		var p = db.datebox('panel'), //日期选择对象
+				tds = false, //日期选择对象中月份
+				yearIpt = p.find('input.calendar-menu-year'),//年份输入框
+				span = p.find('span.calendar-text'); //显示月份层的触发控件
+	}
+
+</script>
+</body>
+</html>

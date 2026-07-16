@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">
+	<div id="inputForm" method="post" class="editForm_approve content_div"
+		 style="margin-top: 10px;margin-bottom: 0;overflow:hidden;">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}"/>
+		<div class="mb6 vehicleUse_content">
+			<p class="yw-table-filter">
+				<label>申请人:</label>
+				<input name="applyUserId" id="applyUserId" type="hidden" th:value="${entity.applyUserId}"/>
+				<input name="applyUserName" id="applyUserName" readonly="readonly" type="text" th:value="${entity.applyUserName}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>申请时间:</label>
+				<input name="applyDate" id="applyDate" type="text" th:value="${#dates.format(entity.applyDate,'yyyy-MM-dd')}"/>
+			</p>
+			<p class="yw-table-filter">
+				<label>所在地点:</label>
+				<input name="locations" id="locations" type="text" th:value="${entity.locations}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>部门:</label>
+				<input name="applyDeptName" id="applyDeptName" th:value="${entity.applyDeptName}" type="text">
+			</p>
+			<p class="yw-table-filter">
+				<label>出发时间:</label>
+				<input name="departDate" id="departDate" type="text" th:value="${#dates.format(entity.departDate,'yyyy-MM-dd')}"/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>目的地:</label>
+				<input name="destination" id="destination" type="text" th:value="${entity.destination}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>用车事由:</label>
+				<input name="useReason" id="useReason" type="text" th:value="${entity.useReason}"/>
+			</p>
+			<p class="yw-table-filter w2">
+				<label>车牌号:</label>
+				<input name="plateNumber" id="plateNumber" type="text" th:value="${entity.plateNumber}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w2">
+				<label>驾驶员:</label>
+				<input name="driverName" type="text" id="driverName" th:value="${entity.driverName}"/>
+			</p>
+
+			<p class="yw-table-filter w2">
+				<label>乘车人数(人):</label>
+				<input name="ridingNumber" type="text" id="ridingNumber" th:value="${entity.ridingNumber}"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label>起始公里数(公里):</label>
+				<input name="startRevenue" type="text" id="startRevenue" th:value="${entity.startRevenue}"/>
+			</p>
+
+			<p class="yw-table-filter">
+				<label>终止公里数(公里):</label>
+				<input name="stopRevenue" type="text" id="stopRevenue" th:value="${entity.stopRevenue}"/>
+			</p>
+
+			<p class="yw-table-filter w2">
+				<label>实际里程数(公里):</label>
+				<input name="actualMileage" type="text" id="actualMileage" th:value="${entity.actualMileage}"/>
+			</p>
+		</div>
+		<div class="editForm">
+			<p style="width:240px">
+				<span class="upload-btn" id="btn_fileId">
+	               	 <a href="#" class="easyui-linkbutton file-upload" data-options="iconCls:'icon-upload'">上传附件 </a>
+	           	</span>
+				<input class="control" id="fileId" name="fileId" type="hidden" th:value="${entity.fileId}" />
+			</p>
+			<p class="controls showImg fileId" id="span_fileId"></p>
+		</div>
+	</div>
+</div>
+
+<script th:src="@{/static/js/admin/apply_base.js}" type="text/javascript"></script>
+<script type="text/javascript">
+	var filePlugin = new FilePlugin('#fileId',$('#entityId').val(),'/apply/vehicleUse/updateFileId',[[${param.hasEditFile}]]);
+    var _curStatus = '[[${status}]]';
+    //车牌号
+    var plateNumberJson = eval('[(${plateNumberJson})]');
+    // 所在地点
+    var vehicleLocationJson = eval('[(${vehicleLocations})]');
+    $(function () {
+		$('.easyui-linkbutton').linkbutton();
+
+		if(_curStatus&&(_curStatus=='N'||_curStatus=='B'||_curStatus=='C')){
+			$("#startRevenue,#stopRevenue,#actualMileage").numberbox({min:0})
+			$("#ridingNumber").numberbox({required:true,min:0})
+			$("#departDate,#applyDate").datebox({required:true})
+			$('#useReason,#destination,#driverName').textbox({required: true});
+
+
+			$("#locations").combobox({
+				data: vehicleLocationJson,
+				textField: 'dictName',
+				valueField: 'dictCd',
+				panelHeight: "auto",
+				editable: false,
+				required: true,
+			})
+
+			$("#plateNumber").combobox({
+				data: plateNumberJson,
+				textField: 'dictName',
+				valueField: 'dictName',
+				panelHeight: "auto",
+				editable: true,
+				required: true,
+				onSelect : function (val){
+					if (val.dispOrderNo == 1){
+						$('#driverName').textbox('setValue','朱建');
+					}else{
+						$('#driverName').textbox('setValue','');
+					}
+				}
+			});
+
+        } else if (_curStatus && (_curStatus == 'A' || _curStatus == 'D')) {
+			$("#toolbar").addClass("hide");
+			$("#inputForm").find("input").not('.tags input').not("[type='button']").attr("readonly",true);
+			$("#locations").combobox({
+				data: vehicleLocationJson,
+				textField: 'dictName',
+				valueField: 'dictCd',
+				panelHeight: "auto",
+				editable: false,
+				required: true,
+				readonly: true,
+			})
+			//var _plateNumber = $("#plateNumber").val();
+			//var _plateNumberType = Convert.findValueByKey(plateNumberJson,"dictCd",_plateNumber,"dictName");
+			//$("#plateNumber").val(_plateNumberType);
+        }
+
+		//加载附件列表
+		filePlugin.load($('#fileId').val(),'#span_fileId');
+		if ($('#btn_fileId').length>0){
+			fileUpload("btn_fileId", "fileId");
+		}
+    });
+</script>

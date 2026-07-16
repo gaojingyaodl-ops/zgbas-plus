@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<div class="easyui-layout" fit="true">	
+<div region="north" class="search_div pt20	pl20 pr20 pb15 ofh" border="false">
+	<form id="inputForm" method="post"  class="from-input-layout">
+		<input type="hidden" name="id" id="entityId" th:value="${entity.id}" />
+		<input type="hidden" id="oriWarehouseName" th:value="${entity.warehouseName}" />
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="warehouseName"  class="control-label">仓库名称:</label>
+				<input name="warehouseName" id="warehouseName" required="required" type="text" th:value="${entity.warehouseName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label for="contactName"  class="control-label">联系人:</label>
+				<input name="contactName" id="contactName" type="text" th:value="${entity.contactName}"></input>
+			</p>
+			<p class="yw-table-filter">
+				<label for="contactPhone"  class="control-label">联系电话:</label>
+				<input type="text" name="contactPhone" id="contactPhone" th:value="${entity.contactPhone}" data-options="validType:'length[1,20]'"/>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter">
+				<label for="enableFlg"  class="control-label">是否有效:</label>
+				<input type="text" name="enableFlg" id="enableFlg" th:value="${entity.enableFlg}" />
+			</p>
+			<p class="yw-table-filter">
+				<label for="tpBusinessFlg"  class="control-label">托盘业务:</label>
+				<input type="text" name="tpBusinessFlg" id="tpBusinessFlg" th:value="${entity.tpBusinessFlg}" />
+			</p>
+			<p class="yw-table-filter">
+				<label for="zyBusinessFlg"  class="control-label">自营业务:</label>
+				<input type="text" name="zyBusinessFlg" id="zyBusinessFlg" th:value="${entity.zyBusinessFlg}" />
+			</p>
+			<p class="yw-table-filter">
+				<label for="remark"  class="control-label">备注:</label>
+				<input name="remark" id="remark" type="text" th:value="${entity.remark}"></input>
+			</p>
+		</div>
+		<div class="mb6">
+			<p class="yw-table-filter w4">
+				<label for="storageComputeFormula"  class="control-label">仓储费计算公式:</label>
+				<textarea name="storageComputeFormula" style="width:640px;height: 100px;font-size: 14px;line-height: 1.7em;padding: 10px;border-color: #CBD1E0;" id="storageComputeFormula"  class="easyui-validatebox control textarea-middle" th:text="${entity.storageComputeFormula}"></textarea>
+<!--				<input name="storageComputeFormula" id="storageComputeFormula" type="text" th:value="${entity.storageComputeFormula}"></input>-->
+			</p>
+		</div>
+	</form>
+	</div>
+	<div region="center" border="false" style="padding-left:19px;padding-right: 19px;padding-top: 10px" >
+<!--	    <a  href="#" style="margin-left: 1px " class="easyui-linkbutton addBtn" data-options="iconCls:'icon-add'" onclick="insert()">新增</a>-->
+		<a  href="#" class="easyui-linkbutton mb6"  data-options="iconCls:'icon-add'," onclick="insert()">新增</a>
+		<a  href="#" class="easyui-linkbutton mb6" style="float: right"data-options="iconCls:'icon-detail'," onclick="removeAddr()">删除</a>
+	<input type="hidden" id="warehouseId" th:value="${warehouseId}"/>
+	<table id="warehouseAddrTable" fit="true" border="0"
+		title="" iconCls="icon-edit" singleSelect="true"
+		idField="id"  class="popup-tab tbw mt20 yw-menu-section">
+	</table>
+	</div>
+
+	<div region="south" border="false" style="overflow: hidden;height: 40px;">
+		<div class="actions_bar">
+		<span  class="easyui-linkbutton btn-info-empty" style="margin-left:19px;" data-options="iconCls:'icon-save'" onclick="save();">保存</span>
+		</div>
+	</div>
+</div>
+<script type="text/javascript">
+var entityId=$("#entityId").val();
+var enableFlgs = eval('[(${enableFlgs})]');
+var areaList = eval('[(${areaList})]');
+var whetherFlgs = [
+	{
+		label: '是',
+		value: "true"
+	},
+	{
+		label: '否',
+		value: "false"
+	}
+]
+var _warehouseId = 0;	
+	$(function(){
+		//仓库名称
+		$("#warehouseName").validatebox({
+			required: true,
+			validType:{length:[1,30],remote:[_ctx+"/bas/warehouse/validateWarehouse?id=" + entityId,'warehouseName']}
+		});
+		//是否有效
+		$("#enableFlg").combobox({
+			data:enableFlgs,
+			textField:'dictName',
+			valueField:'dictCd',
+			required: true
+		});
+		$("#tpBusinessFlg").combobox({
+			data:whetherFlgs,
+			textField:'label',
+			valueField:'value'
+		});
+		$("#zyBusinessFlg").combobox({
+			data:whetherFlgs,
+			textField:'label',
+			valueField:'value'
+		});
+
+		if(entityId!=null){
+			_warehouseId=entityId;
+		}
+		else{
+			entityId=0;
+		}
+		
+		var _url = _ctx+"/bas/warehouseAddr/addrList/"+_warehouseId;
+		$('#warehouseAddrTable').datagrid({
+			pageSize:50,
+			rownumbers:true,
+			url:_url,
+			width: 600,
+			pagination:false,
+			columns:[ [
+				//{field:'id',title:'ID',hidden:true},
+				{field:'warehouseId',title:'仓库id',hidden:true},
+				{field:'warehouseShortName',title:'仓库地址简称',align:'center',width:100,editor: { type: 'validatebox',options:{required:true,validType:'length[1,20]'}}},
+				{
+					field: 'provinceCode', title: '省', align: 'center', width: 120,
+					editor: {
+						type: 'combobox', options: {
+							url: _ctx + "/bs/areaCost/ajaxGetCity?id=1",
+							valueField: "id",
+							textField: "name",
+							width: 120,
+							required: true,
+							editable: false,
+							validType: 'length[1,20]',
+							onChange: function (newValue,oldValue){
+								// 获取当前行号
+								var rowIndex = $(this).closest('tr.datagrid-row').attr('datagrid-row-index');
+								var cityEditor = $('#warehouseAddrTable').datagrid('getEditor', {
+									index: rowIndex,
+									field: 'cityCode'
+								});
+								// 针对双击修改赋值，清空问题处理
+								if(oldValue) {
+									$(cityEditor.target).combobox('clear');
+								}
+								if(newValue){
+									$(cityEditor.target).combobox('reload', _ctx + "/bs/areaCost/ajaxGetCity?id=" + newValue);
+								}
+							},
+							onSelect: function (province) {
+
+							}
+						}
+					},
+					formatter: function(value, row, index) {
+						// 假设有一个名为 provinceData 的对象数组，包含了码值到名称的映射关系
+						var provinceName = areaList.find(function(item) {
+							return item.id == value;
+						});
+						return provinceName ? provinceName.name : value; // 如果找到名称则返回名称，否则返回码值本身
+					}
+				},
+				{
+					field: 'cityCode', title: '市', align: 'center', width: 120,
+					editor: {
+						type: 'combobox', options: {
+							valueField: "id",
+							textField: "name",
+							width: 120,
+							required: true,
+							editable: false,
+							validType: 'length[1,20]',
+							onChange: function (newValue,oldValue){
+								// 获取当前行号
+								var rowIndex = $(this).closest('tr.datagrid-row').attr('datagrid-row-index');
+								var areaCode = $('#warehouseAddrTable').datagrid('getEditor', {
+									index: rowIndex,
+									field: 'areaCode'
+								});
+								// 没被双击，执行正常逻辑，
+								if(oldValue) {
+									$(areaCode.target).combobox('clear');
+								}
+								if(newValue){
+									$(areaCode.target).combobox('reload', _ctx + "/bs/areaCost/ajaxGetCity?id=" + newValue);
+								}
+							},
+							onSelect: function (city) {
+
+							}
+						}
+					},
+					formatter: function(value, row, index) {
+						// 假设有一个名为 provinceData 的对象数组，包含了码值到名称的映射关系
+						var cityName = areaList.find(function(item) {
+							return item.id == value;
+						});
+						return cityName ? cityName.name : value; // 如果找到名称则返回名称，否则返回码值本身
+					}
+				},
+				{
+					field: 'areaCode', title: '区', align: 'center', width: 120,
+					editor: {
+						type: 'combobox', options: {
+							valueField: "id",
+							textField: "name",
+							editable: false,
+							width: 120,
+							validType: 'length[1,20]'
+						}
+					},
+					formatter: function(value, row, index) {
+						// 假设有一个名为 provinceData 的对象数组，包含了码值到名称的映射关系
+						var areaName = areaList.find(function(item) {
+							return item.id == value;
+						});
+						return areaName ? areaName.name : value; // 如果找到名称则返回名称，否则返回码值本身
+					}
+				},
+				{field:'warehouseAddr',title:'地址', width:150,editor:{type:'validatebox',options:{required:true,validType:'length[1,40]'}}},
+				{field:'warehouseUnitCost',title:'仓储费单价(元)/吨', width:120,editor: { type: 'numberbox'}},
+				{field:'updatedDate',title:'更新时间', align:'center', width:130},
+				{field:'defaultFlg',title:'是否默认', width:80,align:'center',editor: { type: 'checkbox',options:{on:'true',off:'false'}},formatter:function(value,row,index){
+					if(value=='true'){
+						return'是';
+					}else{
+						return'否';
+					}
+				}}
+				// ,
+				// {field:'action',title:'操作', width:80,align:'center',formatter:function(value, row, index){
+				// 	var id=row.id;
+				//     var str = '<img onclick="removeAddr(\''+row.id+'\',event)" style="cursor:pointer;width:16px;hight:18px" src="../static/new-version/images/icon_delete.png"/>';
+				//    /*  var strs = "<span class='btnSpan' onclick='update(\""+id+"\")' class='l-btn'><span style='width:60px;cursor: pointer;'>是否默认</span>";  */
+			    //     return str;
+				// }}
+			]],
+			toolbar:'#toolbar',
+			// onLoadSuccess: function () {
+			// 	var rows=$("#warehouseAddrTable").datagrid('getRows');
+			// 	if(rows.length==0){
+			// 		insert();
+			// 	}
+			// },
+			onDblClickCell:function(index,field){
+				$('#warehouseAddrTable').datagrid('endEdit', lastIndex);
+				$('#warehouseAddrTable').datagrid('beginEdit', index);
+				lastIndex = index;
+				Convert.focusEditor("warehouseAddrTable",field,lastIndex);
+			}/* ,
+			onBeginEdit:function(index,row){
+				var ed_warehouseName = $('#warehouseAddrTable').datagrid('getEditor', {index:index,field:'warehouseShortName'});
+				var id =row.id;
+				$(ed_warehouseName.target).validatebox('options').validType={length:[1,30],remote:[_ctx+"/bas/warehouseAddr/validateWarehouse?id=" + id,'warehouseShortName']};
+			} */
+		});
+	});
+	//新增
+	function insert(){
+		_warehouseId=entityId;
+		$("#warehouseAddrTable").datagrid("appendRow",{warehouseId:_warehouseId,id:'0'});
+		var rows=$("#warehouseAddrTable").datagrid('getRows');					
+		$("#warehouseAddrTable").datagrid('beginEdit', rows.length - 1);
+	}
+	
+	//保存
+	function save(){
+		var flag = beforSaveOper();
+		var url = _ctx+'/bas/warehouseAddr/saveAddr';
+		var _id = $("#entityId").val();
+		var _val =  $("#warehouseName").attr("value");
+		var count = verifyRows();
+		if(count > 1) {
+			$.messager.alert('提示','默认地址只能存在一个','info');
+			return;
+		}
+		var options={
+		        url:url,
+		        onSubmit: function(){
+		        	var flag=true;
+		        	if(!$("#inputForm").form('validate')){
+		        		flag=false;
+		        	}
+		        	//添加datagrid校验
+		        	/* var changeRows = $('#warehouseAddrTable').datagrid('getRows'); 
+		        	for(var i=0;i<changeRows.length;i++){
+		        		var rowIndex=$('#warehouseAddrTable').datagrid('getRowIndex',changeRows[i]);
+		        		flag=$('#warehouseAddrTable').datagrid('validateRow',rowIndex);
+		        		if (!flag){
+		        			$('#warehouseAddrTable').datagrid('selectRow',rowIndex);
+		        			$('#warehouseAddrTable').datagrid('beginEdit', rowIndex);
+		        			flag = false;
+		        			break;
+		        		}else{
+		        			$('#warehouseAddrTable').datagrid('endEdit', rowIndex);
+		        		}
+		        	} */
+		        	var compareFlg = false;
+		        	if(_id==0){
+		        		compareFlg = true;
+		        	}else{
+		        		var _oriWarehouseName = $("#oriWarehouseName").val();
+		        		if(_val!=_oriWarehouseName){
+		        			compareFlg = true;
+		        		}
+		        	}
+		        	if(compareFlg){
+		        		$.ajax({
+							url:_ctx+"/bas/warehouse/verify/"+_val,
+							type:"GET",
+							async:false,
+							//data:{companyName:_val},
+							dataType: "json",
+							beforeSend:function(){
+							},success:function(data){
+									if(data.success){
+										var _count = Number(data.success);
+										if(_count>0){
+											$.messager.alert('提示','该仓库已存在','info');
+											flag = false;
+										}
+									}else{
+										flag = false;
+									}
+						       }
+						});
+		        	}
+		        	return flag;
+		        },
+		        success:function(data){
+		        	var result = eval('('+data+')');
+					if(result.success){
+		        		$.messager.show({
+		                     title:'Tip',
+		                     msg:'保存成功',
+		                     timeout:2000,
+		                     showType:'show'
+		                 });
+		        		 $('#w').window("close");	
+		        		 $('#tt').datagrid('reload');
+		        	}else{
+		        		$.messager.alert('error',result.failure,'warning');
+		        	}
+		        }
+			};
+		$('#inputForm').form('submit', options);
+	}
+	// 验证更新行和添加行的默认值
+	function verifyRows() {
+		var arrInserted = $('#warehouseAddrTable').datagrid('getChanges', 'inserted');
+		var arrUpdated = $('#warehouseAddrTable').datagrid('getChanges', 'updated');
+		var count = 0;
+		for(var i=0;i<arrInserted.length;i++) {
+			if(arrInserted[i].defaultFlg=="true") {
+				count += 1;
+			}
+		}
+		for(var j=0;j<arrUpdated.length;j++) {
+			if(arrUpdated[j].defaultFlg=="true") {
+				count += 1;
+			}
+		}
+		return count;
+	}
+	//保存前操作
+	function beforSaveOper(){
+		var changeRows = $('#warehouseAddrTable').datagrid('getRows'); 
+		for(var i=0;i<changeRows.length;i++){
+			var rowIndex=$('#warehouseAddrTable').datagrid('getRowIndex',changeRows[i]);
+			flag=$('#warehouseAddrTable').datagrid('validateRow',rowIndex);
+			if (!flag){
+				$('#warehouseAddrTable').datagrid('selectRow',rowIndex);
+				$('#warehouseAddrTable').datagrid('beginEdit', rowIndex);
+				break;
+			}else{
+				$('#warehouseAddrTable').datagrid('endEdit', rowIndex);
+			}
+		}
+	    Convert.setChildren2Form("inputForm","warehouseAddrTable");
+	    return true;
+	}
+	function endEdit(){
+		var rows=$("#warehouseAddrTable").datagrid('getRows');
+		for(var i=0;i<rows.length;i++){
+			//验证没通过 不关闭编辑器
+			if($("#warehouseAddrTable").datagrid("validateRow",i)){
+				$("#warehouseAddrTable").datagrid("endEdit",i);
+			}
+		}
+	}
+	//删除
+    function removeAddr(){
+	// var row , index;
+	// if(id=='0' ||id =='' || id == undefined) {
+	// 	row = $('#warehouseAddrTable').datagrid('getSelected');
+	// 	index = $('#warehouseAddrTable').datagrid('getRowIndex', row);
+	// 	$('#warehouseAddrTable').datagrid('deleteRow',index);
+	// }else{
+		//得到选中行
+		var row = $('#warehouseAddrTable').datagrid('getSelected');
+		if (row) {
+			//获取索引
+			var index = $('#warehouseAddrTable').datagrid('getRowIndex', row);
+			//空行直接删除
+			if (row.id == undefined||row.id==0) {
+				$('#warehouseAddrTable').datagrid('deleteRow', index);
+			} else {
+				$.messager.confirm({
+					width:388,
+					height:170,
+					title: '删除提示',
+					msg: '确定要删除该信息吗？',
+					ok: "确定",
+					cancel: "取消",
+					cls:'c9',
+					border:'thin',
+					fn: function(r){
+						if (r){
+							//TODO:如果该记录被引用,是否强制不允许删除?
+							$.post(_ctx+"/bas/warehouseAddr/delete/"+row.id,function(result) {
+								var rObj = eval(result);
+								if(rObj.success){
+									// $('#w').window("close");
+									$('#warehouseAddrTable').datagrid('reload');
+									$('#warehouseAddrTable').datagrid('clearSelections');
+								}else{
+									$.messager.alert('error',rObj.failure,'warning');
+								}
+							});
+						}
+					}
+				});
+			}
+		}
+		// }
+	}
+	// function removeAddr(id,event){
+	// 	var row , index;
+	// 	if(id=='0' ||id =='' || id == undefined) {
+	// 		row = $('#warehouseAddrTable').datagrid('getSelected');
+	// 		index = $('#warehouseAddrTable').datagrid('getRowIndex', row);
+	// 		$('#warehouseAddrTable').datagrid('deleteRow',index);
+	// 	}else{
+	// 		$('#warehouseAddrTable').datagrid('selectRecord',id);
+	// 		row = $('#warehouseAddrTable').datagrid('getSelected');
+	// 		index = $('#warehouseAddrTable').datagrid('getRowIndex', row);
+	// 		$.messager.confirm('提示','确认要删除该记录吗?',function(t){
+	// 			if(t){
+	// 				$('#warehouseAddrTable').datagrid('deleteRow', index);
+	// 				var nextSelect=index>0?index-1:0;
+	// 				$('#warehouseAddrTable').datagrid('selectRow', nextSelect);
+	// 			}
+	// 		});
+	// 	}
+	// 	event.stopPropagation();
+	// }
+</script>
