@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.system.dao.SampleMapper">
+
+    <!-- Trivial dual-ORM proof (PERSIST-03): queries t_api_external_his, the table that
+         backs the ApiExternalHis @Entity (JPA). Same Druid DataSource as JPA via the
+         @Primary wiring in ZgbasDataSourceConfig. -->
+    <select id="countAll" resultType="long">
+        select count(*) from t_api_external_his
+    </select>
+
+</mapper>
