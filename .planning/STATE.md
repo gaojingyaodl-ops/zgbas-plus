@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 3 context gathered
-last_updated: "2026-07-16T14:25:49.808Z"
-last_activity: 2026-07-16 -- Phase 03 planning complete
+last_updated: "2026-07-16T14:46:10.969Z"
+last_activity: 2026-07-16
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 11
-  completed_plans: 7
+  completed_plans: 8
   percent: 29
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 单进程启动即可跑通全部供应链业务（登录 → 核心业务 → 报表 → 定时任务），行为对齐旧系统 zgbas
-**Current focus:** Phase 3 — 认证首页
+**Current focus:** Phase 03 — auth-homepage
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
+Phase: 03 (auth-homepage) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-07-16 -- Phase 03 planning complete
+Last activity: 2026-07-16
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 73%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [██████████] 100%
 
 *Updated after each plan completion*
 | Phase 1 P01 | 7 | 2 tasks | 14 files |
+| Phase 03 P01 | 5 | 2 tasks | 16 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,8 @@ Recent decisions affecting current work:
 - 双 ORM 单 DataSource + JpaTransactionManager @Primary
 - spt-tools 内联顺序 core→(data,http,file)→(jpa,web,mybatis,shiro,aop,config)
 - [Phase ?]: Phase 1 skeleton complete: 5-module aggregator, spring-boot-starter-parent:2.5.9 grandparent (broke spt-parent chain), zero-error compile + empty-context boot + fat-jar-only-admin verified
+- [Phase ?]: Shiro auth chain placed in zgbas-system not framework (D-08 topology: framework can't see system classes)
+- [Phase ?]: ruoyi-common 4.7.2 + UserAgentUtils 1.21 jar deps added for ShiroDbRealm compile
 
 ### Pending Todos
 
@@ -88,6 +91,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-16T13:14:50.433Z
+Last session: 2026-07-16T14:45:57.591Z
 Stopped at: Phase 3 context gathered
-Resume file: .planning/phases/03-auth-homepage/03-CONTEXT.md
+Resume file: None
