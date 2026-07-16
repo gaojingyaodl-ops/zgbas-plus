@@ -88,3 +88,10 @@ None — this plan only edits poms; no source files created or stubbed.
 ## Threat Flags
 
 None — this plan introduces no new network endpoints, auth paths, file access patterns, or schema changes. The 4 external SDK coordinates (auth/push/file/sign) are declared in dependencyManagement but no source code consumes them yet (that lands in plan 02-05 ZgbasExternalBeansConfig). Threat register T-P2-01-nacos and T-P2-01-secrets mitigations verified: nacos absent from dependency graph; no secrets in poms.
+
+## Self-Check: PASSED
+
+- All 4 modified files exist on disk (pom.xml, zgbas-common/pom.xml, zgbas-framework/pom.xml, zgbas-admin/pom.xml).
+- SUMMARY.md exists at `.planning/phases/02-infrastructure/02-01-SUMMARY.md`.
+- All 3 commits verified in git log: 4d8feb5 (Task 1), dced332 (Task 2), 7c73575 (SUMMARY).
+- No shared tracking files (STATE.md / ROADMAP.md / REQUIREMENTS.md) modified — orchestrator owns those.
