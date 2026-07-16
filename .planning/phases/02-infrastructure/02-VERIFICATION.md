@@ -1,8 +1,9 @@
 ---
 phase: 02-infrastructure
 verified: 2026-07-16T18:58:00Z
-status: human_needed
-score: 6/7 must-have truths verified (1 UNCERTAIN — routes to human)
+status: passed
+score: 6/7 must-have truths verified (1 UNCERTAIN — resolved by human decision 2026-07-16, see Resolution)
+resolution_date: 2026-07-16
 overrides_applied: 0
 human_verification:
   - test: "Re-run capstone gate with the real DB password exported"
@@ -20,7 +21,7 @@ human_verification:
 
 **Phase Goal:** spt-tools 源码内联进 zgbas-common，双 ORM 单 DataSource 共存，外部服务 Bean 保持原 HTTP 注入，nacos 移除，295 个 FeignClient 进程内化，配置文件收敛 — 为业务迁移提供可用的基础设施层
 **Verified:** 2026-07-16T18:58:00Z
-**Status:** human_needed
+**Status:** passed (human decisions resolved 2026-07-16 — see Resolution)
 **Re-verification:** No — initial verification
 
 ## Goal Achievement
@@ -154,3 +155,17 @@ The single behavioral gate (D-P2-03 capstone context-load) is credential-locked 
 
 _Verified: 2026-07-16T18:58:00Z_
 _Verifier: Claude (gsd-verifier)_
+
+## Resolution (2026-07-16 — orchestrator, post human decision)
+
+All three `human_verification` items resolved; status flipped `human_needed → passed`.
+
+| Item | Resolution | Tracking |
+|------|-----------|----------|
+| 1. Re-run capstone with real DB password | **DONE** — orchestrator ran `mvn -pl zgbas-admin -am test -Dtest=ZgbasApplicationTest,InProcessContractTest -DfailIfNoTests=false` with `DB_PASSWORD`/`SPT_APP_SECRET` from env → **BUILD SUCCESS, Tests run: 6, Failures: 0, Errors: 0**. The 6/6 GREEN claim is reproduced. | — |
+| 2. WR-02 (HTTP-mapping proof) | **Accepted as-is; deferred to Phase 4.** User chose to add MockMvc HTTP coverage when real Phase-4 `@RestController implements I*Client` impls land (more meaningful then). | `.planning/todos/pending/phase4-inprocess-contract-http-proof.md` |
+| 3. ddl-auto=none deviation | **Accepted; drift deferred to Phase 4.** User confirmed the ~259-table schema fix is out of Phase-2 scope; `none` matches source behavior; re-enable `validate` after drift reconciliation. | `.planning/todos/pending/phase4-resolve-entity-schema-drift.md` |
+
+Additionally, **CR-01 (plaintext prod secrets)** was fixed before verification: `application-dev.yml` now uses `${DB_PASSWORD}`/`${SPT_APP_SECRET}` (no secret in git as of HEAD), `.gitignore` covers `application-local*`. The leaked **values still require rotation** — an outward-facing deployment action tracked in `.planning/todos/pending/rotate-leaked-prod-credentials.md`.
+
+**Verdict:** Phase 2 delivers a bootable infrastructure layer (14/14 requirement IDs MET). The capstone test is GREEN with credentials present. No code-level gaps. Phase marked **passed**.
