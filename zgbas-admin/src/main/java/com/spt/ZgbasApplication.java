@@ -7,6 +7,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
@@ -31,14 +33,40 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  *       {@link MyBatisDao} marker (sample Mapper from Plan 05).</li>
  * </ul>
  *
+ * <p>{@link ComponentScan} is declared explicitly (overrides the default scan inside
+ * {@link SpringBootApplication}) to add an {@code excludeFilters}: two {@code @Configuration}
+ * classes share the bean name {@code feignConfig} — {@code com.spt.tools.http.feign.FeignConfig}
+ * (inlined common) and {@code com.spt.sign.client.config.FeignConfig} (sign-client jar). Both
+ * are per-client Feign configs instantiated inside Feign's child context via
+ * {@code @FeignClient(configuration = ...)}; neither should be a top-level singleton. The source
+ * {@code BasServer} avoided the conflict via a narrow {@code @ComponentScan(basePackages = {"com.spt.pm",
+ * "com.spt.bas.server"})}; the monolith's broad {@code com.spt} scan requires the exclude filter instead
+ * (Rule 1 fix — ConflictingBeanDefinitionException on context load).
+ *
+ * <p>Additionally, {@code com.spt.tools.shiro.config.ToolsShiroConfig} is excluded — Shiro
+ * authentication is Phase 3 scope (AUTH-01..04, D-P2-06: "Shiro Realm Phase 3 writes"). The
+ * inlined config's {@code EhCacheManager} conflicts with Hibernate's ehcache (same VM CacheManager
+ * name) and its security/filter beans require a Realm not present until Phase 3. Excluding keeps
+ * Shiro dormant without affecting any Phase 2 infrastructure (Rule 1 fix).
+ *
  * <p>Dropped vs source {@code BasServer.java}: {@code @PropertySource} (D-P2-14 native
  * profile), {@code @EnableDiscoveryClient} (nacos removed, D-P2-11), {@code @Import} of
- * microservice residue, {@code @ComponentScan} ({@code com.spt} base package covers all).
+ * microservice residue (sign config auto-registers via the {@code com.spt} scan), the bare
+ * {@code @ComponentScan} (superseded by the filtered one above).
  */
 @SpringBootApplication
+@ComponentScan(
+    basePackages = "com.spt",
+    excludeFilters = @ComponentScan.Filter(
+        type = FilterType.ASSIGNABLE_TYPE,
+        classes = { com.spt.tools.http.feign.FeignConfig.class,
+                    com.spt.sign.client.config.FeignConfig.class,
+                    com.spt.tools.shiro.config.ToolsShiroConfig.class }
+    )
+)
 @EnableFeignClients(basePackages = "com.spt.sign.client.remote")
 @EntityScan(basePackageClasses = IdEntity.class,
-            basePackages = {"com.spt.bas.client.entity"})
+            basePackages = {"com.spt.bas.client.entity", "com.spt.pm.entity"})
 @EnableJpaRepositories(basePackages = {"com.spt.bas.server.dao"})
 @MapperScan(basePackages = "com.spt.bas.system.dao",
             annotationClass = MyBatisDao.class)

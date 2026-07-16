@@ -153,10 +153,15 @@
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
         </dependency>
-        <!-- spt-tools-http TokenUtil uses old jjwt 0.7.0 API (D-P2-08 pin; SB 2.5.9 does not manage jjwt) -->
+        <!-- spt-tools-http TokenUtil uses old jjwt 0.7.0 API signWith(SignatureAlgorithm, String).
+             Provided scope: needed at compile time only. At runtime, jjwt-api 0.11.2 (SB-managed,
+             transitively via SDK jars) provides io.jsonwebtoken.* — the old single-jar SignatureAlgorithm
+             lacks getMinKeyLength() which FileRemote SDK calls, so old jjwt must NOT be on runtime classpath.
+             Phase 3 (auth) will update TokenUtil to the 0.11.x API (Rule 1 fix — split-package conflict). -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Lombok (all spt-tools modules, optional) -->
