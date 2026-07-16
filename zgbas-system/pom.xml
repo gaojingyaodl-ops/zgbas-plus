@@ -22,6 +22,15 @@
             <groupId>com.spt</groupId>
             <artifactId>zgbas-framework</artifactId>
         </dependency>
+
+        <!-- Lombok: data-layer support types (entities/vo) use @Data etc.
+             Version managed by spring-boot-starter-parent (root grandparent).
+             Common declares it optional so it is NOT transitive — declare directly. -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>
