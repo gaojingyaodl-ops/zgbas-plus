@@ -22,6 +22,8 @@ spring:
       pool-prepared-statements: true
       max-pool-prepared-statement-per-connection-size: 20
       filters: stat
+  thymeleaf:
+    cache: false                                      # WARNING 1: dev hot reload (prod overrides to true)
 
 # External HTTP SDK keys (EXT-04) — dev defaults from source config.properties.
 spt:
@@ -51,6 +53,3 @@ shiro:
     app-cd: zgbas
 zgBas:
   secret: DUHZOTTIUTWNDJFRGLUKSHBGVBKWJRUY
-spring:
-  thymeleaf:
-    cache: false
