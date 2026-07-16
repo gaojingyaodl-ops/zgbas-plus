@@ -94,17 +94,62 @@
 
 ## Traceability
 
-> 阶段映射在 ROADMAP.md 创建时填充（gsd-roadmapper）。每条 v1 需求映射到恰好一个阶段。
+> 阶段映射由 gsd-roadmapper 填充（2026-07-16）。每条 v1 需求映射到恰好一个阶段。
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| *(待 roadmapper 填充)* | TBD | Pending |
+| BUILD-01 | Phase 1 | Pending |
+| BUILD-02 | Phase 1 | Pending |
+| BUILD-03 | Phase 1 | Pending |
+| BUILD-04 | Phase 1 | Pending |
+| BUILD-05 | Phase 1 | Pending |
+| ALIGN-03 | Phase 1 | Pending |
+| INLINE-01 | Phase 2 | Pending |
+| INLINE-02 | Phase 2 | Pending |
+| INLINE-03 | Phase 2 | Pending |
+| INLINE-04 | Phase 2 | Pending |
+| PERSIST-01 | Phase 2 | Pending |
+| PERSIST-03 | Phase 2 | Pending |
+| PERSIST-04 | Phase 2 | Pending |
+| EXT-01 | Phase 2 | Pending |
+| EXT-02 | Phase 2 | Pending |
+| EXT-03 | Phase 2 | Pending |
+| EXT-04 | Phase 2 | Pending |
+| INFRA-01 | Phase 2 | Pending |
+| INFRA-02 | Phase 2 | Pending |
+| INFRA-04 | Phase 2 | Pending |
+| AUTH-01 | Phase 3 | Pending |
+| AUTH-02 | Phase 3 | Pending |
+| AUTH-03 | Phase 3 | Pending |
+| AUTH-04 | Phase 3 | Pending |
+| BIZ-01 | Phase 4 | Pending |
+| BIZ-02 | Phase 4 | Pending |
+| BIZ-03 | Phase 4 | Pending |
+| REPORT-01 | Phase 5 | Pending |
+| REPORT-02 | Phase 5 | Pending |
+| PERSIST-02 | Phase 5 | Pending |
+| QUARTZ-01 | Phase 6 | Pending |
+| QUARTZ-02 | Phase 6 | Pending |
+| QUARTZ-03 | Phase 6 | Pending |
+| QUARTZ-04 | Phase 6 | Pending |
+| INFRA-03 | Phase 6 | Pending |
+| ALIGN-01 | Phase 7 | Pending |
+| ALIGN-02 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 33 total
-- Mapped to phases: 0 (待 roadmap)
-- Unmapped: 33 ⚠️ (roadmap 阶段将 100% 覆盖)
+- v1 requirements: 37 total (10 categories: BUILD 5, PERSIST 4, INLINE 4, EXT 4, AUTH 4, INFRA 4, QUARTZ 4, BIZ 3, REPORT 2, ALIGN 3)
+- Mapped to phases: 37 (100%)
+- Unmapped: 0
+
+**Per-phase breakdown:**
+- Phase 1 (编译止血 + 骨架): 6 requirements
+- Phase 2 (基础设施): 14 requirements
+- Phase 3 (认证首页): 4 requirements
+- Phase 4 (核心业务迁移): 3 requirements
+- Phase 5 (报表迁移): 3 requirements
+- Phase 6 (定时任务迁移): 5 requirements
+- Phase 7 (行为对齐验证): 2 requirements
 
 ---
 *Requirements defined: 2026-07-16*
-*Last updated: 2026-07-16 after initial definition*
+*Last updated: 2026-07-16 after roadmap creation (traceability filled)*

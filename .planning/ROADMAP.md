@@ -1,0 +1,112 @@
+# Roadmap: zgbas-plus
+
+## Overview
+
+zgbas-plus 是 zgbas（Spring Cloud 微服务 4 服务）→ 单体重构的交付路线图。7 个阶段按 foundation-first 递进：从编译止血 + 骨架搭建开始，经基础设施收敛（spt-tools 内联、双 ORM、外部 Bean、删 nacos、Feign 进程内化），到认证首页端到端，再依次迁移核心业务、53 套报表、64 个定时任务，最终以行为对齐验证收尾。每阶段强依赖前一阶段的成果（parallelization=false），最终交付单进程跑全功能的单体应用。
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: 编译止血 + 骨架** - 5 模块聚合单体搭建，mvn compile 零错，单进程可启动
+- [ ] **Phase 2: 基础设施** - spt-tools 内联、双 ORM 共存、外部 Bean 注入、配置收敛、删 nacos、Feign 进程内化
+- [ ] **Phase 3: 认证首页** - Shiro 登录链路 + 动态菜单首页端到端可用
+- [ ] **Phase 4: 核心业务迁移** - 合同/授信/库存/放款 basServer JPA 业务迁入，Controller 迁入 admin
+- [ ] **Phase 5: 报表迁移** - 53 套 mybatis 报表迁入，查询行为等价
+- [ ] **Phase 6: 定时任务迁移** - xxl-job 删除，64 handler 迁入 RuoYi quartz
+- [ ] **Phase 7: 行为对齐验证** - 单服务端到端可用，与旧系统 zgbas 行为等价
+
+## Phase Details
+
+### Phase 1: 编译止血 + 骨架
+**Goal**: 5 模块聚合单体结构就位，全模块 mvn compile 零错，单进程可启动 — 为后续所有迁移提供编译通过的骨架基线
+**Depends on**: Nothing (first phase)
+**Requirements**: BUILD-01, BUILD-02, BUILD-03, BUILD-04, BUILD-05, ALIGN-03
+**Success Criteria** (what must be TRUE):
+  1. 5 模块聚合单体结构存在（zgbas-admin / common / framework / quartz / system），模块间依赖关系正确
+  2. `mvn compile`（apache-maven-3.8.6 + zg_settings.xml）全模块零错误（ALIGN-03 编译止血基线达成）
+  3. 单一 `@SpringBootApplication` 启动类存在，`mvn spring-boot:run` 单进程可启动（无需多服务协作）
+  4. 仅 zgbas-admin 产出可执行 fat jar，其余 4 模块为普通 jar（弃旧 layout=ZIP 瘦 jar 策略）
+**Plans**: TBD
+
+### Phase 2: 基础设施
+**Goal**: spt-tools 源码内联进 zgbas-common，双 ORM 单 DataSource 共存，外部服务 Bean 保持原 HTTP 注入，nacos 移除，295 个 FeignClient 进程内化，配置文件收敛 — 为业务迁移提供可用的基础设施层
+**Depends on**: Phase 1
+**Requirements**: INLINE-01, INLINE-02, INLINE-03, INLINE-04, PERSIST-01, PERSIST-03, PERSIST-04, EXT-01, EXT-02, EXT-03, EXT-04, INFRA-01, INFRA-02, INFRA-04
+**Success Criteria** (what must be TRUE):
+  1. spt-tools-* 源码内联进 zgbas-common（core 最先），运行时 classpath 不再依赖 spt-tools 私服 jar
+  2. 双 ORM 单 DataSource 共存可用：JPA（JpaTransactionManager 设 @Primary）与 mybatis 可同时注入并执行查询，审计字段（createdDate/updatedDate + @EntityListeners）行为保留
+  3. 外部服务 Bean（AuthOpenFacade / PushClientHttp / FileRemote / CfcaSignClient）保持原 HTTP/Feign 注入方式，配置项（spt.app.secretKey / appCode / *.url）迁移到位
+  4. nacos 依赖与配置完全移除（3 处 nacos.common.utils 工具类引用改 commons），295 个 @FeignClient 改为进程内 bean 直调且编译通过
+  5. 4 套配置文件收敛为单 application.yml + profile，数据源前缀统一
+**Plans**: TBD
+
+### Phase 3: 认证首页
+**Goal**: Shiro 登录认证 + 动态菜单首页端到端可用 — 用户可登录并看到与旧系统等价的首页菜单
+**Depends on**: Phase 2
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04
+**Success Criteria** (what must be TRUE):
+  1. 登录接口照搬旧项目，Shiro session+cookie（非 JWT）认证链路可用，密码校验行为等价（SHA-1 + 盐 1024 次迭代）
+  2. 登录成功后首页 + 动态菜单正常加载（经 auth-sdk HTTP 调外部 spt-auth 取菜单/用户数据）
+  3. Shiro 链路（Realm / Service / Util / ShiroFilter 配置）迁入 zgbas-framework，过滤器链配置正确
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 4: 核心业务迁移
+**Goal**: 合同/授信/库存/放款等核心供应链业务（源 basServer JPA）迁入 zgbas-system，业务 Controller / BFF（源 web）迁入 zgbas-admin，业务间调用改为同进程直调 — 核心业务在单体内端到端可用
+**Depends on**: Phase 2, Phase 3
+**Requirements**: BIZ-01, BIZ-02, BIZ-03
+**Success Criteria** (what must be TRUE):
+  1. 合同/授信/库存/放款等核心业务实体与 Service（源 basServer JPA）迁入 zgbas-system，JPA 增删改查可用（PERSIST-01 基础设施支撑实体/Dao 落位）
+  2. 业务 Controller / BFF（源 web）迁入 zgbas-admin，核心业务 HTTP 接口可访问
+  3. 业务间原 Feign 调用改为同进程 Service 直调，行为等价
+**Plans**: TBD
+
+### Phase 5: 报表迁移
+**Goal**: 53 套 mybatis 报表（合同台账/收付款/风控/业绩等）迁入单体，查询行为与旧系统等价
+**Depends on**: Phase 2, Phase 4
+**Requirements**: REPORT-01, REPORT-02, PERSIST-02
+**Success Criteria** (what must be TRUE):
+  1. 53 套报表 Mapper + XML 迁入 zgbas-system 报表包，mybatis 报表查询可执行（PERSIST-02 mybatis 复杂报表查询可用）
+  2. 报表 Controller 迁入 zgbas-admin，报表查询 HTTP 接口可访问
+  3. 报表查询行为与旧系统 zgbas 等价（仅保行为，分页性能另行评估）
+**Plans**: TBD
+
+### Phase 6: 定时任务迁移
+**Goal**: xxl-job 删除，64 个 handler 迁入 RuoYi quartz（zgbas-quartz 模块），任务可在 quartz 中注册并手动触发
+**Depends on**: Phase 2
+**Requirements**: QUARTZ-01, QUARTZ-02, QUARTZ-03, QUARTZ-04, INFRA-03
+**Success Criteria** (what must be TRUE):
+  1. zgbas-quartz 模块就位，RuoYi quartz（整模块复制 spt-auth/auth-quartz + ScheduleConfig）引入，sys_job / sys_job_log 表建好
+  2. 64 个 @XxlJob handler 迁移为 quartz bean（XxlJobHelper.log→slf4j、handleSuccess/Fail→return/异常、getJobParam→JobDataMap）
+  3. 任务记录初始化（cron / bean / method 翻译为 sys_job 数据），支持手动触发与传参
+  4. 至少 1 个迁移后的任务可手动触发 + 传参 dry-run 通过；xxl-job 依赖与 executor 配置完全移除
+**Plans**: TBD
+
+### Phase 7: 行为对齐验证
+**Goal**: 单服务启动后全链路端到端可用，关键业务流程与旧系统 zgbas 行为等价 — 单体化交付完成
+**Depends on**: Phase 3, Phase 4, Phase 5, Phase 6
+**Requirements**: ALIGN-01, ALIGN-02
+**Success Criteria** (what must be TRUE):
+  1. 单服务启动后，登录 → 首页 → 核心业务 → 报表 → 定时任务 全链路端到端可用
+  2. 关键业务流程与旧系统 zgbas 行为等价（回归对照通过）
+**Plans**: TBD
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. 编译止血 + 骨架 | 0/TBD | Not started | - |
+| 2. 基础设施 | 0/TBD | Not started | - |
+| 3. 认证首页 | 0/TBD | Not started | - |
+| 4. 核心业务迁移 | 0/TBD | Not started | - |
+| 5. 报表迁移 | 0/TBD | Not started | - |
+| 6. 定时任务迁移 | 0/TBD | Not started | - |
+| 7. 行为对齐验证 | 0/TBD | Not started | - |
