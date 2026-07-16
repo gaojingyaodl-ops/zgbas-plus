@@ -43,6 +43,14 @@
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
+
+        <!-- ruoyi-common: ShiroDbRealm references com.ruoyi.common.enums.UserStatus +
+             com.ruoyi.common.utils.IpUtils. Transitive to admin (D-P2-06 framework dep).
+             Version managed by root dependencyManagement (4.7.2). -->
+        <dependency>
+            <groupId>com.ruoyi</groupId>
+            <artifactId>ruoyi-common</artifactId>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>

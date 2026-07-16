@@ -200,6 +200,15 @@
                 <artifactId>jjwt</artifactId>
                 <version>${jjwt.version}</version>
             </dependency>
+            <!-- ruoyi-common (4.7.2): referenced by ShiroDbRealm (UserStatus, IpUtils) + later
+                 IndexController (AjaxResult, ShiroConstants, Convert). Surface grew large enough
+                 to justify a jar dep over inlining individual classes. Same version the source
+                 web module uses; jar present in local repo (ASSUMED, T-03-SC). -->
+            <dependency>
+                <groupId>com.ruoyi</groupId>
+                <artifactId>ruoyi-common</artifactId>
+                <version>4.7.2</version>
+            </dependency>
             <!-- External HTTP SDKs (private repo SNAPSHOTs, EXT-01..04 — kept as jars, NOT inlined) -->
             <dependency>
                 <groupId>com.spt</groupId>
