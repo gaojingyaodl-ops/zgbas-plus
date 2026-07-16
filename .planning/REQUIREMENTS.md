@@ -9,11 +9,11 @@
 
 ### 骨架与打包 (BUILD)
 
-- [ ] **BUILD-01**: 搭建 5 模块 Maven 聚合单体 `zgbas-admin / zgbas-common / zgbas-framework / zgbas-quartz / zgbas-system`，模块间依赖关系正确
-- [ ] **BUILD-02**: 使用 Maven `apache-maven-3.8.6` + `zg_settings.xml`（私服仓库）可干净构建
-- [ ] **BUILD-03**: 锁定 JDK 1.8 + Spring Boot 2.5.9 版本基线，全模块一致
-- [ ] **BUILD-04**: 单一 `@SpringBootApplication` 启动类，**单进程启动**即可加载全部模块
-- [ ] **BUILD-05**: 仅 `zgbas-admin` 产出可执行 fat jar，弃旧 layout=ZIP 瘦 jar + libs 目录策略
+- [x] **BUILD-01**: 搭建 5 模块 Maven 聚合单体 `zgbas-admin / zgbas-common / zgbas-framework / zgbas-quartz / zgbas-system`，模块间依赖关系正确
+- [x] **BUILD-02**: 使用 Maven `apache-maven-3.8.6` + `zg_settings.xml`（私服仓库）可干净构建
+- [x] **BUILD-03**: 锁定 JDK 1.8 + Spring Boot 2.5.9 版本基线，全模块一致
+- [x] **BUILD-04**: 单一 `@SpringBootApplication` 启动类，**单进程启动**即可加载全部模块
+- [x] **BUILD-05**: 仅 `zgbas-admin` 产出可执行 fat jar，弃旧 layout=ZIP 瘦 jar + libs 目录策略
 
 ### 双 ORM 持久层 (PERSIST)
 
@@ -72,7 +72,7 @@
 
 - [ ] **ALIGN-01**: 单服务启动后，登录 → 首页 → 核心业务 → 报表 → 定时任务 端到端可用
 - [ ] **ALIGN-02**: 关键业务流程与旧系统 zgbas 行为等价（回归对照）
-- [ ] **ALIGN-03**: 全模块 `mvn compile` 零错误（编译止血基线）
+- [x] **ALIGN-03**: 全模块 `mvn compile` 零错误（编译止血基线）
 
 ## v2 Requirements
 
@@ -98,12 +98,12 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BUILD-01 | Phase 1 | Pending |
-| BUILD-02 | Phase 1 | Pending |
-| BUILD-03 | Phase 1 | Pending |
-| BUILD-04 | Phase 1 | Pending |
-| BUILD-05 | Phase 1 | Pending |
-| ALIGN-03 | Phase 1 | Pending |
+| BUILD-01 | Phase 1 | Complete |
+| BUILD-02 | Phase 1 | Complete |
+| BUILD-03 | Phase 1 | Complete |
+| BUILD-04 | Phase 1 | Complete |
+| BUILD-05 | Phase 1 | Complete |
+| ALIGN-03 | Phase 1 | Complete |
 | INLINE-01 | Phase 2 | Pending |
 | INLINE-02 | Phase 2 | Pending |
 | INLINE-03 | Phase 2 | Pending |
