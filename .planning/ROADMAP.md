@@ -67,7 +67,7 @@ Plans:
 **Wave 4** *(blocked on Wave 3 completion)*
 
 - [x] 02-04-PLAN.md — framework dual-ORM wiring (@Primary DataSource + mybatis + 3 external SDK beans)
-- [ ] 02-05-PLAN.md — entity/Dao bulk-copy (239+240) + trivial sample Mapper (dual-ORM proof)
+- [x] 02-05-PLAN.md — entity/Dao bulk-copy (239+240) + trivial sample Mapper (dual-ORM proof)
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
@@ -147,7 +147,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
-| 2. 基础设施 | 4/6 | In Progress|  |
+| 2. 基础设施 | 5/6 | In Progress|  |
 | 3. 认证首页 | 0/TBD | Not started | - |
 | 4. 核心业务迁移 | 0/TBD | Not started | - |
 | 5. 报表迁移 | 0/TBD | Not started | - |
