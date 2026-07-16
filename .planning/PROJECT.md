@@ -126,4 +126,11 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-07-16 after initialization*
+
+## Progress
+
+- **Phase 1（编译止血 + 骨架）— COMPLETE 2026-07-16。** 5 模块 Maven 聚合单体骨架就位（`zgbas-admin/common/framework/quartz/system`），根 parent 继承 `spring-boot-starter-parent:2.5.9`（**spt-parent / bas-parent / spt-tools-parent BOM 已消除** —— 新扁平 parent，脱离私服 parent 链），D-08 模块拓扑接线完成（`common←(无) / framework←common / system←common,framework / quartz←common,framework,system / admin←all`），单一 `@SpringBootApplication`（`com.spt.ZgbasApplication`）起空 Spring context，仅 `zgbas-admin` 产 fat jar。`mvn compile` 全模块零 `[ERROR]`（JDK 1.8.0_482，ALIGN-03 编译止血基线达成）。骨架为空 context（无 DB / 外部 SDK / 业务代码）—— 这些在后续阶段引入。
+  - **关键决策新增（ discuss 阶段锁定）：** D-01..03 消除 spt-parent，改扁平 parent 继承 spring-boot-starter-parent:2.5.9。
+  - **下一阶段：Phase 2（基础设施）** — spt-tools 内联进 common、双 ORM 单 DataSource、外部 Bean 保持 HTTP 注入、删 nacos、295 Feign 进程内化、配置收敛。
+
+*Last updated: 2026-07-16 after Phase 1 completion*
