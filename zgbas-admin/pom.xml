@@ -35,6 +35,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- EXT-03: cfca sign FeignClient contracts + SignClientConfig (jar from private repo).
+             openfeign starter arrives transitively via common (spt-tools-http) — not re-declared. -->
+        <dependency>
+            <groupId>com.spt</groupId>
+            <artifactId>spt-sign-client</artifactId>
+        </dependency>
         <!-- Context-load smoke test (BUILD-04) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
