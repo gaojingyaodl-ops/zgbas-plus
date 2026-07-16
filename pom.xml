@@ -44,6 +44,10 @@
         <easyexcel.version>1.1.2-beta4</easyexcel.version>
         <zxing.version>3.3.0</zxing.version>
         <commons-io.version>2.11.0</commons-io.version>
+        <!-- spt-tools-core JsonUtil imports org.json (D-P2-08: pin old spt-parent version) -->
+        <json.version>20170516</json.version>
+        <!-- spt-tools-http TokenUtil uses old jjwt 0.7.0 API signWith(SignatureAlgorithm, String) (D-P2-08) -->
+        <jjwt.version>0.7.0</jjwt.version>
     </properties>
 
     <!-- D-08 topology: internal module versions unified via ${project.version}.
@@ -185,6 +189,16 @@
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons-io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.json</groupId>
+                <artifactId>json</artifactId>
+                <version>${json.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt</artifactId>
+                <version>${jjwt.version}</version>
             </dependency>
             <!-- External HTTP SDKs (private repo SNAPSHOTs, EXT-01..04 — kept as jars, NOT inlined) -->
             <dependency>

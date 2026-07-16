@@ -148,6 +148,16 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
+        <!-- spt-tools-core JsonUtil imports org.json (D-P2-08 pin) -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
+        <!-- spt-tools-http TokenUtil uses old jjwt 0.7.0 API (D-P2-08 pin; SB 2.5.9 does not manage jjwt) -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt</artifactId>
+        </dependency>
 
         <!-- Lombok (all spt-tools modules, optional) -->
         <dependency>
