@@ -1,13 +1,14 @@
-# zgbas-plus dev profile — local defaults, no env-var dependency (D-P2-14).
-# Dev credentials for the existing sptbasdb_pd dev database. Prod secrets are NOT here
-# (see application-prod.yml env-var placeholders). Rotate when rotating prod (D-P2-13).
+# zgbas-plus dev profile — non-secret local defaults + env-var placeholders for secrets (D-P2-13).
+# Secrets are NEVER committed: DB password + auth secretKey resolve from the local environment
+# (export DB_PASSWORD / SPT_APP_SECRET, or a gitignored local override). The plaintext values that
+# were briefly committed here (and already in the source zgbas git history) MUST be rotated.
 spring:
   datasource:
     druid:                                             # D-P2-15 unified prefix -> @ConfigurationProperties(spring.datasource.druid)
       driver-class-name: com.mysql.cj.jdbc.Driver
       url: jdbc:mysql://47.104.15.98:3306/sptbasdb_pd?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&useSSL=false
-      username: sptbaspduser
-      password: rjni^xL3Q88p6uC#ZEwK                  # dev-only credential (sptbasdb_pd), already in source git history
+      username: ${DB_USER:sptbaspduser}
+      password: ${DB_PASSWORD}                        # D-P2-13 externalized — export DB_PASSWORD locally; rotate the leaked value
       initial-size: 1
       min-idle: 1
       max-active: 20
@@ -25,8 +26,8 @@ spring:
 # External HTTP SDK keys (EXT-04) — dev defaults from source config.properties.
 spt:
   app:
-    secretKey: spt_secretkey_171212
-    appCode: zgbas
+    secretKey: ${SPT_APP_SECRET}                      # D-P2-13 externalized — export locally; rotate the leaked value
+    appCode: ${SPT_APP_CODE:zgbas}
 
 auth:
   url: http://47.104.15.98:9011

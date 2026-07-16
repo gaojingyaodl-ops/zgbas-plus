@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -21,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * satisfied at the infrastructure level.
  */
 @SpringBootTest
+@ActiveProfiles("dev")
 class ZgbasApplicationTest {
 
     @Autowired

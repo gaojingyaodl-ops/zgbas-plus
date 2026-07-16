@@ -10,8 +10,6 @@ spring:
     allow-bean-definition-overriding: true              # Rule 1 fix: 11 sign-client @FeignClient share name="sign" -> FeignClientSpecification override (Spring Cloud OpenFeign standard)
   application:
     name: zgbas-plus
-  profiles:
-    active: dev
   flyway:
     enabled: false                                     # D-P2-02 (no schema mutation)
   jpa:

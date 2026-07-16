@@ -1,8 +1,6 @@
 package com.spt;
 
 import com.spt.tools.jpa.vo.IdEntity;
-import com.spt.tools.mybatis.annotation.MyBatisDao;
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -15,7 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * zgbas-plus monolith boot class.
  *
  * <p>Keeps {@link SpringBootApplication} with NO auto-config exclusions: we WANT
- * DataSource + JPA + mybatis-plus auto-configuration to engage. Four infra annotations
+ * DataSource + JPA + mybatis-plus auto-configuration to engage. Three infra annotations
  * scope the data and feign surface:
  *
  * <ul>
@@ -29,9 +27,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  *       the IdEntity package causes {@code MappingException: Unknown entity} (Pitfall 2).</li>
  *   <li>{@link EnableJpaRepositories} targeting {@code com.spt.bas.server.dao} (240 Dao
  *       from Plan 05, each {@code extends BaseDao}).</li>
- *   <li>{@link MapperScan} targeting {@code com.spt.bas.system.dao} with the
- *       {@link MyBatisDao} marker (sample Mapper from Plan 05).</li>
  * </ul>
+ *
+ * <p>The mybatis {@code @MapperScan} for {@code com.spt.bas.system.dao} lives in
+ * {@code ZgbasMybatisConfig} (single source of truth — WR-01).
  *
  * <p>{@link ComponentScan} is declared explicitly (overrides the default scan inside
  * {@link SpringBootApplication}) to add an {@code excludeFilters}: two {@code @Configuration}
@@ -68,8 +67,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan(basePackageClasses = IdEntity.class,
             basePackages = {"com.spt.bas.client.entity", "com.spt.pm.entity"})
 @EnableJpaRepositories(basePackages = {"com.spt.bas.server.dao"})
-@MapperScan(basePackages = "com.spt.bas.system.dao",
-            annotationClass = MyBatisDao.class)
 public class ZgbasApplication {
 
     public static void main(String[] args) {
