@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: 编译止血 + 骨架** - 5 模块聚合单体搭建，mvn compile 零错，单进程可启动 (completed 2026-07-16)
 - [x] **Phase 2: 基础设施** - spt-tools 内联、双 ORM 共存、外部 Bean 注入、配置收敛、删 nacos、Feign 进程内化 (completed 2026-07-16)
-- [ ] **Phase 3: 认证首页** - Shiro 登录链路 + 动态菜单首页端到端可用
+- [x] **Phase 3: 认证首页** - Shiro 登录链路 + 动态菜单首页端到端可用 (completed 2026-07-16)
 - [ ] **Phase 4: 核心业务迁移** - 合同/授信/库存/放款 basServer JPA 业务迁入，Controller 迁入 admin
 - [ ] **Phase 5: 报表迁移** - 53 套 mybatis 报表迁入，查询行为等价
 - [ ] **Phase 6: 定时任务迁移** - xxl-job 删除，64 handler 迁入 RuoYi quartz
@@ -97,7 +97,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-04-PLAN.md — prod 配置外置 + 启动验证（D-P3-13）
+- [x] 03-04-PLAN.md — prod 配置外置 + 启动验证（D-P3-13）
 **UI hint**: yes
 
 ### Phase 4: 核心业务迁移
@@ -161,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
-| 3. 认证首页 | 3/4 | In Progress|  |
+| 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
 | 4. 核心业务迁移 | 0/TBD | Not started | - |
 | 5. 报表迁移 | 0/TBD | Not started | - |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-07-16T14:58:12.995Z"
+status: verifying
+stopped_at: Completed 03-04-PLAN.md
+last_updated: "2026-07-16T15:13:17.895Z"
 last_activity: 2026-07-16
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 11
-  completed_plans: 10
-  percent: 29
+  completed_plans: 11
+  percent: 43
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 Phase: 03 (auth-homepage) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-07-16
 
-Progress: [█████████░] 91%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -57,6 +57,7 @@ Progress: [█████████░] 91%
 | Phase 03 P01 | 5 | 2 tasks | 16 files |
 | Phase 03 P02 | 4 | 2 tasks | 10 files |
 | Phase 03 P03 | 2 | 2 tasks | 2709 files |
+| Phase 03 P04 | 12 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,8 @@ Recent decisions affecting current work:
 - [Phase 03-02]: IndexController stub-port (required=false x3 + null-guards) so /index renders menu via authOpenFacade while Phase-4 business data degrades (D-P3-10)
 - [Phase 03-02]: MyIndexController deferred to Phase 5 (report-contract cascade); stub contracts IPmProcessClient/IApproveWaitDealClient in system for Phase 4 replacement
 - [Phase ?]: WebSocketServer @OnOpen stub via comment-out (Phase 4 IApproveWaitDealClient) + full frontend 608 templates/742 JS-CSS copied
+- [Phase ?]: Phase 3 D-P3-13 startup gate GREEN: 14-test @SpringBootTest(RANDOM_PORT) proves Shiro beans wire + endpoints reachable
+- [Phase ?]: Prod auth config externalized: mock-backdoor OFF in prod (empty placeholder), thymeleaf.cache=true (03-04)
 
 ### Pending Todos
 
@@ -96,6 +99,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-16T14:58:05.851Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-07-16T15:13:17.890Z
+Stopped at: Completed 03-04-PLAN.md
 Resume file: None
