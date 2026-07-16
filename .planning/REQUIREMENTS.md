@@ -39,7 +39,7 @@
 ### 认证与首页 (AUTH)
 
 - [x] **AUTH-01**: 登录接口与流程照搬旧项目（Shiro session+cookie，非 JWT）
-- [ ] **AUTH-02**: 登录后首页 + 动态菜单照搬（经 auth-sdk 调外部 spt-auth 取菜单/用户）
+- [x] **AUTH-02**: 登录后首页 + 动态菜单照搬（经 auth-sdk 调外部 spt-auth 取菜单/用户）
 - [x] **AUTH-03**: Shiro 链路迁入 `zgbas-framework`（Realm/Service/Util/ShiroFilter 配置）
 - [x] **AUTH-04**: 密码校验行为等价（SHA-1 + 盐 1024 次迭代）
 
@@ -119,7 +119,7 @@
 | INFRA-02 | Phase 2 | Pending |
 | INFRA-04 | Phase 2 | Pending |
 | AUTH-01 | Phase 3 | Complete |
-| AUTH-02 | Phase 3 | Pending |
+| AUTH-02 | Phase 3 | Complete |
 | AUTH-03 | Phase 3 | Complete |
 | AUTH-04 | Phase 3 | Complete |
 | BIZ-01 | Phase 4 | Pending |

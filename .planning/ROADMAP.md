@@ -92,7 +92,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1; 03-02/03-03 逻辑无依赖但须串行执行 — 共享 zgbas-admin/target/)*
 
-- [ ] 03-02-PLAN.md — Web 控制器 + Thymeleaf（LoginController/UserOpenController 干净照搬 + IndexController stub-port）
+- [x] 03-02-PLAN.md — Web 控制器 + Thymeleaf（LoginController/UserOpenController 干净照搬 + IndexController stub-port）
 - [ ] 03-03-PLAN.md — WebSocket 端点 + 全量前端资源（608 模板 + 742 JS/CSS 批量复制）
 
 **Wave 3** *(blocked on Wave 2 completion)*
@@ -161,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
-| 3. 认证首页 | 1/4 | In Progress|  |
+| 3. 认证首页 | 2/4 | In Progress|  |
 | 4. 核心业务迁移 | 0/TBD | Not started | - |
 | 5. 报表迁移 | 0/TBD | Not started | - |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |

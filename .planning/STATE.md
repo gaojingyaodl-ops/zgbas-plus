@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 context gathered
-last_updated: "2026-07-16T14:46:10.969Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-07-16T14:53:13.037Z"
 last_activity: 2026-07-16
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 11
-  completed_plans: 8
-  percent: 29
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State
@@ -26,17 +26,17 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 03 (auth-homepage) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-07-16
 
-Progress: [███████░░░] 73%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 7
+- Total plans completed: 9
 - Average duration: — min
 - Total execution time: 0 hours
 
@@ -55,6 +55,7 @@ Progress: [███████░░░] 73%
 *Updated after each plan completion*
 | Phase 1 P01 | 7 | 2 tasks | 14 files |
 | Phase 03 P01 | 5 | 2 tasks | 16 files |
+| Phase 03 P02 | 4 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -70,6 +71,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 1 skeleton complete: 5-module aggregator, spring-boot-starter-parent:2.5.9 grandparent (broke spt-parent chain), zero-error compile + empty-context boot + fat-jar-only-admin verified
 - [Phase ?]: Shiro auth chain placed in zgbas-system not framework (D-08 topology: framework can't see system classes)
 - [Phase ?]: ruoyi-common 4.7.2 + UserAgentUtils 1.21 jar deps added for ShiroDbRealm compile
+- [Phase 03-02]: IndexController stub-port (required=false x3 + null-guards) so /index renders menu via authOpenFacade while Phase-4 business data degrades (D-P3-10)
+- [Phase 03-02]: MyIndexController deferred to Phase 5 (report-contract cascade); stub contracts IPmProcessClient/IApproveWaitDealClient in system for Phase 4 replacement
 
 ### Pending Todos
 
@@ -91,6 +94,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-16T14:45:57.591Z
-Stopped at: Phase 3 context gathered
+Last session: 2026-07-16T14:53:13.031Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
