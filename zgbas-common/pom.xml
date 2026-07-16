@@ -148,6 +148,11 @@
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
         </dependency>
+        <!-- spt-tools-core JsonUtil imports org.json (D-P2-08 pin) -->
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+        </dependency>
 
         <!-- Lombok (all spt-tools modules, optional) -->
         <dependency>
