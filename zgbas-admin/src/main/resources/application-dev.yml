@@ -1,0 +1,41 @@
+# zgbas-plus dev profile — local defaults, no env-var dependency (D-P2-14).
+# Dev credentials for the existing sptbasdb_pd dev database. Prod secrets are NOT here
+# (see application-prod.yml env-var placeholders). Rotate when rotating prod (D-P2-13).
+spring:
+  datasource:
+    druid:                                             # D-P2-15 unified prefix -> @ConfigurationProperties(spring.datasource.druid)
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://47.104.15.98:3306/sptbasdb_pd?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&useSSL=false
+      username: sptbaspduser
+      password: rjni^xL3Q88p6uC#ZEwK                  # dev-only credential (sptbasdb_pd), already in source git history
+      initial-size: 1
+      min-idle: 1
+      max-active: 20
+      max-wait: 60000
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      validation-query: select 'x'
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      filters: stat
+
+# External HTTP SDK keys (EXT-04) — dev defaults from source config.properties.
+spt:
+  app:
+    secretKey: spt_secretkey_171212
+    appCode: zgbas
+
+auth:
+  url: http://47.104.15.98:9011
+push:
+  server:
+    url: http://push.tosupply.cn/ys-push-server
+file:
+  server:
+    url: http://file.tosupply.cn/ys-file-server
+sign:
+  server:
+    url: http://47.104.15.98:9002                       # Pitfall 9: required for cfca Feign SpEL #{signServerConfig.url}

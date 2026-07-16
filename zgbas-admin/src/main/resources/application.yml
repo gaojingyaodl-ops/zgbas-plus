@@ -1,14 +1,46 @@
-# Phase 1 skeleton minimal config; intentionally no db/cache/registry/config-store wiring (D-07 empty context)
+# zgbas-plus shared config — public keys + framework behavior (D-P2-14).
+# Secrets live in application-{dev,prod}.yml, never here.
 server:
-  port: 8080
+  port: 8080                                          # D-P2-16
   servlet:
     context-path: /
 
 spring:
+  main:
+    allow-bean-definition-overriding: true              # Rule 1 fix: 11 sign-client @FeignClient share name="sign" -> FeignClientSpecification override (Spring Cloud OpenFeign standard)
   application:
     name: zgbas-plus
   profiles:
     active: dev
+  flyway:
+    enabled: false                                     # D-P2-02 (no schema mutation)
+  jpa:
+    hibernate:
+      # D-P2-02 intended validate to surface entity/schema drift. Validate DID surface real
+      # drift (e.g. api_param: entity varchar(255) vs DB mediumtext — pre-existing across 239
+      # entities, source project ran with implicit ddl-auto=none). Drift fix is out of Phase 2
+      # scope (CONTEXT.md deferred: "涉及 259 表结构变更"). Set to none to match source behavior
+      # and unblock startup verification (D-P2-03 primary goal). Drift tracked as deferred debt.
+      ddl-auto: none
+    show-sql: false                                    # Discretion: copy source behavior
+    properties:
+      hibernate:
+        generate_statistics: true
+        cache:
+          use_second_level_cache: true                 # ehcache 2nd-level (Discretion: copy source)
+          use_query_cache: true
+          region:
+            factory_class: org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory
+      javax.persistence:
+        sharedCache:
+          mode: ENABLE_SELECTIVE                       # @Cache entities only
+  aop:
+    auto: true
+    proxy-target-class: true
+
+mybatis-plus:
+  mapper-locations: classpath:/mybatis/mappers/*Mapper.xml
+  type-aliases-package: com.spt.bas.client.entity      # Pitfall 4 defense
 
 logging:
   level:
