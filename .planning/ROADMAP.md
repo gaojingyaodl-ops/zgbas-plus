@@ -90,7 +90,7 @@ Plans:
 
 - [ ] 03-01-PLAN.md — Shiro 认证链路迁入 zgbas-framework（Realm/Service/Util + web 工具类 + un-exclude + ruoyi-common）
 
-**Wave 2** *(blocked on Wave 1 completion — parallel)*
+**Wave 2** *(blocked on Wave 1; 03-02/03-03 逻辑无依赖但须串行执行 — 共享 zgbas-admin/target/)*
 
 - [ ] 03-02-PLAN.md — Web 控制器 + Thymeleaf（LoginController/UserOpenController 干净照搬 + IndexController stub-port）
 - [ ] 03-03-PLAN.md — WebSocket 端点 + 全量前端资源（608 模板 + 742 JS/CSS 批量复制）
@@ -161,7 +161,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
-| 3. 认证首页 | 0/4 | Not started | - |
+| 3. 认证首页 | 0/4 | Ready to execute | - |
 | 4. 核心业务迁移 | 0/TBD | Not started | - |
 | 5. 报表迁移 | 0/TBD | Not started | - |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |

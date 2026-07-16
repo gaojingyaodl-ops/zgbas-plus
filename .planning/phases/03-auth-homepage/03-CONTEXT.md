@@ -71,7 +71,7 @@
 - `/Users/alan/WorkSpace/IDEA/zgbas`（分支 `feat-系统重构v5.0`）— 源微服务 `web` 模块（端口 80，BFF+UI）
   - `web/src/main/java/com/spt/bas/web/shiro/ShiroDbRealm.java` — **核心 Realm**（`super:` 后门 L63/L91、`authOpenFacade.login()` L115、`reLoginSso` SSO 路径、`assertCredentialsMatch` no-op）→ 照搬进 framework
   - `web/src/main/java/com/spt/bas/web/controller/LoginController.java` — 登录页 Controller（GET/POST `/login`）→ 照搬进 admin
-  - `web/src/main/java/com/spt/bas/web/controller/IndexController.java` / `MyIndexController.java` — 首页 + 菜单（调 auth-sdk）→ 照搬进 admin
+  - `web/src/main/java/com/spt/bas/web/controller/IndexController.java` — 首页 + 菜单（调 auth-sdk）→ **stub 移植进 admin**（缺失 Phase-4 client `IPmProcessClient`/`IApproveWaitDealClient` 用 `@Autowired(required=false)` + null 守卫，业务数据裸 404，契合 D-P3-10）；`MyIndexController.java` → **延后 Phase 5**（报表契约级联，见 deferred）
   - `web/src/main/java/com/spt/bas/web/config/ShiroPropConfig.java` — `mockPassword` 配置绑定 → 照搬
   - `web/src/main/java/com/spt/bas/web/open/apply/UserOpenController.java` — SSO 入口 `ssoLogin`/`resSsoLogin`（用 `zgBas.secret`）→ 照搬进 admin
   - `web/src/main/java/com/spt/bas/web/ws/WebSocketConfig.java` / `ws/IndexWebSocketServer.java` / `ws/WebSocketServer.java` — WebSocket 端点 → 照搬进 framework/admin
@@ -130,7 +130,8 @@
 - **业务 Service / Controller / BFF 逻辑** → Phase 4（BIZ-01..03；本期只搬前端模板，业务页后端 Controller 未迁，点业务菜单数据接口裸 404）
 - **WebSocket 推送业务发送方** → Phase 4（本期搬 WS 端点骨架，WS 先连上闲置）
 - **真实浏览器登录 e2e / 行为对齐** → Phase 7（ALIGN-01/02）
-- **Shiro 过滤器链 DB 表存在性** → Phase 3 research/planning 确认（若 `sptbasdb_pd` 无链表则记 blocker，补 DDL 或改静态规则）
+- **Shiro 过滤器链 DB 表存在性** → ✅ 已澄清（pattern-mapping 2026-07-16）：链由静态规则（`/login=authc` / `/logout=logout` / `/**=user`）+ 运行期经 `ShiroService.initMenu()` → `authOpenFacade.findAllMenu()` HTTP 调外部 spt-auth 取菜单构建，**无 DB 表、无需 DDL**，`ddl-auto=none`（D-P2-02）无影响。非 blocker。
+- **MyIndexController（`/my/index` 报表仪表盘）** → Phase 5（REPORT-01/02）。pattern-mapping 发现其硬依赖 Phase 5 报表契约级联（`IRptIndexReportClient` + `WorkBenchCache` + ~15 report VO），照搬会启动期 `NoSuchBeanDefinitionException` 破坏 D-P3-13。用户 2026-07-16 确认延后；`IndexController`（`/index` 首页+菜单）保留本期 **stub 移植**（缺失 Phase-4 client 用 `@Autowired(required=false)` + null 守卫，业务数据降级裸 404，契合 D-P3-10）。
 - **CR-01 真实轮换已泄漏生产库密码** → 跨阶段安全债（outward-facing），仍 deferred
 - **53 套报表 / 64 xxl-job handler / basWx** → Phase 5 / Phase 6 / v2（与本期无关）
 
