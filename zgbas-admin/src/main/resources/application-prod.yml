@@ -14,6 +14,8 @@ spring:
       validation-query: select 'x'
       test-while-idle: true
       filters: stat
+  thymeleaf:
+    cache: true                                        # WARNING 1: prod enables template cache (dev profile sets false for hot reload; prod overrides back to true)
 
 # External HTTP SDK keys (EXT-04) — prod env-var injection.
 spt:
@@ -32,3 +34,12 @@ file:
 sign:
   server:
     url: ${SIGN_SERVER_URL}                            # Pitfall 9: required for cfca Feign SpEL
+
+# Phase 3 auth config — prod env-var placeholders (D-P3-07/D-P3-12).
+# All values resolve from environment; empty default = feature OFF in prod.
+shiro:
+  prop:
+    mock-password: ${ZGBAS_MOCK_PASSWORD:}             # D-P3-07: empty default = mock backdoor OFF in prod (source application-prod.properties comments this out)
+    app-cd: ${ZGBAS_APP_CD:}                           # D-P3-02: appCode via env-var
+zgBas:
+  secret: ${ZGBAS_SECRET:}                             # D-P3-12: SSO secret via env-var
