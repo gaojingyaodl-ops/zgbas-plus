@@ -43,7 +43,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. 外部服务 Bean（AuthOpenFacade / PushClientHttp / FileRemote / CfcaSignClient）保持原 HTTP/Feign 注入方式，配置项（spt.app.secretKey / appCode / *.url）迁移到位
   4. nacos 依赖与配置完全移除（3 处 nacos.common.utils 工具类引用改 commons），295 个 @FeignClient 改为进程内 bean 直调且编译通过
   5. 4 套配置文件收敛为单 application.yml + profile，数据源前缀统一
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 02-01-PLAN.md — POM foundation: version pins (D-P2-08) + module dependency declarations
+- [ ] 02-02-PLAN.md — spt-tools inline layers 1-2 (core + data/http/file) with compile gates
+- [ ] 02-03-PLAN.md — spt-tools inline layers 3-4 (jpa/web/mybatis/shiro/aop/config) + INLINE-04 verify
+- [ ] 02-04-PLAN.md — framework dual-ORM wiring (@Primary DataSource + mybatis + 3 external SDK beans)
+- [ ] 02-05-PLAN.md — entity/Dao bulk-copy (239+240) + trivial sample Mapper (dual-ORM proof)
+- [ ] 02-06-PLAN.md — boot annotations + config consolidation + Feign proof + startup verification
 
 ### Phase 3: 认证首页
 **Goal**: Shiro 登录认证 + 动态菜单首页端到端可用 — 用户可登录并看到与旧系统等价的首页菜单
@@ -104,7 +111,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
-| 2. 基础设施 | 0/TBD | Not started | - |
+| 2. 基础设施 | 0/6 | Not started | - |
 | 3. 认证首页 | 0/TBD | Not started | - |
 | 4. 核心业务迁移 | 0/TBD | Not started | - |
 | 5. 报表迁移 | 0/TBD | Not started | - |
