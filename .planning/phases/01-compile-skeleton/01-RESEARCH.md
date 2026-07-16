@@ -532,16 +532,18 @@ ls zgbas-common/target/*.jar.original 2>/dev/null && echo "BAD: common repackage
 
 **说明：** 上述均为非 locked 的次要实现细节。所有 locked decisions（D-01..D-11）与核心技术结论（grandparent 继承、JDK8、locale 无关断言、fat jar 仅 admin）均为 `[VERIFIED: 实测 POC]`，非假设。
 
-## Open Questions
+## Open Questions (RESOLVED — 两者均已被 plan 01-01 采纳落地)
 
 1. **根 parent 版本号取什么？**
    - What we know: 源项目用 `2.0.1-SNAPSHOT`(bas-parent) / spt-parent `2.5.3-SNAPSHOT`；新项目是新生命周期。
    - What's unclear: 用户是否希望沿用某版本号体系（如 `1.0.0-SNAPSHOT` vs 对齐旧 `2.x`）。
    - Recommendation: 默认 `1.0.0-SNAPSHOT`（新项目新基线），planner 在 PLAN 中标注，用户可在 review 时改。非阻塞。
+   - **RESOLVED:** 采用 `1.0.0-SNAPSHOT` —— plan 01-01 Task 1 根 pom.xml 已落地。
 
 2. **library 模块本期是否需要占位 java 文件？**
    - What we know: 空 src 的 jar 模块 Maven 通常能正常构建（POC 未测纯空 src，但测过单占位类）。
    - Recommendation: 每个模块放一个占位类（如 common 放 `com.spt.tools.core` 下占位，对齐 Phase 2 内联包名），避免 IDE/空模块边角问题。
+   - **RESOLVED:** 4 个 library 模块各放 `PackageMarker.java` 占位类 —— plan 01-01 Task 1 已落地（common→`com.spt.tools.core`）。
 
 ## Environment Availability
 

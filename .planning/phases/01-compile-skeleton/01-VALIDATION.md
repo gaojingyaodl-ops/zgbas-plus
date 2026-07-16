@@ -22,7 +22,7 @@ created: 2026-07-16
 
 | Property | Value |
 |----------|-------|
-| **Framework** | JUnit 4（经 `spring-boot-starter-test`，Spring Boot 2.5.9 默认携带）+ Spring Test（`@SpringBootTest`） |
+| **Framework** | JUnit 5 / Jupiter（经 `spring-boot-starter-test`，Spring Boot 2.5.9 默认携带）+ Spring Test（`@SpringBootTest`） |
 | **Config file** | none — starter-test 自带默认；maven-surefire-plugin 由 spring-boot-starter-parent 管理 |
 | **Quick run command** | `$MVN -s "$S" -pl zgbas-admin test` |
 | **Full suite command** | `$MVN -s "$S" clean test` |
