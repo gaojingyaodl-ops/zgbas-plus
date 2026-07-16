@@ -35,6 +35,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- D-P3-09: Thymeleaf template engine for login/index views (version managed by starter-parent) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
         <!-- EXT-03: cfca sign FeignClient contracts + SignClientConfig (jar from private repo).
              openfeign starter arrives transitively via common (spt-tools-http) — not re-declared. -->
         <dependency>
