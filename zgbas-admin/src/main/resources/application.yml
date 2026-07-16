@@ -1,0 +1,16 @@
+# Phase 1 skeleton minimal config; intentionally no db/cache/registry/config-store wiring (D-07 empty context)
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: zgbas-plus
+  profiles:
+    active: dev
+
+logging:
+  level:
+    com.spt: info
+    org.springframework: warn
