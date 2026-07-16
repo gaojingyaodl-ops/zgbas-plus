@@ -926,25 +926,27 @@ sign:
 | A9 | spt-sign-client jar's `SignClientConfig` auto-registers `LocalServerConfig signServerConfig` via ComponentScan of `com.spt.sign.*`. | Pitfall 9 / EXT-03 | LOW — jar contents listing shows `com/spt/sign/client/config/SignClientConfig.class`; `@Configuration` is meta-annotated; `ZgbasApplication` scans `com.spt` so covered. |
 | A10 | The 239 entity count + 240 Dao count is the complete set (no additional entities/Dao in basWx/purchase that sneak in). | PERSIST-01 / D-P2-05 | LOW — verified via `find ... | wc -l` in basClient.entity (239) and basServer.dao (240); basWx explicitly out-of-scope. |
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> All 4 questions resolved during planning (plans 02-01..06 adopt every recommendation below). Markers added per plan-checker W1.
 
 1. **Do the 3 `nacos.common.utils` source files belong in Phase 2's deliverable or Phase 4's?**
    - What we know: They are `WorkBenchCache.java` (web), `ApplyReceiveRefundDcsxServiceImpl.java` (basServer service/impl), `ApplyLossServiceImpl.java` (basServer service/impl).
    - What's unclear: D-P2-11 says "delete nacos + 3 util-class refs" — literally these 3 files. But they are business code (Phase 4 scope).
-   - Recommendation: **Phase 2 removes the nacos POM deps + config keys only; the 3 file imports stay broken-but-absent** (files don't exist yet in zgbas-plus, so nothing breaks). Phase 4 planner applies the swap rule (Pitfall 8) when those files are bulk-copied. Document as Phase 4 prerequisite.
+   - RESOLVED — Recommendation: **Phase 2 removes the nacos POM deps + config keys only; the 3 file imports stay broken-but-absent** (files don't exist yet in zgbas-plus, so nothing breaks). Phase 4 planner applies the swap rule (Pitfall 8) when those files are bulk-copied. Document as Phase 4 prerequisite.
 
 2. **Should framework's `@Bean @Primary DataSource` use `@AutoConfigureBefore(ToolsJpaConfig.class)`?**
    - What we know: Both `ToolsJpaConfig` and `ToolsMybatisConfig` declare `@Bean("datasource") @ConditionalOnMissingBean`. `@ConditionalOnMissingBean` evaluates at config-class processing time.
    - What's unclear: Whether `ZgbasDataSourceConfig` is guaranteed to process before the spt-tools configs.
-   - Recommendation: Use `@AutoConfigureBefore({ToolsJpaConfig.class, ToolsMybatisConfig.class})` on `ZgbasDataSourceConfig` OR define `ZgbasDataSourceConfig` in a `META-INF/spring.factories` Auto-configuration with lower order. Simpler: rely on `@ConditionalOnMissingBean` working bidirectionally (it does — whichever @Bean is registered first wins). Phase 2 ends with context-load test that proves non-ambiguity.
+   - RESOLVED — Recommendation: Use `@AutoConfigureBefore({ToolsJpaConfig.class, ToolsMybatisConfig.class})` on `ZgbasDataSourceConfig` OR define `ZgbasDataSourceConfig` in a `META-INF/spring.factories` Auto-configuration with lower order. Simpler: rely on `@ConditionalOnMissingBean` working bidirectionally (it does — whichever @Bean is registered first wins). Phase 2 ends with context-load test that proves non-ambiguity.
 
 3. **Should `application-prod.yml` ship with empty defaults `${VAR:}` (graceful) or `${VAR}` (fail-fast if missing)?**
    - What we know: D-P2-13 says "占位 + 本地 dev 默认值"; the syntax `${VAR:default}` provides a default (empty after colon) while `${VAR}` fails startup if unset.
-   - Recommendation: Use `${VAR}` for secrets in prod (fail-fast if rotation incomplete) and `${VAR:dev-default}` in dev (always provide defaults).
+   - RESOLVED — Recommendation: Use `${VAR}` for secrets in prod (fail-fast if rotation incomplete) and `${VAR:dev-default}` in dev (always provide defaults).
 
 4. **Phase 2 Sample Mapper — use `t_api_external_his` (ApiExternalHis entity) or a custom sample table?**
    - What we know: Sample Mapper needs a real table to query (count(*)).
-   - Recommendation: Use `t_api_external_his` (backs `ApiExternalHis` @Entity, verified in basClient.entity). If table missing in dev schema, fall back to a system table like `information_schema.tables` (no entity coupling).
+   - RESOLVED — Recommendation: Use `t_api_external_his` (backs `ApiExternalHis` @Entity, verified in basClient.entity). If table missing in dev schema, fall back to a system table like `information_schema.tables` (no entity coupling).
 
 ## Environment Availability
 
