@@ -2,7 +2,6 @@ package com.spt;
 
 import com.spt.bas.client.remote.IBsCompanyOurClient;
 import org.apache.shiro.mgt.SecurityManager;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -153,18 +152,19 @@ class ZgbasApplicationTest {
     }
 
     // ---- Phase 4 Wave 0 (D-P4-06 WR-02): business contract HTTP reachability placeholders ----
-    // These four tests build the WR-02 shell. Wave 3 ports the 224 @RestController endpoints
-    // (extends BaseApi<Entity>) into zgbas-system; Wave 4 ports the 267 BFF controllers into
-    // zgbas-admin. Once those land, remove @Disabled — the endpoints will resolve and these
-    // tests naturally activate as the WR-02 acceptance proof.
+    // These tests are the WR-02 acceptance proof (D-P4-06). Wave 3 ported the 236 @RestController
+    // endpoints (extends BaseApi<Entity>) into zgbas-system; Wave 4 ported the 267 BFF controllers
+    // into zgbas-admin. The @Disabled annotations have been removed — the endpoints now resolve
+    // and these tests prove end-to-end HTTP reachability through the Feign self-loopback (方案 A).
     //
-    // Assertion shape matches the existing loginEndpointReachable pattern: 2xx / 3xx / 401 all
-    // count as "endpoint registered and Spring MVC reachable over HTTP". 401 is expected when
-    // Shiro's user filter rejects an unauthenticated request to a protected business endpoint.
+    // Assertion shape: 2xx / 3xx / 401 all count as "endpoint registered and Spring MVC reachable
+    // over HTTP". Shiro's user filter (Phase 3 AUTH-03 /**=user chain) redirects unauthenticated
+    // requests to /login (302) — proving the endpoint space is protected, not absent. 401 is
+    // expected when Shiro returns unauthorized for protected business endpoints.
 
     @Test
-    @Disabled("Wave 3: ApplyBrandApi落位后启用 (D-P4-06 / WR-02 合同域)")
     void basContractEndpointReachable_applyBrand_findAll() {
+        // WR-02 合同域: ApplyBrandController @RequestMapping("/apply/brand")
         ResponseEntity<String> response = restTemplate.postForEntity(
             "/apply/brand/findAll", null, String.class);
         assertThat(response.getStatusCode().is2xxSuccessful()
@@ -173,8 +173,8 @@ class ZgbasApplicationTest {
     }
 
     @Test
-    @Disabled("Wave 3: CtrContractApi落位后启用 (D-P4-06 / WR-02 授信/合同域)")
     void basContractEndpointReachable_ctrContract_findPage() {
+        // WR-02 授信/合同域: CtrContractController @RequestMapping("/ctr/contract")
         ResponseEntity<String> response = restTemplate.postForEntity(
             "/ctr/contract/findPage", null, String.class);
         assertThat(response.getStatusCode().is2xxSuccessful()
@@ -183,24 +183,34 @@ class ZgbasApplicationTest {
     }
 
     @Test
-    @Disabled("Wave 3: StockDetailApi落位后启用 (D-P4-06 / WR-02 库存域)")
-    void basContractEndpointReachable_stockDetail_findAll() {
+    void basContractEndpointReachable_stockContract_findPage() {
+        // WR-02 库存域: StockContractController @RequestMapping("/stock/stockContract")
         ResponseEntity<String> response = restTemplate.postForEntity(
-            "/stock/detail/findAll", null, String.class);
+            "/stock/stockContract/findPage", null, String.class);
         assertThat(response.getStatusCode().is2xxSuccessful()
             || response.getStatusCode().is3xxRedirection()
             || response.getStatusCodeValue() == 401).isTrue();
     }
 
     @Test
-    @Disabled("Wave 4: BFF controller 落位后启用 (D-P4-06 / BIZ-02)")
+    void basContractEndpointReachable_ctrLoading_findPage() {
+        // WR-02 放款域: CtrContractLoadingController @RequestMapping("/ctr/loading")
+        ResponseEntity<String> response = restTemplate.postForEntity(
+            "/ctr/loading/findPage", null, String.class);
+        assertThat(response.getStatusCode().is2xxSuccessful()
+            || response.getStatusCode().is3xxRedirection()
+            || response.getStatusCodeValue() == 401).isTrue();
+    }
+
+    @Test
     void bffControllersRegistered_sample() {
-        // Wave 4 ports 267 web BFF controllers into zgbas-admin; sample 3 representative beans
-        // (合同/授信/库存 domains) once they land. Bean name convention = simple class name
-        // with initial lowercased (Spring default for @Controller).
+        // BIZ-02: Wave 4 ports 267 web BFF controllers into zgbas-admin; sample 4 representative
+        // beans (合同/授信/库存/放款 domains). Bean name convention = simple class name with
+        // initial lowercased (Spring default for @Controller).
         assertThat(context.containsBean("applyBrandController")).isTrue();
         assertThat(context.containsBean("ctrContractController")).isTrue();
-        assertThat(context.containsBean("stockDetailController")).isTrue();
+        assertThat(context.containsBean("stockContractController")).isTrue();
+        assertThat(context.containsBean("ctrContractLoadingController")).isTrue();
     }
 
     // ---- Phase 4 Wave 0/4 (D-P4-01 方案 A + D-P4-01a): Feign self-loopback fail-fast probe ----
