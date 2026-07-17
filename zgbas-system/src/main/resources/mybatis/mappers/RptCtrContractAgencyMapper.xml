@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractAgencyMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="businessNo != null and businessNo != ''">
+			AND (c1.contract_no LIKE CONCAT('%',#{businessNo},'%') OR c2.contract_no LIKE CONCAT('%',#{businessNo},'%'))
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND r.product_cd = #{brandNumber}
+		</if>
+		<if test="buyCompanyName != null and buyCompanyName != ''">
+			AND r.buy_company_name LIKE CONCAT('%',#{buyCompanyName},'%')
+		</if>
+		<if test="sellCompanyName != null and sellCompanyName != ''">
+			AND r.sell_company_name LIKE CONCAT('%',#{sellCompanyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c1.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="businessType != null and businessType != ''">
+			AND c1.business_Type = #{businessType}
+		</if>
+		<if test="searchType != null and searchType != ''">
+			AND (c1.business_Type = 'DL-DC' OR c1.business_Type = 'DL-KZ' OR c1.business_Type = 'ZY-BB')
+		</if>
+		<if test="beginTime != null">
+		<![CDATA[ AND DATE_FORMAT((SELECT
+				v.created_date As lastBillDate
+			FROM
+				t_apply_invoice_received v
+			WHERE
+				v.contract_id = r.buy_contract_id
+			AND v.status = 'D'
+			order by v.created_date desc
+			limit 1), '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="endTime != null">
+		<![CDATA[ AND DATE_FORMAT((SELECT
+				v.created_date As lastBillDate
+			FROM
+				t_apply_invoice_received v
+			WHERE
+				v.contract_id = r.buy_contract_id
+			AND v.status = 'D'
+			order by v.created_date desc
+			limit 1), '%Y-%m-%d') <= DATE_FORMAT(#{endTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="buyContractSatrtTime != null">
+			<![CDATA[AND DATE_FORMAT(c1.contract_time,'%Y-%m-%d') >= DATE_FORMAT(#{buyContractSatrtTime},'%Y-%m-%d')]]>
+		</if>
+		<if test="buyContractEndTime != null">
+			<![CDATA[AND DATE_FORMAT(c1.contract_time,'%Y-%m-%d') <= DATE_FORMAT(#{buyContractEndTime},'%Y-%m-%d')]]>
+		</if>
+		<if test="sellContractSatrtTime != null">
+			<![CDATA[AND DATE_FORMAT(c2.contract_time,'%Y-%m-%d') >= DATE_FORMAT(#{sellContractSatrtTime},'%Y-%m-%d')]]>
+		</if>
+		<if test="sellContractEndTime != null">
+			<![CDATA[AND DATE_FORMAT(c2.contract_time,'%Y-%m-%d') <= DATE_FORMAT(#{sellContractEndTime},'%Y-%m-%d')]]>
+		</if>
+	</sql>
+	<!-- 代采代销明细统计 -->
+	<select id="findPageAgency" resultType="com.spt.bas.report.client.entity.RptCtrContractAgencyReport">
+		  SELECT
+		  	c1.business_type As businessType,
+			r.product_name AS productName,
+			r.brand_number AS brandNumber,
+			r.factory_id AS factoryId,
+			r.factory_name AS factoryName,
+			r.buy_company_id AS buyCompanyId,
+			r.buy_company_name AS buyCompanyName,
+			bp.deal_price AS buyPrice,
+			bp.deal_number As buyTotalNumber,
+			bp.total_price AS buyTotalAmount,
+			(c1.total_amount - IFNULL(c1.billed_amount, 0)) AS invoiceBillAmount,
+			r.sell_company_id AS sellCompanyId,
+			r.sell_company_name AS sellCompanyName,
+			sp.deal_price AS sellPrice,
+			sp.deal_number AS sellTotalNumber,
+			sp.total_price AS sellTotalAmount,
+			(c2.total_amount - IFNULL(c2.billed_amount, 0)) AS receiveBillAmount,
+			c1.id As buyId,
+			c2.id As sellId,
+			c1.contract_no As buyContractNo,
+			c1.source As source,
+			c1.our_company_name As ourCompanyName,
+			c1.contract_time As buyContractDate,
+			c1.bill_flg As billFlg,
+			c1.match_user_name As buyMatchUserName,
+			c2.contract_no As sellContractNo,
+			c2.match_user_name As sellMatchUserName,
+			sp.warehouse_number As warehouseNumber,
+			c2.contract_time As sellContractDate,
+			(SELECT
+				v.created_date As lastBillDate
+			FROM
+				t_apply_invoice_received v
+			WHERE
+				v.contract_id = r.buy_contract_id
+			AND v.status = 'D'
+			order by v.created_date desc
+			limit 1) As lastBillDate,
+			c1.delivery_mode As buyDeliveryMode,
+			c1.transport_amount As buyTransportAmount,
+			c1.warehouse_amount As buyWarehouseAmount,
+			c2.delivery_mode As sellDeliveryMode,
+			c2.transport_amount As sellTransportAmount,
+			c2.warehouse_amount As sellWarehouseAmount,
+			c1.match_user_id As matchUserId,
+			(SELECT f.calculate_no FROM t_apply_calculate f WHERE f.contract_id = c2.id AND f.status = 'N' limit 1) As calculateNo
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON c1.id = r.buy_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.sell_contract_id
+		LEFT JOIN t_ctr_product bp ON bp.id = r.buy_product_id
+		LEFT JOIN t_ctr_product sp ON sp.id = r.sell_product_id
+		WHERE 1=1
+		AND c1.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY r.id DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY r.id ASC
+            </when>
+           	<otherwise>
+           		ORDER BY r.id DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	<!-- 带采代销表合计 -->
+	<select id="findPageAgencyTotal" resultType="com.spt.bas.report.client.entity.RptCtrContractAgencyReport">
+		SELECT
+			SUM(bp.deal_number) As buyTotalNumber,
+			SUM(sp.deal_number) AS sellTotalNumber,
+			SUM(sp.warehouse_number) As warehouseNumber
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON c1.id = r.buy_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.sell_contract_id
+		LEFT JOIN t_ctr_product bp ON bp.id = r.buy_product_id
+		LEFT JOIN t_ctr_product sp ON sp.id = r.sell_product_id
+		WHERE 1=1
+		AND c1.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY r.id DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY r.id ASC
+            </when>
+           	<otherwise>
+           		ORDER BY r.id DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	<!-- 根据合同Id查询收票单号 -->
+	<select id="findReceiveBillNoById" resultType="com.spt.bas.report.client.entity.RptCtrContractAgencyReport" >
+		SELECT
+			t.in_invoice_no AS receiveBillNo
+		FROM
+			t_apply_invoice_received t
+		WHERE
+			t.contract_id = #{buyId}
+		AND t.in_invoice_no != ''
+	</select>
+	<!-- 根据合同Id查询开票单号 -->
+	<select id="findInvoiceBillNoById" resultType="com.spt.bas.report.client.entity.RptCtrContractAgencyReport">
+		SELECT
+			t.invoice_no AS invoiceBillNo
+		FROM
+			t_apply_invoice t
+		WHERE
+			t.contract_id = #{sellId}
+		AND t.invoice_no != ''
+	</select>
+	<select id="findLastBill" resultType="com.spt.bas.report.client.entity.RptCtrContractAgencyReport">
+		SELECT
+			v.created_date As lastBillDate
+		FROM
+			t_apply_invoice_received v
+		WHERE
+			v.contract_id = #{buyId}
+		AND v.status = 'D'
+		order by v.created_date desc
+		limit 1
+	</select>
+	
+	<select id="findAgencyBySellId" resultType="com.spt.bas.report.client.entity.RptCtrContractAgencyReport">
+		  SELECT
+		  	c1.business_type As businessType,
+			r.product_name AS productName,
+			r.brand_number AS brandNumber,
+			r.factory_id AS factoryId,
+			r.factory_name AS factoryName,
+			r.buy_company_id AS buyCompanyId,
+			r.buy_company_name AS buyCompanyName,
+			bp.deal_price AS buyPrice,
+			bp.deal_number As buyTotalNumber,
+			<!-- bp.total_price AS buyTotalAmount, -->
+			r.deal_number*bp.deal_price As buyTotalAmount,
+			(c1.total_amount - IFNULL(c1.billed_amount, 0)) AS invoiceBillAmount,
+			r.sell_company_id AS sellCompanyId,
+			r.sell_company_name AS sellCompanyName,
+			sp.deal_price AS sellPrice,
+			sp.deal_number AS sellTotalNumber,
+			sp.total_price AS sellTotalAmount,
+			(c2.total_amount - IFNULL(c2.billed_amount, 0)) AS receiveBillAmount,
+			c1.id As buyId,
+			c2.id As sellId,
+			c1.contract_no As buyContractNo,
+			c1.source As source,
+			c1.our_company_name As ourCompanyName,
+			c1.contract_time As buyContractDate,
+			c1.bill_flg As billFlg,
+			c1.match_user_name As buyMatchUserName,
+			c2.contract_no As sellContractNo,
+			c2.match_user_name As sellMatchUserName,
+			sp.warehouse_number As warehouseNumber,
+			c2.contract_time As sellContractDate,
+			r.id As relaId,
+			t.content As sellContent,
+			t1.content As buyContent,
+			c2.credit_flg As creditFlg,
+			c2.pay_full_time As piccAccrualDate,
+			c2.delivery_date_from As piccHappenDate,
+			c2.total_amount As piccTotalAmount,
+			c2.total_number As piccTotalNumber,
+			c2.match_user_id As sellMatchUserId,
+			c1.match_user_id As buyMatchUserId,
+			r.deal_number As dealNumber,
+			c2.enterprise_id As enterpriseId,
+			c2.status As status,
+			'bas' As appCode,
+			sp.settlement_code As settlementNo
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON c1.id = r.buy_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.sell_contract_id
+		LEFT JOIN t_ctr_product bp ON bp.id = r.buy_product_id
+		LEFT JOIN t_ctr_product sp ON sp.id = r.sell_product_id
+		LEFT JOIN t_ctr_contract_text t on t.ctr_contract_id = c2.id
+		LEFT JOIN t_ctr_contract_text t1 on t1.ctr_contract_id = c1.id
+		WHERE 1=1
+		AND c2.contract_no = #{sellContractNo}
+		<if test="enterpriseId != null and enterpriseId != ''">
+			AND c1.enterprise_id = #{enterpriseId}
+		</if>
+	</select>
+	<select id="findSecondCalculatePage" resultType="com.spt.bas.report.client.entity.RptCtrContractAgencyReport">
+		SELECT
+		  c1.business_type As businessType,
+			r.product_name AS productName,
+			r.brand_number AS brandNumber,
+			r.factory_id AS factoryId,
+			r.factory_name AS factoryName,
+			r.buy_company_id AS buyCompanyId,
+			r.buy_company_name AS buyCompanyName,
+			bp.deal_number As buyTotalNumber,
+			bp.total_price AS buyTotalAmount,
+			r.sell_company_name AS sellCompanyName,
+			sp.deal_number AS sellTotalNumber,
+			sp.total_price AS sellTotalAmount,
+			c1.id As buyId,
+			c2.id As sellId,
+			c1.contract_no As buyContractNo,
+			c1.our_company_name As ourCompanyName,
+			c1.contract_time As buyContractDate,
+			c1.match_user_name As buyMatchUserName,
+			c2.contract_no As sellContractNo,
+			c2.match_user_name As sellMatchUserName,
+			c2.contract_time As sellContractDate,
+			c1.delivery_mode As buyDeliveryMode,
+			c2.delivery_mode As sellDeliveryMode,
+			c1.match_user_id As matchUserId,
+			(SELECT f.calculate_no FROM t_apply_calculate f WHERE f.contract_id = c2.id AND f.status = 'N' limit 1) As calculateNo
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON c1.id = r.buy_contract_id
+		LEFT JOIN t_apply_calculate f ON f.contract_id = r.sell_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.sell_contract_id
+		LEFT JOIN t_ctr_product bp ON bp.id = r.buy_product_id
+		LEFT JOIN t_ctr_product sp ON sp.id = r.sell_product_id
+		WHERE 
+		c1.enterprise_id = #{enterpriseId}
+		<!-- AND (c1.business_type = 'ZY-BB' OR c1.business_type = 'DL-DC' OR c1.business_type = 'DL-KZ') -->
+		<include refid="Where_SearchVo" />
+		AND (
+		<choose>
+			<when test="bkbAuditFlg != null and 'true'.toString()==bkbAuditFlg.toString()">
+				c1.business_type = 'ZY-BB'
+			</when>
+			<otherwise>
+				(c1.match_user_id = #{matchUserId} AND c1.business_type = 'ZY-BB') 
+			</otherwise>
+		</choose>
+		<if test="dlkzAuditFlg != null and 'true'.toString()==dlkzAuditFlg.toString()">
+			OR c1.business_type = 'DL-KZ'
+		</if>
+		<if test="dlkzApplyFLg != null and 'true'.toString()==dlkzApplyFLg.toString()">
+			OR c1.business_type = 'DL-KZ'
+		</if>
+		<if test="dldcAuditFLg != null and 'true'.toString()==dldcAuditFLg.toString()">
+			OR c1.business_type = 'DL-DC'
+		</if>
+		<if test="dldcApplyFLg != null and 'true'.toString()==dldcApplyFLg.toString()">
+			OR c1.business_type = 'DL-DC'
+		</if>
+		)
+		GROUP BY c1.id,c2.id
+		ORDER BY 
+			(
+			SELECT
+				f.calculate_no
+			FROM
+				t_apply_calculate f
+			WHERE
+				f.contract_id = c2.id
+			AND f. STATUS = 'N'
+			LIMIT 1
+			) DESC,
+		r.id DESC
+	</select>
+</mapper>

@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractReceiveDetailMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<!--N 没有作废  -->
+			<choose>
+		            <when test="'Y'.toString() eq isCancel">
+		              	AND c.contract_status ='C'
+		            </when>
+		            <when test="'N' .toString() eq isCancel">
+		              	AND c.contract_status !='C'
+		            </when>
+		     </choose>
+		<if test="businessType != null and businessType != ''">
+			AND c.business_type LIKE CONCAT('%',#{businessType},'%')
+		</if>
+		<if test="source != null and source != ''">
+			AND c.source =#{source}
+		</if>
+		<if test="companyName != null and companyName != ''">
+			AND c.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c.our_company_name LIKE CONCAT('%',#{ourCompanyName},'%')
+		</if>
+	    <if test="contractNo != null and contractNo != ''">
+			AND c.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		
+     	<if test="receiveTimeGTED != null">
+		<![CDATA[ AND DATE_FORMAT(r.receive_date, '%Y-%m-%d') >= DATE_FORMAT(#{receiveTimeGTED}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="receiveTimeLTD != null">
+		<![CDATA[ AND DATE_FORMAT(r.receive_date, '%Y-%m-%d') <= DATE_FORMAT(#{receiveTimeLTD}, '%Y-%m-%d') ]]> 
+		</if>
+	</sql>
+
+	<!-- 收款明细 -->
+	<select id="findPageReceiveDetail" resultType="com.spt.bas.report.client.entity.RptCtrContractReceiveDetailReport">
+		SELECT
+			c.id AS id,
+		    c.contract_type As contractType,
+			c.contract_no AS contractNo,
+			c.products_name AS productsName,
+			c.company_name AS companyName,
+			c.total_number AS totalNumber,
+			c.total_amount AS totalAmount,
+			c.dealed_amount AS dealedAmount,
+			c.contract_status AS contractStatus,
+			c.pay_full_time AS payFullTime,
+			c.pay_bond_time AS payBondTime,
+			c.contract_time AS contractTime,
+			c.match_user_name AS matchUserName,
+			c.our_company_name As ourCompanyName,
+			c.dept_id AS deptId,
+			c.business_type AS businessType,
+			r.payed_amount AS payedAmount,
+			r.receive_date AS receiveDate,
+			r. STATUS AS status,
+			r.receive_amount AS receiveAmount,
+			i.deal_amount AS dealAmount,
+			t.content AS exitContractText,
+			IF(DATEDIFF((IFNULL((SELECT MAX(re.receive_date) FROM t_apply_receive re WHERE re.contract_id = c.id),NOW())),c.pay_full_time) &gt;0,c.total_amount-r.receive_amount,0) AS overdueAmount,
+			c.source	
+		FROM
+			t_ctr_contract AS c
+			LEFT JOIN t_apply_receive AS r ON c.id = r.contract_id
+			LEFT JOIN t_apply_invoice AS i ON c.id = i.contract_id
+			LEFT JOIN t_ctr_contract_text AS t ON c.id = t.ctr_contract_id
+		WHERE
+			c.contract_type = 'S'	
+			AND
+			r.status='D'
+		AND c.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY r.receive_date DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY r.receive_date ASC
+            </when>
+           	<otherwise>
+           		ORDER BY r.receive_date DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	
+	
+	<!-- 收款明细统计  -->
+	<select id="findPageReceiveDetailSum" resultType="com.spt.bas.report.client.entity.RptCtrContractReceiveDetailReport">
+		SELECT
+			SUM(c.total_amount) AS sumTotalAmount,
+			SUM(c.billed_amount) AS sumBilledAmount,
+			SUM(r.receive_amount) AS sumReceiveAmount,
+			SUM(IF(DATEDIFF((IFNULL((SELECT MAX(re.receive_date) FROM t_apply_receive re WHERE re.contract_id = c.id),NOW())),c.pay_full_time) &gt;0,c.total_amount-r.receive_amount,0)) AS sumOverdueAmount
+			FROM
+				t_ctr_contract AS c
+				LEFT JOIN t_apply_receive AS r ON c.id = r.contract_id
+				LEFT JOIN t_apply_invoice AS i ON c.id = i.contract_id
+				LEFT JOIN t_ctr_contract_text AS t ON c.id = t.ctr_contract_id
+			WHERE
+				c.contract_type = 'S'	
+				AND
+				r.status='D'
+			AND c.enterprise_id = #{enterpriseId}
+			<include refid="Where_SearchVo" />
+			<choose>
+	            <when test="'asc' eq order">
+	                ORDER BY r.receive_date DESC
+	            </when>
+	            <when test="'desc' eq order">
+	                ORDER BY r.receive_date ASC
+	            </when>
+	           	<otherwise>
+	           		ORDER BY r.receive_date DESC
+	           	</otherwise>
+	       	</choose>
+	</select>
+
+	<select id="selectSellReceiveDateList" resultType="com.spt.bas.report.client.vo.RptContractDateVo">
+		SELECT
+		contract_no contractNo,
+		receive_date sellReceiveDate
+		FROM
+		t_apply_receive
+		WHERE
+		( contract_no, receive_date ) IN (
+		SELECT
+		contract_no,
+		MAX( receive_date ) AS max_receive_date
+		FROM
+		t_apply_receive
+		WHERE
+		`status` = 'D'
+		<if test="sellContractNoList != null and sellContractNoList.size > 0 ">
+			and contract_no IN
+			<foreach collection="sellContractNoList"  item="var" index="index" open="(" close=")" separator=",">
+				#{sellContractNoList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		GROUP BY
+		contract_no )
+		AND `status` = 'D'
+		GROUP BY contract_no
+	</select>
+	
+</mapper>

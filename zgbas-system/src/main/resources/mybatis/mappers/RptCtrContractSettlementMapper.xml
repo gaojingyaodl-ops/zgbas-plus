@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractSettlementMapper">
+
+    <sql id="Where_SearchVo_contract_settlement">
+
+        <!-- 1-赊销合同;2-代采合同;3-自营采购;4-自营销售;5-代采赊销 -->
+        <if test='budgetType == "SX"'>
+            and (s.business_type_dcsx in ('BL','PT','HDFK') and a.match_credit_flg = true)
+        </if>
+        <if test='budgetType == "DC"'>
+            and (a.match_credit_flg = false)
+        </if>
+        <if test='budgetType == "ZYCG"'>
+            and a.business_type = 'ZY-CG'
+        </if>
+        <if test='budgetType == "ZYXS"'>
+            and a.business_type = 'ZY-XS'
+        </if>
+        <if test='budgetType == "DCSX"'>
+            and (a.match_credit_flg = true and s.business_type_dcsx in ('DCSXBL','DCSX','DCSXHDFK'))
+        </if>
+
+        <if test='budgetType == "SX,DCSX,DC"'>
+            and ( (a.match_credit_flg = true and s.business_type_dcsx in ('DCSXBL','DCSX','DCSXHDFK','BL','PT','HDFK')) or a.match_credit_flg = false)
+        </if>
+        <if test='budgetType == "SX,DCSX"'>
+            and ( a.match_credit_flg = true and s.business_type_dcsx in ('DCSXBL','DCSX','DCSXHDFK','BL','PT','HDFK'))
+        </if>
+        <if test='budgetType == "SX,DC"'>
+            and ( (a.match_credit_flg = true and s.business_type_dcsx in ('BL','PT','HDFK')) or a.match_credit_flg = false)
+        </if>
+        <if test='budgetType == "DCSX,DC"'>
+            and ( (a.match_credit_flg = true and s.business_type_dcsx in ('DCSXBL','DCSX','DCSXHDFK')) or a.match_credit_flg = false)
+        </if>
+
+        <if test="ourCompanyName != null and ourCompanyName != ''">
+            and (
+            a.sell_our_company_name = #{ourCompanyName}
+            )
+        </if>
+
+        <if test="contractNo != null and contractNo != ''">
+            and (
+            a.sell_contract_no like CONCAT('%',#{contractNo},'%')
+            or
+            a.buy_contract_no like CONCAT('%',#{contractNo},'%')
+            )
+        </if>
+
+        <if test="companyName != null and companyName != ''">
+            and (a.buy_company_name like CONCAT('%',#{companyName},'%')
+            or a.sell_company_name like CONCAT('%',#{companyName},'%')
+            )
+        </if>
+
+        <if test="matchUserName != null and matchUserName != ''">
+            and (
+            a.sell_match_user_name like CONCAT('%',#{matchUserName},'%')
+            )
+        </if>
+
+        <if test="matchUserId != null and matchUserId != ''">
+            and (
+            a.sell_match_user_id = #{matchUserId}
+            )
+        </if>
+
+        <if test="level != null and level != '' and level.toString() == '3'.toString()">
+            and (
+            a.product_name LIKE CONCAT('%',#{productsNameOne},'%')
+            and
+            a.brand_number LIKE CONCAT('%',#{productsNameTwo},'%')
+            and
+            a.factory_name LIKE CONCAT('%',#{productsNameThree},'%')
+            )
+        </if>
+        <if test="level != null and level != '' and level.toString() == '2'.toString()">
+            and (
+            (a.product_name LIKE CONCAT('%',#{productsNameOne},'%') and a.brand_number LIKE CONCAT('%',#{productsNameTwo},'%'))
+            or
+            (a.brand_number LIKE CONCAT('%',#{productsNameOne},'%') and a.factory_name LIKE CONCAT('%',#{productsNameTwo},'%'))
+            )
+        </if>
+        <if test="level != null and level != '' and level.toString() == '1'.toString()">
+            and (
+            a.product_name LIKE CONCAT('%',#{productsNameOne},'%')
+            or
+            a.brand_number LIKE CONCAT('%',#{productsNameOne},'%')
+            or
+            a.factory_name LIKE CONCAT('%',#{productsNameOne},'%')
+            )
+        </if>
+
+        <if test="deptName != null and deptName != ''">
+            and (
+            a.dept_name LIKE CONCAT('%',#{deptName},'%')
+            )
+        </if>
+
+        <if test="contractTimeFrom != null and contractTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') >= DATE_FORMAT(#{contractTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="contractTimeTo != null and contractTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') <= DATE_FORMAT(#{contractTimeTo},'%Y-%m-%d')]]>
+        </if>
+
+        <if test="bpayFullTimeFrom != null and bpayFullTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.appoint_pay_date,'%Y-%m-%d') >= DATE_FORMAT(#{bpayFullTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="bpayFullTimeTo != null and bpayFullTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.appoint_pay_date,'%Y-%m-%d') <= DATE_FORMAT(#{bpayFullTimeTo},'%Y-%m-%d')]]>
+        </if>
+        <if test="spayFullTimeFrom != null and spayFullTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.receive_date,'%Y-%m-%d') >= DATE_FORMAT(#{spayFullTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="spayFullTimeTo != null and spayFullTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.receive_date,'%Y-%m-%d') <= DATE_FORMAT(#{spayFullTimeTo},'%Y-%m-%d')]]>
+        </if>
+        <if test="notDeptIds != null and notDeptIds.size() != 0">
+            and s.dept_id not in
+            <foreach collection="notDeptIds" index="index" item="item" open="(" separator="," close=")">
+                #{notDeptIds[${index}]}
+            </foreach>
+        </if>
+    </sql>
+
+    <select id="findCtrContractSettlementList" resultType="com.spt.bas.report.client.entity.RptContractSettlementVo">
+        select
+        CONCAT(a.product_name,'/',a.brand_number,'/',a.factory_name) productsName,
+        a.sell_contract_id,
+        a.sell_contract_no,
+        a.buy_contract_id,
+        a.buy_contract_no,
+        a.contract_time,
+        a.status settlementStatus,
+        a.deal_number,
+        a.sell_price,
+        a.buy_price,
+        if(a.print_amount is null ,0,a.print_amount) printAmount,
+        a.insurance_rate,
+        a.enterprise_id,
+        a.delivery_time,
+        a.pay_full_time,
+        a.real_pay_full_time,
+        a.receive_date,
+        a.appoint_pay_date,
+        a.confirm_receipt_date,
+        a.settlement_date,
+        a.receive_bill_date,
+        a.summary_date,
+        a.buy_company_id,
+        a.buy_company_name,
+        a.sell_company_id,
+        a.sell_company_name,
+        a.buy_our_company_name,
+        a.sell_our_company_name,
+        a.buy_match_user_id,
+        a.buy_match_user_name,
+        a.sell_match_user_id,
+        a.sell_match_user_name,
+        a.delivery_fee,
+        a.breach_day,
+        a.breach_amount,
+        a.credit_cycle,
+        a.business_type,
+        a.match_credit_flg,
+        a.buy_total_amount,
+        a.sell_total_amount,
+        a.transport_amount,
+        a.warehouse_amount,
+        if(a.vat_amount is null ,0,a.vat_amount) vatAmount,
+        if(a.financial_service_amount is null ,0,a.financial_service_amount) financialServiceAmount,
+        a.vat_spread_amount,
+        if(a.surcharge_amount is null ,0,a.surcharge_amount) surchargeAmount,
+        a.taxes_surcharges_amount,
+        if(a.after_tax_spread_amount is null ,0,a.after_tax_spread_amount) afterTaxSpreadAmount,
+        a.sell_head_user_id,
+        a.sell_head_commission_amount,
+        a.buy_head_user_id,
+        a.buy_head_commission_amount,
+        a.sell_match_amount,
+        a.buy_match_amount,
+        a.receive_flg,
+        a.confirm_flg,
+        a.bill_flg,
+        a.settlement_code,
+        a.created_date,
+        a.updated_date,
+        a.breach_rate,
+        a.settle_status,
+        a.settle_total_flg,
+        a.approve_id,
+        a.approve_no,
+        a.dept_id,
+        a.dept_name,
+        ifNULL(b.transport_amount,0) + ifNULL(s.transport_amount,0) transportAmount,
+        ifNULL(b.warehouse_amount,0) + ifNULL(s.warehouse_amount,0) warehouseAmount,
+        ifNULL(b.delivery_fee,0) + ifNULL(s.delivery_fee,0) deliveryFee,
+        ifNULL(b.stevedorage,0) + ifNULL(s.stevedorage,0) stevedorage,
+        s.total_amount*(if(s.insurance_rate is null,0,s.insurance_rate)) insuranceAmount
+        from t_ctr_contract_settlement a
+        INNER JOIN t_ctr_contract b ON a.buy_contract_id = b.id
+        INNER JOIN t_ctr_contract s on a.sell_contract_id = s.id
+        <where>
+            a.enable_flg = TRUE
+            and s.business_type = 'ZY-BB'
+            AND b.seal_flg = TRUE
+            AND s.seal_flg = TRUE
+            AND b.status != 'C'
+            AND s.status != 'C'
+            <include refid="Where_SearchVo_contract_settlement"/>
+            order by a.contract_time desc
+        </where>
+    </select>
+
+    <select id="findCtrContractSettlementSum" resultType="com.spt.bas.report.client.entity.RptContractSettlementVo">
+        select
+        sum(a.deal_number) dealNumber,
+        sum(a.buy_price) / count(a.id) buyPrice,
+        sum(a.sell_price) / count(a.id) sellPrice,
+        sum(a.buy_total_amount) buyTotalAmount,
+        sum(a.sell_total_amount) sellTotalAmount,
+        sum(a.financial_service_amount) financialServiceAmount,
+        sum(a.vat_amount) vatAmount,
+        sum(a.surcharge_amount) surchargeAmount,
+        sum(a.print_amount) as printAmount,
+        sum(a.after_tax_spread_amount) as afterTaxSpreadAmount,
+        sum(ifNULL(b.transport_amount,0) + ifNULL(s.transport_amount,0)) transportAmount,
+        sum(ifNULL(b.warehouse_amount,0) + ifNULL(s.warehouse_amount,0)) warehouseAmount,
+        sum(ifNULL(b.delivery_fee,0) + ifNULL(s.delivery_fee,0)) deliveryFee,
+        sum(ifNULL(b.stevedorage,0) + ifNULL(s.stevedorage,0)) stevedorage,
+        sum(s.total_amount*(if(s.insurance_rate is null,0,s.insurance_rate))) insuranceAmount
+        from t_ctr_contract_settlement a
+        INNER JOIN t_ctr_contract b ON a.buy_contract_id = b.id
+        INNER JOIN t_ctr_contract s on a.sell_contract_id = s.id
+        <where>
+            a.enable_flg = TRUE
+            and s.business_type = 'ZY-BB'
+            AND b.seal_flg = TRUE
+            AND s.seal_flg = TRUE
+            AND b.status != 'C'
+            AND s.status != 'C'
+            <include refid="Where_SearchVo_contract_settlement"/>
+            order by a.contract_time desc
+        </where>
+    </select>
+
+    <select id="selectAssessment" resultType="com.spt.bas.report.client.vo.RptAssessmentResultVo">
+        SELECT s.sell_match_user_name                                                       userName,
+               s.sell_match_user_id                                                         userId,
+               DATE_FORMAT(s.created_date, '%Y-%m')                                         createdDate,
+               SUM(IF(s.match_credit_flg = TRUE, s.sell_total_amount, 0))                AS sellMoney,
+
+               SUM(IF(s.match_credit_flg = TRUE,
+                      (IFNULL(s.sell_total_amount, 0) - IFNULL(s.buy_total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+                       IFNULL(s.transport_amount, 0) - IFNULL(s.delivery_fee, 0) -
+                       IFNULL(s.financial_service_amount, 0) - IFNULL(s.sell_head_commission_amount, 0) -
+                       IFNULL(s.buy_head_commission_amount, 0) - IFNULL(s.sell_match_amount, 0) -
+                       IFNULL(s.buy_match_amount, 0)), 0))                                  sellMoneyProfit,
+
+               SUM(IF(s.match_credit_flg = FALSE, s.sell_total_amount, 0))                  buyMoney,
+
+               SUM(IF(s.match_credit_flg = FALSE,
+                      (IFNULL(s.sell_total_amount, 0) - IFNULL(s.buy_total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+                       IFNULL(s.transport_amount, 0) - IFNULL(s.delivery_fee, 0) -
+                       IFNULL(s.sell_head_commission_amount, 0) - IFNULL(s.buy_head_commission_amount, 0) -
+                       IFNULL(s.sell_match_amount, 0) - IFNULL(s.buy_match_amount, 0)), 0)) buyMoneyProfit,
+
+               SUM(IF(s.match_credit_flg = TRUE,
+                      (IFNULL(s.sell_total_amount, 0) - IFNULL(s.buy_total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+                       IFNULL(s.transport_amount, 0) - IFNULL(s.delivery_fee, 0) -
+                       IFNULL(s.financial_service_amount, 0) - IFNULL(s.sell_head_commission_amount, 0) -
+                       IFNULL(s.buy_head_commission_amount, 0) - IFNULL(s.sell_match_amount, 0) -
+                       IFNULL(s.buy_match_amount, 0)),
+                      (IFNULL(s.sell_total_amount, 0) - IFNULL(s.buy_total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+                       IFNULL(s.transport_amount, 0) - IFNULL(s.delivery_fee, 0) -
+                       IFNULL(s.sell_head_commission_amount, 0) - IFNULL(s.buy_head_commission_amount, 0) -
+                       IFNULL(s.sell_match_amount, 0) - IFNULL(s.buy_match_amount, 0)))) AS sumProfitMoney
+        FROM t_ctr_contract_settlement s
+        join t_ctr_contract c on c.id =s.sell_contract_id  and c.status !='C'
+        <where>
+            <if test="yearAndMonth != null and yearAndMonth != ''">
+                DATE_FORMAT(s.created_date, '%Y-%m') = #{yearAndMonth}
+            </if>
+            <if test="year != null">
+                and DATE_FORMAT(s.created_date, '%Y') = #{year}
+            </if>
+            <if test="startMonth != null and startMonth != '' and endMonth != null and endMonth != ''">
+                and DATE_FORMAT(s.created_date, '%m') between #{startMonth} and #{endMonth}
+            </if>
+            <if test="userId != null">
+                and s.sell_match_user_id = #{userId}
+            </if>
+            <if test="userIds != null and userIds.size() != 0">
+                and s.sell_match_user_id in
+                <foreach collection="userIds" index="index" item="item" open="(" separator="," close=")">
+                    #{userIds[${index}]}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY s.sell_match_user_id
+    </select>
+
+    <select id="getPerformanceCommission" resultType="com.spt.bas.report.client.vo.RptIndexCommonVo">
+        select
+        <if test="currentUserId != null">
+        sum(
+                    if(buy_match_user_id = #{currentUserId}, ifnull(buy_match_amount, 0), 0) +
+                    if(sell_match_user_id = #{currentUserId}, ifnull(sell_match_amount, 0), 0) +
+                    if(sell_head_user_id = #{currentUserId}, ifnull(sell_head_commission_amount, 0), 0) +
+                    if(buy_head_user_id = #{currentUserId}, ifnull(buy_head_commission_amount, 0), 0)
+            ) money,
+        </if>
+        <if test="currentUserId == null">
+            sum(
+                        ifnull(buy_match_amount, 0) +
+                        ifnull(sell_match_amount, 0) +
+                        ifnull(sell_head_commission_amount, 0) +
+                        ifnull(buy_head_commission_amount, 0)
+                ) money,
+        </if>
+
+        <if test="nameFlag != null and nameFlag == 1">
+            '累计未结算提成' typeName,
+        </if>
+        <if test="nameFlag != null and nameFlag == 2">
+            '预计提成' typeName,
+        </if>
+        <if test="nameFlag != null and nameFlag == 3">
+            '上个月结算提成' typeName,
+        </if>
+        count(*) num
+
+        from t_ctr_contract_settlement
+        where
+        receive_flg = true
+        and confirm_flg = true
+        and bill_flg = true
+        and settle_status is not null
+        and date_format(summary_date, '%Y-%m') = #{dayOrMonth}
+        <if test="currentUserId != null">
+            and (buy_head_user_id = #{currentUserId} or
+            sell_match_user_id = #{currentUserId} or
+            sell_head_user_id = #{currentUserId} or
+            buy_match_user_id = #{currentUserId})
+        </if>
+        <if test="settleStatus != null">
+            and settle_status = #{settleStatus}
+        </if>
+
+    </select>
+</mapper>
