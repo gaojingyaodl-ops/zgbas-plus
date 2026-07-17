@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 04-04-PLAN.md (Wave 2b service + PM absorption + merged compile gate GREEN)"
-last_updated: "2026-07-17T04:47:06.714Z"
+stopped_at: Completed 04-05-PLAN.md (Wave 3 api 223 basServer + 13 PM ported + 4 wiring gaps closed; compile+startup green)
+last_updated: "2026-07-17T05:19:54.517Z"
 last_activity: 2026-07-17
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 17
-  completed_plans: 15
-  percent: 88
+  completed_plans: 16
+  percent: 43
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 04 (core-business) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-07-17
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -62,6 +62,8 @@ Progress: [█████████░] 88%
 | Phase 04 P01 | 10min | 2 tasks | 7 files |
 | Phase 04 P02 | 5min | 2 tasks | 253 files |
 | Phase 04 P04 | 12 | 3 tasks | 585 files |
+| Phase 04 P05 | 20 | 1 tasks | 236 files |
+| Phase 04 P05 | 20 | 1 tasks | 236 files |
 
 ## Accumulated Context
 
@@ -95,6 +97,11 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 04]: Phase 4 04-04 Rule 3 cascade deps verbatim source basServer/basCore pom: pdfbox 2.0.29 + xxl-job-core 2.3.0 (compile-time only, P6 scheduling excluded) + report-client + purchase-client 2.0.1-SNAPSHOT (types-only, P5/v2 defer) + spring-cloud-alibaba-commons + nacos-common (util classes only, Phase 2 #9 nacos-discovery stays in force)
 - [Phase ?]: [Phase 04]: Phase 4 04-04 Rule 1 source-bug fixes (latent in feat-系统重构v5.0): TokenUtil.createToken(Map,String) overload added as 1-line delegate (fixes 3 source callers basServer/web/basWx); BasicErrorController Date->LocalDateTime (ErrorResp field type); pmClient constant/PmConstants.java inlined (Phase 2 oversight)
 - [Phase ?]: [Phase 04]: Phase 4 04-04 Phase 6 placement correction: command/BasCommandExecutor + package-info removed (has @XxlJob method + imports 4 task/ classes). 04-03 SUMMARY established @XxlJob handler -> P6 rule but Wave 2a command/ had leaked it; Phase 6 re-ports command + task cluster (xxl-job -> RuoYi quartz)
+- [Phase ?]: test decision
+- [Phase ?]: [Phase 04]: Phase 4 04-05 Wave 3 done: basServer api 223 (MQApi deferred P6 per @XxlJob rule) + PM api 13 ported verbatim; D-P4-01 方案 A 关键约束满足 (0 implements I*Client, 228 extends BaseApi); merged compile + startup gates GREEN (19/0/0/4 skipped, no Phase 2/3 regression)
+- [Phase ?]: [Phase 04]: Phase 4 04-05 Rule 3 wiring: ZgbasApplication widen @EnableFeignClients to scan basWx (com.spt.bas.purchase.wx.client.remote, 16 svc refs, v2-defer) + report (com.spt.bas.report.client.remote, 9 svc refs, P5 defer); both self-loop to localhost:8080 where no impl → runtime 404 (D-P4-02 lazy-degradation extended to service layer)
+- [Phase ?]: [Phase 04]: Phase 4 04-05 Rule 3 wiring: com.spt.pm.dao added to @EnableJpaRepositories (Phase 2 oversight — entity scan had pm.entity but dao missed pm.dao; 14 PM BaseDao); com.spt.tools.http.interceptor.BasicErrorController added to ComponentScan excludeFilters (bean-name conflict with basServer customisation — same precedent as Phase 2 FeignConfig exclusion)
+- [Phase ?]: [Phase 04]: Phase 4 04-05 Phase 6 re-port memory updated: api/MQApi.java joins xxl-job cluster (basServer/task/23 + rocketmq/task/8 + command/BasCommandExecutor + 4 task classes). MQApi is API-layer trigger facade for 8 Synchronized*Task handlers — same Rule 3 defer as BasCommandExecutor 04-04
 
 ### Pending Todos
 
@@ -117,6 +124,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-17T04:46:49.179Z
-Stopped at: Completed 04-02-PLAN.md (Wave 1: 238 contracts + 14 data carriers)
+Last session: 2026-07-17T05:19:54.511Z
+Stopped at: Completed 04-05-PLAN.md (Wave 3 api 223 basServer + 13 PM ported + 4 wiring gaps closed; compile+startup green)
 Resume file: None

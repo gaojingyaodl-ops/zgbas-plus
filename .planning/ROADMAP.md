@@ -131,7 +131,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2b)*
 
-- [ ] 04-05-PLAN.md — basServer api @RestController 照搬 224 **+ PM api 13**（extends BaseApi，零 implements I*Client — D-P4-01 方案 A 关键约束）
+- [x] 04-05-PLAN.md — basServer api @RestController 照搬 224 **+ PM api 13**（extends BaseApi，零 implements I*Client — D-P4-01 方案 A 关键约束）
 
 **Wave 4** *(blocked on Wave 3)*
 
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
-| 4. 核心业务迁移 | 4/6 | In Progress|  |
+| 4. 核心业务迁移 | 5/6 | In Progress|  |
 | 5. 报表迁移 | 0/TBD | Not started | - |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
