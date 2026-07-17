@@ -1,14 +1,10 @@
-# zgbas-plus dev profile — non-secret local defaults + env-var placeholders for secrets (D-P2-13).
-# Secrets are NEVER committed: DB password + auth secretKey resolve from the local environment
-# (export DB_PASSWORD / SPT_APP_SECRET, or a gitignored local override). The plaintext values that
-# were briefly committed here (and already in the source zgbas git history) MUST be rotated.
 spring:
   datasource:
-    druid:                                             # D-P2-15 unified prefix -> @ConfigurationProperties(spring.datasource.druid)
+    druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
       url: jdbc:mysql://47.104.15.98:3306/sptbasdb_pd?serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=UTF-8&useSSL=false
-      username: ${DB_USER:sptbaspduser}
-      password: ${DB_PASSWORD}                        # D-P2-13 externalized — export DB_PASSWORD locally; rotate the leaked value
+      username: sptbaspduser
+      password: rjni^xL3Q88p6uC#ZEwK
       initial-size: 1
       min-idle: 1
       max-active: 20
@@ -23,14 +19,23 @@ spring:
       max-pool-prepared-statement-per-connection-size: 20
       filters: stat
   thymeleaf:
-    cache: false                                      # WARNING 1: dev hot reload (prod overrides to true)
-
-# External HTTP SDK keys (EXT-04) — dev defaults from source config.properties.
+    cache: false
+  redis:
+    host: 47.104.15.98
+    port: 6379
+    password: zg123456
+    database: 5
 spt:
   app:
-    secretKey: ${SPT_APP_SECRET}                      # D-P2-13 externalized — export locally; rotate the leaked value
-    appCode: ${SPT_APP_CODE:zgbas}
-
+    secretKey: spt_secretkey_171212
+    appCode: zgbas
+  # Phase 4 D-P4-01 方案 A (corrected 2026-07-17): Feign self-loopback anchor.
+  # BasClientConfig produces a "basServerConfig" bean whose url is read from this key;
+  # the 238 bas @FeignClient contracts use url = "#{basServerConfig.url}" (BasConstants.SERVER_URL).
+  # Pointing this at localhost:8080 makes every bas Feign proxy self-loop to the monolith's own port.
+  bas:
+    server:
+      url: http://localhost:8080
 auth:
   url: http://47.104.15.98:9011
 push:
@@ -41,15 +46,21 @@ file:
     url: http://file.tosupply.cn/ys-file-server
 sign:
   server:
-    url: http://47.104.15.98:9002                       # Pitfall 9: required for cfca Feign SpEL #{signServerConfig.url}
-
-# Shiro + thymeleaf dev config keys (Phase 3 AUTH-01..04).
-# D-P3-06/07: mock-password dev plaintext backdoor (照搬旧项目明文). prod profile uses ${ZGBAS_MOCK_PASSWORD:} (empty = backdoor off).
-# D-P3-02: app-cd 照搬源 appCode. D-P3-12: zgBas.secret SSO secret dev value.
-# WARNING 1: thymeleaf dev hot reload (source application.properties L18); prod overrides to true (Plan 04).
+    url: http://47.104.15.98:9002
 shiro:
   prop:
     mock-password: 123456
     app-cd: zgbas
 zgBas:
   secret: DUHZOTTIUTWNDJFRGLUKSHBGVBKWJRUY
+# Phase 4 D-P4-04: rocketmq configuration照搬 source basServer/application-dev.properties:22
+# (name-server) + application.properties:66 (producer.group). Producer is lazy-connecting —
+# context boot does NOT contact the broker, so this value being unreachable does not break startup.
+# Dev defaults for AK/SK are kept (source application-prod.properties:34-36 has plaintext) to
+# keep local `mvn test` hermetic-ish (no ROCKETMQ_* export needed); prod profile force-externalizes.
+rocketmq:
+  name-server: 47.104.66.178:9876
+  producer:
+    group: contract_producer_group
+    access-key: ${ROCKETMQ_AK:zgrocketmq}
+    secret-key: ${ROCKETMQ_SK:zg12345678}

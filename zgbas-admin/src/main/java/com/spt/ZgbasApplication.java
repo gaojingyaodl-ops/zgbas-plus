@@ -63,7 +63,28 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
                     com.spt.sign.client.config.FeignConfig.class }
     )
 )
-@EnableFeignClients(basePackages = "com.spt.sign.client.remote")
+// Phase 4 D-P4-01 方案 A (corrected 2026-07-17): widen @EnableFeignClients to also scan
+// com.spt.bas.client.remote. The 238 bas @FeignClient contracts there generate Feign proxies
+// whose url = BasConstants.SERVER_URL = "#{basServerConfig.url}" resolves (via the
+// BasClientConfig-produced basServerConfig bean) to http://localhost:8080 — i.e. the proxies
+// self-loop back to the monolith's own port 8080 where the ported @RestController endpoints
+// (Wave 3) live. This is a same-process HTTP hop (no cross-process hop); behaviour is equivalent
+// to the source microservice topology where web→basServer was Feign-over-HTTP.
+//
+// The original D-P2-12 narrowing intent (avoid double-bean conflict) is preserved because the
+// ported @RestController endpoints extend BaseApi<Entity> and do NOT implement I*Client
+// (verified 0/224 implements in source — see 04-RESEARCH.md §D-P4-01 Critical Finding). There
+// is therefore no local bean candidate that could conflict with the Feign proxy.
+//
+// The excludeFilters above remain UNCHANGED: both FeignConfig singletons stay excluded from
+// top-level ComponentScan so they only engage as per-client configurations inside Feign's child
+// context (as in Phase 2). The path-prefix discrepancy between the source context-path
+// (/spt-bas-server) and the monolith root (/) is resolved by BasFeignPathConfig's
+// basServerPathStripper RequestInterceptor (D-P4-01a).
+@EnableFeignClients(basePackages = {
+    "com.spt.sign.client.remote",   // EXT-03 cfca — Phase 2 D-P2-12 narrowing preserved
+    "com.spt.bas.client.remote"     // Phase 4 D-P4-01 — bas 契约自回环
+})
 @EntityScan(basePackageClasses = IdEntity.class,
             basePackages = {"com.spt.bas.client.entity", "com.spt.pm.entity"})
 @EnableJpaRepositories(basePackages = {"com.spt.bas.server.dao"})

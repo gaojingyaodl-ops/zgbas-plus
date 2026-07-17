@@ -22,6 +22,12 @@ spt:
   app:
     secretKey: ${SPT_APP_SECRET}                       # D-P2-13 rotate
     appCode: ${SPT_APP_CODE}
+  # Phase 4 D-P4-01 方案 A: Feign self-loopback anchor (prod env-var, no default — fail-fast).
+  # BasClientConfig reads this key; the 238 bas Feign proxies self-loop to this URL.
+  # Prod points at the monolith's own external-facing URL/port (same process, same port).
+  bas:
+    server:
+      url: ${SPT_BAS_SERVER_URL}
 
 auth:
   url: ${AUTH_URL}
@@ -43,3 +49,14 @@ shiro:
     app-cd: ${ZGBAS_APP_CD:}                           # D-P3-02: appCode via env-var
 zgBas:
   secret: ${ZGBAS_SECRET:}                             # D-P3-12: SSO secret via env-var
+
+# Phase 4 D-P4-04: rocketmq prod config — all placeholders force-externalized (D-P2-13).
+# Source application-prod.properties:34-36 had plaintext AK/SK; we externalize them.
+# Producer is lazy-connecting (RESEARCH A2): broker reachability is a deploy-time concern,
+# not a context-boot concern. ${ROCKETMQ_NAMESERVER} has no default — fail-fast if unset.
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESERVER}
+  producer:
+    group: contract_producer_group
+    access-key: ${ROCKETMQ_AK}
+    secret-key: ${ROCKETMQ_SK}

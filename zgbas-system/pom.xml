@@ -38,6 +38,18 @@
             <groupId>eu.bitwalker</groupId>
             <artifactId>UserAgentUtils</artifactId>
         </dependency>
+
+        <!-- Phase 4 D-P4-04: rocketmq-spring-boot-starter verbatim from source basCore/pom.xml
+             (<rocketmq-version>2.2.2</rocketmq-version>). Wave 2 infra照搬 includes the 22-file
+             basServer/rocketmq package; three non-rocketmq files (api/MQApi, api/WorkTargetApi,
+             command/BasCommandExecutor) import it at compile time. The starter's producer is
+             lazy-connecting — context boot does NOT contact the broker (RESEARCH A2), so it is
+             safe for the D-P4-06 startup verification. Version pinned per D-P2-08 (no 2.3.x bump). -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <version>2.2.2</version>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>
