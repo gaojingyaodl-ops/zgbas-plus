@@ -138,4 +138,4 @@ This document evolves at phase transitions and milestone boundaries.
   - **延后债务（已记入 todos + 02-LEARNINGS）：** ddl-auto=none（D-P2-02 validate 暴露 239 实体 schema drift，259 表修复留 Phase 4）、WR-02 接口契约 HTTP proof（留 Phase 4）、CR-01 轮换已泄漏的生产库密码（outward-facing）。
   - **下一阶段：Phase 3（认证首页）** — Shiro session+cookie 认证、动态菜单首页、`ToolsShiroConfig` 重新启用 + Realm 接线。
 
-*Last updated: 2026-07-16 after Phase 2 completion*
+*Last updated: 2026-07-17 after Phase 4 completion*
