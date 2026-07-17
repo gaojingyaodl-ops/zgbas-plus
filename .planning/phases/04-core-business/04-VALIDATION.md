@@ -57,10 +57,13 @@ created: 2026-07-17
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 04-01-xx | 01 | 1 | BIZ-01 | — | N/A | compile | `mvn -pl zgbas-system -am compile -q` | ✅ | ⬜ pending |
-| 04-02-xx | 02 | 2a/2b | BIZ-01 | — | N/A | compile | `mvn -pl zgbas-system -am compile -q` | ✅ | ⬜ pending |
-| 04-03-xx | 03 | 3 | BIZ-01/03 | — | N/A | compile + startup | `mvn compile` + `ZgbasApplicationTest` | ✅ | ⬜ pending |
-| 04-04-xx | 04 | 4 | BIZ-02/03 | — | Shiro 链随 controller 照搬 | startup + HTTP | `ZgbasApplicationTest`（含 WR-02 扩展） | ❌ W0 | ⬜ pending |
+| 04-01-T1 | 01 | 0 | BIZ-03 | T-04-01-S/I/T/D, T-04-SC | Feign 自回环仅 localhost + rocketmq 占位外置 | compile | `mvn -am compile`（grep `^\[ERROR]` 零） | ✅ | ⬜ pending |
+| 04-01-T2 | 01 | 0 | BIZ-03 / WR-02 | — | N/A | startup + unit | `mvn -pl zgbas-admin -am test -Dtest=ZgbasApplicationTest`（含 feignSelfLoopbackWiring_probe fail-fast + 4 @Disabled 占位） | ✅ | ⬜ pending |
+| 04-02-T1/T2 | 02 | 1 | BIZ-01 / BIZ-03 | — | N/A | compile | `mvn -pl zgbas-system -am compile -q` | ✅ | ⬜ pending |
+| 04-03-T1/T2 | 03 | 2a | BIZ-01 | — | N/A | compile | `mvn -pl zgbas-system -am compile -q` | ✅ | ⬜ pending |
+| 04-04-T1 | 04 | 2b | BIZ-01 | — | N/A | compile | `mvn -pl zgbas-system -am compile -q` | ✅ | ⬜ pending |
+| 04-05-T1 | 05 | 3 | BIZ-01 / BIZ-03 | — | N/A | compile + startup | `mvn -am compile` + `ZgbasApplicationTest#contextLoads` | ✅ | ⬜ pending |
+| 04-06-T1/T2/T3 | 06 | 4 | BIZ-02 / BIZ-03 | — | Shiro 链随 BFF controller 照搬 | startup + HTTP | `ZgbasApplicationTest`（WR-02 激活：3-5 I*Client 端点 HTTP reachability + BFF bean 抽样） | ❌ W0→W4 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
