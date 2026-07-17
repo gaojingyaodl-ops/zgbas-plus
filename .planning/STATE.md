@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 04-05-PLAN.md (Wave 3 api 223 basServer + 13 PM ported + 4 wiring gaps closed; compile+startup green)
-last_updated: "2026-07-17T05:19:54.517Z"
+last_updated: "2026-07-17T05:50:39.075Z"
 last_activity: 2026-07-17
 progress:
   total_phases: 7
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 17
-  completed_plans: 16
-  percent: 43
+  completed_plans: 17
+  percent: 57
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 04 (core-business) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-07-17
 
-Progress: [█████████░] 94%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [█████████░] 94%
 | Phase 04 P04 | 12 | 3 tasks | 585 files |
 | Phase 04 P05 | 20 | 1 tasks | 236 files |
 | Phase 04 P05 | 20 | 1 tasks | 236 files |
+| Phase 04 P06 | 25 | 3 tasks | 304 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,7 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 04]: Phase 4 04-05 Rule 3 wiring: ZgbasApplication widen @EnableFeignClients to scan basWx (com.spt.bas.purchase.wx.client.remote, 16 svc refs, v2-defer) + report (com.spt.bas.report.client.remote, 9 svc refs, P5 defer); both self-loop to localhost:8080 where no impl → runtime 404 (D-P4-02 lazy-degradation extended to service layer)
 - [Phase ?]: [Phase 04]: Phase 4 04-05 Rule 3 wiring: com.spt.pm.dao added to @EnableJpaRepositories (Phase 2 oversight — entity scan had pm.entity but dao missed pm.dao; 14 PM BaseDao); com.spt.tools.http.interceptor.BasicErrorController added to ComponentScan excludeFilters (bean-name conflict with basServer customisation — same precedent as Phase 2 FeignConfig exclusion)
 - [Phase ?]: [Phase 04]: Phase 4 04-05 Phase 6 re-port memory updated: api/MQApi.java joins xxl-job cluster (basServer/task/23 + rocketmq/task/8 + command/BasCommandExecutor + 4 task classes). MQApi is API-layer trigger facade for 8 Synchronized*Task handlers — same Rule 3 defer as BasCommandExecutor 04-04
+- [Phase ?]: Phase 4 04-06 capstone: 267 BFF ported + D-P4-01a path-prefix correction + D-P4-02 zero-stub + WR-02 green; Phase 4 COMPLETE 6/6
 
 ### Pending Todos
 
@@ -124,6 +126,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-17T05:19:54.511Z
+Last session: 2026-07-17T05:50:25.589Z
 Stopped at: Completed 04-05-PLAN.md (Wave 3 api 223 basServer + 13 PM ported + 4 wiring gaps closed; compile+startup green)
 Resume file: None
