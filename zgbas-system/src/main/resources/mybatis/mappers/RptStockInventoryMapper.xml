@@ -1,0 +1,591 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptStockInventoryMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="productName != null and productName != ''">
+			AND s.product_cd = #{productName}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND s.brand_number = #{brandNumber}
+		</if>
+		<if test="warehouseName != null and warehouseName != ''">
+			AND s.warehouse_name LIKE CONCAT('%',#{warehouseName},'%')
+		</if>
+		<if test="productAttr != null and productAttr != ''">
+			AND s.product_attr = #{productAttr}
+		</if>
+		<if test="spotType != null and spotType != ''">
+			AND spot_type = #{spotType}
+		</if> 
+	    <if test=' longFlg == "Y"'>
+			AND c.long_flg = true
+		</if>
+		<if test=' longFlg == "N"'>
+			AND c.long_flg = false
+		</if>
+		<if test="matchUserName != null and matchUserName != ''">
+			AND c.match_user_name = #{matchUserName}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c.dept_id = #{deptId}
+		</if>
+		<if test="beginTime != null">
+		<![CDATA[ AND DATE_FORMAT(c.created_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="endTime != null">
+		<![CDATA[ AND DATE_FORMAT(c.created_date, '%Y-%m-%d') <= DATE_FORMAT(#{endTime}, '%Y-%m-%d') ]]> 
+		</if>
+	</sql>
+	<!-- 库存统计 -->
+	<select id="findPageStockInventory" resultType="com.spt.bas.report.client.entity.RptStockInventoryReport">
+	  	SELECT
+			c.contract_no As contractNo,
+			c.company_name As companyName,
+			s.product_name As productName,
+			s.brand_number As brandNumber,
+			s.factory_name As factoryName,
+			s.warehouse_name As warehouseName,
+			s.product_attr As productAttr,
+			c.long_flg As longFlg,
+			p.deal_number As totalNumber,
+			IF(c1.dealed_amount>=p1.total_price,p1.deal_number,0) As soldNumber,
+			(p.deal_number-(IFNULL(p1.deal_number,0))) As outSoldNumber,
+			(c.dealed_amount*p.total_price/c.total_amount) As dealedAmount,
+			IF(c1.total_amount!='',IF(IFNULL((p1.total_price/c1.total_amount*c1.dealed_amount)>=p.total_price,0),
+			0,p.total_price-IFNULL((p1.total_price/c1.total_amount*c1.dealed_amount),0)),p.total_price) As occupation,
+			c.match_user_name As matchUserName,
+			c.match_user_id As matchUserId,
+			c.dept_id As deptId,
+			s.spot_type As spotType,
+			c.created_date As createDate
+		FROM
+			t_stock_detail s
+		LEFT JOIN t_ctr_contract c ON s.buy_contract_id = c.id
+		LEFT JOIN t_ctr_product p ON p.id = s.ctr_product_id
+		LEFT JOIN t_ctr_contract_rela r ON r.buy_contract_id = c.id AND r.buy_product_id = p.id
+		LEFT JOIN t_ctr_contract c1 ON r.sell_contract_id = c1.id
+		LEFT JOIN t_ctr_product p1 ON p1.id = r.sell_product_id
+		WHERE c.contract_status != 'C'
+		AND c.enterprise_id = #{enterpriseId}
+		AND c.match_user_id !=''
+		AND (s.delivery_in_number > 0 OR s.available_number > 0 )
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY s.id DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY s.id ASC
+            </when>
+           	<otherwise>
+           		ORDER BY s.id DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	<!-- 库存统计合计 -->
+	<select id="findTotalStockInventory" resultType="com.spt.bas.report.client.entity.RptStockInventoryReport">
+	  	SELECT
+			SUM(p.deal_number) AS totalNumber,
+			SUM(IF(c1.dealed_amount>=p1.total_price,p1.deal_number,0)) AS soldNumber,
+			SUM((p.deal_number-(IFNULL(p1.deal_number,0)))) AS outSoldNumber,
+			SUM((c.dealed_amount*p.total_price/c.total_amount)) AS dealedAmount,
+			SUM(IF(c1.total_amount!='',IF(IFNULL((p1.total_price/c1.total_amount*c1.dealed_amount)>=p.total_price,0),
+			0,p.total_price-IFNULL((p1.total_price/c1.total_amount*c1.dealed_amount),0)),p.total_price)) AS occupation
+		FROM
+			t_stock_detail s
+		LEFT JOIN t_ctr_contract c ON s.buy_contract_id = c.id
+		LEFT JOIN t_ctr_product p ON p.id = s.ctr_product_id
+		LEFT JOIN t_ctr_contract_rela r ON r.buy_contract_id = c.id AND r.buy_product_id = p.id
+		LEFT JOIN t_ctr_contract c1 ON r.sell_contract_id = c1.id
+		LEFT JOIN t_ctr_product p1 ON p1.id = r.sell_product_id
+		WHERE c.contract_status != 'C'
+		AND c.enterprise_id = #{enterpriseId}
+	    AND c.match_user_id !=''
+	    AND (s.delivery_in_number > 0 OR s.available_number > 0 )
+		<include refid="Where_SearchVo"/>
+	</select>
+	<sql id="Where_deliveryOut_SearchVo">
+		<if test="productName != null and productName != ''">
+			AND t.product_cd = #{productName}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND t.brand_number = #{brandNumber}
+		</if>
+		<if test="factoryName != null and factoryName != ''">
+			AND t.factory_name LIKE CONCAT('%',#{factoryName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c.our_company_name LIKE CONCAT('%',#{ourCompanyName},'%')
+		</if>
+		<if test="matchUserName != null and matchUserName != ''">
+			AND c.match_user_name = #{matchUserName}
+		</if>
+		<if test="beginTime != null">
+		<![CDATA[ AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="endTime != null">
+		<![CDATA[ AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{endTime}, '%Y-%m-%d') ]]> 
+		</if>
+	</sql>
+	<!-- 实际出库明细统计分页 -->
+	<select id="findDeliveryOut" resultType="com.spt.bas.report.client.entity.RptDeliveryOutReport">
+		SELECT
+			t.id AS id,
+			c.contract_no AS contractNo,
+			c.contract_attr AS contractAttr,
+			c.contract_time AS contractTime,
+			c.our_company_name As ourCompanyName,
+			t.product_name AS productName,
+			t.brand_number AS brandNumber,
+			t.factory_name AS factoryName,
+			t.buy_company_name AS companyName,
+			p.deal_number AS totalNumber,
+			t.delivery_in_number AS deliveryInNumber,
+			t.delivery_out_number AS deliveryOutNumber,
+			(p.deal_number - t.delivery_out_number) AS surplusNumber,
+			t.apply_no AS warehouseNo,
+			t.warehouse_name AS warehouse,
+			c.match_user_name AS matchUserName,
+			c.dept_id AS deptId
+		FROM
+			t_stock_detail t
+		LEFT JOIN t_ctr_contract c ON t.buy_contract_id = c.id
+		LEFT JOIN t_ctr_product p ON t.ctr_product_id = p.id
+		WHERE
+			c.contract_status != 'C'
+		AND t.enterprise_id = #{enterpriseId}
+		<include refid="Where_deliveryOut_SearchVo"/>
+		ORDER BY
+			t.id DESC
+	</select>
+	<!-- 实际出库明细统计合计 -->
+	<select id="findTotalDeliveryOut" resultType="com.spt.bas.report.client.entity.RptDeliveryOutReport">
+		SELECT
+			SUM(p.deal_number) As totalNumber,
+			SUM(t.delivery_in_number) As deliveryInNumber,
+			SUM(t.delivery_out_number) As deliveryOutNumber,
+			SUM(p.deal_number - t.delivery_out_number) As surplusNumber
+		FROM
+			t_stock_detail t
+		LEFT JOIN t_ctr_contract c ON t.buy_contract_id = c.id
+		LEFT JOIN t_ctr_product p ON t.ctr_product_id = p.id
+		WHERE
+			c.contract_status != 'C'
+		AND t.enterprise_id = #{enterpriseId}
+		<include refid="Where_deliveryOut_SearchVo"/>
+	</select>
+	<sql id="Where_Stock_SearchVo">
+		<if test="id != null ">
+			AND s.id = #{id}
+		</if>
+		<if test="productCd != null and productCd != ''">
+			AND s.product_cd = #{productCd}
+		</if>
+		<if test="contractNo != null and contractNo != ''">
+			AND c.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND s.brand_number LIKE CONCAT('%',#{brandNumber},'%')
+		</if>
+		<if test="buyCompanyName != null and buyCompanyName != ''">
+			AND s.buy_company_name LIKE CONCAT('%',#{buyCompanyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c.our_company_name LIKE CONCAT('%',#{ourCompanyName},'%')
+		</if>
+		<if test="factoryName != null and factoryName != ''">
+			AND s.factory_name LIKE CONCAT('%',#{factoryName},'%')
+		</if>
+		<if test="bizUserName != null and bizUserName != ''">
+			AND s.biz_user_name LIKE CONCAT('%',#{bizUserName},'%')
+		</if>
+		<if test='status != null and status == "C"'>
+			AND (s.frozen_number > 0 OR s.available_number > 0)
+			AND (s.available_number > s.delivery_in_number OR s.available_number > s.delivery_out_number)
+		</if>
+		<if test='status != null and status == "A"'> <!-- 原历史的数据改为作废 -->
+			AND s.frozen_number = 0 
+			AND s.available_number = 0
+		</if>
+		<if test='status != null and status == "H"'> <!-- 历史数据-->
+			AND s.available_number &lt;&gt; 0
+			AND s.delivery_out_number=s.delivery_in_number
+			AND s.delivery_in_number = s.available_number
+		</if>
+	</sql>
+	<select id="findStockDetailPage" resultType="com.spt.bas.report.client.entity.RptStockDetailReport">
+		SELECT
+			s.id AS id,
+			s.stock_id As stockId,
+			s.product_name AS productName,
+			s.product_cd As productCd,
+			s.brand_number As brandNumber,
+			s.factory_id As factoryId,
+			s.factory_name As factoryName,
+			s.warehouse_name AS warehouseName,
+			s.frozen_number AS frozenNumber,
+			s.available_number As availableNumber,
+			s.product_attr As productAttr,
+			s.stock_status As stockStatus,
+			s.remark As remark,
+			s.enterprise_id As enterpriseId,
+			s.created_date As createdDate,
+			s.updated_date As updatedDate,
+			s.warehouse_id As warehouseId,
+			s.buy_contract_id As buyContractId,
+			s.sell_contract_id As sellContractId,
+			s.close_flg As closeFlg,
+			s.sell_price As sellPrise,
+			s.delivery_in_number As deliveryInNumber,
+			s.delivery_out_number As deliveryOutNumber,
+			s.business_no As businessNo,
+			s.sell_contract_cfs As sellContractCfs,
+			s.biz_user_id As bizUserId,
+			s.biz_user_name As bizUserName,
+			s.apply_no As applyNo,
+			s.deal_price AS dealPrice,
+			s.warehouse_position As warehousePosition,
+			s.warehouse_batch_no As warehouseBatchNo,
+			s.presell_number As presellNumber,
+			s.ctr_product_id As ctrProductId,
+			s.link_stock_detail_id As linkStockDetailId,
+			s.buy_company_id As buyCompanyId,
+			s.buy_company_name As buyCompanyName,
+			s.source AS source,
+			s.stock_type AS stockType,
+			s.spot_type AS spotType,
+			c.contract_no As contractNo,
+			c.our_company_name As ourCompanyName,
+			c.dept_id As deptId
+		FROM
+			t_stock_detail s
+			LEFT JOIN t_ctr_contract c ON s.buy_contract_id = c.id
+		WHERE
+			s.enterprise_id = #{enterpriseId}
+		<include refid="Where_Stock_SearchVo"/>
+		ORDER BY
+			s.updated_date DESC
+	</select>
+	
+	<select id="findStockDetailTotal" resultType="com.spt.bas.report.client.entity.RptStockDetailReport">
+		SELECT
+			SUM(s.delivery_in_number) As deliveryInNumber,
+			SUM(s.delivery_out_number) As deliveryOutNumber,
+			SUM(s.available_number) As availableNumber,
+			SUM(s.frozen_number) As frozenNumber
+		FROM
+			t_stock_detail s
+			LEFT JOIN t_ctr_contract c ON s.buy_contract_id = c.id
+		WHERE
+			s.enterprise_id = #{enterpriseId}
+		<include refid="Where_Stock_SearchVo"/>
+	</select>
+	
+	<select id="findStockPage" resultType="com.spt.bas.report.client.entity.RptStockReport">
+		SELECT
+			s.id As id,
+			s.product_name As productName,
+			s.product_cd As productCd,
+			s.brand_number As brandNumber,
+			s.factory_id As factoryId,
+			s.factory_name As factoryName,
+			s.warehouse_name As warehouseName,
+			s.average_price As averagePrice,
+			s.total_number As totalNumber,
+			s.frozen_number As frozenNumber,
+			s.real_number As realNumber,
+			s.product_attr As productAttr
+		FROM t_stock s
+		WHERE 1=1 
+		and EXISTS(
+		SELECT 1 from t_stock_detail d LEFT JOIN t_ctr_contract c on c.id = d.buy_contract_id
+		WHERE s.id = d.stock_id
+		<if test="ourCompanyName !=null and ourCompanyName !=''">
+			AND c.our_company_name = #{ourCompanyName} 
+		</if>
+			AND 1=1 )
+		<if test="productCd != null and productCd != ''">
+			AND s.product_cd = #{productCd}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND s.brand_number LIKE CONCAT('%',#{brandNumber},'%')
+		</if>
+		<if test='status != null and status == "C"'>
+			AND (s.frozen_number > 0 OR s.real_number > 0)
+		</if>
+		<if test='status != null and status == "A"'>
+			AND s.frozen_number = 0 
+			AND s.real_number = 0
+		</if>
+		<if test="factoryName != null and factoryName != ''">
+			AND s.factory_name LIKE CONCAT('%',#{factoryName},'%')
+		</if>
+		<if test="warehouseName != null and warehouseName != ''">
+			AND s.warehouse_name LIKE CONCAT('%',#{warehouseName},'%')
+		</if>
+			AND s.enterprise_id = #{enterpriseId}
+		ORDER BY s.id DESC	
+	</select>
+	
+	<select id="findStockPageTotal" resultType="com.spt.bas.report.client.entity.RptStockReport">
+		SELECT
+			SUM(s.total_number) As totalNumber,
+			SUM(s.frozen_number) As frozenNumber,
+			SUM(s.real_number) AS realNumber
+		FROM t_stock s
+		WHERE 1=1 
+		and EXISTS(
+		SELECT 1 from t_stock_detail d LEFT JOIN t_ctr_contract c on c.id = d.buy_contract_id
+		WHERE 1=1
+		<if test="ourCompanyName !=null and ourCompanyName !=''">
+			AND c.our_company_name =#{ourCompanyName} 
+		</if>
+			AND s.id = d.stock_id)
+		<if test="productCd != null and productCd != ''">
+			AND s.product_cd = #{productCd}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND s.brand_number LIKE CONCAT('%',#{brandNumber},'%')
+		</if>
+		<if test='status != null and status == "C"'>
+			AND (s.frozen_number > 0 OR s.real_number > 0)
+		</if>
+		<if test='status != null and status == "A"'>
+			AND s.frozen_number = 0 
+			AND s.real_number = 0
+		</if>
+		<if test="factoryName != null and factoryName != ''">
+			AND s.factory_name LIKE CONCAT('%',#{factoryName},'%')
+		</if>
+		<if test="warehouseName != null and warehouseName != ''">
+			AND s.warehouse_name LIKE CONCAT('%',#{warehouseName},'%')
+		</if>
+			AND s.enterprise_id = #{enterpriseId}
+		ORDER BY s.id DESC	
+	</select>
+	
+	<select id="findWarehouseOut" resultType="com.spt.bas.report.client.entity.RptWarehouseOutEntity">
+		SELECT
+			d.id As id,
+			d.product_name As productName,
+			d.product_cd As productCd,
+			d.brand_number As brandNumber,
+			d.factory_name As factoryName,
+			d.warehouse_name As warehouseName,
+			d.warehouse_addr As warehouseAddr,
+			d.buy_contract_id As buyContractId,
+			d.available_number As availableNumber,
+			d.delivery_in_number As deliveryInNumber,
+			d.delivery_out_number As deliveryOutNumber,
+			d.ctr_product_id As ctrProductId,
+			d.stock_contract_id As stockContractId,
+			c.contract_no As buyContractNo,
+			c.our_company_name As ourCompanyName,
+			<if test="ctrProductId != null and ctrProductId >0">
+			p.cur_approve_number as curApproveNumber,
+			</if>
+			d.buy_company_name As buyCompanyName,
+			d.biz_user_name As buyBizUserName
+		FROM t_stock_detail d 
+		LEFT JOIN t_ctr_contract c on d.buy_contract_id = c.id
+		LEFT JOIN t_bs_warehouse w ON d.warehouse_id=w.id
+		<if test="ctrProductId != null and ctrProductId >0">
+		LEFT JOIN t_ctr_product p on p.id=#{ctrProductId}
+		</if>
+		WHERE 1=1 
+			AND d.delivery_in_number > d.delivery_out_number
+		<if test="productCd != null and productCd != ''">
+			AND d.product_cd = #{productCd}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND (d.brand_number LIKE CONCAT('%',#{brandNumber},'%') OR d.brand_number is null OR d.brand_number = '')
+		</if>
+		<if test="factoryName != null and factoryName != ''">
+			AND d.factory_name LIKE CONCAT('%',#{factoryName},'%')
+		</if>
+		<if test="warehouseName != null and warehouseName != ''">
+			AND d.warehouse_name LIKE CONCAT('%',#{warehouseName},'%')
+		</if>
+		<if test="stockContractId != null and stockContractId >0">
+			AND d.stock_contract_id = #{stockContractId}
+		</if>
+			AND d.enterprise_id = #{enterpriseId}
+		ORDER BY d.id DESC	
+	</select>
+	
+	<select id="findRealStockDetailPage" resultType="com.spt.bas.report.client.entity.RptStockDetailReport">
+		SELECT
+			s.id AS id,
+			s.stock_id As stockId,
+			s.product_name AS productName,
+			s.product_cd As productCd,
+			s.brand_number As brandNumber,
+			s.factory_id As factoryId,
+			s.factory_name As factoryName,
+			s.warehouse_name AS warehouseName,
+			s.frozen_number AS frozenNumber,
+			s.available_number As availableNumber,
+			s.product_attr As productAttr,
+			s.stock_status As stockStatus,
+			s.remark As remark,
+			s.enterprise_id As enterpriseId,
+			s.created_date As createdDate,
+			s.updated_date As updatedDate,
+			s.warehouse_id As warehouseId,
+			s.buy_contract_id As buyContractId,
+			s.sell_contract_id As sellContractId,
+			s.close_flg As closeFlg,
+			s.sell_price As sellPrise,
+			s.delivery_in_number As deliveryInNumber,
+			s.delivery_out_number As deliveryOutNumber,
+			s.business_no As businessNo,
+			s.sell_contract_cfs As sellContractCfs,
+			s.biz_user_id As bizUserId,
+			s.biz_user_name As bizUserName,
+			s.apply_no As applyNo,
+			s.deal_price AS dealPrice,
+			s.warehouse_position As warehousePosition,
+			s.warehouse_batch_no As warehouseBatchNo,
+			s.presell_number As presellNumber,
+			s.ctr_product_id As ctrProductId,
+			s.link_stock_detail_id As linkStockDetailId,
+			s.buy_company_id As buyCompanyId,
+			s.buy_company_name As buyCompanyName,
+			s.source AS source,
+			s.stock_type AS stockType,
+			s.spot_type AS spotType,
+			c.contract_no As contractNo,
+			c.our_company_name As ourCompanyName,
+			c.dept_id As deptId
+		FROM
+			t_stock_detail s
+			LEFT JOIN t_ctr_contract c ON s.buy_contract_id = c.id
+			LEFT JOIN t_stock_contract_rela r ON s.stock_contract_id = r.stock_contract_id
+			LEFT JOIN t_ctr_contract c1 ON r.contract_id = c1.id
+			LEFT JOIN t_ctr_product p ON r.ctr_product_id = p.id
+		WHERE
+			s.enterprise_id = #{enterpriseId}
+		AND s.delivery_in_number > 0
+		AND s.delivery_out_number &lt; s.available_number
+		AND r.rela_type = 'S'
+		AND IF (c1.delivery_mode = 'SX',(IFNULL((SELECT SUM(rr.rela_num) FROM t_stock_contract_rela rr WHERE rr.ctr_product_id = r.ctr_product_id AND rr.rela_type = 'O'),0) &lt; p.deal_number),1 = 1)
+		AND IF (c1.delivery_mode = 'XHHK',(IFNULL((SELECT SUM(rr.rela_num) FROM t_stock_contract_rela rr WHERE rr.ctr_product_id = r.ctr_product_id AND rr.rela_type = 'O'),0) &lt; p.deal_number),1 = 1)
+		AND IF (c1.delivery_mode = 'XKHH',(IFNULL((SELECT SUM(rr.rela_num) FROM t_stock_contract_rela rr WHERE rr.ctr_product_id = r.ctr_product_id AND rr.rela_type = 'O'),0) &lt; p.deal_number OR ((c1.dealed_amount - c1.refund_amount) &lt; (c1.total_amount*(p.deal_number/c1.total_number)))),1 = 1)
+		GROUP BY s.id 
+		<include refid="Where_Stock_SearchVo"/>
+		ORDER BY
+			s.updated_date DESC
+	</select>
+	<select id="findRealStockDetailTotal" resultType="com.spt.bas.report.client.entity.RptStockDetailReport">
+		SELECT
+			SUM(s.delivery_in_number) As deliveryInNumber,
+			SUM(s.delivery_out_number) As deliveryOutNumber,
+			SUM(s.available_number) As availableNumber,
+			SUM(s.frozen_number) As frozenNumber
+		FROM
+			t_stock_detail s
+			LEFT JOIN t_ctr_contract c ON s.buy_contract_id = c.id
+			LEFT JOIN t_stock_contract_rela r ON s.stock_contract_id = r.stock_contract_id
+			LEFT JOIN t_ctr_contract c1 ON r.contract_id = c1.id
+		WHERE
+			s.enterprise_id = #{enterpriseId}
+		AND s.delivery_in_number > 0
+		AND s.delivery_out_number &lt; s.available_number
+		AND r.rela_type = 'S'
+		<include refid="Where_Stock_SearchVo"/>
+	</select>
+
+	<select id="findPageStockBook" resultType="com.spt.bas.report.client.entity.RptStockBook" parameterType="com.spt.bas.report.client.vo.RptStockBookVo">
+		SELECT
+		v.stock_virtual_no,
+		f.contract_no,
+		f.our_company_name,
+		f.company_name,
+		f.business_type,
+		f.products_name,
+		f.dept_id,
+		f.match_user_name,
+		f.total_number,
+		v.min_sell_price,
+		t.buy_price,
+		t.sell_price,
+		f.credit_cycle,
+		f.warehouse_amount,
+		f.transport_amount,
+		f.stevedorage,
+		f.insurance_rate,
+		f.contract_time,
+		h1.warehouse_out_date as 'realWarehoseDate',
+		h2.pay_date as 'payFullTime',
+		h3.confirm_receipt_date as 'confirmDate',
+		f.match_credit_flg,
+		k.deal_price as "kubBuyPrice",
+		h2.pay_amount as "sumPayAmount",
+		h4.receive_date,
+		h4.receive_amount as 'sumReceiveAmount',
+		f.total_amount
+		FROM
+		t_ctr_contract b
+		LEFT JOIN t_ctr_contract c ON b.virtual_contract_id = c.id
+		LEFT JOIN t_ctr_contract_settlement t ON t.buy_contract_id = b.id
+		left join t_ctr_contract d on d.contract_no = REPLACE(c.contract_no, 'KUX', 'KUB')
+		LEFT JOIN t_ctr_contract f ON f.id = t.sell_contract_id
+		LEFT JOIN ( SELECT contract_id, max( warehouse_out_date ) AS warehouse_out_date FROM t_apply_delivery_out WHERE STATUS = 'D' GROUP BY contract_id ) h1 ON h1.contract_id = f.id
+		LEFT JOIN ( SELECT contract_id, max( pay_date ) AS pay_date,sum(IFNULL(pay_amount,0)) as pay_amount FROM t_apply_pay WHERE STATUS = 'D' GROUP BY contract_id ) h2 ON h2.contract_id = d.id
+		LEFT JOIN ( SELECT contract_id, max( confirm_receipt_date ) AS confirm_receipt_date FROM t_apply_confirm_receipt WHERE STATUS = 'D' GROUP BY contract_id ) h3 ON h3.contract_id = f.id
+		LEFT JOIN ( SELECT contract_id, max( receive_date ) AS receive_date,sum( receive_amount ) AS receive_amount  FROM t_apply_receive WHERE STATUS = 'D' GROUP BY contract_id) h4 on h4.contract_id = f.id
+		LEFT JOIN t_stock_virtual v ON v.link_contract_id = b.id
+		LEFT JOIN t_stock_inventory k ON v.biz_apply_virtual_id = k.id
+		<where>
+			c.virtual_type = 'KC'
+			AND b.`status` != 'C'
+			AND b.contract_status != 'C'
+			AND f.`status` != 'C'
+			AND f.contract_status != 'C'
+			<if test="stockVirtualNo!=null and stockVirtualNo!= ''">
+				and v.stock_virtual_no like concat('%',#{stockVirtualNo},'%')
+			</if>
+
+			<if test="sellContractNo!=null and sellContractNo!= ''">
+				and f.contract_no like concat('%',#{sellContractNo},'%')
+			</if>
+
+			<if test="deptId!=null and deptId!= ''">
+				and t.dept_id =#{deptId}
+			</if>
+
+			<if test="productName!=null and productName!= ''">
+				and f.products_name  like concat('%',#{productName},'%')
+			</if>
+
+			<if test="businessType!=null and businessType!= ''">
+				and f.business_Type=#{businessType} and f.match_credit_flg=#{matchCreditFlg}
+			</if>
+
+			<if test="contractTimeBegin!=null and contractTimeBegin!= ''">
+				and DATE_FORMAT(f.contract_time, '%Y-%m-%d') &gt;=#{contractTimeBegin}
+			</if>
+
+			<if test="contractTimeEnd !=null and contractTimeEnd!= ''">
+				and DATE_FORMAT(f.contract_time, '%Y-%m-%d') &lt;=#{contractTimeEnd}
+			</if>
+
+			<if test="ourCompanyList != null and ourCompanyList.size()>0">
+				and f.our_company_name in
+				<foreach collection="ourCompanyList" index="index" item="items" open="(" separator="," close=")">
+					#{ourCompanyList[${index}],jdbcType=VARCHAR}
+				</foreach>
+			</if>
+			order by v.stock_virtual_no desc,f.contract_no desc
+		</where>
+	</select>
+
+	<select id="findDcsxCompanyList" resultType="com.spt.bas.client.entity.BsCompanyDcsx">
+		select *from t_bs_company_dcsx where dcsx_flg =1 and enable_flg = 1
+	</select>
+
+	<select id="finAllBsFunder" resultType="com.spt.bas.client.entity.BsFunder">
+		select * from t_bs_funder
+	</select>
+</mapper>

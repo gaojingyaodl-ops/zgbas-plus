@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptApplyBusinessPayMapper">
+	<select id="findPageContract" resultType="com.spt.bas.report.client.entity.RptApplyBusinessPayVo">
+		SELECT
+		       b.id id,
+		       b.enterprise_id enterpriseId,
+		       b.approve_id approveId,
+		       b.belog_dept belogDept,
+		       b.apply_user_name applyUserName,
+		       b.cost_type costtype,
+		       c.process_name costtype2,
+		       b.deal_amount dealAmount,
+		       b.company_name companyName,
+		       b.apply_date applyDate,
+		       b.subject subject,
+		       b.receive_company_name receiveCompanyName,
+		       b.bank_name bankName,
+		       b.bank_account bankAccount,
+		       b.remark remark,
+		       b.file_id fileId
+		FROM t_apply_business_pay b  left join t_pm_approve c on c.id = b.approve_id
+		where b.status='D'
+		<if test="applyUserName != null and applyUserName != ''">
+			AND b.apply_user_name LIKE CONCAT('%',#{applyUserName},'%')
+		</if>
+
+		<if test="companyName != null and companyName != ''">
+			AND b.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+
+		<if test="subject != null and subject != ''">
+			AND b.subject LIKE CONCAT('%',#{subject},'%')
+		</if>
+		<if test="beginTime != null and beginTime!=''">
+			<![CDATA[ AND DATE_FORMAT(
+			b.apply_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="endTime != null and endTime!=''">
+			<![CDATA[ AND DATE_FORMAT(b.apply_date, '%Y-%m-%d') <= DATE_FORMAT(#{endTime}, '%Y-%m-%d') ]]>
+		</if>
+
+		<if test="amount != null and amount != ''">
+			<![CDATA[ AND b.deal_amount >= #{amount}]]>
+		</if>
+
+		<if test="amount2 != null and amount2 != ''">
+			<![CDATA[AND b.deal_amount <= #{amount2}]]>
+		</if>
+		<if test="costType2 != null and costType2 != '' and costType2=='费用申请' ">
+			AND  c.process_name='费用申请'
+		</if>
+		<if test="costType2 != null and costType2 != '' and costType2=='经营费用申请' ">
+			AND  c.process_name='经营费用申请'
+		</if>
+		<if test="costType2 != null and costType2 != '' and costType2=='管理费用申请' ">
+			AND  c.process_name='管理费用申请'
+		</if>
+		<if test="costType2 != null and costType2 != '' and costType2=='业务退款申请' ">
+			AND  c.process_name='业务退款申请'
+		</if>
+		<if test="costType != null and costType != '' and typeList.size > 0 ">
+			and b.cost_type IN
+			<foreach collection="typeList"  item="var" index="index" open="(" close=")" separator=",">
+				#{typeList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		ORDER BY b.id DESC
+	</select>
+    <select id="selectUserEvectionCost" resultType="com.spt.bas.report.client.entity.RptApplyBusinessPayVo">
+		SELECT
+			p.apply_user_id AS applyUserId,
+			SUM(p.deal_amount) AS dealAmount
+		FROM
+			t_apply_business_pay p
+			LEFT JOIN t_pm_approve a ON p.approve_id = a.id
+		WHERE
+			a.process_id = 243
+		  AND a.`status` = 'D'
+		  AND p.cost_type IN ('4','6', '8')
+		  AND DATE_FORMAT(a.last_approve_date, '%Y-%m') = #{baseDate}
+		GROUP BY p.apply_user_id
+	</select>
+</mapper>

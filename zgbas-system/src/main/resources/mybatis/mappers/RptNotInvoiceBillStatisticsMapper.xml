@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptNotInvoiceBillStatisticsMapper">
+    <select id="findRptNotInvoiceBillStatisticsPage" resultType="com.spt.bas.report.client.entity.RptNotInvoiceBillStatistics">
+
+		SELECT
+			id,
+			profit_type,
+			sell_contract_no,
+			our_company_name,
+			sell_company_name,
+			product_name,
+			total_number,
+			sell_total_amount,
+			contract_time,
+			receive_amount,
+			sell_pay_full_date,
+			invoice_bill_amount,
+			invoice_bill_date
+		FROM
+			t_ctr_contract_profit
+		WHERE
+			business_type = 'ZY-BB'
+			AND sell_contract_status != 'C'
+			AND seal_flg = TRUE
+			AND receive_amount >= sell_total_amount
+			AND sell_total_amount > invoice_bill_amount
+		<if test="ourCompanyName != null and ourCompanyName != '' ">
+			AND our_company_name = #{ourCompanyName}
+		</if>
+		<if test="companyName != null and companyName != '' ">
+			and sell_company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0 ">
+			and our_company_name IN
+			<foreach collection="ourCompanyNameList" item="var" index="index" open="(" close=")" separator=",">
+				#{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'NHG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'HG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and match_user_id in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="sellPayFullDateStart != null and sellPayFullDateEnd != null">
+			<![CDATA[AND DATE_FORMAT(sell_pay_full_date, '%Y-%m-%d') >= DATE_FORMAT(#{sellPayFullDateStart}, '%Y-%m-%d') ]]>
+			<![CDATA[AND DATE_FORMAT(sell_pay_full_date, '%Y-%m-%d') <= DATE_FORMAT(#{sellPayFullDateEnd}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="sellPayFullDateStart == null or sellPayFullDateEnd == null">
+			<if test="sellPayFullDateStart != null">
+				<![CDATA[AND DATE_FORMAT(sell_pay_full_date, '%Y-%m-%d') >= DATE_FORMAT(#{sellPayFullDateStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="sellPayFullDateEnd != null">
+				<![CDATA[AND DATE_FORMAT(sell_pay_full_date, '%Y-%m-%d') <= DATE_FORMAT(#{sellPayFullDateEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		order by approve_no desc
+
+    </select>
+
+	<select id="findRptNotInvoiceBillStatisticsSum" resultType="com.spt.bas.report.client.entity.RptNotInvoiceBillStatistics">
+
+		SELECT
+			SUM(IFNULL(total_number,0)) AS totalNumber,
+			SUM(IFNULL(sell_total_amount,0)) AS sellBotalAmount,
+			SUM(IFNULL(receive_amount,0)) AS receiveAmount,
+			SUM(IFNULL(invoice_bill_amount,0)) AS invoiceBillAmount
+		FROM
+			t_ctr_contract_profit
+		WHERE
+			business_type = 'ZY-BB'
+			AND sell_contract_status != 'C'
+			AND seal_flg = TRUE
+			AND receive_amount >= sell_total_amount
+			AND sell_total_amount > invoice_bill_amount
+		<if test="ourCompanyName != null and ourCompanyName != '' ">
+			AND our_company_name = #{ourCompanyName}
+		</if>
+		<if test="companyName != null and companyName != '' ">
+			and sell_company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0 ">
+			and our_company_name IN
+			<foreach collection="ourCompanyNameList" item="var" index="index" open="(" close=")" separator=",">
+				#{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'NHG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'HG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and match_user_id in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="sellPayFullDateStart != null and sellPayFullDateEnd != null">
+			<![CDATA[AND DATE_FORMAT(sell_pay_full_date, '%Y-%m-%d') >= DATE_FORMAT(#{sellPayFullDateStart}, '%Y-%m-%d') ]]>
+			<![CDATA[AND DATE_FORMAT(sell_pay_full_date, '%Y-%m-%d') <= DATE_FORMAT(#{sellPayFullDateEnd}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="sellPayFullDateStart == null or sellPayFullDateEnd == null">
+			<if test="sellPayFullDateStart != null">
+				<![CDATA[AND DATE_FORMAT(sell_pay_full_date, '%Y-%m-%d') >= DATE_FORMAT(#{sellPayFullDateStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="sellPayFullDateEnd != null">
+				<![CDATA[AND DATE_FORMAT(sell_pay_full_date, '%Y-%m-%d') <= DATE_FORMAT(#{sellPayFullDateEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+	</select>
+
+	<select id="selectFunderByUserId" resultType="com.spt.bas.report.client.vo.RptFunderVo">
+		SELECT
+			user_id,
+			user_name,
+			company_names,
+			remark,
+			enterprise_id
+		FROM t_bs_funder
+		WHERE user_id = #{userId}
+	</select>
+
+</mapper>

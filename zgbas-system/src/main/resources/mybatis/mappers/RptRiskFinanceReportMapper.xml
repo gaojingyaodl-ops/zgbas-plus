@@ -1,0 +1,1472 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptRiskFinanceReportMapper">
+    <sql id="Where_SearchVo">
+        <if test="contractNo != null and contractNo != ''">
+            and a.contract_no like CONCAT('%',#{contractNo},'%')
+        </if>
+
+        <if test="companyName != null and companyName != ''">
+            and (a.company_name like CONCAT('%',#{companyName},'%')
+            or buy.company_name like CONCAT('%',#{companyName},'%')
+            )
+        </if>
+
+        <if test="matchUserName != null and matchUserName != ''">
+            and a.match_user_name like CONCAT('%',#{matchUserName},'%')
+        </if>
+
+        <if test="productsName != null and productsName != ''">
+            and a.products_name LIKE CONCAT('%',#{productsName},'%')
+        </if>
+        <if test="ourCompanyName != null and ourCompanyName != ''">
+            and a.our_company_name LIKE CONCAT('%',#{ourCompanyName},'%')
+        </if>
+
+        <if test="deliveryType != null and deliveryType != ''">
+            AND a.delivery_type = #{deliveryType}
+        </if>
+
+        <if test="dealedFlg != null and dealedFlg != ''">
+            and a.dealed_flg = #{dealedFlg}
+        </if>
+
+        <if test="contractTimeFrom != null and contractTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') >= DATE_FORMAT(#{contractTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="contractTimeTo != null and contractTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') <= DATE_FORMAT(#{contractTimeTo},'%Y-%m-%d')]]>
+        </if>
+        <!-- 合同状态 -->
+        <if test='financeContractStatus == "F"'>
+            and a.dealed_amount >= a.total_amount
+        </if>
+        <if test='financeContractStatus == "G"'>
+            and a.confirm_receipt_flg = true
+        </if>
+        <if test='financeContractStatus == "V"'>
+            and a.bill_flg = true
+        </if>
+        <if test='financeContractStatus == "D"'>
+            and (a.billed_amount >= a.total_amount and a.billed_amount >= a.dealed_amount)
+        </if>
+        <if test='financeContractStatus == "Y"'>
+            <![CDATA[and (a.breach_days > 0 and a.breach_days <= 15 and a.dealed_amount < a.total_amount)]]>
+        </if>
+        <if test='financeContractStatus == "W"'>
+            <![CDATA[ and a.breach_days > 15 and a.dealed_amount < a.total_amount)]]>
+        </if>
+        <!-- 白条：1；代采：2；(自营采购：3；自营销售：4) -->
+        <if test='budgetType == "1"'>
+            and (a.business_type = 'ZY-BB' and a.settlement_type is not null)
+        </if>
+        <if test='budgetType == "2"'>
+            and (a.business_type = 'ZY-BB' and a.settlement_type is null)
+        </if>
+        <if test='budgetType == "3"'>
+            and a.business_type = 'ZY-CG'
+        </if>
+        <if test='budgetType == "4"'>
+            and a.business_type = 'ZY-XS'
+        </if>
+    </sql>
+
+    <sql id="Where_SearchVo_match_sell">
+        <if test="contractNo != null and contractNo != ''">
+            and (
+            a.contract_no like CONCAT('%',#{contractNo},'%')
+            or
+            buyc.contract_no like CONCAT('%',#{contractNo},'%')
+            )
+        </if>
+
+        <if test='budgetType == "5"'>
+            <if test="companyName != null and companyName != ''">
+                and (a.company_name like CONCAT('%',#{companyName},'%')
+                or sell.company_name like CONCAT('%',#{companyName},'%')
+                or dc.company_name like CONCAT('%',#{companyName},'%')
+                )
+            </if>
+        </if>
+        <if test='budgetType != "5"'>
+            <if test="companyName != null and companyName != ''">
+                and (a.company_name like CONCAT('%',#{companyName},'%')
+                or buy.company_name like CONCAT('%',#{companyName},'%')
+                )
+            </if>
+        </if>
+
+        <if test="matchUserName != null and matchUserName != ''">
+            and (
+            a.match_user_name like CONCAT('%',#{matchUserName},'%')
+            or
+            buyc.match_user_name like CONCAT('%',#{matchUserName},'%')
+            )
+        </if>
+
+        <if test="productsName != null and productsName != ''">
+            and (
+            a.products_name LIKE CONCAT('%',#{productsName},'%')
+            or
+            buyc.products_name LIKE CONCAT('%',#{productsName},'%')
+            )
+        </if>
+        <if test="ourCompanyName != null and ourCompanyName != ''">
+            and (
+            a.our_company_name = #{ourCompanyName}
+            or
+            buyc.our_company_name = #{ourCompanyName}
+            )
+        </if>
+        <if test="ourCompanyNames != null and ourCompanyNames.size > 0">
+            and (
+            a.our_company_name IN
+            <foreach collection="ourCompanyNames"  item="var" index="index" open="(" close=")" separator=",">
+                #{ourCompanyNames[${index}],jdbcType=VARCHAR}
+            </foreach>
+            or
+            buyc.our_company_name IN
+            <foreach collection="ourCompanyNames"  item="var" index="index" open="(" close=")" separator=",">
+                #{ourCompanyNames[${index}],jdbcType=VARCHAR}
+            </foreach>
+            )
+        </if>
+        <if test="deliveryType != null and deliveryType != ''">
+            AND (
+            a.delivery_type = #{deliveryType}
+            or
+            buyc.delivery_type = #{deliveryType}
+            )
+        </if>
+
+        <if test="contractTimeFrom != null and contractTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') >= DATE_FORMAT(#{contractTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="contractTimeTo != null and contractTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') <= DATE_FORMAT(#{contractTimeTo},'%Y-%m-%d')]]>
+        </if>
+
+        <if test="sellApproveFlg != null and 'false'.toString() == sellApproveFlg.toString()">
+            and a.status != 'D'
+        </if>
+
+        <if test="sellApproveFlg">
+            and a.status = 'D'
+        </if>
+
+        <if test="sellSealFlg">
+            and a.seal_flg = ${sellSealFlg}
+        </if>
+
+        <if test="sellSealFlg != null and 'false'.toString() == sellSealFlg.toString()">
+            and a.seal_flg = ${sellSealFlg}
+        </if>
+
+        <if test="sellDealedFlg">
+            and a.dealed_amount >= a.total_amount
+        </if>
+
+        <if test="sellDealedFlg != null and 'false'.toString() == sellDealedFlg.toString()">
+            and a.dealed_amount <![CDATA[<]]> a.total_amount
+        </if>
+
+        <if test="sellWarehouseFlg">
+            and a.warehouse_number >= a.total_number
+        </if>
+
+        <if test="sellWarehouseFlg != null and 'false'.toString() == sellWarehouseFlg.toString()">
+            and a.warehouse_number <![CDATA[<]]> a.total_number
+        </if>
+
+        <if test="sellConfirmFlg">
+            and a.confirm_receive_number >= a.total_number
+        </if>
+
+        <if test="sellConfirmFlg != null and 'false'.toString() == sellConfirmFlg.toString()">
+            and a.confirm_receive_number <![CDATA[<]]> a.total_number
+        </if>
+
+        <if test="sellBilledFlg">
+            and a.billed_amount >= a.total_amount
+        </if>
+
+        <if test="sellBilledFlg != null and 'false'.toString() == sellBilledFlg.toString()">
+            and a.billed_amount <![CDATA[<]]> a.total_amount
+        </if>
+
+        <if test="sellInvalidFlg">
+            and a.contract_status = 'C'
+        </if>
+
+        <if test="sellInvalidFlg != null and 'false'.toString() == sellInvalidFlg.toString()">
+            and a.contract_status != 'C'
+        </if>
+
+        <if test="sellCompleteFlg">
+            and (a.contract_status = 'D'
+            or
+            (
+            (a.dealed_amount >= a.total_amount)
+            and (a.billed_amount >= a.total_amount)
+            ))
+        </if>
+
+        <if test="sellCompleteFlg != null and 'false'.toString() == sellCompleteFlg.toString()">
+            and ( a.dealed_amount <![CDATA[<]]> a.total_amount)
+        </if>
+
+        <if test="sellOverdueFlg">
+            <![CDATA[ and (a.breach_days > 0 and a.breach_days <= 15 and a.dealed_amount < a.total_amount)]]>
+        </if>
+        <if test="sellOverdueFlg != null and 'false'.toString() == sellOverdueFlg.toString()">
+            <![CDATA[ and (a.breach_days <= 0 or  a.dealed_amount >= a.total_amount)]]>
+        </if>
+
+        <if test="sellBreachFlg">
+            <![CDATA[ and (a.breach_days > 15 and a.dealed_amount < a.total_amount)]]>
+        </if>
+        <if test="sellBreachFlg != null and 'false'.toString() == sellBreachFlg.toString()">
+            <![CDATA[ and (a.breach_days <= 15 or a.dealed_amount >= a.total_amount)]]>
+        </if>
+
+        <if test="commonFlg != null and 'false'.toString() == commonFlg.toString()">
+            <![CDATA[ and (a.breach_days > 0 and a.dealed_amount < a.total_amount)]]>
+        </if>
+
+        <if test="commonFlg">
+            <![CDATA[ and (a.breach_days <= 0 or a.dealed_amount >= a.total_amount)]]>
+        </if>
+
+        <if test="sellNoFineFlg">
+            <![CDATA[ and (a.dealed_amount >= a.total_amount and a.bill_flg = false and a.receive_breach_amount < a.breach_amount)]]>
+        </if>
+
+        <!-- 1-赊销合同;2-代采合同;3-自营采购;4-自营销售;5-代采赊销 -->
+        <if test='budgetType == "1"'>
+            and (a.business_type = 'ZY-BB' and a.business_type_dcsx in ('BL','PT') and a.match_credit_flg = true)
+        </if>
+        <if test='budgetType == "2"'>
+            and (a.business_type = 'ZY-BB' and a.match_credit_flg = false)
+        </if>
+        <if test='budgetType == "3"'>
+            and a.business_type = 'ZY-CG'
+        </if>
+        <if test='budgetType == "4"'>
+            and a.business_type = 'ZY-XS'
+        </if>
+        <if test='budgetType == "5"'>
+            and (a.business_type = 'ZY-BB' and a.business_type_dcsx in ('DCSXBL','DCSX','DCSXHDFK') and dc.business_type = 'ZY-BB' and a.match_credit_flg = true)
+        </if>
+
+        <if test="spayFullTimeFrom != null and spayFullTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.appoint_pay_full_time,'%Y-%m-%d') >= DATE_FORMAT(#{spayFullTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="spayFullTimeTo != null and spayFullTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.appoint_pay_full_time,'%Y-%m-%d') <= DATE_FORMAT(#{spayFullTimeTo},'%Y-%m-%d')]]>
+        </if>
+    </sql>
+
+    <sql id="Where_SearchVo_match_buy">
+        <if test="contractNo != null and contractNo != ''">
+            and (
+            a.contract_no like CONCAT('%',#{contractNo},'%')
+            or sell_c.contract_no like CONCAT('%',#{contractNo},'%')
+            )
+        </if>
+
+        <if test="companyName != null and companyName != ''">
+            and (a.company_name like CONCAT('%',#{companyName},'%')
+            or sell_c.company_name like CONCAT('%',#{companyName},'%')
+            or dc.company_name like CONCAT('%',#{companyName},'%')
+            )
+        </if>
+
+        <if test="matchUserName != null and matchUserName != ''">
+            and (
+            a.match_user_name like CONCAT('%',#{matchUserName},'%')
+            or sell_c.match_user_name like CONCAT('%',#{matchUserName},'%')
+            )
+        </if>
+
+        <if test="productsName != null and productsName != ''">
+            and a.products_name LIKE CONCAT('%',#{productsName},'%')
+        </if>
+        <if test="ourCompanyName != null and ourCompanyName != ''">
+            and (
+            a.our_company_name = #{ourCompanyName}
+            or sell_c.our_company_name = #{ourCompanyName}
+            )
+        </if>
+        <if test="ourCompanyNames != null and ourCompanyNames.size > 0">
+            and (
+            a.our_company_name IN
+            <foreach collection="ourCompanyNames"  item="var" index="index" open="(" close=")" separator=",">
+                #{ourCompanyNames[${index}],jdbcType=VARCHAR}
+            </foreach>
+            or
+            sell_c.our_company_name IN
+            <foreach collection="ourCompanyNames"  item="var" index="index" open="(" close=")" separator=",">
+                #{ourCompanyNames[${index}],jdbcType=VARCHAR}
+            </foreach>
+            )
+        </if>
+
+        <if test="deliveryType != null and deliveryType != ''">
+            AND (
+            a.delivery_type = #{deliveryType}
+            or sell_c.delivery_type = #{deliveryType}
+            )
+        </if>
+
+
+        <if test="contractTimeFrom != null and contractTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') >= DATE_FORMAT(#{contractTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="contractTimeTo != null and contractTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') <= DATE_FORMAT(#{contractTimeTo},'%Y-%m-%d')]]>
+        </if>
+
+        <if test="buyApproveFlg != null and 'false'.toString() == buyApproveFlg.toString()">
+            and a.status != 'D'
+        </if>
+        <if test="buyApproveFlg">
+            and a.status = 'D'
+        </if>
+
+        <if test="buySealFlg">
+            and a.seal_flg = ${buySealFlg}
+        </if>
+
+        <if test="buySealFlg != null and 'false'.toString() == buySealFlg.toString()">
+            and a.seal_flg = ${buySealFlg}
+        </if>
+
+        <if test="buyDealedFlg">
+            and a.dealed_amount >= a.total_amount
+        </if>
+
+        <if test="buyDealedFlg != null and 'false'.toString() == buyDealedFlg.toString()">
+            and a.dealed_amount <![CDATA[<]]> a.total_amount
+        </if>
+
+        <if test="buyWarehouseFlg">
+            and a.warehouse_number >= a.total_number
+        </if>
+
+        <if test="buyWarehouseFlg != null and 'false'.toString() == buyWarehouseFlg.toString()">
+            and a.warehouse_number <![CDATA[<]]> a.total_number
+        </if>
+
+        <if test="buyBilledFlg">
+            and a.billed_amount >= a.total_amount
+        </if>
+        <if test="buyBilledFlg != null and 'false'.toString() == buyBilledFlg.toString()">
+            and a.billed_amount <![CDATA[<]]> a.total_amount
+        </if>
+
+        <if test="buyInvalidFlg">
+            and a.contract_status = 'C'
+        </if>
+        <if test="buyInvalidFlg != null and 'false'.toString() == buyInvalidFlg.toString()">
+            and a.contract_status != 'C'
+        </if>
+
+        <if test="buyCompleteFlg">
+            and (a.contract_status = 'D'
+            or
+            (
+            (a.dealed_amount >= a.total_amount)
+            and (a.billed_amount >= a.total_amount)
+            ))
+        </if>
+        <if test="buyCompleteFlg != null and 'false'.toString() == buyCompleteFlg.toString()">
+            and a.contract_status != 'D'
+        </if>
+
+        <if test="buyOverdueFlg">
+            <![CDATA[ and (a.breach_days > 0 and a.breach_days <= 15 and a.dealed_amount < a.total_amount)]]>
+        </if>
+
+        <if test="buyOverdueFlg != null and 'false'.toString() == buyOverdueFlg.toString()">
+            <![CDATA[ and (a.breach_days <= 0 or a.dealed_amount >= a.total_amount)]]>
+        </if>
+
+        <if test="buyBreachFlg">
+            <![CDATA[ and (a.breach_days > 15 and a.dealed_amount < a.total_amount)]]>
+        </if>
+
+        <if test="buyBreachFlg != null and 'false'.toString() == buyBreachFlg.toString()">
+            <![CDATA[ and (a.breach_days <= 15 or a.dealed_amount >= a.total_amount)]]>
+        </if>
+
+        <!-- 白条：1；代采：2；(自营采购：3；自营销售：4) -->
+        <if test='budgetType == "1"'>
+            and (
+            (a.business_type = 'ZY-BB' and a.settlement_type is not null)
+            or
+            (sell_c.business_type = 'ZY-BB' and sell_c.settlement_type is not null)
+            )
+        </if>
+        <if test='budgetType == "2"'>
+            and (
+            (a.business_type = 'ZY-BB' and a.settlement_type is null)
+            or
+            (sell_c.business_type = 'ZY-BB' and sell_c.settlement_type is null)
+            )
+        </if>
+        <if test='budgetType == "3"'>
+            and (
+            a.business_type = 'ZY-CG'
+            or sell_c.business_type = 'ZY-CG'
+            )
+        </if>
+        <if test='budgetType == "4"'>
+            and (
+            a.business_type = 'ZY-XS'
+            or sell_c.business_type = 'ZY-XS'
+            )
+        </if>
+        <if test="bpayFullTimeFrom != null and bpayFullTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.pay_full_time,'%Y-%m-%d') >= DATE_FORMAT(#{bpayFullTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="bpayFullTimeTo != null and bpayFullTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.pay_full_time,'%Y-%m-%d') <= DATE_FORMAT(#{bpayFullTimeTo},'%Y-%m-%d')]]>
+        </if>
+    </sql>
+
+    <sql id="Where_SearchVo_MarginAmount">
+        <if test='budgetType == "1"'>
+            and a.profit_type='1'
+        </if>
+        <if test='budgetType == "2"'>
+            and a.profit_type='2'
+        </if>
+        <if test='budgetType == "5"'>
+            and a.profit_type='5'
+        </if>
+        <if test="ourCompanyName !=null and ourCompanyName != ''">
+            and  a.our_company_name = #{ourCompanyName}
+        </if>
+
+        <if test="ourCompanyName ==null or ourCompanyName == ''">
+            and   a.level ='0'
+        </if>
+
+        <if test="contractNo !=null and contractNo != ''">
+            and (a.buy_contract_no like CONCAT('%',#{contractNo},'%')
+            or a.sell_contract_no like CONCAT('%',#{contractNo},'%')
+            )
+        </if>
+        <if test="companyName !=null and companyName != ''">
+            and (a.buy_company_name like CONCAT('%',#{companyName},'%')
+            or a.sell_company_name like CONCAT('%',#{companyName},'%')
+            )
+        </if>
+        <if test="matchUserName !=null and matchUserName != ''">
+            and a.match_user_name=#{matchUserName}
+        </if>
+        <if test="matchUserId !=null and matchUserId != ''">
+            and a.match_user_id=#{matchUserId}
+        </if>
+        <if test="productsName !=null and productsName != ''">
+            and  a.product_name like CONCAT('%',#{productsName},'%')
+        </if>
+
+        <!-- 签订日 -->
+        <if test="contractTimeFrom != null and contractTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') >= DATE_FORMAT(#{contractTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="contractTimeTo != null and contractTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') <= DATE_FORMAT(#{contractTimeTo},'%Y-%m-%d')]]>
+        </if>
+
+        <!-- 约定付全款日期 -->
+        <if test="spayFullTimeFrom != null and spayFullTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.appoint_pay_full_time,'%Y-%m-%d') >= DATE_FORMAT(#{spayFullTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="spayFullTimeTo != null and spayFullTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.appoint_pay_full_time,'%Y-%m-%d') <= DATE_FORMAT(#{spayFullTimeTo},'%Y-%m-%d')]]>
+        </if>
+
+        <!-- 付全款日期 -->
+        <if test="bpayFullTimeFrom != null and bpayFullTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.sell_pay_full_date,'%Y-%m-%d') >= DATE_FORMAT(#{bpayFullTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="bpayFullTimeTo != null and bpayFullTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.sell_pay_full_date,'%Y-%m-%d') <= DATE_FORMAT(#{bpayFullTimeTo},'%Y-%m-%d')]]>
+        </if>
+
+        <!-- 销售合同状态 -->
+        <if test="sellApproveFlg != null and 'false'.toString() == sellApproveFlg.toString()">
+            and a.sell_contract_status != 'D'
+        </if>
+
+        <if test="sellApproveFlg">
+            and a.sell_contract_status = 'D'
+        </if>
+
+        <if test="sellSealFlg">
+            and a.seal_flg = ${sellSealFlg}
+        </if>
+
+        <if test="sellSealFlg != null and 'false'.toString() == sellSealFlg.toString()">
+            and a.seal_flg = ${sellSealFlg}
+        </if>
+
+        <if test="sellDealedFlg">
+            and a.receive_amount >= a.sell_total_amount
+        </if>
+
+        <if test="sellDealedFlg != null and 'false'.toString() == sellDealedFlg.toString()">
+            and a.receive_amount <![CDATA[<]]> a.sell_total_amount
+        </if>
+
+        <if test="sellWarehouseFlg">
+            and a.delivery_out_number >= a.total_number
+        </if>
+
+        <if test="sellWarehouseFlg != null and 'false'.toString() == sellWarehouseFlg.toString()">
+            and (a.delivery_out_number <![CDATA[<]]> a.total_number  or a.delivery_out_number is null )
+        </if>
+
+        <if test="sellConfirmFlg">
+            and a.confirm_receive_number >= a.total_number
+        </if>
+
+        <if test="sellConfirmFlg != null and 'false'.toString() == sellConfirmFlg.toString()">
+            and a.confirm_receive_number <![CDATA[<]]> a.total_number
+        </if>
+
+        <if test="sellBilledFlg">
+            and a.invoice_bill_amount >= a.sell_total_amount
+        </if>
+
+        <if test="sellBilledFlg != null and 'false'.toString() == sellBilledFlg.toString()">
+            and (a.invoice_bill_amount <![CDATA[<]]> a.sell_total_amount or a.invoice_bill_amount is null)
+        </if>
+
+        <if test="sellInvalidFlg">
+            and a.sell_contract_status = 'C'
+        </if>
+
+        <if test="sellInvalidFlg != null and 'false'.toString() == sellInvalidFlg.toString()">
+            and (a.sell_contract_status != 'C' or a.sell_contract_status is null)
+        </if>
+
+        <if test="sellCompleteFlg">
+            and (a.sell_contract_status = 'D'  or
+            (
+            (a.receive_amount >= a.sell_total_amount)
+            and (a.invoice_bill_amount >= a.sell_total_amount)
+            and (a.delivery_in_number >= a.total_number)
+            and (a.confirm_receive_number>=total_number)
+            )
+            )
+        </if>
+
+        <if test="sellCompleteFlg != null and 'false'.toString() == sellCompleteFlg.toString()">
+            and ( a.receive_amount <![CDATA[<]]> a.sell_total_amount
+            or
+             a.receive_amount is null
+            or
+             a.invoice_bill_amount  <![CDATA[<]]> a.sell_total_amount
+            or
+             a.delivery_in_number  <![CDATA[<]]> a.total_number
+            or
+            a.confirm_receive_number  <![CDATA[<]]> total_number
+            )
+        </if>
+
+        <if test="sellOverdueFlg">
+            <![CDATA[ and (a.breach_days > 0 and a.breach_days <= 15 and a.receive_breach_amount < a.breach_amount)]]>
+        </if>
+        <if test="sellOverdueFlg != null and 'false'.toString() == sellOverdueFlg.toString()">
+            <![CDATA[ and (a.breach_days <= 0 or a.breach_amount = 0 or a.receive_breach_amount >= a.breach_amount)]]>
+        </if>
+
+        <if test="sellBreachFlg">
+            <![CDATA[ and (a.breach_days > 15 and a.receive_breach_amount < a.breach_amount)]]>
+        </if>
+        <if test="sellBreachFlg != null and 'false'.toString() == sellBreachFlg.toString()">
+            <![CDATA[ and (a.breach_days <= 15 and a.breach_days > 0 and a.breach_amount > 0 and a.receive_breach_amount >= a.breach_amount)]]>
+        </if>
+
+        <if test="commonFlg != null and 'false'.toString() == commonFlg.toString()">
+            <![CDATA[ and (a.breach_days > 0 and a.receive_amount < a.sell_total_amount)]]>
+        </if>
+
+        <if test="commonFlg">
+            <![CDATA[ and (a.breach_days <= 0 or a.receive_amount >= a.sell_total_amount)]]>
+        </if>
+
+        <if test="sellNoFineFlg">
+            <![CDATA[ and (a.receive_amount >= a.sell_total_amount and a.bill_flg = false and a.receive_breach_amount < a.breach_amount)]]>
+        </if>
+
+        <!-- 采购合同状态 -->
+        <if test="buyApproveFlg != null and 'false'.toString() == buyApproveFlg.toString()">
+            and a.buy_contract_status != 'D'
+        </if>
+        <if test="buyApproveFlg">
+            and a.buy_contract_status = 'D'
+        </if>
+
+        <if test="buySealFlg">
+            and a.seal_flg = ${buySealFlg}
+        </if>
+
+        <if test="buySealFlg != null and 'false'.toString() == buySealFlg.toString()">
+            and a.seal_flg = ${buySealFlg}
+        </if>
+
+        <if test="buyDealedFlg">
+            and a.pay_amount >= a.buy_total_amount
+        </if>
+
+        <if test="buyDealedFlg != null and 'false'.toString() == buyDealedFlg.toString()">
+            and a.pay_amount <![CDATA[<]]> a.buy_total_amount
+        </if>
+
+        <if test="buyWarehouseFlg">
+            and a.delivery_in_number >= a.total_number
+        </if>
+
+        <if test="buyWarehouseFlg != null and 'false'.toString() == buyWarehouseFlg.toString()">
+            and a.delivery_in_number <![CDATA[<]]> a.total_number
+        </if>
+
+        <if test="buyBilledFlg">
+            and a.receipt_bill_amount >= a.buy_total_amount
+        </if>
+        <if test="buyBilledFlg != null and 'false'.toString() == buyBilledFlg.toString()">
+            and (a.receipt_bill_amount <![CDATA[<]]> a.buy_total_amount or a.receipt_bill_amount is null)
+        </if>
+
+        <if test="buyInvalidFlg">
+            and a.buy_contract_status = 'C'
+        </if>
+        <if test="buyInvalidFlg != null and 'false'.toString() == buyInvalidFlg.toString()">
+            and (a.buy_contract_status != 'C' or a.buy_contract_status is null)
+        </if>
+
+        <if test="buyCompleteFlg">
+            and (a.buy_contract_status = 'D'
+            or
+            (
+            (a.pay_amount >= a.buy_total_amount)
+            and (a.receipt_bill_amount >= a.buy_total_amount)
+            and (a.delivery_in_number >= a.total_number)
+            ))
+        </if>
+        <if test="buyCompleteFlg != null and 'false'.toString() == buyCompleteFlg.toString()">
+            and (
+            a.pay_amount  <![CDATA[<]]> a.buy_total_amount
+            or (a.receipt_bill_amount  <![CDATA[<]]> a.buy_total_amount)
+            or (a.delivery_in_number  <![CDATA[<]]> a.total_number)
+            or a.buy_contract_status is null
+             )
+        </if>
+
+
+<!--        <if test="buyOverdueFlg">-->
+<!--            <![CDATA[ and (a.breach_days > 0 and a.breach_days <= 15 and a.pay_amount < a.buy_total_amount)]]>-->
+<!--        </if>-->
+
+<!--        <if test="buyOverdueFlg != null and 'false'.toString() == buyOverdueFlg.toString()">-->
+<!--            <![CDATA[ and (a.breach_days <= 0 or a.pay_amount >= a.buy_total_amount)]]>-->
+<!--        </if>-->
+
+<!--        <if test="buyBreachFlg">-->
+<!--            <![CDATA[ and (a.breach_days > 15 and a.pay_amount < a.buy_total_amount)]]>-->
+<!--        </if>-->
+
+<!--        <if test="buyBreachFlg != null and 'false'.toString() == buyBreachFlg.toString()">-->
+<!--            <![CDATA[ and (a.breach_days <= 15 or a.pay_amount >= a.buy_total_amount)]]>-->
+<!--        </if>-->
+    </sql>
+
+
+
+    <select id="getMarginAmountList" resultType="com.spt.bas.report.client.entity.RptMarginAmountReport">
+        select c.approve_no approveNo,
+        a.products_name productName,
+        a.contract_time,
+        a.total_number,
+
+        a.id id,
+
+        a.match_user_id,
+        a.match_user_name,
+
+
+        buyc.company_name buyCompanyName,
+        buy.contract_no buyContractNo,
+        buyc.deal_price bdealPrice,
+        buyc.total_amount btotalAmount,
+        buyc.dealed_amount bdealedAmount,
+        buyc.billed_amount bbilledAmount,
+        buyc.total_amount - buyc.dealed_amount balancePayable,
+        buy.pay_rate bPayRate,
+        buy.pay_rate_amount bPayRateAmount,
+
+
+        a.contract_no sellContractNo,
+        a.company_name sellCompanyName,
+        a.deal_price sdealPrice,
+        a.total_amount stotalAmount,
+        a.dealed_amount sdealedAmount,
+        a.billed_amount sbilledAmount,
+        a.total_amount - a.dealed_amount balanceReceivable,
+        sell.pay_rate sPayRate,
+        sell.pay_rate_amount sPayRateAmount,
+        sellt.real_bill_date sBillTime,
+        a.appoint_pay_full_time sPayFullTime,
+        buyt.real_bill_date bBillTime,
+        buy.pay_full_time bPayFullTime,
+        sellt.real_warehose_date slastDeliveryDate,
+        buyt.real_warehose_date blastDeliveryDate,
+        buyc.warehouse_number bWarehouseNumber,
+        a.warehouse_number sWarehouseNumber,
+        a.confirm_date confirmDate,
+
+        a.confirm_date  confirmDate,
+        b.gross_profit marginAmount,
+        b.company_commission companyCommissionAmount,
+        round(b.company_commission / buy.total_amount,4) companyCommissionRate,
+
+        case
+        when a.contract_status = 'C' then 'C'
+        when a.contract_status = 'D' then 'D'
+        when a.dealed_amount >= a.total_amount and a.billed_amount <![CDATA[<]]> a.total_amount and
+        a.receive_breach_amount <![CDATA[<]]> a.breach_amount then 'YJ'
+        when a.breach_days > 0 and a.breach_days <![CDATA[<=]]> 15 and a.dealed_amount <![CDATA[<]]> a.total_amount then
+        'Y'
+        when a.breach_days > 15 and a.dealed_amount <![CDATA[<]]> a.total_amount then 'W'
+        when a.billed_amount >= a.total_amount and a.dealed_amount >= a.total_amount then 'D'
+        when a.billed_amount >= a.total_amount then 'V'
+        when a.confirm_receive_number >= a.total_number then 'M'
+        when a.warehouse_number >= a.total_number then 'G'
+        when a.dealed_amount >= a.total_amount then 'F'
+        when a.seal_flg = true then 'S'
+        when a.status = 'D' then 'B'
+        else 'N' end as contractStatus
+
+        from t_ctr_contract a
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_ctr_contract_apply buyt on buyc.id = buyt.ctr_contract_id
+        left join t_ctr_contract_apply sellt on a.id = sellt.ctr_contract_id
+        where a.status = 'D'
+        and a.contract_type = 'S'
+        and buy.contract_type = 'B'
+        and sell.contract_type = 'S'
+        <if test="approveIds != null and approveIds.size > 0">
+            and c.id in
+            <foreach collection="approveIds" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        order by a.contract_time desc
+    </select>
+
+    <select id="getMarginAmountListNew" resultType="com.spt.bas.report.client.entity.RptMarginAmountReport">
+        select
+        a.id id,
+        a.approve_no approveNo,
+        a.product_name productName,
+        a.contract_time,
+        a.total_number,
+        a.match_user_id,
+        a.match_user_name,
+        a.buy_company_name buyCompanyName,
+        a.buy_contract_no buyContractNo,
+        a.buy_price bdealPrice,
+        a.buy_total_amount btotalAmount,
+        a.pay_amount bdealedAmount,
+        a.receipt_bill_amount bbilledAmount,
+        a.receipt_bill_date bBillTime,
+        a.balance_payable balancePayable,
+        a.buy_bond_rate bPayRate,
+        a.buy_bond_amount bPayRateAmount,
+        a.sell_contract_no sellContractNo,
+        a.sell_company_name sellCompanyName,
+        a.sell_price sdealPrice,
+        a.sell_total_amount stotalAmount,
+        a.receive_amount sdealedAmount,
+        a.invoice_bill_amount sbilledAmount,
+        a.invoice_bill_date sBillTime,
+        a.balance_receivable balanceReceivable,
+        a.sell_bond_rate sPayRate,
+        a.sell_bond_amount sPayRateAmount,
+        a.appoint_pay_full_time sPayFullTime,
+        a.pay_full_date bPayFullTime,
+        a.delivery_out_date slastDeliveryDate,
+        a.delivery_in_date blastDeliveryDate,
+        a.delivery_in_number bWarehouseNumber,
+        a.delivery_out_number sWarehouseNumber,
+        a.confirm_date confirmDate
+        from t_ctr_contract_profit a
+        <where>
+            <include refid="Where_SearchVo_MarginAmount"/>
+        </where>
+        order by a.contract_time desc
+    </select>
+
+    <select id="sumOfMarginAmountListNew" resultType="com.spt.bas.report.client.entity.RptSumMarginAmountReport">
+        select
+        round(sum(a.total_number), 2) totalTotalNumber,
+        round(sum(a.buy_total_amount), 2) totalBtotalAmount,
+        round(sum(a.sell_total_amount), 2) totalStotalAmount,
+        round(sum(a.receive_amount), 2) totalSdealedAmount,
+        round(sum(a.pay_amount), 2) totalBdealedAmount,
+        round(sum(a.invoice_bill_amount), 2) totalSbilledAmount,
+        round(sum(a.receipt_bill_amount), 2) totalBbilledAmount,
+        round(sum(a.buy_total_amount - a.pay_amount), 2) totalBalancePayable,
+        round(sum(a.sell_total_amount - a.receive_amount), 2) totalBalanceReceivable
+        from t_ctr_contract_profit a
+        <where>
+            <include refid="Where_SearchVo_MarginAmount"/>
+        </where>
+    </select>
+
+
+    <select id="sumOfMarginAmountList" resultType="com.spt.bas.report.client.entity.RptSumMarginAmountReport">
+        select round(sum(a.total_number), 2) totalTotalNumber,
+        round(sum(buyc.total_amount), 2) totalBtotalAmount,
+        round(sum(a.total_amount), 2) totalStotalAmount,
+        round(sum(b.gross_profit), 2) totalMarginAmount,
+        round(sum(b.company_commission)) totalCompanyCommissionAmount,
+        round(sum(b.company_commission) / sum(buy.total_amount), 4) aveCompanyCommissionRate,
+        round(sum(a.dealed_amount), 2) totalSdealedAmount,
+        round(sum(buyc.dealed_amount), 2) totalBdealedAmount,
+        round(sum(a.billed_amount), 2) totalSbilledAmount,
+        round(sum(buyc.dealed_amount), 2) totalBbilledAmount,
+        round(sum(buyc.total_amount - buyc.dealed_amount), 2) totalBalancePayable,
+        round(sum(a.total_amount - a.dealed_amount), 2) totalBalanceReceivable
+        from t_ctr_contract a
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        where a.status = 'D'
+        and a.contract_type = 'S'
+        and buy.contract_type = 'B'
+        and sell.contract_type = 'S'
+        <if test="approveIds != null and approveIds.size > 0">
+            and c.id in
+            <foreach collection="approveIds" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getFinalAccountsList" resultType="com.spt.bas.report.client.entity.RptFinalAccountReport">
+        select
+        c.approve_no,
+        a.products_name productName,
+        a.contract_time,
+        a.total_number,
+
+        a.match_user_name,
+        a.match_user_id,
+
+        buy.contract_no buyContractNo,
+        buy.company_name buyCompanyName,
+        buy.deal_price bdealPrice,
+        buy.total_amount btotalAmount,
+        d.buy_commission_amount buyCommission,
+
+
+        a.contract_no sellContractNo,
+        a.company_name sellCompanyName,
+        sell.deal_price sdealPrice,
+        sell.total_amount stotalAmount,
+        d.sell_commission_amount sellCommission,
+
+        a.credit_cycle creditDays,
+        a.settlement_type,
+        sell.premium*a.total_number premiumAmount,
+        a.service_amount serviceAmount,
+        d.vat_amount as valueAddedTax,
+        d.surtax as saleSurtax,
+        d.print_amount as stampTax,
+        d.capital_cost as capitalCost,
+        d.insurance_cost as insuranceCost,
+        d.margin_amount marginAmount,
+        d.company_commission_amount,
+        round(d.company_commission_amount/buy.total_amount,4) companyCommissionRate,
+        d.marketing_retention marketingRetention,
+        d.company_commission_amount companyCommission,
+        d.net_profit netProfit,
+
+        case
+        when a.contract_status = 'C' then 'C'
+        when a.contract_status = 'D' then 'D'
+        when a.dealed_amount >= a.total_amount and a.billed_amount <![CDATA[<]]> a.total_amount and
+        a.receive_breach_amount <![CDATA[<]]> a.breach_amount then 'YJ'
+        when a.breach_days > 0 and a.breach_days <![CDATA[<=]]> 15 and a.dealed_amount <![CDATA[<]]> a.total_amount then
+        'Y'
+        when a.breach_days > 15 and a.dealed_amount <![CDATA[<]]> a.total_amount then 'W'
+        when a.billed_amount >= a.total_amount and a.dealed_amount >= a.total_amount then 'D'
+        when a.billed_amount >= a.total_amount then 'V'
+        when a.confirm_receive_number >= a.total_number then 'M'
+        when a.warehouse_number >= a.total_number then 'G'
+        when a.dealed_amount >= a.total_amount then 'F'
+        when a.seal_flg = true then 'S'
+        when a.status = 'D' then 'B'
+        else 'N' end as contractStatus
+
+        from t_ctr_contract a
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        left join t_budget_settlement d on d.sell_contract_id = a.id
+        where a.status = 'D'
+        and a.contract_type = 'S'
+        and buy.contract_type = 'B'
+        and sell.contract_type = 'S'
+        and d.id is not null
+        <if test="approveIds != null and approveIds.size > 0">
+            and c.id in
+            <foreach collection="approveIds" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="sumOfFinalAccountList" resultType="com.spt.bas.report.client.entity.RptSumFinalAccountReport">
+        select
+        sum(a.total_number) totalTotalNumber,
+        sum(buy.deal_price) / count(a.id) aveBdealPrice,
+        sum(sell.deal_price) / count(a.id) aveSdealPrice,
+        sum(buy.total_amount) totalBtotalAmount,
+        sum(sell.total_amount) totalStotalAmount,
+        sum(a.credit_cycle)/count(a.id) aveCreditDays,
+        sum(sell.premium * a.total_number) totalPremiumAmount,
+        sum(a.service_amount) totalServiceAmount,
+
+        sum(d.vat_amount) as totalValueAddedTax,
+        sum(d.surtax) as totalSaleSurtax,
+        sum(d.print_amount) as totalStampTax,
+
+        sum(d.margin_amount) totalMarginAmount,
+        sum(d.company_commission_amount) totalCompanyCommissionAmount,
+        round(sum(d.company_commission_amount) / sum(buy.total_amount), 4) aveCompanyCommissionRate,
+        sum(d.marketing_retention) totalMarketingRetention,
+        sum(d.buy_commission_amount) totalBuyCommission,
+        sum(d.sell_commission_amount) totalSellCommission,
+        sum(d.company_commission_amount) totalCompanyCommission,
+        sum(d.net_profit) totalNetProfit,
+        sum(d.capital_cost) as totalCapitalCost,
+        sum(d.insurance_cost) as totalInsuranceCost
+
+        from t_ctr_contract a
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        left join t_budget_settlement d on d.sell_contract_id = a.id
+        where a.status = 'D'
+        and a.contract_type = 'S'
+        and buy.contract_type = 'B'
+        and sell.contract_type = 'S'
+        and d.id is not null
+        <if test="approveIds != null and approveIds.size > 0">
+            and c.id in
+            <foreach collection="approveIds" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getApproveIdsWithAll" resultType="java.lang.Long">
+        select a.approveId from (
+        (
+        select distinct c.id approveId
+        from t_ctr_contract a
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        LEFT JOIN t_ctr_dcsx dc ON dc.approve_id = a.approve_id
+        <where>
+            a.status = 'D'
+            and a.contract_type = 'S'
+            and buy.contract_type = 'B'
+            and sell.contract_type = 'S'
+            <include refid="Where_SearchVo_match_sell"/>
+        </where>
+        ) a
+        inner join
+        (
+        select distinct c.id approveId
+        from t_ctr_contract a
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        left join t_ctr_contract sell_c on sell_c.id = sell.contract_id
+        LEFT JOIN t_ctr_dcsx dc ON dc.approve_id = a.approve_id
+        <where>
+            a.contract_type = 'B'
+            and buy.contract_type = 'B'
+            and sell.contract_type = 'S'
+            <include refid="Where_SearchVo_match_buy"/>
+        </where>
+        ) b on a.approveId = b.approveId)
+        order by a.approveId desc
+    </select>
+
+    <select id="getMarginAmountListWithDCSX" resultType="com.spt.bas.report.client.entity.RptMarginAmountReport">
+        select
+        c.approve_no approveNo,
+        a.products_name productName,
+        a.contract_time,
+        a.total_number,
+        c.id,
+        a.match_user_id,
+        a.match_user_name,
+        buy.pay_rate bPayRate,
+        buy.pay_rate_amount bPayRateAmount,
+        dc.company_name buyCompanyName,
+        dc.contract_no buyContractNo,
+        dc.deal_price bdealPrice,
+        dc.total_amount btotalAmount,
+        dc.dealed_amount bdealedAmount,
+        dc.billed_amount bbilledAmount,
+        dc.total_amount - dc.dealed_amount balancePayable,
+        dc.pay_full_time bPayFullTime,
+        buyt.real_warehose_date blastDeliveryDate,
+        buyc.warehouse_number bWarehouseNumber,
+
+
+        a.contract_no sellContractNo,
+        a.company_name sellCompanyName,
+        a.deal_price sdealPrice,
+        a.total_amount stotalAmount,
+        a.dealed_amount sdealedAmount,
+        a.billed_amount sbilledAmount,
+        a.total_amount - a.dealed_amount balanceReceivable,
+        sell.pay_rate sPayRate,
+        sell.pay_rate_amount sPayRateAmount,
+        sellt.real_bill_date sBillTime,
+        a.appoint_pay_full_time sPayFullTime,
+        sellt.real_warehose_date slastDeliveryDate,
+        a.warehouse_number sWarehouseNumber,
+        a.confirm_date confirmDate,
+
+        b.gross_profit marginAmount,
+        b.company_commission companyCommissionAmount,
+        round(b.company_commission / buy.total_amount,4) companyCommissionRate,
+
+        case
+        when a.contract_status = 'C' then 'C'
+        when a.contract_status = 'D' then 'D'
+        when a.dealed_amount >= a.total_amount and a.billed_amount <![CDATA[<]]> a.total_amount and
+        a.receive_breach_amount <![CDATA[<]]> a.breach_amount then 'YJ'
+        when a.breach_days > 0 and a.breach_days <![CDATA[<=]]> 15 and a.dealed_amount <![CDATA[<]]> a.total_amount then
+        'Y'
+        when a.breach_days > 15 and a.dealed_amount <![CDATA[<]]> a.total_amount then 'W'
+        when a.billed_amount >= a.total_amount and a.dealed_amount >= a.total_amount then 'D'
+        when a.billed_amount >= a.total_amount then 'V'
+        when a.confirm_receive_number >= a.total_number then 'M'
+        when a.warehouse_number >= a.total_number then 'G'
+        when a.dealed_amount >= a.total_amount then 'F'
+        when a.seal_flg = true then 'S'
+        when a.status = 'D' then 'B'
+        else 'N' end as contractStatus
+
+        from t_ctr_contract a
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_ctr_contract_apply buyt on buyc.id = buyt.ctr_contract_id
+        left join t_ctr_contract_apply sellt on a.id = sellt.ctr_contract_id
+        left join t_ctr_dcsx dc on dc.approve_id = a.approve_id
+
+        where a.status = 'D'
+        and dc.business_type = 'ZY-BB'
+        and a.contract_type = 'S'
+        and buy.contract_type = 'B'
+        and sell.contract_type = 'S'
+        <if test="approveIds != null and approveIds.size > 0">
+            and c.id in
+            <foreach collection="approveIds" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        order by a.contract_time desc
+    </select>
+
+    <select id="sumOfMarginAmountListDCSX" resultType="com.spt.bas.report.client.entity.RptSumMarginAmountReport">
+        select round(sum(a.total_number), 2) totalTotalNumber,
+               round(sum(dc.total_amount), 2) totalBtotalAmount,
+               round(sum(a.total_amount), 2) totalStotalAmount,
+               round(sum(b.gross_profit), 2) totalMarginAmount,
+               round(sum(b.company_commission)) totalCompanyCommissionAmount,
+               round(sum(b.company_commission) / sum(buy.total_amount), 4) aveCompanyCommissionRate,
+               round(sum(a.dealed_amount), 2) totalSdealedAmount,
+               round(sum(dc.dealed_amount), 2) totalBdealedAmount,
+               round(sum(a.billed_amount), 2) totalSbilledAmount,
+               round(sum(dc.dealed_amount), 2) totalBbilledAmount,
+               round(sum(dc.total_amount - dc.dealed_amount), 2) totalBalancePayable,
+               round(sum(a.total_amount - a.dealed_amount), 2) totalBalanceReceivable
+        from t_ctr_contract a
+                     left join t_pm_approve c on c.id = a.approve_id
+                     left join t_apply_match b on b.approve_id = a.approve_id
+                     left join t_apply_match_detail buy on buy.apply_match_id = b.id
+                     left join t_ctr_contract buyc on buyc.id = buy.contract_id
+                     left join t_apply_match_detail sell on sell.apply_match_id = b.id
+                     left join t_ctr_dcsx dc on dc.approve_id = a.approve_id
+        where a.status = 'D'
+        and dc.business_type = 'ZY-BB'
+        and a.contract_type = 'S'
+        and buy.contract_type = 'B'
+        and sell.contract_type = 'S'
+        <if test="approveIds != null and approveIds.size > 0">
+            and c.id in
+            <foreach collection="approveIds" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="getFinalAccountsListDCSX" resultType="com.spt.bas.report.client.entity.RptFinalAccountReport">
+        select
+        c.approve_no,
+        a.products_name productName,
+        a.contract_time,
+        a.total_number,
+
+        a.match_user_name,
+        a.match_user_id,
+
+        d.buy_commission_amount buyCommission,
+
+        dc.contract_no buyContractNo,
+        dc.company_name buyCompanyName,
+        dc.deal_price bdealPrice,
+        dc.total_amount btotalAmount,
+
+        a.contract_no sellContractNo,
+        a.company_name sellCompanyName,
+        sell.deal_price sdealPrice,
+        sell.total_amount stotalAmount,
+        d.sell_commission_amount sellCommission,
+
+        a.credit_cycle creditDays,
+        a.settlement_type,
+        sell.premium*a.total_number premiumAmount,
+        a.service_amount serviceAmount,
+        d.vat_amount as valueAddedTax,
+        d.surtax as saleSurtax,
+        d.print_amount as stampTax,
+        d.capital_cost as capitalCost,
+        d.insurance_cost as insuranceCost,
+        d.margin_amount marginAmount,
+        d.company_commission_amount,
+        round(d.company_commission_amount/buy.total_amount,4) companyCommissionRate,
+        d.marketing_retention marketingRetention,
+        d.company_commission_amount companyCommission,
+        d.net_profit netProfit,
+
+        case
+        when a.contract_status = 'C' then 'C'
+        when a.contract_status = 'D' then 'D'
+        when a.dealed_amount >= a.total_amount and a.billed_amount <![CDATA[<]]> a.total_amount and
+        a.receive_breach_amount <![CDATA[<]]> a.breach_amount then 'YJ'
+        when a.breach_days > 0 and a.breach_days <![CDATA[<=]]> 15 and a.dealed_amount <![CDATA[<]]> a.total_amount then
+        'Y'
+        when a.breach_days > 15 and a.dealed_amount <![CDATA[<]]> a.total_amount then 'W'
+        when a.billed_amount >= a.total_amount and a.dealed_amount >= a.total_amount then 'D'
+        when a.billed_amount >= a.total_amount then 'V'
+        when a.confirm_receive_number >= a.total_number then 'M'
+        when a.warehouse_number >= a.total_number then 'G'
+        when a.dealed_amount >= a.total_amount then 'F'
+        when a.seal_flg = true then 'S'
+        when a.status = 'D' then 'B'
+        else 'N' end as contractStatus
+
+        from t_ctr_contract a
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        left join t_budget_settlement d on d.sell_contract_id = a.id
+        left join t_ctr_dcsx dc on dc.approve_id = c.id
+
+        where a.status = 'D'
+        and dc.business_type = 'ZY-BB'
+        and a.contract_type = 'S'
+        and buy.contract_type = 'B'
+        and sell.contract_type = 'S'
+        and d.id is not null
+        <if test="approveIds != null and approveIds.size > 0">
+            and c.id in
+            <foreach collection="approveIds" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="sumOfFinalAccountListDCSX" resultType="com.spt.bas.report.client.entity.RptSumFinalAccountReport">
+        select
+        sum(a.total_number) totalTotalNumber,
+        sum(dc.deal_price) / count(a.id) aveBdealPrice,
+        sum(sell.deal_price) / count(a.id) aveSdealPrice,
+        sum(dc.total_amount) totalBtotalAmount,
+        sum(sell.total_amount) totalStotalAmount,
+        sum(a.credit_cycle)/count(a.id) aveCreditDays,
+        sum(sell.premium * a.total_number) totalPremiumAmount,
+        sum(a.service_amount) totalServiceAmount,
+
+        sum(d.vat_amount) as totalValueAddedTax,
+        sum(d.surtax) as totalSaleSurtax,
+        sum(d.print_amount) as totalStampTax,
+
+        sum(d.margin_amount) totalMarginAmount,
+        sum(d.company_commission_amount) totalCompanyCommissionAmount,
+        round(sum(d.company_commission_amount) / sum(buy.total_amount), 4) aveCompanyCommissionRate,
+        sum(d.marketing_retention) totalMarketingRetention,
+        sum(d.buy_commission_amount) totalBuyCommission,
+        sum(d.sell_commission_amount) totalSellCommission,
+        sum(d.company_commission_amount) totalCompanyCommission,
+        sum(d.net_profit) totalNetProfit,
+        sum(d.capital_cost) as totalCapitalCost,
+        sum(d.insurance_cost) as totalInsuranceCost
+
+        from t_ctr_contract a
+        left join t_pm_approve c on c.id = a.approve_id
+        left join t_apply_match b on b.approve_id = a.approve_id
+        left join t_apply_match_detail buy on buy.apply_match_id = b.id
+        left join t_ctr_contract buyc on buyc.id = buy.contract_id
+        left join t_apply_match_detail sell on sell.apply_match_id = b.id
+        left join t_budget_settlement d on d.sell_contract_id = a.id
+        left join t_ctr_dcsx dc on dc.approve_id = c.id
+        where a.status = 'D'
+        and dc.business_type = 'ZY-BB'
+        and a.contract_type = 'S'
+        and buy.contract_type = 'B'
+        and sell.contract_type = 'S'
+        and d.id is not null
+        <if test="approveIds != null and approveIds.size > 0">
+            and c.id in
+            <foreach collection="approveIds" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <sql id="Where_SearchVo_contract_settlement">
+
+        <!-- 1-赊销合同;2-代采合同;3-自营采购;4-自营销售;5-代采赊销 -->
+        <if test='budgetType == "1"'>
+            and (a.business_type = 'ZY-BB' and a.business_type_dcsx in ('BL','PT') and a.match_credit_flg = true)
+        </if>
+        <if test='budgetType == "2"'>
+            and (a.business_type = 'ZY-BB' and a.match_credit_flg = false)
+        </if>
+        <if test='budgetType == "3"'>
+            and a.business_type = 'ZY-CG'
+        </if>
+        <if test='budgetType == "4"'>
+            and a.business_type = 'ZY-XS'
+        </if>
+        <if test='budgetType == "5"'>
+            and (a.business_type = 'ZY-BB' and a.match_credit_flg = true and a.business_type_dcsx in ('DCSXBL','DCSX','DCSXHDFK'))
+        </if>
+        
+        <if test="ourCompanyName != null and ourCompanyName != ''">
+            and (
+            a.sell_our_company_name = #{ourCompanyName}
+            )
+        </if>
+        
+        <if test="contractNo != null and contractNo != ''">
+            and (
+            a.sell_contract_no like CONCAT('%',#{contractNo},'%')
+            or
+            a.buy_contract_no like CONCAT('%',#{contractNo},'%')
+            )
+        </if>
+
+        <if test="companyName != null and companyName != ''">
+            and (a.buy_company_name like CONCAT('%',#{companyName},'%')
+            or a.sell_company_name like CONCAT('%',#{companyName},'%')
+            )
+        </if>
+        
+        <if test="matchUserName != null and matchUserName != ''">
+            and (
+            a.sell_match_user_name like CONCAT('%',#{matchUserName},'%')
+            )
+        </if>
+        
+        <if test="matchUserId != null and matchUserId != ''">
+            and (
+            a.sell_match_user_id like CONCAT('%',#{matchUserId},'%')
+            )
+        </if>
+
+        <if test="level != null and level != '' and level.toString() == '3'.toString()">
+            and (
+                a.product_name LIKE CONCAT('%',#{productsNameOne},'%')
+                and
+                a.brand_number LIKE CONCAT('%',#{productsNameTwo},'%')
+                and
+                a.factory_name LIKE CONCAT('%',#{productsNameThree},'%')
+            )
+        </if>
+        <if test="level != null and level != '' and level.toString() == '2'.toString()">
+            and (
+                (a.product_name LIKE CONCAT('%',#{productsNameOne},'%') and a.brand_number LIKE CONCAT('%',#{productsNameTwo},'%'))
+                or
+                (a.brand_number LIKE CONCAT('%',#{productsNameOne},'%') and a.factory_name LIKE CONCAT('%',#{productsNameTwo},'%'))
+            )
+        </if>
+        <if test="level != null and level != '' and level.toString() == '1'.toString()">
+            and (
+            a.product_name LIKE CONCAT('%',#{productsNameOne},'%')
+            or
+            a.brand_number LIKE CONCAT('%',#{productsNameOne},'%')
+            or
+            a.factory_name LIKE CONCAT('%',#{productsNameOne},'%')
+            )
+        </if>
+
+        <if test="deptName != null and deptName != ''">
+            and (
+            a.dept_name LIKE CONCAT('%',#{deptName},'%')
+            )
+        </if>
+        
+        <if test="contractTimeFrom != null and contractTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') >= DATE_FORMAT(#{contractTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="contractTimeTo != null and contractTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.contract_time,'%Y-%m-%d') <= DATE_FORMAT(#{contractTimeTo},'%Y-%m-%d')]]>
+        </if>
+
+        <if test="bpayFullTimeFrom != null and bpayFullTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.appoint_pay_date,'%Y-%m-%d') >= DATE_FORMAT(#{bpayFullTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="bpayFullTimeTo != null and bpayFullTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.appoint_pay_date,'%Y-%m-%d') <= DATE_FORMAT(#{bpayFullTimeTo},'%Y-%m-%d')]]>
+        </if>
+        <if test="spayFullTimeFrom != null and spayFullTimeFrom != ''">
+            <![CDATA[AND DATE_FORMAT(a.receive_date,'%Y-%m-%d') >= DATE_FORMAT(#{spayFullTimeFrom},'%Y-%m-%d')]]>
+        </if>
+        <if test="spayFullTimeTo != null and spayFullTimeTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.receive_date,'%Y-%m-%d') <= DATE_FORMAT(#{spayFullTimeTo},'%Y-%m-%d')]]>
+        </if>
+    </sql>
+    
+    <select id="getFinalAccountsNewList" resultType="com.spt.bas.report.client.entity.RptFinalAccountReportNew">
+        select
+            CONCAT(a.product_name,'/',a.brand_number,'/',a.factory_name) productsName,
+            a.sell_contract_id,
+            a.sell_contract_no,
+            a.buy_contract_id,
+            a.buy_contract_no,
+            a.contract_time,
+            a.status settlementStatus,
+            a.deal_number,
+            a.sell_price,
+            a.buy_price,
+            if(a.print_amount is null ,0,a.print_amount) printAmount,
+            a.insurance_rate,
+            a.enterprise_id,
+            a.delivery_time,
+            a.pay_full_time,
+            a.real_pay_full_time,
+            a.receive_date,
+            a.appoint_pay_date,
+            a.confirm_receipt_date,
+            a.settlement_date,
+            a.receive_bill_date,
+            a.summary_date,
+            a.buy_company_id,
+            a.buy_company_name,
+            a.sell_company_id,
+            a.sell_company_name,
+            a.buy_our_company_name,
+            a.sell_our_company_name,
+            a.buy_match_user_id,
+            a.buy_match_user_name,
+            a.sell_match_user_id,
+            a.sell_match_user_name,
+            a.delivery_fee,
+            a.breach_day,
+            a.breach_amount,
+            a.credit_cycle,
+            a.business_type,
+            a.match_credit_flg,
+            a.buy_total_amount,
+            a.sell_total_amount,
+            a.transport_amount,
+            a.warehouse_amount,
+            if(a.vat_amount is null ,0,a.vat_amount) vatAmount,
+            if(a.financial_service_amount is null ,0,a.financial_service_amount) financialServiceAmount,
+            a.vat_spread_amount,
+            if(a.surcharge_amount is null ,0,a.surcharge_amount) surchargeAmount,
+            a.taxes_surcharges_amount,
+            if(a.after_tax_spread_amount is null ,0,a.after_tax_spread_amount) afterTaxSpreadAmount,
+            a.sell_head_user_id,
+            a.sell_head_commission_amount,
+            a.buy_head_user_id,
+            a.buy_head_commission_amount,
+            a.sell_match_amount,
+            a.buy_match_amount,
+            a.receive_flg,
+            a.confirm_flg,
+            a.bill_flg,
+            a.settlement_code,
+            a.created_date,
+            a.updated_date,
+            a.breach_rate,
+            a.settle_status,
+            a.settle_total_flg,
+            a.approve_id,
+            a.approve_no,
+            a.dept_id,
+            a.dept_name
+        from t_ctr_contract_settlement a
+        <where>
+            a.enable_flg = TRUE
+            <include refid="Where_SearchVo_contract_settlement"/>
+            order by a.contract_time desc
+        </where>
+    </select>
+    <select id="sumOfFinalAccountNewList" resultType="com.spt.bas.report.client.entity.RptSumFinalAccountReportNew">
+        select
+            sum(a.deal_number) totalDealNumber,
+            sum(a.buy_price) / count(a.id) aveBuyPrice,
+            sum(a.sell_price) / count(a.id) aveSellPrice,
+            sum(a.buy_total_amount) totalBuyTotalAmount,
+            sum(a.sell_total_amount) totalSellTotalAmount,
+            sum(a.financial_service_amount) totalFinancialServiceAmount,
+            sum(a.vat_amount) totalVatAmount,
+            sum(a.surcharge_amount) totalSurchargeAmount,
+            sum(a.print_amount) as totalPrintAmount,
+            sum(a.after_tax_spread_amount) as totalAfterTaxSpreadAmount
+        from t_ctr_contract_settlement a
+        <where>
+            a.enable_flg = TRUE
+            <include refid="Where_SearchVo_contract_settlement"/>
+            order by a.contract_time desc
+        </where>
+    </select>
+    
+</mapper>

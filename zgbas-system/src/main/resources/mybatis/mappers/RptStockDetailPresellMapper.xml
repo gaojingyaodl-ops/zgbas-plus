@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptStockDetailPresellMapper">
+	<select id="findApplyPage" resultType="com.spt.bas.report.client.entity.RptStockDetailPresellReport">
+		SELECT
+			p.id AS id,
+			p.created_date AS createdDate,
+			p.updated_date AS updatedDate,
+			p.approve_buy_number AS approveBuyNumber,
+			p.brand_number AS brandNumber,
+			p.buyed_number AS buyedNumber,
+			p.contract_id AS contractId,
+			p.ctr_product_id AS ctrProductId,
+			p.deal_price AS dealPrice,
+			p.enterprise_id AS enterpriseId,
+			p.factory_id AS factoryId,
+			p.factory_name AS factoryName,
+			p.presell_number AS presellNumber,
+			p.product_cd AS productCd,
+			p.product_name AS productName,
+			p.remark AS remark,
+			p.stock_id AS stockId,
+			p.warehouse_id AS warehouseId,
+			p.warehouse_name AS warehouseName,
+			d.wrap_specs AS wrapSpecs,
+			d.warehouse_pos As warehousePos,
+			d.warehouse_price AS warehusePrice,
+			IFNULL(c.quality_standard, 'Y') AS qualityStandard,
+			c.our_company_name AS ourCompanyName
+		FROM
+			t_stock_detail_presell p
+		LEFT JOIN t_ctr_contract c ON p.contract_id = c.id
+		LEFT JOIN t_ctr_product d ON p.ctr_product_id = d.id
+		WHERE
+			p.enterprise_id = #{enterpriseId}
+			AND c.apply_cancel_flg = false
+			AND p.buyed_number &lt; p.presell_number
+			AND p.presell_number &gt; (p.buyed_number + p.approve_buy_number)
+			AND c.contract_status != 'B'
+			AND c.contract_status != 'C'
+		<if test="productCd != null and productCd != ''">
+			AND p.product_cd = #{productCd}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND p.brand_number LIKE CONCAT('%',#{brandNumber},'%')
+		</if>
+		<if test="factoryName != null and factoryName != ''">
+			AND p.factory_name LIKE CONCAT('%',#{factoryName},'%')
+		</if>
+		<if test="warehouseName != null and warehouseName != ''">
+			AND p.warehouse_name LIKE CONCAT('%',#{warehouseName},'%')
+		</if>
+			ORDER BY
+				p.id DESC
+	</select>
+</mapper>

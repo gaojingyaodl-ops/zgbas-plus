@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCompanyReceivablesMapper">
+    <select id="findRptCompanyReceivablesPage" resultType="com.spt.bas.report.client.entity.RptCompanyReceivables">
+
+        SELECT
+			s.our_company_name AS ourCompanyName,
+			s.company_name AS companyName,
+			SUM(IFNULL(s.total_number,0)) AS tradeTonnes,
+			SUM(IFNULL(s.total_amount,0)) AS totalAmount,
+			COUNT(*) AS tradeCount,
+			SUM(IFNULL(s.total_amount,0) - IFNULL(s.dealed_amount,0)) AS receivablePrincipal,
+			SUM(IFNULL(s.breach_amount,0) - IFNULL(s.receive_breach_amount,0)) AS receivableBreachAmount
+        FROM
+        	t_ctr_contract s
+        INNER JOIN t_ctr_contract_settlement r ON s.id = r.sell_contract_id
+        INNER JOIN t_ctr_contract b ON b.id = r.buy_contract_id
+        WHERE
+			s.enterprise_id = 44
+			AND s.business_type = 'ZY-BB'
+			AND s.contract_type = 'S'
+			AND s.special_chain_flag = FALSE
+			AND s.contract_status != 'C'
+			AND b.contract_status != 'C'
+			AND s.seal_flg = TRUE
+			AND b.seal_flg = TRUE
+          	AND (IFNULL(s.total_amount,0) - IFNULL(s.dealed_amount,0) > 0 OR IFNULL(s.breach_amount,0) - IFNULL(s.receive_breach_amount,0) > 0 )
+			<if test="ourCompanyName != null and ourCompanyName != '' ">
+				AND s.our_company_name = #{ourCompanyName}
+			</if>
+			<if test="companyName != null and companyName != '' ">
+				and s.company_name LIKE CONCAT('%',#{companyName},'%')
+			</if>
+			<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0 ">
+				and s.our_company_name IN
+				<foreach collection="ourCompanyNameList" item="var" index="index" open="(" close=")" separator=",">
+					#{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+				</foreach>
+			</if>
+			<if test="productType != null and productType eq 'NHG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+				and s.match_user_id not in
+				<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+					#{hgMatchUserIdList[${index}]}
+				</foreach>
+			</if>
+			<if test="productType != null and productType eq 'HG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+				and s.match_user_id in
+				<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+					#{hgMatchUserIdList[${index}]}
+				</foreach>
+			</if>
+        GROUP BY
+			s.our_company_name,
+			s.company_name
+        ORDER BY s.our_company_name DESC
+
+    </select>
+
+	<select id="findRptCompanyReceivablesDetailPage" resultType="com.spt.bas.report.client.entity.RptCompanyReceivables">
+
+		SELECT
+		s.id AS id,
+		s.contract_no AS  contractNo,
+		s.business_type AS  businessType,
+		s.match_credit_flg AS  matchCreditFlg,
+		s.products_name as productName,
+		s.match_user_id as matchUserId,
+		s.match_user_name as matchUserName,
+		s.dept_id as deptId,
+		s.seal_date as sealDate,
+		s.our_company_name AS ourCompanyName,
+		s.company_name AS companyName,
+		IFNULL(s.total_number,0) AS tradeTonnes,
+		IFNULL(s.total_amount,0) AS totalAmount,
+		IFNULL(s.dealed_amount,0) AS dealedAmount,
+		IFNULL(s.total_amount,0) - IFNULL(s.dealed_amount,0) AS receivablePrincipal,
+		IFNULL(s.breach_amount,0) AS breachAmount,
+		IFNULL(s.receive_breach_amount,0) AS receiveBreachAmount,
+		IFNULL(s.breach_amount,0) - IFNULL(s.receive_breach_amount,0) AS receivableBreachAmount
+		FROM
+		t_ctr_contract s
+		INNER JOIN t_ctr_contract_settlement r ON s.id = r.sell_contract_id
+		INNER JOIN t_ctr_contract b ON b.id = r.buy_contract_id
+		WHERE
+		s.enterprise_id = 44
+		AND s.business_type = 'ZY-BB'
+		AND s.contract_type = 'S'
+		AND s.special_chain_flag = FALSE
+		AND s.contract_status != 'C'
+		AND b.contract_status != 'C'
+		AND s.seal_flg = TRUE
+		AND b.seal_flg = TRUE
+		AND (IFNULL(s.total_amount,0) - IFNULL(s.dealed_amount,0) > 0 OR IFNULL(s.breach_amount,0) - IFNULL(s.receive_breach_amount,0) > 0 )
+		<if test="ourCompanyName != null and ourCompanyName != '' ">
+			AND s.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="companyName != null and companyName != '' ">
+			and s.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0 ">
+			and s.our_company_name IN
+			<foreach collection="ourCompanyNameList" item="var" index="index" open="(" close=")" separator=",">
+				#{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'NHG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'HG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		ORDER BY s.id DESC
+
+	</select>
+
+	<select id="findRptCompanyReceivablesSum" resultType="com.spt.bas.report.client.entity.RptCompanyReceivables">
+
+		SELECT
+		SUM(IFNULL(s.total_number,0)) AS tradeTonnes,
+		SUM(IFNULL(s.total_amount,0)) AS totalAmount,
+		COUNT(*) AS tradeCount,
+		SUM(IFNULL(s.dealed_amount,0)) AS dealedAmount,
+		SUM(IFNULL(s.total_amount,0) - IFNULL(s.dealed_amount,0)) AS receivablePrincipal,
+		SUM(IFNULL(s.breach_amount,0)) AS breachAmount,
+		SUM(IFNULL(s.receive_breach_amount,0)) AS receiveBreachAmount,
+		SUM(IFNULL(s.breach_amount,0) - IFNULL(s.receive_breach_amount,0)) AS receivableBreachAmount
+		FROM
+		t_ctr_contract s
+		INNER JOIN t_ctr_contract_settlement r ON s.id = r.sell_contract_id
+		INNER JOIN t_ctr_contract b ON b.id = r.buy_contract_id
+		WHERE
+		s.enterprise_id = 44
+		AND s.business_type = 'ZY-BB'
+		AND s.contract_type = 'S'
+		AND s.special_chain_flag = FALSE
+		AND s.contract_status != 'C'
+		AND b.contract_status != 'C'
+		AND s.seal_flg = TRUE
+		AND b.seal_flg = TRUE
+		AND (IFNULL(s.total_amount,0) - IFNULL(s.dealed_amount,0) > 0 OR IFNULL(s.breach_amount,0) - IFNULL(s.receive_breach_amount,0) > 0 )
+		<if test="ourCompanyName != null and ourCompanyName != '' ">
+			AND s.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="companyName != null and companyName != '' ">
+			and s.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0 ">
+			and s.our_company_name IN
+			<foreach collection="ourCompanyNameList" item="var" index="index" open="(" close=")" separator=",">
+				#{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'NHG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'HG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="selectFunderByUserId" resultType="com.spt.bas.report.client.vo.RptFunderVo">
+		SELECT
+			user_id,
+			user_name,
+			company_names,
+			remark,
+			enterprise_id
+		FROM t_bs_funder
+		WHERE user_id = #{userId}
+	</select>
+
+</mapper>

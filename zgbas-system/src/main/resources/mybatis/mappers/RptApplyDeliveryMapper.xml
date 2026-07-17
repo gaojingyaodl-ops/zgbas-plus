@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptApplyDeliveryMapper">
+	<select id="findApplyDeliveryPage" resultType="com.spt.bas.report.client.entity.RptApplyDeliveryReport">
+		SELECT
+			d.id As applyDeliveryId,
+			d.product_id As productId,
+			d.contract_id As contractId,
+			d.stock_detail_id As stockDetailId,
+			d.enterprise_id	As enterpriseId,
+			d.warehouse_no As warehouseNo,
+			c.business_type As businessType,
+			d.product_cd As productCd,
+			d.product_name As productName,
+			d.brand_number As brandNumber,
+			d.factory_name As factoryName,
+			c.contract_no As contractNo,
+			c.our_company_name As ourCompanyName,
+			d.contact_name As contractName,
+			c.company_name As companyName,
+			d.contact_phone As companyPhone,
+			d.deal_number As dealNumber,
+			d.operator_name As bizUserName,
+			d.warehouse_in_no As warehouseInNo,
+			d.driver_name As driverName,
+			d.driver_phone As driverPhone,
+			d.driver_card_no As driverCardNo,
+			d.plate_number As plateNumber,
+			d.warehouse_position As warehousePosition,
+			d.warehouse_batch_no As warehouseBatchNo,
+			d.counters_number As countersNumber,
+			d.delivery_addr As deliveryAddr,
+			o.status AS outStatus,
+			o.warehouse_out_type AS warehouseOutType,
+			d.remark As remark,
+			d.apply_no As applyNo,
+			d.operation As operation,
+			d.delivery_out_apply_id As deliveryOutApplyId,
+			bc.contract_no As realBuyContractNo,
+			(SELECT cc.contract_no FROM t_ctr_contract cc WHERE id = (SELECT a.buy_contract_id FROM t_ctr_contract_rela a WHERE a.sell_contract_id = d.contract_id AND a.sell_product_id = p.ctr_product_id limit 1)) As buyContractNo
+		FROM t_apply_delivery d
+		LEFT JOIN t_ctr_contract c ON c.id = d.contract_id
+		LEFT JOIN t_apply_delivery_out o ON d.delivery_out_apply_id = o.id
+		LEFT JOIN t_apply_product_detail p ON p.apply_id = o.id
+		LEFT JOIN t_stock_detail sd ON sd.id = p.stock_detail_id
+		LEFT JOIN t_ctr_contract bc ON bc.id = sd.buy_contract_id
+		WHERE
+			d.enterprise_id = #{enterpriseId}
+		AND p.apply_type = 'O'
+		<!-- AND d.brand_number = p.brand_number -->
+		AND d.product_cd = p.product_cd
+		<!-- AND d.factory_name = p.factory_name -->
+		AND d.deal_number = p.cur_number
+		AND d.warehouse = p.warehouse_name
+		<if test="applyDeliveryId != null and applyDeliveryId != ''">
+			AND d.id = #{applyDeliveryId}
+		</if>
+		<if test="businessType != null and businessType != ''">
+			AND c.business_type = #{businessType}
+		</if>
+		<if test="productCd != null and productCd != ''">
+			AND d.product_cd = #{productCd}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND d.brand_number = #{brandNumber}
+		</if>
+		<if test="contractNo != null and contractNo != ''">
+			AND c.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="applyNo != null and applyNo != ''">
+			AND d.apply_no LIKE CONCAT('%',#{applyNo},'%')
+		</if>
+		<if test="warehouseOutType != null and warehouseOutType != ''">
+			AND o.warehouse_out_type = #{warehouseOutType}
+		</if>
+		<if test="realBuyContractNo != null and realBuyContractNo != ''">
+			AND bc.contract_no LIKE CONCAT('%',#{realBuyContractNo},'%')
+		</if>
+		<if test="buyContractNo != null and buyContractNo != ''">
+			AND (SELECT cc.contract_no FROM t_ctr_contract cc WHERE id = (SELECT a.buy_contract_id FROM t_ctr_contract_rela a WHERE a.sell_contract_id = d.contract_id AND a.sell_product_id = p.ctr_product_id limit 1)) LIKE CONCAT('%',#{buyContractNo},'%')
+		</if>
+		<choose> 
+			<when test='deliveryOutStatus != null and deliveryOutStatus == "C"'>
+				AND o.status = 'C'
+			</when>
+			<when test='deliveryOutStatus != null and deliveryOutStatus == "N"'>
+				AND o.status = 'D'
+			</when>
+		</choose>
+		GROUP BY d.id
+		ORDER BY d.id DESC
+	</select>
+</mapper>

@@ -1,0 +1,827 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptBusinessManagerWorkbenchMapper">
+
+    <select id="findLeaderBoardMatchUserGroupList" resultType="com.spt.bas.report.client.entity.RptPersonalAchievement">
+        SELECT
+        s.match_user_id,
+        SUM(
+            IFNULL(s.total_amount, 0) - IFNULL(b.total_amount, 0) -
+            IFNULL(s.warehouse_amount, 0) - IFNULL(b.warehouse_amount, 0) -
+            IFNULL(s.transport_amount, 0) - IFNULL(b.transport_amount, 0) -
+            IFNULL(s.stevedorage, 0) - IFNULL(b.stevedorage, 0) -
+            IFNULL(s.delivery_fee, 0) - IFNULL(b.delivery_fee, 0)
+        ) AS grossProfitAmount,
+        SUM(IFNULL(s.total_amount, 0)) sellTotalAmount,
+        SUM(IFNULL(s.total_number, 0)) sellTotalNumber
+        FROM t_ctr_contract_settlement r
+        LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+        LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+        WHERE s.contract_status != 'C'
+        AND s.status != 'C'
+        AND s.contract_type = 'S'
+        AND s.business_type = 'ZY-BB'
+        AND s.enterprise_id = 44
+        AND s.seal_flg = TRUE
+        AND b.seal_flg = TRUE
+        <if test="month != null and month != ''">
+            AND DATE_FORMAT(s.seal_date, '%Y-%m') = #{month}
+        </if>
+        <if test="year != null and year != ''">
+            AND DATE_FORMAT(s.seal_date, '%Y') = #{year}
+        </if>
+        <if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+            and s.match_user_id not in
+            <foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{hgMatchUserIdList[${index}]}
+            </foreach>
+        </if>
+        GROUP BY s.match_user_id
+        ORDER BY grossProfitAmount DESC
+
+    </select>
+    <select id="findPersonalAchievement" resultType="com.spt.bas.report.client.entity.RptPersonalAchievement">
+
+        SELECT
+        result.match_user_id,
+        SUM(IFNULL(result.grossProfitAmount, 0)) grossProfitAmount,
+        SUM(IFNULL(result.sellTotalAmount, 0)) sellTotalAmount,
+        SUM(IFNULL(result.sellTotalNumber, 0)) sellTotalNumber,
+        ranking
+        FROM (
+            SELECT
+            s.match_user_id,
+            SUM(
+                IFNULL(s.total_amount, 0) - IFNULL(b.total_amount, 0) -
+                IFNULL(s.warehouse_amount, 0) - IFNULL(b.warehouse_amount, 0) -
+                IFNULL(s.transport_amount, 0) - IFNULL(b.transport_amount, 0) -
+                IFNULL(s.stevedorage, 0) - IFNULL(b.stevedorage, 0) -
+                IFNULL(s.delivery_fee, 0) - IFNULL(b.delivery_fee, 0)
+            ) AS grossProfitAmount,
+            SUM(IFNULL(s.total_amount, 0)) sellTotalAmount,
+            SUM(IFNULL(s.total_number, 0)) sellTotalNumber,
+            @rownum := @rownum + 1 AS ranking
+            FROM t_ctr_contract_settlement r
+            LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+            LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+            WHERE s.contract_status != 'C'
+            AND s.status != 'C'
+            AND s.contract_type = 'S'
+            AND s.business_type = 'ZY-BB'
+            AND s.enterprise_id = 44
+            AND s.seal_flg = TRUE
+            AND b.seal_flg = TRUE
+            <if test="month != null and month != ''">
+                AND DATE_FORMAT(s.seal_date, '%Y-%m') = #{month} 
+            </if>
+            <if test="year != null and year != ''">
+                AND DATE_FORMAT(s.seal_date, '%Y') = #{year}
+            </if>
+            <if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+                and s.match_user_id not in
+                <foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{hgMatchUserIdList[${index}]}
+                </foreach>
+            </if>
+            GROUP BY s.match_user_id
+            ORDER BY grossProfitAmount DESC
+        ) result, (SELECT @rownum := 0) r
+        WHERE 1=1
+        <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+            and result.match_user_id in
+            <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{matchUserIdList[${index}]}
+            </foreach>
+        </if>
+
+    </select>
+
+    <select id="findFiveMonthGrossProfitAmount" resultType="com.spt.bas.report.client.entity.RptPersonalAchievement">
+
+        SELECT
+        date_format(s.seal_date, '%Y-%m') month,
+        SUM(
+            IFNULL(s.total_amount, 0) - IFNULL(b.total_amount, 0) -
+            IFNULL(s.warehouse_amount, 0) - IFNULL(b.warehouse_amount, 0) -
+            IFNULL(s.transport_amount, 0) - IFNULL(b.transport_amount, 0) -
+            IFNULL(s.stevedorage, 0) - IFNULL(b.stevedorage, 0) -
+            IFNULL(s.delivery_fee, 0) - IFNULL(b.delivery_fee, 0)
+        ) AS grossProfitAmount
+        
+        FROM t_ctr_contract_settlement r
+        LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+        LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+        WHERE s.contract_status != 'C'
+        AND s.status != 'C'
+        AND s.contract_type = 'S'
+        AND s.business_type = 'ZY-BB'
+        AND s.enterprise_id = 44
+        AND s.seal_flg = TRUE
+        AND b.seal_flg = TRUE
+        <if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+            and s.match_user_id not in
+            <foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{hgMatchUserIdList[${index}]}
+            </foreach>
+        </if>
+        <if test="fiveMonthList != null and fiveMonthList.size() > 0">
+            and date_format(s.seal_date, '%Y-%m') in
+            <foreach collection="fiveMonthList"  item="var" index="index" open="(" close=")" separator=",">
+                #{fiveMonthList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+            and s.match_user_id in
+            <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{matchUserIdList[${index}]}
+            </foreach>
+        </if>
+        group by date_format(s.seal_date, '%Y-%m')
+        order by s.seal_date
+
+
+    </select>
+
+    <select id="findSellContractExecution" resultType="com.spt.bas.report.client.entity.RptWorkbenchContract">
+        SELECT *
+        FROM (SELECT c.id,
+                     c.contract_no,
+                     c.contract_type,
+                     c.company_id,
+                     c.company_name,
+                     c.our_company_name,
+                     c.`status`,
+                     c.contract_status,
+                     c.appoint_pay_full_time,
+                     c.match_user_id,
+                     c.match_user_name,
+                     c.total_amount,
+                     c.total_number,
+                     c.dealed_amount,
+                     c.warehouse_number,
+                     c.billed_amount,
+                     c.dept_id,
+                     c.business_type,
+                     c.seal_flg,
+                     c.seal_date,
+                     c.breach_days,
+                     c.match_credit_flg,
+                     c.contract_time,
+                     c.business_kind,
+                     c.final_total_amount,
+                     c.confirm_receive_number,
+                     c.receipt_arrived_flg,
+                     c.apply_cancel_flg,
+                     b.total_amount buyTotalAmount,
+                     b.billed_amount buyBilledAmount,
+        bc.approve_id AS billedApproveId
+        FROM t_ctr_contract_settlement r
+            INNER JOIN
+                t_ctr_contract c
+                ON r.sell_contract_id = c.id
+            INNER JOIN
+                t_ctr_contract b
+                ON r.buy_contract_id = b.id
+            LEFT JOIN (
+                SELECT
+                    b.contract_id,
+                    b.invoice_date,
+                    b.approve_id
+                FROM
+                t_apply_invoice b
+                WHERE
+                    b.STATUS IN ( 'A', 'D' )
+                    AND b.contract_id IS NOT NULL
+                    GROUP BY
+                    b.contract_id
+                    HAVING
+                    MAX( b.invoice_date )
+            ) bc ON c.id = bc.contract_id
+        WHERE 
+              c.contract_status != 'C'
+                  AND c.STATUS != 'C'
+                  AND c.contract_type = 'S'
+                  AND c.business_type = 'ZY-BB'
+                  AND c.enterprise_id = 44
+                  AND c.seal_flg = TRUE
+                  AND (c.warehouse_number <![CDATA[ < ]]> c.total_number OR c.dealed_amount <![CDATA[ < ]]> c.total_amount OR
+                       c.billed_amount <![CDATA[ < ]]> c.total_amount)    
+                <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                    and c.match_user_id in
+                    <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                        #{matchUserIdList[${index}]}
+                    </foreach>
+                </if>
+        ORDER BY c.contract_time DESC) result  
+        WHERE 1=1
+        <if test="labelCode != null and labelCode != '' and labelCode == 'NCK'.toString()">
+            AND result.warehouse_number <![CDATA[ < ]]> result.total_number
+        </if>
+        <if test="labelCode != null and labelCode != '' and labelCode == 'NSK'.toString()">
+            AND result.dealed_amount <![CDATA[ < ]]> result.total_amount
+        </if>
+        <if test="labelCode != null and labelCode != '' and labelCode == 'NKP'.toString()">
+            AND result.billed_amount <![CDATA[ < ]]> result.total_amount
+        </if>
+    </select>
+
+    <select id="findBuyContractExecution" resultType="com.spt.bas.report.client.entity.RptWorkbenchContract">
+        SELECT *
+        FROM (SELECT c.id,
+                c.contract_no,
+                c.contract_type,
+                c.company_id,
+                c.company_name,
+                c.our_company_name,
+                c.`status`,
+                c.contract_status,
+                c.appoint_pay_full_time,
+                c.match_user_id,
+                c.match_user_name,
+                c.total_amount,
+                c.total_number,
+                c.dealed_amount,
+                c.warehouse_number,
+                c.billed_amount,
+                c.dept_id,
+                c.business_type,
+                c.seal_flg,
+                c.seal_date,
+                c.breach_days,
+                c.match_credit_flg,
+                c.contract_time,
+                c.products_name,
+                c.business_kind,
+                c.apply_cancel_flg,
+                bc.approve_id AS billedApproveId
+            FROM t_ctr_contract c
+            LEFT JOIN (
+                SELECT
+                    b.contract_id,
+                    b.in_invoice_date,
+                    b.approve_id
+                FROM
+                t_apply_invoice_received b
+                WHERE
+                    b.STATUS IN ( 'A', 'D' )
+                    AND b.contract_id IS NOT NULL
+                    GROUP BY
+                    b.contract_id
+                    HAVING
+                    MAX( b.in_invoice_date )
+                ) bc ON c.id = bc.contract_id
+            WHERE
+                c.contract_status != 'C'
+                AND c.STATUS != 'C'
+                AND c.contract_type = 'B'
+                AND c.business_type = 'ZY-BB'
+                AND c.enterprise_id = 44
+                AND c.seal_flg = TRUE
+                AND c.billed_amount <![CDATA[ < ]]> c.total_amount
+                <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                    and c.match_user_id in
+                    <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                        #{matchUserIdList[${index}]}
+                    </foreach>
+                </if>
+        ORDER BY c.contract_time DESC) result WHERE 1=1
+        <if test="labelCode != null and labelCode != '' and labelCode == 'NSP'.toString()">
+            AND result.billed_amount <![CDATA[ < ]]> result.total_amount
+        </if>
+    </select>
+    
+    <select id="findSellContractReceivable" resultType="com.spt.bas.report.client.entity.RptWorkbenchContract">
+        SELECT *
+        FROM (SELECT c.id,
+                c.contract_no,
+                c.contract_type,
+                c.company_id,
+                c.company_name,
+                c.our_company_name,
+                c.`status`,
+                c.contract_status,
+                c.appoint_pay_full_time,
+                c.match_user_id,
+                c.match_user_name,
+                c.total_amount,
+                c.total_number,
+                c.dealed_amount,
+                c.warehouse_number,
+                c.billed_amount,
+                c.dept_id,
+                c.business_type,
+                c.seal_flg,
+                c.seal_date,
+                c.breach_days,
+                c.credit_cycle,
+                c.breach_amount,
+                c.receive_breach_amount,
+                IFNULL(c.breach_amount, 0) - IFNULL(c.receive_breach_amount, 0) noReceiveBreachAmount,
+                IFNULL(c.total_amount, 0) - IFNULL(c.dealed_amount, 0) + IFNULL(c.breach_amount, 0) - IFNULL(c.receive_breach_amount, 0) noReceiveTotalAmount,
+                c.match_credit_flg,
+                c.contract_time,
+                c.performance_status,
+                c.business_kind
+            FROM t_ctr_contract c
+            WHERE
+                c.contract_status != 'C'
+                AND c.STATUS != 'C'
+                AND c.contract_type = 'S'
+                AND c.business_type = 'ZY-BB'
+                AND c.enterprise_id = 44
+                AND c.seal_flg = TRUE
+                AND (
+                    performance_status IN ( 'B', 'D', 'S', 'P' ) 
+                    OR ( 
+                        performance_status = 'N'
+                        AND DATEDIFF( appoint_pay_full_time, CURDATE()) <![CDATA[ < ]]> 7 
+                        AND DATEDIFF( appoint_pay_full_time, CURDATE()) >= 0 
+                    )
+                )
+                <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                    and c.match_user_id in
+                    <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                        #{matchUserIdList[${index}]}
+                    </foreach>
+                </if>
+        ORDER BY c.contract_time DESC) result WHERE 1=1
+        <if test="labelCode != null and labelCode != ''">
+            AND result.performance_status = #{labelCode}
+        </if>
+    </select>
+    
+    <select id="findSellContractReceivableSum" resultType="com.spt.bas.report.client.entity.RptWorkbenchContract">
+        SELECT sum(result.total_amount) AS totalAmount,
+               sum(result.total_number) AS totalNumber,
+               sum(result.dealed_amount) AS dealedAmount,
+               sum(result.breach_amount) AS breachAmount,
+               sum(result.noReceiveBreachAmount) AS noReceiveBreachAmount,
+               sum(result.noReceiveTotalAmount) AS noReceiveTotalAmount
+        FROM (SELECT c.id,
+                c.contract_no,
+                c.contract_type,
+                c.company_id,
+                c.company_name,
+                c.our_company_name,
+                c.`status`,
+                c.contract_status,
+                c.appoint_pay_full_time,
+                c.match_user_id,
+                c.match_user_name,
+                c.total_amount,
+                c.total_number,
+                c.dealed_amount,
+                c.warehouse_number,
+                c.billed_amount,
+                c.dept_id,
+                c.business_type,
+                c.seal_flg,
+                c.seal_date,
+                c.breach_days,
+                c.credit_cycle,
+                c.breach_amount,
+                c.receive_breach_amount,
+                IFNULL(c.breach_amount, 0) - IFNULL(c.receive_breach_amount, 0) noReceiveBreachAmount,
+                IFNULL(c.total_amount, 0) - IFNULL(c.dealed_amount, 0) + IFNULL(c.breach_amount, 0) - IFNULL(c.receive_breach_amount, 0) noReceiveTotalAmount,
+                c.match_credit_flg,
+                c.contract_time,
+                c.performance_status,
+                c.business_kind
+            FROM t_ctr_contract c
+            WHERE
+                c.contract_status != 'C'
+                AND c.STATUS != 'C'
+                AND c.contract_type = 'S'
+                AND c.business_type = 'ZY-BB'
+                AND c.enterprise_id = 44
+                AND c.seal_flg = TRUE
+                AND (
+                    performance_status IN ( 'B', 'D', 'S', 'P' ) 
+                    OR ( 
+                        performance_status = 'N'
+                        AND DATEDIFF( appoint_pay_full_time, CURDATE()) <![CDATA[ < ]]> 7 
+                        AND DATEDIFF( appoint_pay_full_time, CURDATE()) >= 0 
+                    )
+                )
+                <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                    and c.match_user_id in
+                    <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                        #{matchUserIdList[${index}]}
+                    </foreach>
+                </if>
+        ORDER BY c.contract_time DESC) result WHERE 1=1
+        <if test="labelCode != null and labelCode != ''">
+            AND result.performance_status = #{labelCode}
+        </if>
+    </select>
+    
+    <select id="findBudgetApproveStatist" resultType="com.spt.bas.report.client.entity.RptWorkbenchApproveStatist">
+
+        SELECT
+            count(1) budgetCount,
+            process_name labelName
+        FROM
+            t_pm_approve
+        WHERE 1=1
+            <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                and create_user_id in
+                <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{matchUserIdList[${index}]}
+                </foreach>
+            </if>
+            <if test="beginDate != null and beginDate != ''">
+                <![CDATA[ AND DATE_FORMAT(created_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginDate}, '%Y-%m-%d') ]]>
+            </if>
+          AND `status` = 'A'
+          AND process_name IN ('代采赊销预算','代采预算','赊销预算')
+        GROUP BY process_name
+        ORDER BY process_name ASC
+        
+    </select>
+    
+    <select id="findSealApproveStatist" resultType="com.spt.bas.report.client.entity.RptWorkbenchApproveStatist">
+
+        SELECT
+            count(1) count
+        FROM
+            t_pm_approve p
+                INNER JOIN t_ctr_contract c ON p.contract_id = c.id
+        WHERE
+            p.process_name = '业务盖章申请'
+            AND p.`status` = 'A'
+            AND c.business_type = 'ZY-BB'
+            <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                and c.match_user_id in
+                <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{matchUserIdList[${index}]}
+                </foreach>
+            </if>
+            <if test="beginDate != null and beginDate != ''">
+                <![CDATA[ AND DATE_FORMAT(p.created_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginDate}, '%Y-%m-%d') ]]>
+            </if>
+            AND c.contract_type = #{contractType}
+            AND c.match_credit_flg = #{matchCreditFlg}
+          <if test="budgetType == 'DCSX'.toString()">
+              AND c.business_type_dcsx IN ( 'DCSX', 'DCSXBL', 'DCSXHDFK' )
+          </if>
+          <if test="budgetType == 'SX'.toString()">
+              AND c.business_type_dcsx NOT IN ( 'DCSX', 'DCSXBL', 'DCSXHDFK' )
+          </if>
+        
+    </select>
+
+    <select id="findBuyPayApproveStatist" resultType="com.spt.bas.report.client.entity.RptWorkbenchApproveStatist">
+
+        SELECT
+            count(1) count
+        FROM
+            t_pm_approve p
+        INNER JOIN t_ctr_contract c ON p.contract_id = c.id
+        WHERE
+            p.process_name = '业务付款申请'
+            AND p.`status` = 'A'
+            AND c.business_type = 'ZY-BB'
+            <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                and c.match_user_id in
+                <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{matchUserIdList[${index}]}
+                </foreach>
+            </if>
+            <if test="beginDate != null and beginDate != ''">
+                <![CDATA[ AND DATE_FORMAT(p.created_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginDate}, '%Y-%m-%d') ]]>
+            </if>
+            AND c.contract_type = #{contractType}
+            AND c.match_credit_flg = #{matchCreditFlg}
+            <if test="budgetType == 'DCSX'.toString()">
+                AND c.business_type_dcsx IN ( 'DCSX', 'DCSXBL', 'DCSXHDFK' )
+            </if>
+            <if test="budgetType == 'SX'.toString()">
+                AND c.business_type_dcsx NOT IN ( 'DCSX', 'DCSXBL', 'DCSXHDFK' )
+            </if>
+
+    </select>
+
+    <select id="findContractApprove" resultType="com.spt.bas.report.client.entity.RptWorkbenchApprove">
+        SELECT * FROM (
+            SELECT
+                p.id approveId,
+                p.process_name budgetName,
+                p.`subject` subject,
+                p.STATUS budgetStatus,
+                p.curr_approver_user_id currApproveUserId,
+                p.last_approve_user_name budgetApproveUserName,
+                p.last_approve_date budgetApproveLastTime,
+                p.created_date
+            FROM
+                t_pm_approve p
+            WHERE 1=1
+                <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                    and p.create_user_id in
+                    <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                        #{matchUserIdList[${index}]}
+                    </foreach>
+                </if>
+                <if test="beginDate != null and beginDate != ''">
+                    <![CDATA[ AND DATE_FORMAT(p.created_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginDate}, '%Y-%m-%d') ]]>
+                </if>
+                AND `status` = 'A'
+                AND process_name IN ('代采赊销预算','代采预算','赊销预算')
+            
+            UNION 
+            
+            SELECT
+                p.id approveId,
+                p.process_name budgetName,
+                p.`subject` subject,
+                p.STATUS budgetStatus,
+                p.curr_approver_user_id currApproveUserId,
+                p.last_approve_user_name budgetApproveUserName,
+                p.last_approve_date budgetApproveLastTime,
+                p.created_date
+            FROM
+                t_pm_approve p
+            INNER JOIN
+                t_ctr_contract b ON p.id = b.approve_id
+            WHERE 
+                    b.contract_type='B'
+                AND b.special_chain_flag = FALSE
+                AND b.business_type = 'ZY-BB'
+                AND (b.seal_flg = FALSE OR b.total_amount > b.dealed_amount)
+                <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                    and p.create_user_id in
+                    <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                        #{matchUserIdList[${index}]}
+                    </foreach>
+                </if>
+                <if test="beginDate != null and beginDate != ''">
+                    <![CDATA[ AND DATE_FORMAT(p.created_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginDate}, '%Y-%m-%d') ]]>
+                </if>
+                AND p.`status` = 'D'
+                AND p.process_name IN ('代采赊销预算', '代采预算', '赊销预算')
+            
+            UNION
+            
+            SELECT
+                p.id approveId,
+                p.process_name budgetName,
+                p.`subject` subject,
+                p.STATUS budgetStatus,
+                p.curr_approver_user_id currApproveUserId,
+                p.last_approve_user_name budgetApproveUserName,
+                p.last_approve_date budgetApproveLastTime,
+                p.created_date
+            FROM
+                t_pm_approve p
+            INNER JOIN
+                t_ctr_contract s ON p.id = s.approve_id
+            WHERE
+                    s.contract_type='S'
+                AND s.business_type = 'ZY-BB'
+                AND s.seal_flg = FALSE
+                <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                    and p.create_user_id in
+                    <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                        #{matchUserIdList[${index}]}
+                    </foreach>
+                </if>
+                <if test="beginDate != null and beginDate != ''">
+                    <![CDATA[ AND DATE_FORMAT(p.created_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginDate}, '%Y-%m-%d') ]]>
+                </if>
+                AND p.`status` = 'D'
+                AND p.process_name IN ('代采赊销预算', '代采预算', '赊销预算')
+        ) result
+        order by created_date desc 
+
+
+    </select>
+
+
+    <select id="findContractByApproveIds" resultType="com.spt.bas.report.client.entity.RptWorkbenchContract">
+        SELECT
+            c.id,
+            c.contract_no,
+            c.contract_type,
+            c.special_chain_flag,
+            c.approve_id,
+            c.virtual_type,
+            c.virtual_contract_id,
+            c.virtual_contract_no
+        FROM
+            t_ctr_contract c
+            WHERE c.approve_id in
+            <foreach collection="approveIdList" item="var" index="index" open="(" close=")" separator=",">
+                #{approveIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+    </select>
+
+    <select id="findBuySealApprove" resultType="com.spt.bas.report.client.entity.RptWorkbenchApprove">
+        select        
+            p.id approveId,
+            p.contract_id contractId,
+            p.process_name budgetName,
+            p.`subject` subject,
+            p.STATUS buySealStatus,
+            p.curr_approver_user_id currApproveUserId,
+            p.last_approve_user_name buySealApproveUserName,
+            p.last_approve_date buySealApproveLastTime,
+            p.created_date
+        FROM
+            t_pm_approve p
+        WHERE
+            p.process_name = '业务盖章申请'
+            AND p.contract_id in
+            <foreach collection="contractIdList" item="var" index="index" open="(" close=")" separator=",">
+                #{contractIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+    </select>
+    <select id="findSellSealApprove" resultType="com.spt.bas.report.client.entity.RptWorkbenchApprove">
+        select
+            p.id approveId,
+            p.contract_id contractId,
+            p.process_name budgetName,
+            p.`subject` subject,
+            p.STATUS sellSealStatus,
+            p.curr_approver_user_id currApproveUserId,
+            p.last_approve_user_name sellSealApproveUserName,
+            p.last_approve_date sellSealApproveLastTime,
+            p.created_date
+        FROM
+            t_pm_approve p
+        WHERE
+            p.process_name = '业务盖章申请'
+            AND p.contract_id in
+            <foreach collection="contractIdList" item="var" index="index" open="(" close=")" separator=",">
+                #{contractIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+    </select>
+    <select id="findBuyPayApprove" resultType="com.spt.bas.report.client.entity.RptWorkbenchApprove">
+        select
+            p.id approveId,
+            p.contract_id contractId,
+            p.process_name budgetName,
+            p.`subject` subject,
+            p.STATUS buyPayStatus,
+            p.curr_approver_user_id currApproveUserId,
+            p.last_approve_user_name buyPayApproveUserName,
+            p.last_approve_date buyPayApproveLastTime,
+            p.created_date
+        FROM
+            t_pm_approve p
+        WHERE
+            p.process_name = '业务付款申请'
+            AND p.status in('D','A')
+            AND p.contract_id in
+            <foreach collection="contractIdList" item="var" index="index" open="(" close=")" separator=",">
+                #{contractIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+    </select>
+
+    <select id="findNewCompanyList" resultType="com.spt.bas.report.client.entity.RptWorkbenchCompany">
+        SELECT
+            c.id,
+            c.company_name,
+            c.company_source,
+            c.company_type,
+            c.contact_name,
+            c.contact_phone,
+            c.company_category,
+            c.industry,
+            c.created_date
+        FROM
+            t_bs_company c
+        WHERE
+            c.company_type = #{companyType}
+            <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                and c.owner_of_account_id in
+                <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{matchUserIdList[${index}]}
+                </foreach>
+            </if>
+            <if test="month != null and month != ''">
+                AND DATE_FORMAT(c.created_date, '%Y-%m') = #{month}
+            </if>
+            <if test="year != null and year != ''">
+                AND DATE_FORMAT(c.created_date, '%Y') = #{year}
+            </if>
+        ORDER BY c.created_date DESC
+    </select> 
+    
+    <select id="findCompanyVisitList" resultType="com.spt.bas.report.client.entity.RptWorkbenchCompany">
+        SELECT 
+            v.company_id id,
+            v.company_name,
+            v.recommended_amount
+        FROM t_bs_company_visit v
+        JOIN (
+            SELECT company_id, MAX(created_date) AS max_created_date
+            FROM t_bs_company_visit
+            WHERE `status` = 'D'
+            GROUP BY company_id
+        ) latest ON v.company_id = latest.company_id AND v.created_date = latest.max_created_date
+        WHERE 
+            v.`status` = 'D'
+            AND v.company_id in
+            <foreach collection="companyIdList" item="var" index="index" open="(" close=")" separator=",">
+                #{companyIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        
+    </select>
+
+    <select id="findPiccCompanyList" resultType="com.spt.bas.report.client.entity.RptWorkbenchCompany">
+        SELECT
+            c.id,
+            c.company_name,
+            c.company_type,
+            c.created_date,
+            p.updated_date piccEntryDate,
+            p.apply_picc_date,
+            p.apply_credit_amount piccApplyCreditAmount,
+            c.picc_apply_status
+        FROM
+            t_bs_company c
+        INNER JOIN t_picc_supplement_info p ON p.company_id = c.id
+        WHERE
+            c.picc_apply_credit_amount_flg = TRUE
+            AND c.picc_apply_status = '1'
+            <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                and c.match_user_id in
+                <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{matchUserIdList[${index}]}
+                </foreach>
+            </if>
+
+    </select>
+    
+    <select id="findHyCompanyList" resultType="com.spt.bas.report.client.entity.RptWorkbenchCompany">
+        SELECT
+            bc.id,
+            bc.company_name,
+            bc.contact_name,
+            bc.contact_phone,
+            bc.company_source
+        FROM t_bs_company bc
+        INNER JOIN t_ctr_contract con ON bc.id = con.company_id
+        WHERE
+            bc.company_type = #{companyType}
+            <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                and bc.match_user_id in
+                <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{matchUserIdList[${index}]}
+                </foreach>
+            </if>
+            AND con.contract_status != 'C'
+            AND con.status != 'C'
+            AND con.business_type = 'ZY-BB'
+            AND con.enterprise_id = 44
+            AND con.contract_time >= CURDATE() - INTERVAL 2 MONTH
+        GROUP BY bc.id
+
+    </select>
+
+    <select id="findCompanyCreditList" resultType="com.spt.bas.report.client.entity.RptWorkbenchCompanyCredit">
+        SELECT
+            company_id,
+            credit_type,
+            credit_amount,
+            used_credit_amount,
+            temporary_amount,
+            risk_amount
+        FROM
+            t_bs_company_credit
+        WHERE
+            enable_flg = true
+            and company_id IN
+            <foreach collection="companyIdList" item="var" index="index" open="(" close=")" separator=",">
+                #{companyIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+
+    </select>
+    
+    <select id="findContractInfoList" resultType="com.spt.bas.report.client.entity.RptWorkbenchCompany">
+        SELECT
+            con.company_id id,
+            MAX(con.contract_time) AS lastContractTime,
+            MIN(con.contract_time) AS firstContractTime,
+            SUM(con.total_amount) AS totalContractAmount
+        FROM
+            t_ctr_contract con
+        WHERE
+            con.contract_status != 'C'
+            AND con.STATUS != 'C'
+            AND con.business_type = 'ZY-BB'
+            AND con.enterprise_id = 44
+            <if test="matchUserIdList != null and matchUserIdList.size() != 0">
+                and con.match_user_id in
+                <foreach collection="matchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{matchUserIdList[${index}]}
+                </foreach>
+            </if>
+            AND con.company_id IN
+            <foreach collection="companyIdList" item="var" index="index" open="(" close=")" separator=",">
+                #{companyIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        GROUP BY
+        con.company_id
+    </select>
+    
+</mapper>

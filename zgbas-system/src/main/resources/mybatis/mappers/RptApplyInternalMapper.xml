@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptApplyInternalMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="brandNumber != null and brandNumber != ''">
+			AND s.product_cd = #{brandNumber}
+		</if>
+		<if test="matchUserName != null and matchUserName != ''">
+			AND d1.shipper_match_user_name = #{matchUserName}
+		</if>
+		<if test="beginTime != null">
+		<![CDATA[ AND DATE_FORMAT(t.created_date, '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="endTime != null">
+		<![CDATA[ AND DATE_FORMAT(t.created_date, '%Y-%m-%d') <= DATE_FORMAT(#{endTime}, '%Y-%m-%d') ]]> 
+		</if>
+	</sql>
+	<!-- 内部采购统计 -->
+	<select id="findPageInternalBuy" resultType="com.spt.bas.report.client.entity.RptApplyInternalReport">
+	  	SELECT
+			t.id AS id,
+			s.product_name AS productName,
+			s.brand_number AS brandNumber,
+			s.factory_name AS factoryName,
+			s.warehouse_name AS warehouseName,
+			t.total_number AS buyNumber,
+			d1.shipper_match_user_id AS shipperUserId,
+			d1.shipper_match_user_name AS shipperUserName,
+			d2.shipper_match_user_id AS matchUserId,
+			d2.shipper_match_user_name AS matchUserName,
+			t.created_date AS createdDate
+		FROM
+			t_apply_internal_buy t
+		LEFT JOIN t_apply_internal_buy_detail d1 ON d1.apply_internal_buy_id = t.id
+		AND d1.detail_type = 'O'
+		LEFT JOIN t_apply_internal_buy_detail d2 ON d2.apply_internal_buy_id = t.id
+		AND d2.detail_type = 'N'
+		LEFT JOIN t_stock_detail s ON s.id = d1.stock_detail_id
+		WHERE
+			t. STATUS = 'D'
+			AND t.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY t.id DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY t.id ASC
+            </when>
+           	<otherwise>
+           		ORDER BY t.id DESC
+           	</otherwise>
+       	</choose>
+	</select>
+</mapper>

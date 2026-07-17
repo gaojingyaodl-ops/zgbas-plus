@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptBusinessAccountMapper">
+		<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="businessType != null and businessType != ''">
+			AND c1.business_type = #{businessType}
+		</if>
+		<if test="business != null and business != ''">
+			AND c1.business_type LIKE CONCAT('%',#{business},'%')
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c1.dept_id = #{deptId}
+		</if>
+		<if test="buyUserName != null and buyUserName != ''">
+			AND r.buy_user_name LIKE CONCAT('%',#{buyUserName},'%')
+		</if>
+		<if test="sellUserName != null and sellUserName != ''">
+			AND r.sell_user_name LIKE CONCAT('%',#{sellUserName},'%')
+		</if>
+		<if test="sellContractStartTime != null">
+			<![CDATA[AND c1.contract_time >= DATE_FORMAT(#{sellContractStartTime}, '%Y-%m-%d')]]>
+		</if>
+		<if test="sellContractEndTime != null">
+			<![CDATA[AND c1.contract_time < DATE_ADD(DATE_FORMAT(#{sellContractEndTime}, '%Y-%m-%d'),INTERVAL 1 DAY)]]>
+		</if>
+		<if test="receiveStartTime != null">
+		<![CDATA[AND a1.real_pay_date >= DATE_FORMAT(#{receiveStartTime}, '%Y-%m-%d')]]> 
+		</if>
+		<if test="receiveEndTime != null">
+		<![CDATA[AND (a1.real_pay_date < DATE_ADD(DATE_FORMAT(#{receiveEndTime}, '%Y-%m-%d'),INTERVAL 1 DAY))]]> 
+		</if>
+	</sql>
+	<select id="findPage" resultType="com.spt.bas.report.client.entity.RptBusinessAccountReport">
+		SELECT
+			c1.business_type As businessType,
+			c1.contract_no As sellContractNo,
+			c1.our_company_name As ourCompanyName,
+			ROUND(r.buy_price * r.deal_number,2) As buyAmount,
+			ROUND(r.sell_price * r.deal_number,2) As sellAmount,
+			ROUND((r.sell_price-r.buy_price)*r.deal_number,2) As profit,
+		 	(c1.dealed_amount-c1.refund_amount) as dealedAmount,
+		  	ROUND((c1.total_amount-c1.dealed_amount-c1.refund_amount)*r.deal_number/c1.total_number,2) As notReceive,
+			c1.interest_amount as receiveInterest,
+			r.buy_user_name As buyUserName,
+			r.sell_user_name As sellUserName,
+			IF(((c1.dealed_amount-c1.refund_amount)=c1.total_amount),(SELECT MAX(re.receive_date) FROM t_apply_receive re WHERE re.contract_id = c1.id AND re.status = 'D'),null) As lastReceiveTime,
+			IF(((c2.dealed_amount-c2.refund_amount)=c2.total_amount),(SELECT MAX(ap.pay_date) FROM t_apply_pay ap WHERE ap.contract_id = c2.id AND ap.status = 'D'),null) As lastPayTime,
+			IFNULL(c1.pay_full_time,(SELECT DATE_ADD(s.delivery_time,INTERVAL s.credit_days DAY) FROM t_apply_sell s WHERE s.contract_id = c1.id)) As sellPayFullTime,
+			c2.pay_full_time As buyPayFullTime,
+			c1.total_number As sellTotalNumber,
+			c2.total_number As buyTotalNumber,
+			r.deal_number As dealNumber,
+			r.buy_price As buyDealPrice,
+			r.sell_price As sellDealPrice,
+			IFNULL(c2.transport_amount,0) As buyTransportAmount,
+			IFNULL(c2.warehouse_amount,0) As buyWarehouseAmount,
+			IFNULL(c1.transport_amount,0) As sellTransportAmount,
+			IFNULL(c1.warehouse_amount,0) As sellWarehouseAmount,
+			IFNULL(c1.interest_amount,0) As sellInterestAmount,
+			c2.interest_amount As buyInterestAmount,
+			DATEDIFF((IFNULL((SELECT MAX(re.receive_date) FROM t_apply_receive re WHERE re.contract_id = c1.id AND re.status ='D'),NOW())),c1.pay_full_time) As orverdurDay,
+			IFNULL((SELECT SUM(pf.cc_fee_cg+pf.cc_fee_qt+pf.cc_fee_ruku+pf.cc_fee_xs+pf.wl_fee_dfcc+pf.wl_fee_ys+pf.wl_fee_zc+pf.wl_fee_qt) FROM t_ctr_product_fee pf,t_apply_delivery d WHERE pf.apply_delivery_id=d.id AND d.operation = '0' AND pf.contract_id = c1.id),0) As realTranAndWarehouseAmount,
+			IFNULL(DATEDIFF(IFNULL(c1.pay_full_time,(SELECT DATE_ADD(s.delivery_time,INTERVAL s.credit_days DAY) FROM t_apply_sell s WHERE s.contract_id = c1.id)),c2.pay_full_time),0) As creditDays,
+			(SELECT MAX(r.receive_date) FROM t_apply_receive r WHERE r.contract_id = c1.id AND r.`status` = 'D') As maxReceiveDate,
+			(SELECT MAX(p.pay_date) FROM t_apply_pay p WHERE p.contract_id = c2.id AND p.`status` = 'D') As maxPayDate,
+			IFNULL((SELECT SUM((DATEDIFF(maxReceiveDate,ar.receive_date))*ar.receive_amount) FROM t_apply_receive ar WHERE ar.contract_id = c1.id AND ar.`status` = 'D'),0) As sellInterest,
+			IFNULL((SELECT SUM((DATEDIFF(maxPayDate,ap.pay_date))*ap.pay_amount) FROM t_apply_pay ap WHERE ap.contract_id = c2.id AND ap.`status` = 'D'),0) As buyInterest,
+			IF(IFNULL(ROUND((SELECT SUM(DATEDIFF(tr.receive_date,(IFNULL(c1.pay_full_time,(SELECT DATE_ADD(s.delivery_time,INTERVAL s.credit_days DAY) FROM t_apply_sell s WHERE s.contract_id = c1.id))))*(r.deal_number/c1.total_number)*tr.receive_amount*0.001) FROM t_apply_receive tr WHERE tr.contract_id = c1.id AND tr.status = 'D'),2),0)&lt;0,0,IFNULL(ROUND((SELECT SUM(DATEDIFF(tr.receive_date,(IFNULL(c1.pay_full_time,(SELECT DATE_ADD(s.delivery_time,INTERVAL s.credit_days DAY) FROM t_apply_sell s WHERE s.contract_id = c1.id))))*(r.deal_number/c1.total_number)*tr.receive_amount*0.001) FROM t_apply_receive tr WHERE tr.contract_id = c1.id AND tr.status = 'D'),2),0)) AS interestAmount
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON r.sell_contract_id = c1.id
+		LEFT JOIN t_ctr_contract c2 ON r.buy_contract_id = c2.id
+		LEFT JOIN t_ctr_contract_apply a1 ON a1.ctr_contract_id = c1.id
+		LEFT JOIN t_ctr_contract_apply a2 ON a2.ctr_contract_id = c2.id
+		WHERE
+			c1.contract_status != 'C'
+		AND
+			c1.business_type != ''
+		AND c1.enterprise_id = #{enterpriseId}
+		AND c1.contract_type = 'S'
+		<include refid="Where_SearchVo" />
+		ORDER BY c1.id DESC
+	</select>
+	
+	
+	<select id="findPageSum" resultType="com.spt.bas.report.client.entity.RptBusinessAccountReport">
+		SELECT
+			SUM(ROUND(r.sell_price * r.deal_number,2)) As sellAmount,
+			SUM(ROUND((r.sell_price-r.buy_price)*r.deal_number,2)) As profit,
+			SUM(ROUND(((r.sell_price-r.buy_price)*r.deal_number)-(IF((r.sell_price-r.buy_price)*r.deal_number*0.12884956 &lt; 0,(r.deal_number*r.sell_price*0.0003),((r.sell_price-r.buy_price)*r.deal_number)*0.12884956+(r.deal_number*r.sell_price*0.0003)))-((r.buy_price*r.deal_number)*(DATEDIFF(IFNULL((SELECT MAX(r.receive_date) FROM t_apply_receive r WHERE r.contract_id = c1.id),NOW()),IFNULL((SELECT MAX(p.pay_date) FROM t_apply_pay p WHERE p.contract_id = c2.id),NOW())))*0.0002)-(IFNULL(c2.transport_amount,0)/1.09+IFNULL(c2.warehouse_amount,0)/1.06)-(IFNULL(c1.transport_amount,0)/1.09+IFNULL(IFNULL((SELECT SUM(f.fee_amount) FROM t_ctr_contract_fee f where f.contract_id = c1.id),0)+((p.warehouse_number-r.deal_number)*p.warehouse_price*(DATEDIFF(NOW(),(SELECT sc.created_date FROM t_stock_contract sc WHERE sc.id = r.stock_contract_id)))),0)/1.06),2)) As margin,
+			SUM(ROUND((((r.sell_price-r.buy_price)*r.deal_number)-(IF((r.sell_price-r.buy_price)*r.deal_number*0.12884956 &lt; 0,(r.deal_number*r.sell_price*0.0003),((r.sell_price-r.buy_price)*r.deal_number)*0.12884956+(r.deal_number*r.sell_price*0.0003)))-((r.buy_price*r.deal_number)*(DATEDIFF(IFNULL((SELECT MAX(r.receive_date) FROM t_apply_receive r WHERE r.contract_id = c1.id),NOW()),IFNULL((SELECT MAX(p.pay_date) FROM t_apply_pay p WHERE p.contract_id = c2.id),NOW())))*0.0002)-(IFNULL(c2.transport_amount,0)/1.09+IFNULL(c2.warehouse_amount,0)/1.06)-(IFNULL(c1.transport_amount,0)/1.09+IFNULL(IFNULL((SELECT SUM(f.fee_amount) FROM t_ctr_contract_fee f where f.contract_id = c1.id),0)+((p.warehouse_number-r.deal_number)*p.warehouse_price*(DATEDIFF(NOW(),(SELECT sc.created_date FROM t_stock_contract sc WHERE sc.id = r.stock_contract_id)))),0)/1.06))/(r.deal_number*r.buy_price)*365/(DATEDIFF(c1.pay_full_time,c2.pay_full_time)),2)) As earnings,
+			SUM(ROUND((((r.sell_price-r.buy_price)*r.deal_number)-(IF((r.sell_price-r.buy_price)*r.deal_number*0.12884956 &lt; 0,(r.deal_number*r.sell_price*0.0003),((r.sell_price-r.buy_price)*r.deal_number)*0.12884956+(r.deal_number*r.sell_price*0.0003)))-((r.buy_price*r.deal_number)*(DATEDIFF(IFNULL((SELECT MAX(r.receive_date) FROM t_apply_receive r WHERE r.contract_id = c1.id),NOW()),IFNULL((SELECT MAX(p.pay_date) FROM t_apply_pay p WHERE p.contract_id = c2.id),NOW())))*0.0002)-(IFNULL(c2.transport_amount,0)/1.09+IFNULL(c2.warehouse_amount,0)/1.06)-(IFNULL(c1.transport_amount,0)/1.09+IFNULL(IFNULL((SELECT SUM(f.fee_amount) FROM t_ctr_contract_fee f where f.contract_id = c1.id),0)+((p.warehouse_number-r.deal_number)*p.warehouse_price*(DATEDIFF(NOW(),(SELECT sc.created_date FROM t_stock_contract sc WHERE sc.id = r.stock_contract_id)))),0)/1.06))/(r.deal_number*r.buy_price)*365/(DATEDIFF(IFNULL((SELECT MAX(r.receive_date) FROM t_apply_receive r WHERE r.contract_id = c1.id),NOW()),IFNULL((SELECT MAX(p.pay_date) FROM t_apply_pay p WHERE p.contract_id = c2.id),NOW()))),2)) As realEarnings,
+			SUM(ROUND((c1.total_amount-c1.dealed_amount)*r.deal_number/c1.total_number,2)) As notReceive
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON r.sell_contract_id = c1.id
+		LEFT JOIN t_ctr_contract c2 ON r.buy_contract_id = c2.id
+		LEFT JOIN t_ctr_product p ON p.id = r.sell_product_id
+		WHERE
+			c1.contract_status != 'C'
+		AND
+			c1.business_type != ''
+		AND c1.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+	</select>
+</mapper>
