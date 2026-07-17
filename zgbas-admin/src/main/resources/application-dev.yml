@@ -36,17 +36,20 @@ spt:
   bas:
     server:
       url: http://localhost:8080
+    # Phase 5 Wave 0 (Plan 05-01 Rule 1 fix): moved `report:` block UNDER `bas:` so Spring
+    # flattens to spt.bas.report.url (matching ReportConstant.SERVER_URL_KEY). The Phase 4
+    # 04-05 author placed it as a sibling of `bas:` which produced spt.report.url — a latent
+    # bug never surfaced because D-P4-02 lazy-degradation meant nothing called
+    # reportServerConfig.getUrl() at runtime. Phase 5 Wave 0 reportFeignSelfLoopbackWiring_probe
+    # now exercises this resolution path, forcing the fix.
+    report:
+      url: http://localhost:8080
   # Phase 4 Wave 3 (Plan 04-05 Rule 3): basWx purchase contracts (IWxUserDetailClient /
   # ISaveTempClient) referenced by 16 ported basServer service impls. basWx itself is
   # v2-deferred (PROJECT.md #14); proxies self-loop to localhost:8080 where no @RestController
   # handles them → runtime calls 404 (D-P4-02 lazy-degradation). Startup is unaffected
   # (PurchaseWxClientConfig bean is component-scanned; URL resolved lazily on first call).
   bas.purchaseWx:
-    url: http://localhost:8080
-  # Phase 4 Wave 3 (Plan 04-05 Rule 3): report contracts (IRptCompanyClient + others) referenced
-  # by 9 ported basServer service impls. Report migration is Phase 5 (REPORT-01/02); same
-  # lazy-degradation semantics as basWx above (runtime 404 until Phase 5 ports ReportServer).
-  report:
     url: http://localhost:8080
 auth:
   url: http://47.104.15.98:9011

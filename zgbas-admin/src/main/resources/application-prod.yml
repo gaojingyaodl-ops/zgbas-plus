@@ -28,12 +28,13 @@ spt:
   bas:
     server:
       url: ${SPT_BAS_SERVER_URL}
+    # Phase 5 Wave 0 (Plan 05-01 Rule 1 fix): moved `report:` under `bas:` so Spring flattens
+    # to spt.bas.report.url (matching ReportConstant.SERVER_URL_KEY). Phase 4 04-05 latent bug.
+    report:
+      url: ${SPT_BAS_REPORT_URL}
   # Phase 4 Wave 3 (Plan 04-05): basWx purchase contracts prod URL (force-externalized).
   bas.purchaseWx:
     url: ${SPT_BAS_PURCHASE_WX_URL}
-  # Phase 4 Wave 3 (Plan 04-05): report contracts prod URL (force-externalized).
-  report:
-    url: ${SPT_BAS_REPORT_URL}
 
 auth:
   url: ${AUTH_URL}

@@ -234,4 +234,40 @@ class ZgbasApplicationTest {
         //   - the IBsCompanyOurClient @FeignClient metadata (name/path/url/configuration) is valid.
         assertThat(context.getBean(IBsCompanyOurClient.class)).isNotNull();
     }
+
+    // ---- Phase 5 Wave 0 (D-P5-03): report Feign self-loopback fail-fast probe ----
+    // Runs in Wave 0 (NOT @Disabled). Verifies the report-side wiring that Wave 5 (api controllers)
+    // + Waves 1-4 (53 Mappers + XML + services) will depend on. Mirrors the Phase 4
+    // feignSelfLoopbackWiring_probe verbatim, with three report-specific assertions.
+    @Test
+    void reportFeignSelfLoopbackWiring_probe() {
+        // (1) ReportFeignPathConfig registered as a bean — proves the @Configuration is picked
+        // up by the com.spt ComponentScan and its WebMvcConfigurer.configurePathMatch engages,
+        // adding the /spt-bas-report prefix to all 54 (future Wave 5) api controllers in
+        // com.spt.bas.report.server.api. Without this, the 14 BFF path collisions would
+        // throw AmbiguousMappingException once Wave 5 ports the api controllers.
+        assertThat(context.getBean(
+            com.spt.bas.client.config.ReportFeignPathConfig.class)).isNotNull();
+
+        // (2) IRptFundReceivableStatisticsClient Feign proxy resolves — proves:
+        //   - @EnableFeignClients (Phase 4 04-05) includes com.spt.bas.report.client.remote;
+        //   - the inlined ReportClientConfig (Wave 0 D-P5-02) registered the
+        //     "reportServerConfig" LocalServerConfig bean;
+        //   - the SpEL "#{reportServerConfig.url}" in ReportConstant.SERVER_URL resolved;
+        //   - the IRptFundReceivableStatisticsClient @FeignClient metadata is valid.
+        // If the inline copy missed ReportClientConfig, or if the SpEL broke, this throws
+        // NoSuchBeanDefinitionException / SpelEvaluationException — fail-fast.
+        assertThat(context.getBean(
+            com.spt.bas.report.client.remote.IRptFundReceivableStatisticsClient.class)).isNotNull();
+
+        // (3) reportServerConfig URL resolves to the localhost:8080 self-loopback — proves
+        // the application-dev.yml key spt.bas.report.url: http://localhost:8080 (Phase 4 04-05)
+        // was read by ReportClientConfig.setUrlKey("spt.bas.report.url") and propagated to
+        // LocalServerConfig.getUrl(). When Phase 5 Wave 5 ports the api controllers + Waves 1-4
+        // port the Mappers/services, the 9 basServer service impls + BFF controllers that
+        // @Autowired IRpt*Client (Phase 4 D-P4-02 lazy-degradation) will self-loop correctly.
+        com.spt.tools.core.bean.LocalServerConfig reportServerConfig = context.getBean(
+            "reportServerConfig", com.spt.tools.core.bean.LocalServerConfig.class);
+        assertThat(reportServerConfig.getUrl()).contains("localhost:8080");
+    }
 }
