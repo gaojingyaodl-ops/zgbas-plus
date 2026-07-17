@@ -107,7 +107,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 // top-level ComponentScan so they only engage as per-client configurations inside Feign's child
 // context (as in Phase 2). The path-prefix discrepancy between the source context-path
 // (/spt-bas-server) and the monolith root (/) is resolved by BasFeignPathConfig's
-// basServerPathStripper RequestInterceptor (D-P4-01a).
+// WebMvcConfigurer.addPathPrefix("/spt-bas-server", ...) applied to the api packages
+// (com.spt.bas.server.api / com.spt.pm.api) — the Wave 5 rewrite of D-P4-01a, which replaced
+// the earlier path-stripper RequestInterceptor that caused AmbiguousMappingException once the
+// BFF controllers landed.
 @EnableFeignClients(basePackages = {
     "com.spt.sign.client.remote",        // EXT-03 cfca — Phase 2 D-P2-12 narrowing preserved
     "com.spt.bas.client.remote",         // Phase 4 D-P4-01 — bas 契约自回环

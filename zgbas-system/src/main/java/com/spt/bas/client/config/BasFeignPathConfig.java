@@ -48,7 +48,7 @@ public class BasFeignPathConfig implements WebMvcConfigurer {
      * The literal prefix added to api controller URL mappings. Matches source
      * {@code basServer}'s {@code server.servlet.context-path=/spt-bas-server}.
      */
-    public static final String API_PATH_PREFIX = "/spt-bas-server";
+    private static final String API_PATH_PREFIX = "/spt-bas-server";
 
     @Override
     public void configurePathMatch(PathMatchConfigurer configurer) {

@@ -34,17 +34,18 @@ import static org.assertj.core.api.Assertions.assertThat;
  * — matching D-P3-13 acceptance ("200 或 302"). Not-logged-in /index is expected to redirect
  * (302) to /login via Shiro {@code user} filter — correct behavior.
  *
- * <p>Phase 4 (Wave 0, D-P4-01 方案 A + D-P4-01a + D-P4-06 WR-02): adds five new test methods.
- * Four are {@link Disabled} placeholders (Wave 3/4 endpoint + BFF bean sampling — activated
- * once the ported controllers land). The fifth — {@link #feignSelfLoopbackWiring_probe()} —
- * runs in Wave 0 as a fail-fast gate for the D-P4-01 self-loopback wiring and the D-P4-01a
- * path-prefix stripper. It verifies three things: (1) the {@code basServerPathStripper}
- * {@link RequestInterceptor} bean registers; (2) the {@link IBsCompanyOurClient} Feign proxy
- * resolves (proves the widened {@code @EnableFeignClients} basePackages + the
- * {@code basServerConfig} bean + SpEL {@code "#{basServerConfig.url}"} all work together);
- * (3) the interceptor strips the literal {@code "spt-bas-server/"} prefix from a constructed
- * {@link RequestTemplate} (proves RESEARCH A3 — Feign path rewrite via
- * {@link RequestTemplate#uri(String)} is viable, no Wave 4 surprise).
+ * <p>Phase 4 (Wave 0, D-P4-01 方案 A + D-P4-01a + D-P4-06 WR-02): adds six test methods.
+ * Five verify ported-controller reachability (Wave 3/4 bas contract endpoints + BFF bean
+ * sampling) and are now active — the {@code @Disabled} placeholders were lifted once Wave 3/4
+ * ported the controllers. The sixth — {@link #feignSelfLoopbackWiring_probe()} — runs as a
+ * fail-fast gate for the D-P4-01 self-loopback wiring. It verifies two things: (1) the
+ * {@code BasFeignPathConfig} {@code WebMvcConfigurer} bean registers (the Wave 5 path-prefix
+ * rewrite of D-P4-01a — {@code addPathPrefix("/spt-bas-server", ...)} on the api packages,
+ * which replaced the earlier path-stripper {@code RequestInterceptor} that caused
+ * {@code AmbiguousMappingException} once the BFF controllers landed); (2) the
+ * {@link IBsCompanyOurClient} Feign proxy resolves (proves the widened
+ * {@code @EnableFeignClients} basePackages + the {@code basServerConfig} bean + SpEL
+ * {@code "#{basServerConfig.url}"} all work together).
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("dev")

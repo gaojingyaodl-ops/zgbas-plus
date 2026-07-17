@@ -98,3 +98,30 @@ trade:
     secret: ${TRADE_APP_SECRET}
   login:
     url: ${TRADE_LOGIN_URL}
+# Phase 4 Wave 3 (Plan 04-05 Rule 3): remaining placeholder keys referenced by ported
+# basServer service impls (照搬 source basServer application.properties /
+# application-prod.properties). Non-secret invariant values (boolean feature flags + the
+# fixed share.key label — identical across all source envs, like res.md5.secret.key above)
+# are committed as literals; env-specific URLs and the third-party Baidu API key are
+# force-externalized (D-P2-13 prod externalization, fail-fast — no committed plaintext,
+# no defaults for secrets).
+baidu:
+  map:
+    ak: ${BAIDU_MAP_AK}
+basTrade:
+  server:
+    approveCallBackUrl: ${BASTRADE_APPROVE_CALLBACK_URL}
+cms:
+  server:
+    url: ${CMS_SERVER_URL}
+credit:
+  contract:
+    switch: true
+picc:
+  contract:
+    switch: false
+share:
+  key: shareUrl
+zip:
+  file:
+    directory: ${ZIP_FILE_DIRECTORY}
