@@ -760,9 +760,19 @@ IPmProcessClient / IApproveWaitDealClient  → 已在 zgbas-system 作 stub
 | A6 | ZgbasApplicationTest 用 TestRestTemplate 即满足 WR-02（无需引入 MockMvc）| Validation Architecture | 若需更精细的 controller-level 断言 → 引入 MockMvc + `@AutoConfigureMockMvc` |
 | A7 | 252 个 BFF 引用 I*Client 的 @Autowired 能在方案 A 下解析（Feign proxy 满足）| D-P4-01 | 若解析失败 → 改方案 B 或 C |
 
-## Open Questions
+## Open Questions (RESOLVED 2026-07-17)
 
-1. **D-P4-01 修正方案最终选择（A/B/C）**
+> **全部 5 条已由 04-CONTEXT.md §decisions 解决。** 逐条 RESOLVED 标注（plan-checker Dimension 11 要求）：
+>
+> - **Q1 (D-P4-01 方案选择) → RESOLVED via D-P4-01**：方案 A Feign 自回环，2026-07-17 用户确认（见 04-CONTEXT.md §decisions D-P4-01）。
+> - **Q2 (PM 域 13 簇归属) → RESOLVED via D-P4-02**：默认 stub 降级（Claude discretion，对齐 D-P3-10）；若验收发现 BFF 真依赖 PM 外部服务则改外部 HTTP 接入。
+> - **Q3 (238 内联误记) → RESOLVED**：已修正 04-CONTEXT.md `canonical_refs`/`code_context`（Phase 2/3 仅内联 4，剩余 234 是 Wave 1 工作，见 §Pitfall 6）。
+> - **Q4 (path 前缀) → RESOLVED via D-P4-01a**：Feign path 覆盖（BasFeignPathConfig.RequestInterceptor 剥离 `spt-bas-server/` 前缀），不设单体 context-path（保 Phase 3 Shiro `/login`/`/index` 根路径）。
+> - **Q5 (Wave 1 拆分) → RESOLVED**：不拆，单 sub-wave（契约独立无相互依赖，见 §Wave Composition Wave 1）。
+
+### Historical (original questions, retained for traceability)
+
+1. **D-P4-01 修正方案最终选择（A/B/C）** — RESOLVED (方案 A，见上)
    - What we know: 源 api 不 implements 契约；签名不兼容；路径前缀不一致
    - What's unclear: 用户是否能接受方案 A 的"同进程 HTTP 跳"（D-P4-01 原文要求无网络跳）
    - Recommendation: **强烈推荐方案 A**——与"行为等价优先 + 照搬"核心价值最契合；用户在 Wave 0 必须明确确认
