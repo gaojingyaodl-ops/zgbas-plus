@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptInvoiceBillMapper">
+	<select id="findRptInvoiceBillPage" resultType="com.spt.bas.report.client.entity.RptInvoiceBill">
+		SELECT * from (
+
+		SELECT
+		ai.id id,
+		ai.company_name companyName,
+		ai.our_company_name ourCompanyName,
+		ai.contract_no contractNo,
+		con.contract_time contractTime,
+		con.contract_type contractType,
+		con.business_type businessType,
+		con.buy_content_file_id buyContentFileId,
+		con.sell_content_file_id sellContentFileId,
+		con.file_id fileId,
+		ai.product_name productName,
+		ai.product_cd productCd,
+		ai.brand_number brandNumber,
+		ai.deal_number dealNumber,
+		ai.deal_price dealPrice,
+		ai.total_amount totalAmount,
+		pa.created_date applyDate,
+		ai.invoice_date invoiceDate,
+		ai.deal_amount invoiceAmount,
+		ai.remark remark,
+		ai.invoice_no invoiceNo,
+		pa.approve_no approveNo,
+		pa.`status` approveStatus,
+		pa.curr_approver_user_id currApproveUserId,
+		dcsx.contract_no dcsxContractNo,
+		if(dcsx.invoice_bill_amount >= dcsx.total_amount,'已开票','未开票') dcsxInvoiceStatus,
+		ai.bank_name bankName,
+		ai.bank_account bankAccount,
+		ai.tax_no taxNo,
+		ai.address address,
+		ai.company_phone companyPhone,
+		dcsx.file_id dcsxContractFileId
+		FROM
+		t_apply_invoice ai
+		INNER JOIN t_pm_approve pa ON ai.approve_id = pa.id
+		LEFT JOIN t_ctr_contract con ON ai.contract_id = con.id
+		LEFT JOIN t_ctr_dcsx dcsx ON con.approve_id = dcsx.approve_id
+		WHERE
+		(ai.contract_no LIKE 'SPTS%'
+		OR ai.contract_no LIKE 'KCS%'
+		OR ai.contract_no LIKE 'XYS%')
+		and con.business_type = 'ZY-BB'
+		and pa.status in ('A','D')
+		<if test="contractNo != null and contractNo != '' ">and ai.contract_no LIKE CONCAT('%',#{contractNo},'%')
+			and ai.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="companyName != null and companyName != '' ">
+			and ai.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != '' ">
+			and ai.our_company_name LIKE CONCAT(#{ourCompanyName},'%')
+		</if>
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0 ">
+			and ai.our_company_name IN
+			<foreach collection="ourCompanyNameList" item="var" index="index" open="(" close=")" separator=",">
+				#{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="approveStatus != null and approveStatus != '' ">
+			and pa.status = #{approveStatus}
+		</if>
+		<if test="contractTimeBegin != null and contractTimeBegin != '' ">
+			<![CDATA[ AND DATE_FORMAT(con.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeBegin}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="contractTimeEnd != null and contractTimeEnd != ''">
+			<![CDATA[AND DATE_FORMAT(con.contract_time, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="dcsxInvoiceStatus != null and dcsxInvoiceStatus eq 'Y'.toString()">
+			and dcsx.invoice_bill_amount <![CDATA[ >= ]]>  dcsx.total_amount
+		</if>
+		<if test="dcsxInvoiceStatus != null and dcsxInvoiceStatus eq 'N'.toString()">
+			and dcsx.invoice_bill_amount <![CDATA[ < ]]>  dcsx.total_amount
+		</if>
+		<if test="invoiceBillIdList != null and invoiceBillIdList.size > 0">
+			and ai.id in
+			<foreach collection="invoiceBillIdList" item="long" index="index" open="(" close=")" separator=",">
+				#{invoiceBillIdList[${index}],jdbcType=BIGINT}
+			</foreach>
+		</if>
+		<if test="currApproveUserId != null and currApproveUserId != '' ">
+			and pa.curr_approver_user_id LIKE CONCAT('%',#{currApproveUserId},'%')
+		</if>
+
+		UNION
+
+		SELECT
+		ai.id id,
+		ai.company_name companyName,
+		ai.our_company_name ourCompanyName,
+		ai.contract_no contractNo,
+		con.contract_time contractTime,
+		con.contract_type contractType,
+		con.business_type businessType,
+		con.buy_content_file_id buyContentFileId,
+		con.sell_content_file_id sellContentFileId,
+		con.file_id fileId,
+		p.product_name productName,
+		p.product_cd productCd,
+		p.brand_number brandNumber,
+		p.deal_number dealNumber,
+		dcsx.deal_price dealPrice,
+		ai.total_amount totalAmount,
+		pa.created_date applyDate,
+		ai.invoice_date invoiceDate,
+		ai.deal_amount invoiceAmount,
+		ai.remark remark,
+		ai.invoice_no invoiceNo,
+		pa.approve_no approveNo,
+		pa.`status` approveStatus,
+		pa.curr_approver_user_id currApproveUserId,
+		dcsx.contract_no dcsxContractNo,
+		if(dcsx.invoice_bill_amount >= dcsx.total_amount,'已开票','未开票') dcsxInvoiceStatus,
+		ai.bank_name bankName,
+		ai.bank_account bankAccount,
+		ai.tax_no taxNo,
+		ai.address address,
+		ai.company_phone companyPhone,
+		dcsx.file_id dcsxContractFileId
+		FROM
+		t_apply_invoice ai
+		INNER JOIN t_pm_approve pa ON ai.approve_id = pa.id
+		LEFT JOIN t_ctr_dcsx dcsx ON ai.contract_id = dcsx.id
+		LEFT JOIN t_ctr_contract con ON con.approve_id = dcsx.approve_id
+		LEFT JOIN t_ctr_product p ON p.ctr_contract_id = con.id
+		WHERE
+		(ai.contract_no LIKE 'SPTX%'
+		OR ai.contract_no LIKE 'KCX%'
+		OR ai.contract_no LIKE 'XYX%')
+		and con.business_type = 'ZY-BB'
+		AND con.contract_type = 'S'
+		and pa.status in ('A','D')
+
+		<if test="contractNo != null and contractNo != '' ">
+			and ai.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="companyName != null and companyName != '' ">
+			and ai.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != '' ">
+			and ai.our_company_name LIKE CONCAT(#{ourCompanyName},'%')
+		</if>
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0 ">
+			and ai.our_company_name IN
+			<foreach collection="ourCompanyNameList" item="var" index="index" open="(" close=")" separator=",">
+				#{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="approveStatus != null and approveStatus != '' ">
+			and pa.status = #{approveStatus}
+		</if>
+		<if test="contractTimeBegin != null and contractTimeBegin != '' ">
+			<![CDATA[ AND DATE_FORMAT(con.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeBegin}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="contractTimeEnd != null and contractTimeEnd != ''">
+			<![CDATA[AND DATE_FORMAT(con.contract_time, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="dcsxInvoiceStatus != null and dcsxInvoiceStatus eq 'Y'.toString()">
+			and dcsx.invoice_bill_amount <![CDATA[ >= ]]>  dcsx.total_amount
+		</if>
+		<if test="dcsxInvoiceStatus != null and dcsxInvoiceStatus eq 'N'.toString()">
+			and dcsx.invoice_bill_amount <![CDATA[ < ]]>  dcsx.total_amount
+		</if>
+		<if test="invoiceBillIdList != null and invoiceBillIdList.size > 0">
+			and ai.id in
+			<foreach collection="invoiceBillIdList" item="long" index="index" open="(" close=")" separator=",">
+				#{invoiceBillIdList[${index}],jdbcType=BIGINT}
+			</foreach>
+		</if>
+		<if test="currApproveUserId != null and currApproveUserId != '' ">
+			and pa.curr_approver_user_id LIKE CONCAT('%',#{currApproveUserId},'%')
+		</if>
+		) tem
+
+
+		order by tem.id desc
+	</select>
+
+	<select id="selectFunderByUserId" resultType="com.spt.bas.report.client.vo.RptFunderVo">
+		SELECT
+			user_id,
+			user_name,
+			company_names,
+			remark,
+			enterprise_id
+		FROM t_bs_funder
+		WHERE user_id = #{userId}
+	</select>
+</mapper>

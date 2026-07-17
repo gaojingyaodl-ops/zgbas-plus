@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptEvaluateTotalMapper">
+
+    <!-- for findPageCtrContract 考核列表   -->
+    <resultMap id="EvaluateTotalResultMap" type="com.spt.bas.report.client.vo.RptEvaluateTotalVo">
+        <result property="evaluateMonth" column="evaluateMonth"/>
+        <result property="deptName" column="deptName"/>
+        <result property="totalUsers" column="totalUsers"/>
+        <result property="evaluateNums" column="evaluateNums"/>
+        <result property="approveNums" column="approveNums"/>
+        <result property="confirmNums" column="confirmNums"/>
+        <result property="avgScore" column="avgScore"/>
+        <result property="appealNums" column="appealNums"/>
+<!--        <association property="products" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="products"/>-->
+    </resultMap>
+
+    <!--查询条件 -->
+    <sql id="Where_SearchVo">
+        <if test="evaluateMonth != null and evaluateMonth != ''">
+            and e.evaluate_month = #{evaluateMonth}
+        </if>
+    </sql>
+    <!-- 考核列表 -->
+    <select id="findPageEvaluateTotal" resultMap="EvaluateTotalResultMap">
+        SELECT
+        e.evaluate_month as evaluateMonth,
+        e.dept_name as deptName,
+        count(1) as totalUsers,
+        count(IF(`status`='1' or `status`='2' or `status`='3',1,NULL)) as evaluateNums,
+        count(IF(`status`='2' or `status`='3',1,NULL)) as approveNums,
+        count(IF(`status`='3',1,NULL)) as confirmNums,
+        count(IF(`appeal_flag`='1',1,NULL)) as appealNums,
+        AVG(IF(`status`='1' or `status`='2' or `status`='3',score,NULL)) as avgScore
+
+        FROM
+        t_evaluate_user e
+        WHERE 1=1
+        
+        <include refid="Where_SearchVo" />
+        
+        GROUP BY
+        e.dept_id,
+        e.evaluate_month
+        order by e.evaluate_month desc 
+
+
+    </select>
+
+
+</mapper>

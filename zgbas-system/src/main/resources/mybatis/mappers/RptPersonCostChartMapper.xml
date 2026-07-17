@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptPersonCostChartMapper">
+
+	<select id="getPersonCostChartData" resultType="com.spt.bas.report.client.entity.RptPersonCostChart">
+		SELECT
+			SUM(IFNULL(c.wages, 0)) wages,
+			SUM(IFNULL(c.commission, 0)) commission,
+			SUM(IFNULL(c.social_security, 0) + IFNULL(c.provident_fund, 0)) socialSecurity,
+			SUM(IFNULL(c.evection_cost, 0)) evectionCost,
+			SUM(IFNULL(c.evection_cost, 0) + IFNULL(c.other_cost, 0)) otherCost,
+			count(1) personCount
+		FROM
+			t_rpt_base_cost c
+		WHERE
+			c.base_date = #{searchMonth}
+		<if test="branchCdList != null and branchCdList.size > 0">
+			and c.branch_cd in
+			<foreach collection="branchCdList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+
+	</select>
+
+
+
+</mapper>

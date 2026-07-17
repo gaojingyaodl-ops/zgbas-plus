@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptUserRoiMapper">
+    <select id="findPage" resultType="com.spt.bas.report.client.vo.RptUserRoiResultVo">
+        select
+        cost.match_user_name,
+        cost.match_user_id,
+        c
+        from t_rpt_base_cost cost
+                 left join t_ctr_contract contract
+                           on cost.match_user_id = contract.match_user_id
+        <where>
+            <if test="baseDate != null and baseDate != ''">
+                date_format(contract_time, '%Y-%m') = #{baseDate}
+            </if>
+            <if test="branchCd != null and branchCd != ''">
+                and cost.branch_cd = #{branchCd}
+            </if>
+            <if test="matchUserName != null and matchUserName != ''">
+                and cost.match_user_name like concat('%', #{matchUserName}, '%')
+            </if>
+            group by
+        </where>
+    </select>
+</mapper>

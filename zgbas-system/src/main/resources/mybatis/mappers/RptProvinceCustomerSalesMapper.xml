@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptProvinceCustomerSalesMapper">
+
+    <select id="getProvinceCustomerSales" resultType="com.spt.bas.report.client.entity.RptProvinceCustomerSales">
+        SELECT
+            b.province_code,
+            c.name as 'provinceName',
+            sum(a.total_amount) 'totalAmount'
+        FROM
+        t_ctr_contract a
+        LEFT JOIN t_bs_company b ON b.id = a.company_id
+        LEFT JOIN t_bs_area c on c.code =b.province_code
+        <where>
+            a.business_type = 'ZY-BB'
+            AND a.contract_status != 'C'
+            AND a.contract_type = 'S'
+            <if test ="monthBegin!=null and monthBegin !=''">
+                AND DATE_FORMAT(a.contract_time, '%Y-%m')&gt;=#{monthBegin}
+            </if>
+            <if test="monthEnd!=null and monthEnd != ''">
+                and DATE_FORMAT(a.contract_time, '%Y-%m')&lt;=#{monthEnd}
+            </if>
+            <if test ="matchCreditFlg !=null">
+                and a.match_credit_flg =#{matchCreditFlg}
+            </if>
+            <if test="deptId!=null and deptId !=''">
+                and a.dept_id = #{deptId}
+            </if>
+        </where>
+        GROUP BY b.province_code,c.name
+        order by totalAmount desc
+
+    </select>
+</mapper>

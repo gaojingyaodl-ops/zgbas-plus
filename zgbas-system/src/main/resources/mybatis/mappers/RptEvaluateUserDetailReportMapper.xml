@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptEvaluateUserDetailReportMapper">
+    <select id="selectEvaluateUserDetail" resultType="com.spt.bas.report.client.vo.RptEvaluateUserDetailRemoteVo">
+        select item.evaluate_group            evaluateGroup,
+               item.evaluate_metrics          evaluateMetrics,
+               item.weight                    weight,
+               item.metrics_content           metricsContent,
+               item.evaluate_dept             evaluateDept,
+               item.disp_order_no             dispOrderNo,
+               detail.score_user_id           scoreUserId,
+               detail.score_user_name         scoreUserName,
+               detail.id                      evaluateDetailId,
+               detail.score                   detailScore,
+               detail.status                  evaluateUserDetailStatus,
+               date_format(now(), '%Y-%m-%d') evaluateDate,
+               u.user_name                    userName,
+               u.user_id                      userId,
+               u.dept_name                    deptName,
+               u.dept_id                      deptId,
+               u.evaluate_month               evaluateMonth,
+               u.id                           evaluateUserId,
+               u.status                       evaluateUserStatus,
+               u.evaluate_remark              evaluateRemark
+        from t_evaluate_user_detail detail
+                     join t_evaluate_item item on detail.evaluate_item_id = item.id
+                     join t_evaluate_user u on detail.evaluate_user_id = u.id
+        <where>
+            <if test="evaluateUserId != null">
+                detail.evaluate_user_id = #{evaluateUserId}
+            </if>
+           <if test="yearAndMonth != null and yearAndMonth != ''">
+               and u.evaluate_month = #{yearAndMonth}
+           </if>
+            <if test="evaluateDept != null and evaluateDept != ''">
+                and item.evaluate_dept = #{evaluateDept}
+                <if test="evaluateDept == 'HR' and currentUserId != null">
+                    <!-- 如果查询的是HR评分项，当前登录人必须等于评分人  -->
+                    and (
+                        find_in_set(#{currentUserId}, replace(detail.score_user_id, '|', ','))
+                    <if test="branchCd != null and branchCd != ''">
+                        or u.branch_cd = #{branchCd}
+                    </if>
+                    )
+                </if>
+            </if>
+            <if test="evaluateName != null and evaluateName != ''">
+                and u.user_name like concat('%',#{evaluateName},'%')
+            </if>
+        </where>
+        order by item.disp_order_no
+    </select>
+
+    <update id="updateDetailScoreVo">
+        update t_evaluate_user_detail
+        <set>
+            score=#{detailScore}
+        </set>
+        where id = #{evaluateDetailId}
+    </update>
+
+    <select id="findEvaluateUserIdBySourceId" resultType="com.spt.bas.report.client.vo.RptEvaluateUserVo">
+        select u.*
+        from t_evaluate_user_detail d
+                 join t_evaluate_user u on d.evaluate_user_id = u.id
+        <where>
+            <if test="currentUserId != null">
+                (
+                    find_in_set(#{currentUserId},replace(d.score_user_id,'|',',')) or u.user_id = #{currentUserId}
+                    <if test="branchCd != null and branchCd != ''">
+                        or u.branch_cd = #{branchCd}
+                    </if>
+                )
+            </if>
+            <if test="evaluateMonth != null and evaluateMonth != ''">
+                and u.evaluate_month = #{evaluateMonth}
+            </if>
+            <if test="userName != null and userName != ''">
+                and u.user_name like concat('%',#{userName},'%')
+            </if>
+            <if test="evaluateStatus != null and evaluateStatus != ''">
+                and u.status = #{evaluateStatus}
+            </if>
+        </where>
+        group by u.id,u.dept_id,u.assessment_user_id
+        order by u.dept_id,u.assessment_user_id
+    </select>
+
+    <select id="findDetailByEvaluateUserIds" resultType="com.spt.bas.client.entity.EvaluateUserDetail">
+        select *
+        from t_evaluate_user_detail d
+                 join t_evaluate_item t on d.evaluate_item_id = t.id
+        <where>
+            <if test="param2 != null and param2 != ''">
+                t.evaluate_dept = #{param2}
+            </if>
+            <if test="param1 != null and param1.size() != 0">
+                and d.evaluate_user_id in
+                <foreach collection="param1" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="getDetailAndItemByEvaluateUserId" resultType="com.spt.bas.report.client.vo.RptDetailAndItemRemoteVo">
+        select d.evaluate_user_id evaluateUserId,
+               d.evaluate_item_id evaluateItemId,
+               d.id               evaluateDetailId,
+               d.score_user_id    scoreUserId,
+               d.score_user_name  scoreUserName,
+               d.score            detailScore,
+               d.status           detailStatus,
+               t.evaluate_dept    evaluateDept
+        from t_evaluate_user_detail d
+                 join t_evaluate_item t on d.evaluate_item_id = t.id
+        <where>
+            <if test="list != null and list.size() != 0">
+                d.evaluate_user_id in
+                <foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+</mapper>

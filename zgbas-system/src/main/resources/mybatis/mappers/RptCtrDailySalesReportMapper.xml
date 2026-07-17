@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrDailySalesReportMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="sellMatchName != null and sellMatchName != ''">
+			AND c2.match_user_name = #{sellMatchName}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c2.dept_id = #{deptId}
+		</if>
+	</sql>
+	<sql id="Where_SearchVo2">
+		<if test="matchName != null and matchName != ''">
+			AND c.match_user_name = #{matchName}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c.dept_id = #{deptId}
+		</if>
+	</sql>
+	<sql id="Where_SearchVo3">
+		<if test="sellMatchName != null and sellMatchName != ''">
+			AND c1.match_user_name = #{sellMatchName}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c1.dept_id = #{deptId}
+		</if>
+	</sql>
+	<sql id="Where_SearchVo4">
+		<if test="matchName != null and matchName != ''">
+			AND c1.match_user_name = #{matchName}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c1.dept_id = #{deptId}
+		</if>
+		<if test="contractAttr != null and contractAttr != ''">
+			AND c1.contract_attr = #{contractAttr}
+		</if>
+	</sql>
+	<!-- 日销售明细表 -->
+	<select id="findDailySales" resultType="com.spt.bas.report.client.entity.RptCtrDailySalesReport">
+	  	SELECT
+			c2.contract_time As contractTime,
+			c2.contract_attr As contractAttr,
+			c2.business_no As sellBusinessNo,
+			r.product_name As productName,
+			p2.deal_number As sellNumber,
+			p2.deal_price As sellPrice,
+			(p2.deal_number * p2.deal_price) As totalAmount,
+			c1.business_no As buyBusinessNo,
+			(p2.deal_price - p1.deal_price) As spreadSell,
+			(p2.deal_price - p1.deal_price) * p2.deal_number As spreadTotal,
+			c2.match_user_id As sellMatchId,
+			c2.match_user_name As sellMatchName,
+			c1.match_user_name As buyMatchName,
+			c1.match_user_id As buyMatchId,
+			c2.enterprise_id As enterpriseId,
+			c2.dept_id As deptId
+		FROM
+			t_ctr_contract_rela r
+			LEFT JOIN t_ctr_contract c1 ON c1.id=r.buy_contract_id
+			LEFT JOIN t_ctr_contract c2 ON c2.id=r.sell_contract_id
+			LEFT JOIN t_ctr_product p1 ON p1.id=r.buy_product_id
+			LEFT JOIN t_ctr_product p2 ON p2.id=r.sell_product_id
+		WHERE
+		<choose>
+			<when test="searchTime == null">
+				DATE_FORMAT(c2.contract_time,'%Y-%m-%d') = CURDATE()
+			</when>
+			<otherwise>
+				DATE_FORMAT(c2.contract_time,'%Y-%m-%d') = DATE_FORMAT(#{searchTime}, '%Y-%m-%d')
+			</otherwise>
+		</choose>
+		<include refid="Where_SearchVo" />
+		<if test="contractAttr != null and contractAttr != ''">
+			AND c2.contract_attr = #{contractAttr}
+		</if>
+			AND c2.enterprise_id = #{enterpriseId}
+			AND c2.contract_status !='C'
+			AND c1.contract_status !='C'
+			ORDER BY c2.id DESC
+	</select>
+	<!-- 日销售明细表合计 -->
+	<select id="findDailySalesTotal" resultType="com.spt.bas.report.client.entity.RptCtrDailySalesReport">
+	  	SELECT
+			SUM(p2.deal_number) As sellNumber,
+			SUM(p2.deal_number * p2.deal_price) As totalAmount,
+			SUM((p2.deal_price - p1.deal_price) * p2.deal_number) As spreadTotal
+		FROM
+			t_ctr_contract_rela r
+			LEFT JOIN t_ctr_contract c1 ON c1.id=r.buy_contract_id
+			LEFT JOIN t_ctr_contract c2 ON c2.id=r.sell_contract_id
+			LEFT JOIN t_ctr_product p1 ON p1.id=r.buy_product_id
+			LEFT JOIN t_ctr_product p2 ON p2.id=r.sell_product_id
+		WHERE
+		<choose>
+			<when test="searchTime == null">
+				DATE_FORMAT(c2.contract_time,'%Y-%m-%d') = CURDATE()
+			</when>
+			<otherwise>
+				DATE_FORMAT(c2.contract_time,'%Y-%m-%d') = DATE_FORMAT(#{searchTime}, '%Y-%m-%d')
+			</otherwise>
+		</choose>
+		<include refid="Where_SearchVo" />
+		<if test="contractAttr != null and contractAttr != ''">
+			AND c2.contract_attr = #{contractAttr}
+		</if>
+			AND c2.enterprise_id = #{enterpriseId}
+			AND c2.contract_status !='C'
+			AND c1.contract_status !='C'
+	</select>
+	<!-- 日采购明细表 -->
+	<select id="findDailyBuy" resultType="com.spt.bas.report.client.entity.RptCtrDailyBuyReport">
+	  	SELECT
+			c.id As id,
+			c.contract_time As contractTime,
+			c.contract_attr As contractAttr,
+			c.business_no As businessNo,
+			p.product_name As productName,
+			p.deal_number As dealNumber,
+			p.deal_price As dealPrice,
+			(p.deal_number * p.deal_price) As totalAmount,
+			c.match_user_id As macthId,
+			c.match_user_name As matchName,
+			c.dept_id As deptId,
+			c.enterprise_id As enterpriseId
+		FROM
+			t_ctr_product p
+			LEFT JOIN t_ctr_contract c ON c.id= p.ctr_contract_id
+		WHERE
+		<choose>
+			<when test="searchTime == null">
+				DATE_FORMAT(c.contract_time,'%Y-%m-%d') = CURDATE()
+			</when>
+			<otherwise>
+				DATE_FORMAT(c.contract_time,'%Y-%m-%d') = DATE_FORMAT(#{searchTime}, '%Y-%m-%d')
+			</otherwise>
+		</choose>
+		<include refid="Where_SearchVo2" />
+		<if test="contractAttr != null and contractAttr != ''">
+			AND c.contract_attr = #{contractAttr}
+		</if>
+			AND c.enterprise_id = #{enterpriseId}
+			AND c.contract_type = 'B'
+			AND c.contract_status !='C'
+			ORDER BY c.id DESC
+	</select>
+	<!-- 日采购明细表合计 -->
+	<select id="findDailyBuyTotal" resultType="com.spt.bas.report.client.entity.RptCtrDailyBuyReport">
+	  	SELECT
+			SUM(p.deal_number) As dealNumber,
+			SUM(p.deal_number * p.deal_price) As totalAmount
+		FROM
+			t_ctr_product p
+			LEFT JOIN t_ctr_contract c ON c.id= p.ctr_contract_id
+		WHERE
+		<choose>
+			<when test="searchTime == null">
+				DATE_FORMAT(c.contract_time,'%Y-%m-%d') = CURDATE()
+			</when>
+			<otherwise>
+				DATE_FORMAT(c.contract_time,'%Y-%m-%d') = DATE_FORMAT(#{searchTime}, '%Y-%m-%d')
+			</otherwise>
+		</choose>
+		<include refid="Where_SearchVo2" />
+		<if test="contractAttr != null and contractAttr != ''">
+			AND c.contract_attr = #{contractAttr}
+		</if>
+			AND c.enterprise_id = #{enterpriseId}
+			AND c.contract_type = 'B'
+			AND c.contract_status !='C'
+	</select>
+	<!-- 业务员毛利明细月报表 -->
+	<select id="findMatchUserProfit" resultType="com.spt.bas.report.client.entity.RptCtrMatchUserProfitReport">
+	  	SELECT
+			c1.dept_id AS deptId,
+			c1.match_user_id AS sellMatchId,
+			c1.match_user_name AS sellMatchName,
+			c1.business_no AS sellBusinessNo,
+			p1.product_name AS productName,
+			p1.deal_number AS dealNumber,
+			p1.deal_price AS sellPrice,
+			c2.business_no AS buyBusinessNo,
+			p2.deal_price AS buyPrice,
+			c2.match_user_id AS buyMatchId,
+			c2.match_user_name AS buyMatchName,
+			c1.enterprise_id AS enterpriseId
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON c1.id = r.sell_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.buy_contract_id
+		LEFT JOIN t_ctr_product p1 ON p1.id = r.sell_product_id
+		LEFT JOIN t_ctr_product p2 ON p2.id = r.buy_product_id
+		WHERE
+		<choose>
+			<when test="searchTime == null">
+				DATE_FORMAT(c1.contract_time,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')
+			</when>
+			<otherwise>
+				DATE_FORMAT(c1.contract_time,'%Y-%m') = DATE_FORMAT(#{searchTime}, '%Y-%m')
+			</otherwise>
+		</choose>
+		<include refid="Where_SearchVo3" />
+			AND c1.total_amount = c1.dealed_amount
+			AND c1.enterprise_id = #{enterpriseId}
+			AND c1.contract_status !='C'
+			AND c2.contract_status !='C'
+			AND c1.contract_type = 'S'
+			ORDER BY c1.id DESC
+	</select>
+	<!-- 业务员毛利明细月报表合计 -->
+	<select id="findProfitTotal" resultType="com.spt.bas.report.client.entity.RptCtrMatchUserProfitReport">
+	  	SELECT
+			SUM(p1.deal_number) As dealNumber
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON c1.id = r.sell_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.buy_contract_id
+		LEFT JOIN t_ctr_product p1 ON p1.id = r.sell_product_id
+		LEFT JOIN t_ctr_product p2 ON p2.id = r.buy_product_id
+		WHERE
+		<choose>
+			<when test="searchTime == null">
+				DATE_FORMAT(c1.contract_time,'%Y-%m') = DATE_FORMAT(CURDATE(),'%Y-%m')
+			</when>
+			<otherwise>
+				DATE_FORMAT(c1.contract_time,'%Y-%m') = DATE_FORMAT(#{searchTime}, '%Y-%m')
+			</otherwise>
+		</choose>
+		<include refid="Where_SearchVo3" />
+			AND c1.total_amount = c1.dealed_amount
+			AND c1.enterprise_id = #{enterpriseId}
+			AND c1.contract_status !='C'
+			AND c2.contract_status !='C'
+			AND c1.contract_type = 'S'
+	</select>
+	<!-- 采购合同库存日明细表 -->
+	<select id="findDailyStock" resultType="com.spt.bas.report.client.entity.RptCtrDailyStockReport">
+	  	SELECT
+			c1.contract_time AS buyContractTime,
+			c1.contract_attr AS contractAttr,
+			c1.business_no AS buyBusinessNo,
+			p1.product_name AS productName,
+			p1.deal_number AS buyNumber,
+			p1.deal_price AS buyPrice,
+			p2.deal_number AS dealNumber,
+			c2.business_no AS sellBusinessNo,
+			c2.contract_time AS sellContractTime,
+			(
+				p1.deal_number - (
+					SELECT
+						SUM(p.deal_number)
+					FROM
+						t_ctr_contract_rela r
+					LEFT JOIN t_ctr_product p ON p.id = r.sell_product_id
+					WHERE
+						r.buy_contract_id = c1.id
+					AND p.product_name = p1.product_name
+					AND p.factory_id = p1.factory_id
+				)
+			) AS remainNumber,
+			TIMESTAMPDIFF(
+				HOUR,
+				IFNULL(
+					(
+						SELECT
+							a.pay_date
+						FROM
+							t_apply_pay a
+						WHERE
+							a.contract_id = c1.id
+						AND a.`status` = 'D'
+						ORDER BY
+							a.id ASC
+						LIMIT 1
+					),
+					c1.contract_time
+				),
+				NOW()
+			) AS inWarehouseHours,
+			c1.match_user_id AS matchId,
+			c1.match_user_name AS matchName,
+			c1.dept_id AS deptId,
+			c1.enterprise_id AS enterpriseId
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON c1.id = r.buy_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.sell_contract_id
+		LEFT JOIN t_ctr_product p1 ON p1.id = r.buy_product_id
+		LEFT JOIN t_ctr_product p2 ON p2.id = r.sell_product_id
+		WHERE
+		<choose>
+			<when test="searchTime == null">
+				DATE_FORMAT(c1.contract_time,'%Y-%m-%d') = CURDATE()
+			</when>
+			<otherwise>
+				DATE_FORMAT(c1.contract_time,'%Y-%m-%d') = DATE_FORMAT(#{searchTime}, '%Y-%m-%d')
+			</otherwise>
+		</choose>
+		<include refid="Where_SearchVo4" />
+			AND c1.contract_status != 'C'
+			AND c2.contract_status != 'C'
+			AND c1.enterprise_id = #{enterpriseId}
+		ORDER BY
+			c1.id DESC
+	</select>
+	<!-- 采购合同库存日明细表合计 -->
+	<select id="findDailyStockTotal" resultType="com.spt.bas.report.client.entity.RptCtrDailyStockReport">
+	  	SELECT
+			SUM(p1.deal_number) As buyNumber,
+			SUM(p2.deal_number) As dealNumber,
+			SUM((
+				p1.deal_number - (
+					SELECT
+						SUM(p.deal_number)
+					FROM
+						t_ctr_contract_rela r
+					LEFT JOIN t_ctr_product p ON p.id = r.sell_product_id
+					WHERE
+						r.buy_contract_id = c1.id
+					AND p.product_name = p1.product_name
+					AND p.factory_id = p1.factory_id
+				)
+			)) As remainNumber
+		FROM
+			t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract c1 ON c1.id = r.buy_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.sell_contract_id
+		LEFT JOIN t_ctr_product p1 ON p1.id = r.buy_product_id
+		LEFT JOIN t_ctr_product p2 ON p2.id = r.sell_product_id
+		WHERE
+		<choose>
+			<when test="searchTime == null">
+				DATE_FORMAT(c1.contract_time,'%Y-%m-%d') = CURDATE()
+			</when>
+			<otherwise>
+				DATE_FORMAT(c1.contract_time,'%Y-%m-%d') = DATE_FORMAT(#{searchTime}, '%Y-%m-%d')
+			</otherwise>
+		</choose>
+		<include refid="Where_SearchVo4" />
+			AND c1.contract_status != 'C'
+			AND c2.contract_status != 'C'
+			AND c1.enterprise_id = #{enterpriseId}
+	</select>
+</mapper>
