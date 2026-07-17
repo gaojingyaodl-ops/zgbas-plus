@@ -30,7 +30,7 @@ spring:
     show-sql: false                                    # Discretion: copy source behavior
     properties:
       hibernate:
-        generate_statistics: true
+        generate_statistics: false                       # was true (Phase-2 startup-drift instrumentation, not source behavior); off to stop collecting + silence the "Session Metrics" listener spam
         cache:
           use_second_level_cache: true                 # ehcache 2nd-level (Discretion: copy source)
           use_query_cache: true
@@ -51,3 +51,4 @@ logging:
   level:
     com.spt: info
     org.springframework: warn
+    org.hibernate.stat: OFF                             # silence "Session Metrics" console spam (StatisticalLoggingSessionEventListener)
