@@ -18,7 +18,8 @@ findings:
   warning: 3
   info: 2
   total: 6
-status: issues_found
+status: resolved
+resolved_in: f01d9ef
 ---
 
 # Phase 04: Code Review Report
@@ -26,7 +27,16 @@ status: issues_found
 **Reviewed:** 2026-07-17
 **Depth:** standard
 **Files Reviewed:** 9
-**Status:** issues_found
+**Status:** resolved (all findings addressed in commit f01d9ef)
+
+## Resolution (f01d9ef)
+
+- **CR-01 (Critical → RESOLVED)**: 7 missing prod keys added to `application-prod.yml` externalized (`${CMS_SERVER_URL}` / `${BAIDU_MAP_AK}` / `${ZIP_FILE_DIRECTORY}` / `${BASTRADE_APPROVE_CALLBACK_URL}` etc.) + literal env-invariants (`credit.contract.switch=true`, `picc.contract.switch=false`, `share.key=shareUrl`). Dev yml already had them (nested YAML form). No committed plaintext, D-P2-13 held. (Orchestrator note: initial reclassification as false-positive was based on a flawed dotted-key grep that missed nested YAML `credit:{contract:{switch:true}}`; the fix executor's YAML-aware check confirmed CR-01 was real — prod genuinely lacked keys dev had.)
+- **WR-01/02/03 (→ RESOLVED)**: stale `basServerPathStripper RequestInterceptor` comments updated to Wave 5 `WebMvcConfigurer.addPathPrefix` mechanism; `feignSelfLoopbackWiring_probe` Javadoc corrected to actual 2 assertions; dead `import java.util.Date` removed.
+- **IN-02 (→ RESOLVED)**: `BasFeignPathConfig.API_PATH_PREFIX` public→private.
+- **IN-01 (deferred)**: reachability test HttpStatus predicate style — cosmetic, non-blocking.
+
+Gates post-fix: `mvn -am compile` 0 ERROR; `ZgbasApplicationTest` 20 green, 0 skipped.
 
 ## Summary
 
