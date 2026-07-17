@@ -28,6 +28,12 @@ spt:
   bas:
     server:
       url: ${SPT_BAS_SERVER_URL}
+  # Phase 4 Wave 3 (Plan 04-05): basWx purchase contracts prod URL (force-externalized).
+  bas.purchaseWx:
+    url: ${SPT_BAS_PURCHASE_WX_URL}
+  # Phase 4 Wave 3 (Plan 04-05): report contracts prod URL (force-externalized).
+  report:
+    url: ${SPT_BAS_REPORT_URL}
 
 auth:
   url: ${AUTH_URL}
@@ -60,3 +66,16 @@ rocketmq:
     group: contract_producer_group
     access-key: ${ROCKETMQ_AK}
     secret-key: ${ROCKETMQ_SK}
+# Phase 4 Wave 3 (Plan 04-05): res.* prod config. res.md5.secret.key is a fixed non-secret
+# MD5 salt label (literal in source application.properties:72 — same value across envs);
+# the URLs are env-specific so they are force-externalized (D-P2-13).
+res:
+  md5:
+    secret:
+      key: pd_md5_key
+  fileView: ${RES_FILEVIEW_URL}
+  login:
+    url: ${RES_LOGIN_URL}
+  mobile:
+    login:
+      url: ${RES_MOBILE_LOGIN_URL}

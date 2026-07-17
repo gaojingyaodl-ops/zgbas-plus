@@ -26,7 +26,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  *       alongside {@code com.spt.bas.client.entity} (239 entities from Plan 05). Missing
  *       the IdEntity package causes {@code MappingException: Unknown entity} (Pitfall 2).</li>
  *   <li>{@link EnableJpaRepositories} targeting {@code com.spt.bas.server.dao} (240 Dao
- *       from Plan 05, each {@code extends BaseDao}).</li>
+ *       from Plan 05, each {@code extends BaseDao}). Phase 4 (Plan 04-05 Rule 3 blocking fix)
+ *       added {@code com.spt.pm.dao} — the 14 PM BaseDao interfaces ported in Wave 2b PM
+ *       absorption (04-04) were never entity-scanned before because no Wave 2b service had
+ *       autowired them; the api layer port surfaced the missing scan via
+ *       {@code NoSuchBeanDefinitionException: PmApproveDao} on context load.</li>
  * </ul>
  *
  * <p>The mybatis {@code @MapperScan} for {@code com.spt.bas.system.dao} lives in
@@ -41,6 +45,18 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * {@code BasServer} avoided the conflict via a narrow {@code @ComponentScan(basePackages = {"com.spt.pm",
  * "com.spt.bas.server"})}; the monolith's broad {@code com.spt} scan requires the exclude filter instead
  * (Rule 1 fix — ConflictingBeanDefinitionException on context load).
+ *
+ * <p>Phase 4 Wave 3 (Plan 04-05) added a third assignable-type exclusion:
+ * {@code com.spt.tools.http.interceptor.BasicErrorController}. The source basServer module
+ * ships a customised {@code com.spt.bas.server.config.BasicErrorController} (adds errorId/errorMsg
+ * integration + specific error pages 400/404/401/500); the spt-tools generic ancestor
+ * ({@code com.spt.tools.http.interceptor.BasicErrorController}, inlined Phase 2) is the structural
+ * template the basServer one was derived from. Both are {@code @Controller} with the same simple
+ * name, so Spring derives the same default bean name {@code basicErrorController} —
+ * {@code ConflictingBeanDefinitionException} on context load. Source avoided it via module-isolated
+ * scans (basServer boot app scanned only its own package); the monolith's broad {@code com.spt} scan
+ * requires excluding the generic ancestor so the basServer customisation wins (Rule 3 blocking
+ * auto-fix, Plan 04-05 — same precedent as the FeignConfig exclusion above).
  *
  * <p>Phase 3 (AUTH-01..04, D-P3-01): {@code com.spt.tools.shiro.config.ToolsShiroConfig} is now
  * UN-excluded — the previously-dormant Shiro auto-config engages now that a concrete Realm
@@ -60,7 +76,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
         classes = { com.spt.tools.http.feign.FeignConfig.class,
-                    com.spt.sign.client.config.FeignConfig.class }
+                    com.spt.sign.client.config.FeignConfig.class,
+                    com.spt.tools.http.interceptor.BasicErrorController.class }
     )
 )
 // Phase 4 D-P4-01 方案 A (corrected 2026-07-17): widen @EnableFeignClients to also scan
@@ -82,12 +99,22 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 // (/spt-bas-server) and the monolith root (/) is resolved by BasFeignPathConfig's
 // basServerPathStripper RequestInterceptor (D-P4-01a).
 @EnableFeignClients(basePackages = {
-    "com.spt.sign.client.remote",   // EXT-03 cfca — Phase 2 D-P2-12 narrowing preserved
-    "com.spt.bas.client.remote"     // Phase 4 D-P4-01 — bas 契约自回环
+    "com.spt.sign.client.remote",        // EXT-03 cfca — Phase 2 D-P2-12 narrowing preserved
+    "com.spt.bas.client.remote",         // Phase 4 D-P4-01 — bas 契约自回环
+    "com.spt.bas.purchase.wx.client.remote",  // Phase 4 Wave 3 (Plan 04-05 Rule 3): basWx contracts
+    // referenced by 16 ported basServer service impls (IWxUserDetailClient + ISaveTempClient).
+    // basWx itself is v2-deferred (PROJECT.md #14); proxies self-loop to localhost:8080 but no
+    // @RestController impl exists → runtime calls 404 (D-P4-02 lazy-degradation for v2 contracts).
+    // Startup succeeds because Feign proxies are lazy (URL resolved on call, not on registration).
+    "com.spt.bas.report.client.remote"   // Phase 4 Wave 3 (Plan 04-05 Rule 3): report contracts
+    // referenced by 9 ported basServer service impls (IRptCompanyClient + others). Report
+    // migration is Phase 5 (REPORT-01/02); report-client jar (04-04 types-only dep) provides
+    // contract types. Same lazy-degradation semantics as basWx above — runtime calls 404 until
+    // Phase 5 ports ReportServer. ReportClientConfig bean is component-scanned (URL lazy-resolved).
 })
 @EntityScan(basePackageClasses = IdEntity.class,
             basePackages = {"com.spt.bas.client.entity", "com.spt.pm.entity"})
-@EnableJpaRepositories(basePackages = {"com.spt.bas.server.dao"})
+@EnableJpaRepositories(basePackages = {"com.spt.bas.server.dao", "com.spt.pm.dao"})
 public class ZgbasApplication {
 
     public static void main(String[] args) {

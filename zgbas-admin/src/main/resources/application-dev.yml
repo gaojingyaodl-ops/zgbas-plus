@@ -36,6 +36,18 @@ spt:
   bas:
     server:
       url: http://localhost:8080
+  # Phase 4 Wave 3 (Plan 04-05 Rule 3): basWx purchase contracts (IWxUserDetailClient /
+  # ISaveTempClient) referenced by 16 ported basServer service impls. basWx itself is
+  # v2-deferred (PROJECT.md #14); proxies self-loop to localhost:8080 where no @RestController
+  # handles them → runtime calls 404 (D-P4-02 lazy-degradation). Startup is unaffected
+  # (PurchaseWxClientConfig bean is component-scanned; URL resolved lazily on first call).
+  bas.purchaseWx:
+    url: http://localhost:8080
+  # Phase 4 Wave 3 (Plan 04-05 Rule 3): report contracts (IRptCompanyClient + others) referenced
+  # by 9 ported basServer service impls. Report migration is Phase 5 (REPORT-01/02); same
+  # lazy-degradation semantics as basWx above (runtime 404 until Phase 5 ports ReportServer).
+  report:
+    url: http://localhost:8080
 auth:
   url: http://47.104.15.98:9011
 push:
@@ -43,6 +55,11 @@ push:
     url: http://push.tosupply.cn/ys-push-server
 file:
   server:
+    url: http://file.tosupply.cn/ys-file-server
+  # Phase 4 Wave 3 (Plan 04-05 Rule 3): file.download/show URLs referenced by ported services.
+  download:
+    url: https://file.tosupply.cn/ys-file-server
+  show:
     url: http://file.tosupply.cn/ys-file-server
 sign:
   server:
@@ -64,3 +81,41 @@ rocketmq:
     group: contract_producer_group
     access-key: ${ROCKETMQ_AK:zgrocketmq}
     secret-key: ${ROCKETMQ_SK:zg12345678}
+# Phase 4 Wave 3 (Plan 04-05 Rule 3 blocking fix): res.* properties照搬 source basServer
+# application.properties:72,74 + application-dev.properties:28,30. Referenced by ported
+# PmApproveServiceImpl + other business code. All literal non-secret values (MD5 salt label +
+# env-specific URLs); user decision 2026-07-17 permits plaintext dev values.
+res:
+  md5:
+    secret:
+      key: pd_md5_key
+  fileView: http://testview.tosupply.cn/onlinePreview?url=
+  login:
+    url: http://127.0.0.1:8066/#/login
+  mobile:
+    login:
+      url: http://127.0.0.1:9000/#/login
+# Phase 4 Wave 3 (Plan 04-05 Rule 3): remaining placeholder keys referenced by ported
+# basServer service impls. All照搬 source basServer application.properties / application-dev.properties
+# literal values (non-secret — URLs, feature flags, MD5 salts). User decision 2026-07-17 permits
+# plaintext dev values; prod profile externalizes the env-specific ones.
+baidu:
+  map:
+    ak: SpfygoSuEluio4sj9QMDxNDhvGfAAG3O
+basTrade:
+  server:
+    approveCallBackUrl: https://tradetest.tosupply.cn/admin-api/trd/base/approveCallBack
+cms:
+  server:
+    url: http://127.0.0.1:8888
+credit:
+  contract:
+    switch: true
+picc:
+  contract:
+    switch: false
+share:
+  key: shareUrl
+zip:
+  file:
+    directory: /data/filedownload/
