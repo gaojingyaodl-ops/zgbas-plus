@@ -28,6 +28,19 @@ public class TokenUtil {
 		return userToken;
 	}
 
+	// Phase 4 Rule 1 (bug fix, 2026-07-17): 2-arg Map overload missing from spt-tools master,
+	// but 3 source callers expect it (basServer/ApplyCompanyLicenseImpl, web/FactBisController,
+	// basWx/JwtUtil) — none declares/handles checked Exception. Source branch feat-系统重构v5.0
+	// was mid-refactor and never added it to spt-tools-http. The matching overload exists in
+	// spt-auth/auth-sdk/SdkTokenUtil. Delegate to the byte[] 3-arg overload with SUBJECT_PP
+	// (default subject also used by createToken(String, String) below) via the Charset overload
+	// of getBytes (no checked UnsupportedEncodingException) — preserves JWT semantics: claims
+	// from map, 1-day expiry, HS512 signing. No `throws` matches caller expectations.
+	public static String createToken(Map<String, Object> map, String secretKey) {
+		byte[] bytes = Base64.encodeBase64(secretKey.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		return createToken(SUBJECT_PP, map, bytes);
+	}
+
 	public static String createToken(String subject, Map<String, Object> map, byte[] secretKey) {
 		String userToken = null;
 		JwtBuilder builder = Jwts.builder().setSubject(subject)

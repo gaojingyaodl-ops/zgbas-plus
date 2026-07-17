@@ -76,6 +76,83 @@
             <groupId>com.spt</groupId>
             <artifactId>spt-sign-client</artifactId>
         </dependency>
+
+        <!-- Phase 4 Wave 2b/3 Rule 3: cascade pom deps verbatim from source basServer/pom.xml +
+             basCore/pm/pom.xml. Required by ported service + PM modules.
+
+             QLExpress 3.3.1 (basServer/pom.xml): service/impl/IApplyTPBudgetImpl,
+                 service/impl/ApplyChargeSalesServiceImpl, util/CommissionCalculateUtil,
+                 pm/util/ResConditionParser, pm/service/impl/{PmParseService,
+                 PmApprovePushServiceImpl,PmProcessAutoStepServiceImpl} import com.ql.util.express.*.
+             httpmime (basServer/pom.xml, version managed by Boot parent → 4.5.13):
+                 util/RtUtil imports org.apache.http.entity.mime.*.
+             ik-expression 1.0-SNAPSHOT (basCore/pm/pom.xml verbatim): pm/util/RuleUtils +
+                 pm/service/impl/PmProcessAutoStepServiceImpl import org.wltea.expression.*.
+             pdfbox 2.0.29 (basServer/pom.xml): service/impl/CtrContractDownloadService imports
+                 org.apache.pdfbox.{multipdf,pdmodel}.*.
+             xxl-job-core 2.3.0 (basServer/pom.xml): the jar provides XxlJobHelper for
+                 service/impl/CtrContractProfitServiceImpl's diagnostic logging (XxlJobHelper.log).
+                 NOTE: this jar dep does NOT enable xxl-job scheduling — that requires
+                 @Bean XxlJobSpringExecutor (BasJobConfig, correctly EXCLUDED to Phase 6 per
+                 INFRA-03). The Phase 6 exclusion is about task/ handlers, not the compile-time
+                 jar dep that source basServer also declared.
+             report-client 2.0.1-SNAPSHOT (basServer/pom.xml + basCore/pom.xml ${snapshot.version}):
+                 types-only dep for service files importing com.spt.bas.report.client.* — the
+                 report module itself ports in Phase 5 (REPORT-01/02); the client jar provides
+                 compile-time contract types (entity/vo/remote interfaces) verbatim from source.
+             purchase-client 2.0.1-SNAPSHOT (same source): types-only dep for service files
+                 importing com.spt.bas.purchase.wx.client.* — basWx deferred to v2 (WX-01/02);
+                 client jar provides contract types verbatim from source.
+             spring-cloud-alibaba-commons 2021.0.1.0 + nacos-common 1.4.2: utility classes only
+                 (com.alibaba.cloud.commons.lang.StringUtils, com.alibaba.nacos.common.utils.
+                 {StringUtils,CollectionUtils}) used by ~4 service impls. NO autoconfig /
+                 NO discovery — Phase 2 #9 (nacos discovery deleted) stays in force; these are
+                 inert util jars that do not trigger @EnableDiscoveryClient wiring.
+             All jars verified present in local repo (/Users/alan/App/Repository). -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>QLExpress</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code</groupId>
+            <artifactId>ik-expression</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.29</version>
+        </dependency>
+        <dependency>
+            <groupId>com.xuxueli</groupId>
+            <artifactId>xxl-job-core</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.spt.bas</groupId>
+            <artifactId>report-client</artifactId>
+            <version>2.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.spt.bas</groupId>
+            <artifactId>purchase-client</artifactId>
+            <version>2.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-alibaba-commons</artifactId>
+            <version>2021.0.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-common</artifactId>
+            <version>1.4.2</version>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>

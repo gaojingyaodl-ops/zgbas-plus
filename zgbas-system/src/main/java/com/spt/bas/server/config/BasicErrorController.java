@@ -108,7 +108,7 @@ public class BasicErrorController implements ErrorController {
 		err.setStatus(status.value());
 		err.setPath(String.valueOf(body.get("path")));
 		err.setError(String.valueOf(body.get("error")));
-		err.setTimestamp(new Date());
+		err.setTimestamp(LocalDateTime.now());
 		respVo.setData(err);
 		respVo.setMessage(err.getMessage());
 		respVo.setCode(err.getErrorId() + "");
