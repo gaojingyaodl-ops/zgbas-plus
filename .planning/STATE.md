@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-07-17T03:34:57.869Z"
+stopped_at: "Completed 04-02-PLAN.md (Wave 1: 238 contracts + 14 data carriers)"
+last_updated: "2026-07-17T03:48:22.796Z"
 last_activity: 2026-07-17
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 17
-  completed_plans: 12
+  completed_plans: 13
   percent: 43
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 04 (core-business) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-07-17
 
-Progress: [███████░░░] 71%
+Progress: [████████░░] 76%
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ Progress: [███████░░░] 71%
 | Phase 03 P03 | 2 | 2 tasks | 2709 files |
 | Phase 03 P04 | 12 | 2 tasks | 3 files |
 | Phase 04 P01 | 10min | 2 tasks | 7 files |
+| Phase 04 P02 | 5min | 2 tasks | 253 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,10 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 4 D-P4-01a path 前缀: BasFeignPathConfig.basServerPathStripper RequestInterceptor 剥离 spt-bas-server/ 前缀, 不设单体 context-path 保 Phase 3 AUTH-03 Shiro 根路径链 (04-01)
 - [Phase ?]: Phase 4 D-P4-04 rocketmq: rocketmq-spring-boot-starter:2.2.2 在 zgbas-system pom 声明 (源 basCore/pom.xml verbatim); 懒连接启动验证不阻塞; dev yml 占位带默认, prod 全占位 D-P2-13 (04-01)
 - [Phase ?]: Phase 4 WR-02 占位脚手架: ZgbasApplicationTest 扩 4 @Disabled (Wave 3/4 移除后激活) + 1 feignSelfLoopbackWiring_probe Wave 0 即运行 (fail-fast 验 D-P4-01/01a); 现 19 test 14 旧+5 新全绿 (04-01)
+- [Phase 04]: Phase 4 Wave 1 done: 238 @FeignClient contracts + 14 data carriers (dto/util/common/riskScore) ported verbatim to zgbas-system; BIZ-01/03 compile+runtime prerequisite satisfied (04-02)
+- [Phase 04]: Phase 4 04-02 commit order reversed: Task 2 (data carriers) before Task 1 (remote contracts) — bidirectional compile coupling (ICtrContractClient needs dto.CtrContractDto, IRiskApplyClient needs common.*) resolved per plan's anticipated reorder
+- [Phase 04]: Phase 4 04-02 stub upgrade: IApproveWaitDealClient + IPmProcessClient Phase 3 stubs replaced with source-real @FeignClient extends BaseClient contracts; IndexController unaffected (method signatures preserved: getUserWaitDealNum, findAccess); zgbas-admin sanity compile green
+- [Phase 04]: Phase 4 04-02 PM-domain 13 contracts ported verbatim as source-real interfaces; D-P4-02 stub-degradation deferred to Plan 04-06 BFF field layer (@Autowired(required=false)), not at contract interface layer
 
 ### Pending Todos
 
@@ -106,6 +111,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-17T03:34:57.863Z
-Stopped at: Phase 4 context gathered
+Last session: 2026-07-17T03:48:22.790Z
+Stopped at: Completed 04-02-PLAN.md (Wave 1: 238 contracts + 14 data carriers)
 Resume file: None

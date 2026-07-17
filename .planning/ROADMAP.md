@@ -119,7 +119,7 @@ Plans:
 
 **Wave 1** *(blocked on Wave 0)*
 
-- [ ] 04-02-PLAN.md — basClient 数据载体照搬（remote 234 契约 + dto/util/common/riskScore 14，合计 ~249 文件）
+- [x] 04-02-PLAN.md — basClient 数据载体照搬（remote 234 契约 + dto/util/common/riskScore 14，合计 ~249 文件）
 
 **Wave 2a** *(blocked on Wave 1)*
 
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
-| 4. 核心业务迁移 | 1/6 | In Progress|  |
+| 4. 核心业务迁移 | 2/6 | In Progress|  |
 | 5. 报表迁移 | 0/TBD | Not started | - |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
