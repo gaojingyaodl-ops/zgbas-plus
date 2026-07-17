@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptRiskCompanyReportMapper">
+    <sql id="where_sql">
+
+        <if test="companyName != null and companyName != ''">
+            and a.company_name like CONCAT('%',#{companyName},'%')
+        </if>
+        <if test="address != null and address != ''">
+            and a.address like CONCAT('%',#{address},'%')
+        </if>
+        <if test="companyType != null and companyType != ''">
+            and a.company_type = #{companyType}
+        </if>
+        <if test="customCompanySource != null and customCompanySource != ''">
+            and a.industry = #{customCompanySource}
+        </if>
+        <if test="matchUserIds!=null and matchUserIds.size()!=0">
+            and a.match_user_id in
+            <foreach collection="matchUserIds" item="item" index="index" open="(" close=")" separator=",">
+                #{matchUserIds[${index}]}
+            </foreach>
+        </if>
+
+        <choose>
+            <when test='companyFlag=="0"'>
+                and h.maxBreachDay = 0
+            </when>
+            <when test='companyFlag=="1"'>
+                and h.maxBreachDay > 0 and h.maxBreachDay <![CDATA[<=]]> 15
+            </when>
+            <when test='companyFlag=="2"'>
+                and h.maxBreachDay <![CDATA[>]]> 15
+            </when>
+            <when test='companyFlag=="4"'>
+                and h.maxBreachDay > 0 and h.maxBreachDay <![CDATA[<=]]> 7
+            </when>
+            <when test='companyFlag=="5"'>
+                and h.maxBreachDay <![CDATA[>]]> 7 and h.maxBreachDay <![CDATA[<=]]> 15
+            </when>
+        </choose>
+    </sql>
+
+    <select id="getOverdueCompanyList" resultType="com.spt.bas.report.client.entity.RptRiskOverdueCompanyReport">
+        select a.id                                                                          company_id,
+        a.company_name,
+
+        a.match_user_id,
+        a.match_user_name                                                                      matchUserName,
+
+        ROUND(IFNULL(b.tradeNumber, 0), 2)                                            tradeNumber,
+        ROUND(IFNULL(b.totalTradeAmout, 0), 2)                                        totalTradeAmount,
+        ROUND(IFNULL(b.totalTradeNumber, 0), 2)                                        totalTradeNumber,
+        ROUND(IFNULL(IFNULL(b.totalTradeAmout, 0) / IFNULL(b.tradeNumber, 0), 0), 2)  averageTradeAmount,
+        ROUND(IFNULL(c.margin_amount, 0), 2)                                          totalMarginAmount,
+
+        ROUND(IFNULL(f.iousNumber, 0), 2)                                             iousNumber,
+        ROUND(IFNULL(f.iousTradeNumber, 0), 2)                                        iousTradeNumber,
+        ROUND(IFNULL(f.iousTradeAmount, 0), 2)                                        iousTradeAmount,
+        ROUND(IFNULL(IFNULL(f.iousTradeAmount, 0) / IFNULL(f.iousNumber, 0), 0), 2)   iousAverageTradeAmount,
+        ROUND(IFNULL(f.iousMarginAmount, 0), 2)                                       iousMarginAmount,
+
+
+        ROUND(IFNULL(IFNULL(b.totalCreditCycle, 0) / IFNULL(b.tradeNumber, 0), 0), 2) averageCreditCycle,
+        ROUND(IFNULL(c.overdueNumber, 0), 2)                                          overdueNumber,
+        ROUND(IFNULL(c.totalOverdueAmount, 0), 2)                                     totalOverdueAmount,
+        ROUND(IFNULL(IFNULL(c.breach_days, 0) / IFNULL(c.overdueNumber, 0), 0), 2)    averageOverdueDay,
+        ROUND(IFNULL(IFNULL(c.overdueNumber, 0) / IFNULL(b.tradeNumber, 0), 0), 2)    overdueRate,
+        ROUND(IFNULL(c.breach_amount, 0), 2)                                          totalInterestAmount,
+        ROUND(IFNULL(c.receive_breach_amount, 0), 2)                                  totalReceiveInterestAmount,
+        ROUND(IFNULL(a.total_credit_amount, 0), 2)                                    totalCreditAmount,
+        ROUND((IFNULL(a.total_credit_amount, 0) - IFNULL(a.used_credit_amount, 0) - IFNULL(a.approve_credit_amount, 0)),
+        2)                                                                      availableCreditAmount,
+        ROUND(IFNULL(d.breachNumber, 0), 2)                                           breachNumber,
+        ROUND(IFNULL(d.totalTotalBreachAmount, 0), 2)                                 totalBreachAmount,
+
+
+        ROUND(IFNULL(g.matchNumber, 0), 2)                                            matchNumber,
+        ROUND(IFNULL(g.matchTradeNumber, 0), 2)                                       matchTradeNumber,
+        ROUND(IFNULL(g.matchTradeAmount, 0), 2)                                       matchTradeAmount,
+        ROUND(IFNULL(IFNULL(g.matchTradeAmount, 0) / IFNULL(g.matchNumber, 0), 0), 2) matchAverageTradeAmount,
+        ROUND(IFNULL(g.matchMarginAmount, 0), 2)                                      matchMarginAmount
+
+
+        from t_bs_company a
+<!--        left join `sptauth_pd`.sys_user tsu on tsu.user_id = a.match_user_id-->
+        left join (
+        select b.company_id,
+        count(b.id) as      tradeNumber,
+        sum(b.total_amount) totalTradeAmout,
+        sum(b.total_number) totalTradeNumber,
+        sum(b.credit_cycle) totalCreditCycle
+        from t_ctr_contract b
+        where b.contract_type = 'S'
+        and b.contract_status != 'C'
+        and b.status = 'D'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(b.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(b.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by b.company_id) b on
+        b.company_id = a.id
+        left join (
+        select a.company_id,
+        count(a.id)                  overdueNumber,
+        sum(a.total_amount)          totalOverdueAmount,
+        sum(a.breach_days)           breach_days,
+        sum(a.breach_amount)         breach_amount,
+        sum(a.receive_breach_amount) receive_breach_amount,
+        sum(tbs.margin_amount)       margin_amount
+        from t_ctr_contract a
+        left join t_budget_settlement tbs on
+        a.id = tbs.sell_contract_id
+        where a.status = 'D'
+        and a.contract_status != 'C'
+        and a.contract_type = 'S'
+        and a.breach_days > 0
+        and tbs.budget_status != '3'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id) c on
+        c.company_id = a.id
+        left join (
+        select a.company_id,
+        count(a.id)          breachNumber,
+        sum(a.breach_amount) totalTotalBreachAmount
+        from t_ctr_contract a
+        left join t_budget_settlement tbs on
+        a.id = tbs.sell_contract_id
+        where a.status = 'D'
+        and a.contract_status != 'C'
+        and a.contract_type = 'S'
+        and tbs.budget_status = '3'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id
+        ) d on d.company_id = a.id
+        left join (
+        select a.company_id,
+        count(a.id)          iousNumber,
+        sum(a.total_number)  iousTradeNumber,
+        sum(a.total_amount)  iousTradeAmount,
+        sum(b.margin_amount) iousMarginAmount
+        from t_ctr_contract a
+        left join t_budget_settlement b on a.id = b.sell_contract_id
+        where a.status = 'D'
+        and a.contract_status != 'C'
+        and a.contract_type = 'S'
+        and a.settlement_type is not null
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id
+        ) f on f.company_id = a.id
+        left join (
+        select a.company_id,
+        count(a.id)          matchNumber,
+        sum(a.total_number)  matchTradeNumber,
+        sum(a.total_amount)  matchTradeAmount,
+        sum(b.margin_amount) matchMarginAmount
+        from t_ctr_contract a
+        left join t_budget_settlement b on a.id = b.sell_contract_id
+        where a.status = 'D'
+        and a.contract_status != 'C'
+        and a.contract_type = 'S'
+        and a.settlement_type is null
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id
+        ) g on g.company_id = a.id
+        left join (
+        select max(breach_days) maxBreachDay,a.company_id from t_ctr_contract a
+        where a.status = 'D'
+        and a.contract_status != 'C'
+        and a.contract_type = 'S'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id
+        ) h on h.company_id = a.id
+        where a.enable_flg = true
+        and a.enterprise_id = 44
+
+        <include refid="where_sql"/>
+
+        <choose>
+            <when test="'asc' eq order">
+                ORDER BY a.id ASC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY a.id DESC
+            </when>
+            <otherwise>
+                ORDER BY a.id DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countOverdueCompanyList" resultType="com.spt.bas.report.client.entity.RptCountOfRiskOverdueCompany">
+        select  sum(x.tradeNumber) totalTradeNumber,
+        ROUND(sum(x.totalTradeNumber),2) totalTotalTradeNumber,
+        sum(x.totalTradeAmount) totalTotalTradeAmount,
+        sum(x.totalMarginAmount) totalTotalMarginAmount,
+        ROUND(IFNULL(sum(x.totalTradeAmount) / sum(x.tradeNumber), 0), 2) aveAverageTradeAmount,
+
+        sum(x.iousNumber) totalIousNumber,
+        sum(x.iousTradeNumber) totalIousTradeNumber,
+        sum(x.iousTradeAmount) totalIousTradeAmount,
+        sum(x.iousMarginAmount) totalIousMarginAmount,
+        ROUND(IFNULL(sum(x.iousTradeAmount) / sum(x.iousNumber), 0), 2) aveIousAverageTradeAmount,
+
+        ROUND(IFNULL(sum(x.creditCycle) / sum(x.tradeNumber), 0),2)  aveAverageCreditCycle,
+        ROUND(IFNULL(sum(x.overdueNumber) / sum(x.tradeNumber),0),2) aveOverdueNumber,
+        sum(totalOverdueAmount) totalTotalOverdueAmount,
+        ROUND(IFNULL(sum(x.breachDays) / sum(x.overdueNumber),0),2) aveAverageOverdueDay,
+        ROUND(IFNULL(sum(x.overdueNumber) / sum(x.tradeNumber),0),2)  aveOverdueRate,
+        sum(x.totalInterestAmount) totalTotalInterestAmount,
+        sum(x.totalReceiveInterestAmount) totalTotalReceiveInterestAmount,
+        sum(x.totalCreditAmount) totalTotalCreditAmount,
+        sum(x.availableCreditAmount) availableTotalCreditAmount,
+        sum(x.breachNumber) totalBreachNumber,
+        sum(x.totalBreachAmount) totalTotalBreachAmount,
+
+        sum(x.matchNumber) totalMatchNumber,
+        sum(x.matchTradeNumber) totalMatchTradeNumber,
+        sum(x.matchTradeAmount) totalMatchTradeAmount,
+        sum(x.matchMarginAmount) totalMatchMarginAmount,
+        ROUND(IFNULL(sum(x.matchTradeAmount) / sum(x.matchNumber), 0), 2) aveMatchAverageTradeAmount
+
+        from (
+        select IFNULL(b.tradeNumber, 0)                                      tradeNumber,
+        IFNULL(b.totalTradeAmout, 0)                                     totalTradeAmount,
+        IFNULL(b.totalTradeNumber, 0)                                       totalTradeNumber,
+        IFNULL(c.margin_amount, 0)                                       totalMarginAmount,
+
+        IFNULL(f.iousNumber, 0)                                           iousNumber,
+        IFNULL(f.iousTradeNumber, 0)                                      iousTradeNumber,
+        IFNULL(f.iousTradeAmount, 0)                                       iousTradeAmount,
+        IFNULL(f.iousMarginAmount, 0)                                      iousMarginAmount,
+
+        IFNULL(b.totalCreditCycle, 0) creditCycle,
+
+        IFNULL(c.overdueNumber, 0)                                         overdueNumber,
+        IFNULL(c.totalOverdueAmount, 0)                                    totalOverdueAmount,
+        IFNULL(c.breach_days, 0) breachDays,
+        IFNULL(c.breach_amount, 0)                                          totalInterestAmount,
+        IFNULL(c.receive_breach_amount, 0)                                 totalReceiveInterestAmount,
+        IFNULL(a.total_credit_amount, 0)                                    totalCreditAmount,
+        (IFNULL(a.total_credit_amount, 0) - IFNULL(a.used_credit_amount, 0) -
+        IFNULL(a.approve_credit_amount, 0))
+        availableCreditAmount,
+        IFNULL(d.breachNumber, 0)                                          breachNumber,
+        IFNULL(d.totalTotalBreachAmount, 0)                                 totalBreachAmount,
+
+
+        IFNULL(g.matchNumber, 0)                                           matchNumber,
+        IFNULL(g.matchTradeNumber, 0)                                      matchTradeNumber,
+        IFNULL(g.matchTradeAmount, 0)                                      matchTradeAmount,
+        IFNULL(g.matchMarginAmount, 0)                                     matchMarginAmount
+
+
+        from t_bs_company a
+<!--        left join `sptauth_pd`.sys_user tsu on tsu.user_id = a.match_user_id-->
+        left join (
+        select b.company_id,
+        count(b.id) as      tradeNumber,
+        sum(b.total_amount) totalTradeAmout,
+        sum(b.total_number) totalTradeNumber,
+        sum(b.credit_cycle) totalCreditCycle
+        from t_ctr_contract b
+        where b.contract_type = 'S'
+        and b.status = 'D'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(b.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(b.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by b.company_id) b on
+        b.company_id = a.id
+        left join (
+        select a.company_id,
+        count(a.id)                  overdueNumber,
+        sum(a.total_amount)          totalOverdueAmount,
+        sum(a.breach_days)           breach_days,
+        sum(a.breach_amount)         breach_amount,
+        sum(a.receive_breach_amount) receive_breach_amount,
+        sum(tbs.margin_amount)       margin_amount
+        from t_ctr_contract a
+        left join t_budget_settlement tbs on
+        a.id = tbs.sell_contract_id
+        where a.status = 'D'
+        and a.contract_type = 'S'
+        and a.breach_days > 0
+        and tbs.budget_status != '3'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id) c on
+        c.company_id = a.id
+        left join (
+        select a.company_id,
+        count(a.id)          breachNumber,
+        sum(a.breach_amount) totalTotalBreachAmount
+        from t_ctr_contract a
+        left join t_budget_settlement tbs on
+        a.id = tbs.sell_contract_id
+        where a.status = 'D'
+        and a.contract_type = 'S'
+        and tbs.budget_status = '3'
+
+        group by a.company_id
+        ) d on d.company_id = a.id
+        left join (
+        select a.company_id,
+        count(a.id)          iousNumber,
+        sum(a.total_number)  iousTradeNumber,
+        sum(a.total_amount)  iousTradeAmount,
+        sum(b.margin_amount) iousMarginAmount
+        from t_ctr_contract a
+        left join t_budget_settlement b on a.id = b.sell_contract_id
+        where a.status = 'D'
+        and a.contract_status != 'C'
+        and a.contract_type = 'S'
+        and a.settlement_type is not null
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id
+        ) f on f.company_id = a.id
+        left join (
+        select a.company_id,
+        count(a.id)          matchNumber,
+        sum(a.total_number)  matchTradeNumber,
+        sum(a.total_amount)  matchTradeAmount,
+        sum(b.margin_amount) matchMarginAmount
+        from t_ctr_contract a
+        left join t_budget_settlement b on a.id = b.sell_contract_id
+        where a.status = 'D'
+        and a.contract_status != 'C'
+        and a.contract_type = 'S'
+        and a.settlement_type is null
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id
+        ) g on g.company_id = a.id
+        left join (
+        select max(breach_days) maxBreachDay,a.company_id from t_ctr_contract a
+        where a.status = 'D'
+        and a.contract_status != 'C'
+        and a.contract_type = 'S'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+        group by a.company_id
+        ) h on h.company_id = a.id
+        where a.enable_flg = true
+        and a.enterprise_id = 44
+        <include refid="where_sql"/>
+        ) x
+    </select>
+</mapper>

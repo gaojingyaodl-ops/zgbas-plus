@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptBusinessOverviewMapper">
+		<!--查询条件 -->
+	<sql id="Where_con_SearchVo">
+		<if test="companyName != null and companyName != ''">
+			and con.company_Name like CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			and con.our_company_name like CONCAT(#{ourCompanyName},'%')
+		</if>
+		<if test="matchCreditFlg != null ">
+			and con.match_credit_flg = #{matchCreditFlg}
+		</if>
+		<if test="contractDateBegin != null and contractDateBegin != '' ">
+			<![CDATA[ AND DATE_FORMAT(con.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractDateBegin}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="contractDateEnd != null and contractDateEnd != ''">
+			<![CDATA[AND DATE_FORMAT(con.contract_time, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{contractDateEnd}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and con.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="deptIdList != null and deptIdList.size() != 0">
+			and con.dept_id in
+			<foreach collection="deptIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{deptIdList[${index}]}
+			</foreach>
+		</if>
+	</sql>
+	<sql id="Where_dcsx_SearchVo">
+		<if test="companyName != null and companyName != ''">
+			and dcsx.company_name like CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			and dcsx.our_company_name like CONCAT(#{ourCompanyName},'%')
+		</if>
+		<if test="matchCreditFlg != null and 'false'.toString() == matchCreditFlg.toString() ">
+			and 1=2
+		</if>
+		<if test="contractDateBegin != null and contractDateBegin != '' ">
+			<![CDATA[ AND DATE_FORMAT(dcsx.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractDateBegin}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="contractDateEnd != null and contractDateEnd != '' ">
+			<![CDATA[AND DATE_FORMAT(dcsx.contract_time, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{contractDateEnd}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and dcsx.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="deptIdList != null and deptIdList.size() != 0">
+			and dcsx.dept_id in
+			<foreach collection="deptIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{deptIdList[${index}]}
+			</foreach>
+		</if>
+	</sql>
+	<select id="findBusinessOverviewList" resultType="com.spt.bas.report.client.entity.RptBusinessOverview">
+		SELECT
+		  	'H' AS statisticalType,
+			'待签约' AS STATUS,
+			( SELECT COUNT( 1 ) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44 
+				AND con.business_type = 'ZY-BB' 
+				AND con.contract_type = 'B' 
+				AND con.status = 'D' 
+				AND con.seal_flg = FALSE
+				<include refid="Where_con_SearchVo" /> 
+			) AS buyNum,
+			( SELECT COUNT( 1 ) FROM t_ctr_dcsx dcsx
+				WHERE dcsx.enterprise_id = 44
+				AND dcsx.business_type = 'ZY-BB'
+				AND dcsx.status !='C'
+				AND dcsx.seal_flg = FALSE
+				<include refid="Where_dcsx_SearchVo" />
+			) AS dcsxNum,
+			( SELECT COUNT( 1 ) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44 
+				AND con.business_type = 'ZY-BB' 
+				AND con.contract_type = 'S' 
+				AND con.status = 'D' 
+				AND con.seal_flg = FALSE
+				<include refid="Where_con_SearchVo" />
+			) AS sellNum,
+			'已审批、未签约' AS logicalDeclaration
+		UNION ALL
+
+		SELECT
+			'I' AS statisticalType,
+			'待入库' AS STATUS,
+			( SELECT COUNT( 1 ) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44 
+			    AND con.contract_type='B' 
+			    AND con.business_type = 'ZY-BB' 
+			    AND con.contract_status !='C'  
+			    AND con.seal_flg = TRUE 
+			    AND con.total_number > con.warehouse_number
+				<include refid="Where_con_SearchVo" />
+			) AS buyNum,
+			'' AS dcsxNum,
+			'' AS sellNum,
+			'已签约、未全部入库' AS logicalDeclaration
+		UNION ALL
+
+		SELECT
+			'J' AS statisticalType,
+			'待出库' AS STATUS,
+			'' AS buyNum,
+			'' AS dcsxNum,
+			( SELECT COUNT( 1 ) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44 
+				AND con.contract_type='S' 
+				AND con.business_type = 'ZY-BB' 
+				AND con.contract_status !='C'  
+				AND con.seal_flg = TRUE 
+				AND con.total_number > con.warehouse_number
+				<include refid="Where_con_SearchVo" />
+			) AS sellNum,
+			'已签约、未全部出库' AS logicalDeclaration
+		UNION ALL
+
+		SELECT
+			'K' AS statisticalType,
+			'待确认收货' AS STATUS,
+			'' AS buyNum,
+			( SELECT COUNT(1) FROM t_ctr_dcsx dcsx
+				left JOIN t_ctr_contract con
+				ON dcsx.approve_id = con.approve_id
+				WHERE dcsx.enterprise_id = 44
+				AND con.contract_type='S'
+				AND con.business_type = 'ZY-BB'
+				AND con.status != 'C'
+				AND con.seal_flg = TRUE
+				AND con.warehouse_number >= con.total_number
+				AND dcsx.total_number > dcsx.confirm_receive_number
+				<include refid="Where_con_SearchVo" />
+			) AS dcsxNum,
+			( SELECT COUNT( 1 ) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44 
+				AND con.contract_type='S' 
+				AND con.business_type = 'ZY-BB' 
+				AND con.contract_status !='C'  
+				AND con.seal_flg = TRUE 
+				AND con.warehouse_number >= con.total_number
+				AND con.confirm_receipt_flg = FALSE
+				<include refid="Where_con_SearchVo" />
+			) AS sellNum,
+			'已出库、未确认收货' AS logicalDeclaration
+		UNION ALL
+
+		SELECT
+			'L' AS statisticalType,
+			'待付款' AS STATUS,
+			( SELECT COUNT(1) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44
+				AND con.business_type = 'ZY-BB'
+				AND con.contract_type = 'B'
+				AND con.contract_status != 'C'
+				AND con.seal_flg = TRUE
+				AND con.total_amount > con.dealed_amount
+				<include refid="Where_con_SearchVo" />
+			) AS buyNum,
+			( SELECT COUNT( 1 ) FROM t_ctr_dcsx dcsx
+				WHERE dcsx.enterprise_id = 44
+				AND dcsx.business_type = 'ZY-BB'
+				AND dcsx.status !='C'
+				AND dcsx.seal_flg = TRUE
+				AND dcsx.total_amount > dcsx.dealed_amount
+				<include refid="Where_dcsx_SearchVo" /> 
+			) AS dcsxNum,
+			'' AS sellNum,
+			'已签约、未全部付款' AS logicalDeclaration
+		UNION ALL
+		
+		SELECT
+			'M' AS statisticalType,
+			'待收款' AS STATUS,
+			'' AS buyNum,
+			'' AS dcsxNum,
+			( SELECT COUNT(1) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44
+				AND con.business_type = 'ZY-BB'
+				AND con.contract_type = 'S'
+				AND con.contract_status != 'C'
+				AND con.seal_flg = TRUE
+				AND con.total_amount > con.dealed_amount
+				<include refid="Where_con_SearchVo" />
+			) AS sellNum,
+			'已签约、未全部收款' AS logicalDeclaration
+		UNION ALL
+		SELECT
+			'N' AS statisticalType,
+			'待收票' AS STATUS,
+			( SELECT COUNT(1) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44
+				AND con.business_type = 'ZY-BB'
+				AND con.contract_type = 'B'
+				AND con.contract_status != 'C'
+				AND con.seal_flg = TRUE
+				AND con.warehouse_number = con.total_number
+				AND con.total_amount > con.billed_amount
+				<include refid="Where_con_SearchVo" />
+			) AS buyNum,
+			(SELECT COUNT( 1 ) FROM t_ctr_dcsx dcsx
+				JOIN t_bs_company_our our ON dcsx.our_company_name = our.company_name
+				WHERE dcsx.enterprise_id = 44
+				AND dcsx.business_type = 'ZY-BB'
+				AND our.our_company_flag=true
+				AND dcsx.status !='C'
+				AND dcsx.seal_flg = TRUE
+				AND dcsx.total_amount > dcsx.billed_amount
+				<include refid="Where_dcsx_SearchVo" />
+			) AS dcsxNum,
+			'' AS sellNum,
+			'采购：已入库、未全部收票；中游：已签约、未全部收票' AS logicalDeclaration
+		UNION ALL
+
+		SELECT
+			'O' AS statisticalType,
+			'待开票' AS STATUS,
+			'' AS buyNum,
+			(SELECT COUNT( 1 ) FROM t_ctr_dcsx dcsx
+				JOIN t_bs_company_our our ON dcsx.company_name = our.company_name
+				WHERE dcsx.enterprise_id = 44
+				AND dcsx.business_type = 'ZY-BB'
+				AND our.our_company_flag=true
+				AND dcsx.status !='C'
+				AND dcsx.seal_flg = TRUE
+				AND dcsx.total_amount > dcsx.invoice_bill_amount
+				<include refid="Where_dcsx_SearchVo" />
+			) AS dcsxNum,
+			( SELECT COUNT(1) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44
+				AND con.business_type = 'ZY-BB'
+				AND con.contract_type = 'S'
+				AND con.contract_status != 'C'
+				AND con.seal_flg = TRUE
+				AND con.warehouse_number = con.total_number
+				AND con.total_amount > con.billed_amount
+				<include refid="Where_con_SearchVo" />
+			) AS sellNum,
+			'已出库、未全部开票' AS logicalDeclaration
+		UNION ALL
+		SELECT
+		'P' AS statisticalType,
+		'已完成' AS STATUS,
+		( SELECT COUNT(1) FROM t_ctr_contract con
+			WHERE con.enterprise_id = 44
+			AND con.business_type = 'ZY-BB'
+			AND con.contract_type = 'B'
+			AND con.contract_status != 'C'
+			AND con.seal_flg = TRUE
+			AND con.dealed_amount = con.total_amount
+			AND con.billed_amount = con.total_amount
+			AND con.warehouse_number = con.total_number
+			AND con.breach_amount = con.receive_breach_amount
+			<include refid="Where_con_SearchVo" />
+		) AS buyNum,
+		( SELECT COUNT( 1 ) FROM t_ctr_dcsx dcsx
+			WHERE dcsx.enterprise_id = 44
+			AND dcsx.business_type = 'ZY-BB'
+			AND dcsx.status !='C'
+			AND dcsx.seal_flg = TRUE
+			AND dcsx.billed_amount >= dcsx.total_amount
+			AND dcsx.invoice_bill_amount >= dcsx.total_amount
+			AND dcsx.dealed_amount >= dcsx.total_amount
+			AND dcsx.receive_amount >= dcsx.total_amount
+			AND dcsx.confirm_receive_number >= dcsx.total_number
+			<include refid="Where_dcsx_SearchVo" />
+		) AS dcsxNum,
+		( SELECT COUNT(1) FROM t_ctr_contract con
+			WHERE con.enterprise_id = 44
+			AND con.business_type = 'ZY-BB'
+			AND con.contract_type = 'S'
+			AND con.contract_status != 'C'
+			AND con.seal_flg = TRUE
+			AND con.dealed_amount = con.total_amount
+			AND con.billed_amount = con.total_amount
+			AND con.warehouse_number = con.total_number
+			AND con.breach_amount = con.receive_breach_amount
+			<include refid="Where_con_SearchVo" />
+		) AS sellNum,
+		'同时满足（已收/付款、已开/收票、已收/发货，没有罚金）判定已完成' AS logicalDeclaration
+		UNION ALL
+
+		SELECT
+			'Q' AS statisticalType,
+			'作废' AS STATUS,
+			( SELECT COUNT(1) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44
+				AND con.business_type = 'ZY-BB'
+				AND con.contract_type = 'B'
+				AND con.contract_status = 'C'
+				<include refid="Where_con_SearchVo" />
+			) AS buyNum,
+			( SELECT COUNT( 1 ) FROM t_ctr_dcsx dcsx
+				WHERE dcsx.enterprise_id = 44
+				AND dcsx.business_type = 'ZY-BB'
+				AND dcsx.status ='C'
+				<include refid="Where_dcsx_SearchVo" />
+			) AS dcsxNum,
+			( SELECT COUNT(1) FROM t_ctr_contract con
+				WHERE con.enterprise_id = 44
+				AND con.business_type = 'ZY-BB'
+				AND con.contract_type = 'S'
+				AND con.contract_status = 'C'
+				<include refid="Where_con_SearchVo" />
+			) AS sellNum,
+			'手动操作' AS logicalDeclaration
+		UNION ALL
+
+		SELECT
+		'R' AS statisticalType,
+		'罚金不足' AS STATUS,
+		'' AS buyNum,
+		'' AS dcsxNum,
+		(SELECT COUNT(1) FROM t_ctr_contract con
+			WHERE con.enterprise_id = 44
+			AND con.business_type = 'ZY-BB'
+			AND con.contract_type = 'S'
+			AND con.contract_status != 'C'
+			AND con.seal_flg = TRUE
+			AND con.breach_amount > con.receive_breach_amount
+			<include refid="Where_con_SearchVo" />
+		) AS sellNum,
+		'合同产生罚金，还有未收到的罚金' AS logicalDeclaration
+
+	</select>
+	
+	
+</mapper>

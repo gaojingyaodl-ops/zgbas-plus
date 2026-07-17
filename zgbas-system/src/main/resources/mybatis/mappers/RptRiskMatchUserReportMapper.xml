@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptRiskMatchUserReportMapper">
+    <select id="getMatchUserList" resultType="com.spt.bas.report.client.entity.RptMatchUserReport">
+        SELECT
+            a.user_id as matchUserId,
+            a.nick_name as matchUserName,
+            b.count as companyNumber,
+            IFNULL(c.count,0) as tradeNumber ,
+        round(IFNULL(c.totalTradeAmount,0),2) totalTradeAmount,
+        round(IFNULL(d.overdueNumber,0),2) overdueNumber,
+        round(IFNULL(d.totalOverdueAmount,0),2) totalOverdueAmount,
+        round(IFNULL( d.breach_days, 0)/ IFNULL( d.overdueNumber, 1),2) as averageOverdueDay,
+        round(IFNULL(d.overdueNumber, 0)/ IFNULL(c.count , 1),2) as overdueRate,
+        round(IFNULL(e.count, 0)/ IFNULL(c.count , 1),2) as defaultRate ,
+        round(IFNULL(d.breach_amount,0),2) as totalInterestAmount,
+        round(IFNULL(d.receive_breach_amount,0),2) as totalReceiveInterestAmount
+        from
+            `sptauth_pd`.sys_user a
+        left join (
+            select
+                count(a.id) count,
+                a.match_user_id
+            from
+                t_bs_company a
+            where
+                a.enable_flg = true
+            GROUP by
+                a.match_user_id) b on
+            a.user_id = b.match_user_id
+        left join (
+            select
+                a.match_user_id,
+                count(a.id) count,
+                sum(a.total_amount) totalTradeAmount
+            from
+                t_ctr_contract a
+            where
+                a.status = 'D'
+                and a.contract_type = 'S'
+                <if test="timeFrom != null and timeFrom != ''">
+                    <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+                </if>
+                <if test="timeTo != null and timeTo != ''">
+                    <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+                </if>
+            GROUP by
+                a.match_user_id ) c on
+            c.match_user_id = a.user_id
+        left join (
+            select
+                a.match_user_id,
+                count(a.id) overdueNumber,
+                sum(a.total_amount) totalOverdueAmount,
+                sum(a.breach_days) breach_days,
+                sum(a.breach_amount) breach_amount,
+                sum(a.receive_breach_amount) receive_breach_amount
+            from
+                t_ctr_contract a
+            left join t_budget_settlement tbs on
+                a.id = tbs.sell_contract_id
+            where
+                a.status = 'D'
+                and a.contract_type = 'S'
+                and a.breach_days > 0
+                and tbs.budget_status != '3'
+                <if test="timeFrom != null and timeFrom != ''">
+                    <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+                </if>
+                <if test="timeTo != null and timeTo != ''">
+                    <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+                </if>
+            GROUP by
+                a.match_user_id ) d on
+            d.match_user_id = a.user_id
+        left join (
+            select
+                tcc.match_user_id,
+                count(tbs.id) count
+            from
+                t_ctr_contract tcc
+            left join t_budget_settlement tbs on
+                tcc.id = tbs.sell_contract_id
+            where
+                tcc.contract_type = 'S'
+                and tcc.status = 'D'
+                and tbs.budget_status = '3'
+            <if test="timeFrom != null and timeFrom != ''">
+                <![CDATA[ AND DATE_FORMAT(tcc.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+            </if>
+            <if test="timeTo != null and timeTo != ''">
+                <![CDATA[ AND DATE_FORMAT(tcc.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+            </if>
+            GROUP by
+                tcc.match_user_id ) e on
+            e.match_user_id = a.user_id
+        where
+            a.status = '0'
+            and a.enterprise_id = 44
+            <choose>
+                <when test="matchUserId != null and matchUserId != ''">
+                    and a.user_id = #{matchUserId}
+                </when>
+                <otherwise>
+                    <if test="matchUserIds != null and matchUserIds.size > 0">
+                        and a.user_id in
+                        <foreach collection="matchUserIds" item="item" index="index" open="(" close=")" separator=",">
+                            #{matchUserIds[${index}]}
+                        </foreach>
+                    </if>
+                </otherwise>
+            </choose>
+    </select>
+    <select id="countMatchUserList" resultType="com.spt.bas.report.client.entity.RptCountOfMatchUserReport">
+            select round(sum(a.companyNumber) ,2)                     totalCompanyNumber,
+        round(sum(a.tradeNumber) ,2)                       totalTradeNumber,
+        round(sum(a.totalTradeAmount)   ,2)                totalTotalTradeAmount,
+        round(sum(a.overdueNumber)  ,2)                    totalOverdueNumber,
+        round(sum(a.totalOverdueAmount)   ,2)              totalTotalOverdueAmount,
+        round(sum(breachDays) / sum(a.overdueNumber),2)    aveAverageOverdueDay,
+        round(sum(a.overdueNumber) / sum(a.tradeNumber),2) aveOverdueRate,
+        round(sum(defaultCount) / sum(a.tradeNumber),2)    aveDefaultRate,
+        round(sum(totalInterestAmount)   ,2)               totalTotalInterestAmount,
+        round(sum(totalReceiveInterestAmount)   ,2)        totalTotalReceiveInterestAmount
+from (
+         SELECT
+                b.count                                               as companyNumber,
+                IFNULL(c.count, 0)                                    as tradeNumber,
+                IFNULL(c.totalTradeAmount, 0)                            totalTradeAmount,
+                IFNULL(d.overdueNumber, 0)                               overdueNumber,
+                IFNULL(d.totalOverdueAmount, 0)                          totalOverdueAmount,
+                d.breach_days                                         as breachDays,
+                e.count                                               as defaultCount,
+                IFNULL(d.breach_amount, 0)                            as totalInterestAmount,
+                IFNULL(d.receive_breach_amount, 0)                    as totalReceiveInterestAmount
+         from `sptauth_pd`.sys_user a
+                  left join (
+             select count(a.id) count,
+                    a.match_user_id
+             from t_bs_company a
+             where a.enable_flg = true
+             GROUP by a.match_user_id) b on
+             a.user_id = b.match_user_id
+                  left join (
+             select a.match_user_id,
+                    count(a.id)         count,
+                    sum(a.total_amount) totalTradeAmount
+             from t_ctr_contract a
+             where a.status = 'D'
+               and a.contract_type = 'S'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+             GROUP by a.match_user_id) c on
+             c.match_user_id = a.user_id
+                  left join (
+             select a.match_user_id,
+                    count(a.id)                  overdueNumber,
+                    sum(a.total_amount)          totalOverdueAmount,
+                    sum(a.breach_days)           breach_days,
+                    sum(a.breach_amount)         breach_amount,
+                    sum(a.receive_breach_amount) receive_breach_amount
+             from t_ctr_contract a
+                      left join t_budget_settlement tbs on
+                 a.id = tbs.sell_contract_id
+             where a.status = 'D'
+               and a.contract_type = 'S'
+               and a.breach_days > 0
+               and tbs.budget_status != '3'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(a.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+             GROUP by a.match_user_id) d on
+             d.match_user_id = a.user_id
+                  left join (
+             select tcc.match_user_id,
+                    count(tbs.id) count
+             from t_ctr_contract tcc
+                      left join t_budget_settlement tbs on
+                 tcc.id = tbs.sell_contract_id
+             where tcc.contract_type = 'S'
+               and tcc.status = 'D'
+               and tbs.budget_status = '3'
+        <if test="timeFrom != null and timeFrom != ''">
+            <![CDATA[ AND DATE_FORMAT(tcc.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{timeFrom}, '%Y-%m-%d') ]]>
+        </if>
+        <if test="timeTo != null and timeTo != ''">
+            <![CDATA[ AND DATE_FORMAT(tcc.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{timeTo}, '%Y-%m-%d') ]]>
+        </if>
+             GROUP by tcc.match_user_id) e on
+             e.match_user_id = a.user_id
+         where a.status = '0'
+           and a.enterprise_id = 44
+        <choose>
+            <when test="matchUserId != null and matchUserId != ''">
+                and a.user_id = #{matchUserId}
+            </when>
+            <otherwise>
+                <if test="matchUserIds != null and matchUserIds.size > 0">
+                    and a.user_id in
+                    <foreach collection="matchUserIds" item="item" index="index" open="(" close=")" separator=",">
+                        #{matchUserIds[${index}]}
+                    </foreach>
+                </if>
+            </otherwise>
+        </choose>
+     ) a
+    </select>
+</mapper>
