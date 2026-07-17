@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptStockVirtualMapper">
+    <select id="selectAssessment" resultType="com.spt.bas.report.client.vo.RptStockVirtualVo">
+        select id                                        id,
+               stock_virtual_no                          stockVirtualNo,
+               contract_type                             contractType,
+               company_name                              companyName,
+               product_name                              productName,
+               factory_name                              factoryName,
+               brand_number                              brandNumber,
+               deal_number                               dealNumber,
+               deal_price                                dealPrice,
+               total_amount                              totalAmount,
+               date_format(delivery_date, '%Y-%m-%d')    deliveryDate,
+               date_format(pay_full_time, '%Y-%m-%d')    payFullTime,
+               date_format(publish_time, '%Y-%m-%d')     publicTime,
+               delivery_type                             'deliveryType',
+               date_format(arrival_time_ext, '%Y-%m-%d') arrivalTimeExt,
+               status                                    status,
+               delivery_addr                             deliveryAddr,
+               match_user_name                           matchUserName
+        from t_stock_virtual
+        <where>
+            <if test="contractTypeSearch != null and contractTypeSearch != ''">
+                contract_type = #{contractTypeSearch}
+            </if>
+            <if test="companyNameSearch != null and companyNameSearch != ''">
+                and company_name like concat('%',#{companyNameSearch},'%')
+            </if>
+            <if test="productNameSearch != null and productNameSearch != ''">
+                and product_name = #{productNameSearch}
+            </if>
+            <if test="brandNumberSearch != null and brandNumberSearch != ''">
+                and brand_number = #{brandNumberSearch}
+            </if>
+            <if test="factoryNameSearch != null and factoryNameSearch != ''">
+                and factory_name = #{factoryNameSearch}
+            </if>
+            <if test="minDealNumberSearch != null and maxDealNumberSearch != null">
+                and deal_number between #{minDealNumberSearch} and  #{maxDealNumberSearch}
+            </if>
+            <if test="minDealNumberSearch != null and maxDealNumberSearch == null">
+                <![CDATA[ and deal_number >= #{minDealNumberSearch} ]]>
+            </if>
+            <if test="minDealNumberSearch == null and maxDealNumberSearch != null">
+                <![CDATA[ and deal_number <= #{maxDealNumberSearch} ]]>
+            </if>
+            <if test="wrapSpecsSearch != null and wrapSpecsSearch != ''">
+                and wrap_specs = #{wrapSpecsSearch}
+            </if>
+            <if test="qualityStandardSearch != null and qualityStandardSearch != ''">
+                and quality_standard = #{qualityStandardSearch}
+            </if>
+
+        </where>
+        order by id desc
+    </select>
+
+    <select id="getWxStockVirtualPage" resultType="com.spt.bas.report.client.vo.RptStockVirtualVo">
+        select * from (
+        select id as id,
+        stock_virtual_no stockVirtualNo,
+        contract_type contractType,
+        company_name companyName,
+        product_name productName,
+        factory_name factoryName,
+        brand_number brandNumber,
+        deal_number dealNumber,
+        deal_price dealPrice,
+        FORMAT(total_amount, 3) totalAmountStr,
+        total_amount totalAmount,
+        date_format(delivery_date, '%Y-%m-%d') deliveryDate,
+        date_format(pay_full_time, '%Y-%m-%d') payFullTime,
+        date_format(publish_time, '%Y-%m-%d') publicTime,
+        delivery_type 'deliveryType',
+        date_format(arrival_time_ext, '%Y-%m-%d') arrivalTimeExt,
+        status status,
+        delivery_addr deliveryAddr,
+        match_user_name matchUserName
+        from t_stock_virtual
+        order by created_date desc limit 200
+        ) as c
+        <where>
+            <if test="productName != null and productName != ''">
+                concat(productName,'/', brandNumber,'/',factoryName) like concat('%',#{productName},'%')
+            </if>
+        </where>
+    </select>
+</mapper>

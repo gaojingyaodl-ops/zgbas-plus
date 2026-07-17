@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptWeChatWorkMapper">
+
+	<select id="findLeaderBoardMatchUserGroupList" resultType="com.spt.bas.report.client.entity.RptLeaderboard">
+		SELECT s.match_user_id,
+			   Sum(IFNULL(s.total_amount, 0) - IFNULL(b.total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+				   IFNULL(b.warehouse_amount, 0) - IFNULL(s.transport_amount, 0) -
+				   IFNULL(b.transport_amount, 0) - IFNULL(s.stevedorage, 0) - IFNULL(b.stevedorage, 0) -
+				   IFNULL(s.delivery_fee, 0) - IFNULL(b.delivery_fee, 0)) grossProfitAmount
+		FROM t_ctr_contract_settlement r
+				 LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+				 LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+		WHERE s.contract_status != 'C'
+		  AND s.contract_type = 'S'
+		  AND s.business_type = 'ZY-BB'
+		  AND s.enterprise_id = 44
+		  AND s.seal_flg = TRUE
+		  AND b.seal_flg = TRUE
+		  AND s.owning_region != 'KH'
+		  AND date_format(s.seal_date, '%Y-%m-%d') BETWEEN date_format(#{startDate}, '%Y-%m-%d') AND date_format(#{endDate}, '%Y-%m-%d')
+		<if test="deptIdList != null and deptIdList.size > 0">
+			and s.dept_id in
+			<foreach collection="deptIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		GROUP BY s.match_user_id
+		ORDER BY grossProfitAmount DESC
+		LIMIT 10;
+
+	</select>
+
+	<select id="findLeaderBoardDeptGroupList" resultType="com.spt.bas.report.client.entity.RptLeaderboard">
+		SELECT s.dept_id,
+			   Sum(IFNULL(s.total_amount, 0) - IFNULL(b.total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+				   IFNULL(b.warehouse_amount, 0) - IFNULL(s.transport_amount, 0) -
+				   IFNULL(b.transport_amount, 0) - IFNULL(s.stevedorage, 0) - IFNULL(b.stevedorage, 0) -
+				   IFNULL(s.delivery_fee, 0) - IFNULL(b.delivery_fee, 0)) grossProfitAmount
+		FROM t_ctr_contract_settlement r
+				 LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+				 LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+		WHERE s.contract_status != 'C'
+		  AND s.contract_type = 'S'
+		  AND s.business_type = 'ZY-BB'
+		  AND s.enterprise_id = 44
+		  AND s.seal_flg = TRUE
+		  AND b.seal_flg = TRUE
+		  AND s.owning_region != 'KH'
+		  AND date_format(s.seal_date, '%Y-%m-%d') BETWEEN date_format(#{startDate}, '%Y-%m-%d') AND date_format(#{endDate}, '%Y-%m-%d')
+		<if test="deptIdList != null and deptIdList.size > 0">
+			and s.dept_id in
+			<foreach collection="deptIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		GROUP BY s.dept_id
+		ORDER BY grossProfitAmount DESC
+		LIMIT 10;
+
+	</select>
+
+	<select id="findLeaderBoardTotalGrossProfitAmount" resultType="com.spt.bas.report.client.entity.RptLeaderboard">
+		SELECT
+		Sum(IFNULL(s.total_amount, 0) - IFNULL(b.total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+		IFNULL(b.warehouse_amount, 0) - IFNULL(s.transport_amount, 0) -
+		IFNULL(b.transport_amount, 0) - IFNULL(s.stevedorage, 0) - IFNULL(b.stevedorage, 0) -
+		IFNULL(s.delivery_fee, 0) - IFNULL(b.delivery_fee, 0)) grossProfitAmount
+		FROM t_ctr_contract_settlement r
+		LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+		LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+		WHERE s.contract_status != 'C'
+		AND s.contract_type = 'S'
+		AND s.business_type = 'ZY-BB'
+		AND s.enterprise_id = 44
+		AND s.seal_flg = TRUE
+		AND b.seal_flg = TRUE
+		AND s.owning_region != 'KH'
+		AND date_format(s.seal_date, '%Y-%m-%d') BETWEEN date_format(#{startDate}, '%Y-%m-%d') AND date_format(#{endDate}, '%Y-%m-%d')
+		<if test="deptIdList != null and deptIdList.size > 0">
+			and s.dept_id in
+			<foreach collection="deptIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="findLeaderBoardCustomerDevelopMatchList" resultType="com.spt.bas.report.client.entity.RptLeaderboard">
+		SELECT s.match_user_id,
+		SUM(s.total_number) totalNum,
+		SUM(s.total_amount) totalAmount,
+		Sum(IFNULL(s.total_amount, 0) - IFNULL(b.total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+		IFNULL(b.warehouse_amount, 0) - IFNULL(s.transport_amount, 0) -
+		IFNULL(b.transport_amount, 0) - IFNULL(s.stevedorage, 0) - IFNULL(b.stevedorage, 0) -
+		IFNULL(s.delivery_fee, 0) - IFNULL(b.delivery_fee, 0)) grossProfitAmount
+		FROM t_ctr_contract_settlement r
+		LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+		LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+		WHERE s.contract_status != 'C'
+		AND s.contract_type = 'S'
+		AND s.business_type = 'ZY-BB'
+		AND s.enterprise_id = 44
+		AND s.seal_flg = TRUE
+		AND b.seal_flg = TRUE
+		AND date_format(s.seal_date, '%Y-%m-%d') BETWEEN date_format(#{startDate}, '%Y-%m-%d') AND date_format(#{endDate}, '%Y-%m-%d')
+		<if test="deptIdList != null and deptIdList.size > 0">
+			AND s.dept_id in
+			<foreach collection="deptIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		GROUP BY s.match_user_id
+		ORDER BY grossProfitAmount DESC
+		LIMIT 10
+	</select>
+
+
+	<select id="findLeaderBoardCustomerDevelopTotalGrossProfitAmount" resultType="com.spt.bas.report.client.entity.RptLeaderboard">
+		SELECT
+		Sum(IFNULL(s.total_amount, 0) - IFNULL(b.total_amount, 0) - IFNULL(s.warehouse_amount, 0) -
+		IFNULL(b.warehouse_amount, 0) - IFNULL(s.transport_amount, 0) -
+		IFNULL(b.transport_amount, 0) - IFNULL(s.stevedorage, 0) - IFNULL(b.stevedorage, 0) -
+		IFNULL(s.delivery_fee, 0) - IFNULL(b.delivery_fee, 0)) grossProfitAmount
+		FROM t_ctr_contract_settlement r
+		LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+		LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+		WHERE s.contract_status != 'C'
+		AND s.contract_type = 'S'
+		AND s.business_type = 'ZY-BB'
+		AND s.enterprise_id = 44
+		AND s.seal_flg = TRUE
+		AND b.seal_flg = TRUE
+		AND date_format(s.seal_date, '%Y-%m-%d') BETWEEN date_format(#{startDate}, '%Y-%m-%d') AND date_format(#{endDate}, '%Y-%m-%d')
+		<if test="deptIdList != null and deptIdList.size > 0">
+			and s.dept_id in
+			<foreach collection="deptIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+</mapper>

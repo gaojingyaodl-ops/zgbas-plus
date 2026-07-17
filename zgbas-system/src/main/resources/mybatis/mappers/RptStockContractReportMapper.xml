@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptStockContractReportMapper">
+	<sql id="Where_SearchVo">
+		<if test="productCd != null and productCd != ''">
+			AND s.product_cd = #{productCd}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND s.brand_number LIKE CONCAT('%',#{brandNumber},'%')
+		</if>
+		<if test="factoryName != null and factoryName != ''">
+			AND s.factory_name LIKE CONCAT('%',#{factoryName},'%')
+		</if>
+		<if test="warehouseName != null and warehouseName != ''">
+			AND s.warehouse_name LIKE CONCAT('%',#{warehouseName},'%')
+		</if>
+		<if test="bizUserName != null and bizUserName != ''">
+			AND s.biz_user_name LIKE CONCAT('%',#{bizUserName},'%')
+		</if>
+	</sql>
+	<select id="findStockContractPage" resultType="com.spt.bas.report.client.entity.RptStockContractReportVo">
+		SELECT
+			s.id As id,
+			s.buy_contract_id As buyContractId,
+			s.buy_product_id As buyProductId,
+			s.product_name As productName,
+			s.product_cd As productCd,
+			s.brand_number As brandNumber,
+			s.factory_id As factoryId,
+			s.factory_name As factoryName,
+			s.warehouse_id As warehouseId,
+			s.warehouse_name As warehouseName,
+			s.deal_price As dealPrice,
+			s.warehouse_amount As warehouseAmount,
+			s.buy_number As buyNumber,
+			s.selling_number As sellingNumber,
+			s.sell_number As sellNumber,
+			s.presell_number As presellNumber,
+			s.delivery_in_number As deliveryInNumber,
+			s.delivery_out_number As deliveryOutNumber,
+			s.enterprise_id As enterprise_id,
+			s.biz_user_id As bizUserId,
+			s.biz_user_name As bizUserName,
+			c.our_company_name As ourCompanyName,
+			c.quality_standard As qualityStandard,
+			(s.buy_number-s.selling_number-s.sell_number) As remainNumber,
+			p.wrap_specs As wrapSpecs,
+			p.warehouse_pos As warehousePos,
+			p.product_attr As productAttr,
+			p.warehouse_price As warehousePrice
+		FROM
+			t_stock_contract s
+		LEFT JOIN t_ctr_contract c ON s.buy_contract_id = c.id
+		LEFT JOIN t_ctr_product p ON p.id = s.buy_product_id
+		WHERE
+			c.enterprise_id = #{enterpriseId}
+		AND
+			c.contract_status != 'C'
+		AND 
+			c.contract_status != 'B'
+		AND
+			c.apply_cancel_flg = false
+		<include refid="Where_SearchVo" />
+		AND (
+			s.buy_number > (
+				s.selling_number + s.sell_number
+			)
+		)
+		ORDER BY
+		s.id DESC
+	</select>
+		<select id="findPage" resultType="com.spt.bas.report.client.entity.RptStockContractReportVo">
+		SELECT
+			s.id As id,
+			s.buy_contract_id As buyContractId,
+			s.buy_product_id As buyProductId,
+			s.product_name As productName,
+			s.product_cd As productCd,
+			s.brand_number As brandNumber,
+			s.factory_id As factoryId,
+			s.factory_name As factoryName,
+			s.warehouse_id As warehouseId,
+			s.warehouse_name As warehouseName,
+			s.deal_price As dealPrice,
+			s.warehouse_amount As warehouseAmount,
+			s.buy_number As buyNumber,
+			s.selling_number As sellingNumber,
+			s.sell_number As sellNumber,
+			s.presell_number As presellNumber,
+			s.delivery_in_number As deliveryInNumber,
+			s.delivery_out_number As deliveryOutNumber,
+			s.enterprise_id As enterprise_id,
+			s.biz_user_id As bizUserId,
+			s.biz_user_name As bizUserName,
+			c.contract_no As contractNo,
+			DATEDIFF(IFNULL(c.contract_end_time,Now()),c.contract_time) AS contractDifTime
+		FROM
+			t_stock_contract s
+		LEFT JOIN t_ctr_contract c ON s.buy_contract_id = c.id
+		WHERE
+			s.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<if test="contractNo != null and contractNo != ''">
+			AND c.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		ORDER BY
+			s.created_date DESC
+	</select>
+</mapper>

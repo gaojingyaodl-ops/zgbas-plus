@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCompanyMapper">
+
+	<sql id="Where_SearchVo">
+		<if test="companyName != null and companyName != ''">
+			and com_result.companyName like CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="deptId != null ">
+			and com_result.deptId like CONCAT('%',#{deptId},'%')
+		</if>
+		<if test="matchUserId != null ">
+			and com_result.matchUserId = #{matchUserId}
+		</if>
+		<if test="ownerOfAccountId != null ">
+			and com_result.ownerOfAccountId = #{ownerOfAccountId}
+		</if>
+		<if test="piccCreditAmountStart != null ">
+			<![CDATA[and com_result.piccCreditAmount >= #{piccCreditAmountStart} ]]>
+		</if>
+		<if test="piccCreditAmountEnd != null ">
+			<![CDATA[and com_result.piccCreditAmount <= #{piccCreditAmountEnd} ]]>
+		</if>
+		<if test="sellTotalAmountStart != null ">
+			<![CDATA[and com_result.sellTotalAmount >= #{sellTotalAmountStart} ]]>
+		</if>
+		<if test="sellTotalAmountEnd != null ">
+			<![CDATA[and com_result.sellTotalAmount <= #{sellTotalAmountEnd} ]]>
+		</if>
+		<if test="grossProfitMarginStart != null ">
+			<![CDATA[and com_result.grossProfitMargin >= #{grossProfitMarginStart} ]]>
+		</if>
+		<if test="grossProfitMarginEnd != null ">
+			<![CDATA[and com_result.grossProfitMargin <= #{grossProfitMarginEnd} ]]>
+		</if>
+		<if test="firstContractTimeStart != null ">
+			<![CDATA[ AND DATE_FORMAT(com_result.firstContractTime, '%Y-%m-%d') >= DATE_FORMAT(#{firstContractTimeStart}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="firstContractTimeEnd != null ">
+			<![CDATA[AND DATE_FORMAT(com_result.firstContractTime, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{firstContractTimeEnd}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		
+	</sql>
+	
+	<select id="findRptCompanyList" resultType="com.spt.bas.report.client.entity.RptCompany">
+		select * from (
+		SELECT
+			com.id id,
+		   	com.id companyId,
+			com.company_name companyName,
+			com.province_code provinceCode,
+			com.register_capital registerCapital,
+			com.credit_rating creditRating,
+			com.company_grade companyGrade,
+			com.picc_credit_amount piccCreditAmount,
+			com.credit_days creditDays,
+			com.access_report_flg accessReportFlg,
+			com.on_line_flg onLineFlg,
+			com.actual_guarantee_flg actualGuaranteeFlg,
+			com.created_date createdDate,
+		    con.breachDays,
+		    con.tradeCount,	
+		    con.tradeTonnesSell,	
+		    con.tradeTonnesBuy,	
+		    con.sellUnitPrice,	
+		    con.sellTotalAmount,
+		    con.buyUnitPrice,
+			con.buyTotalAmount,
+		    con.premium,	
+		    con.grossProfitMargin,
+		    con.lastContractTime,
+		    con.firstContractTime,
+		    if(com.dept_id is not null,com.dept_id,max_con.deptId)  deptId,
+		    if(max_con.matchUserId is not null,max_con.matchUserId,com.match_user_id) matchUserId
+		FROM t_bs_company com
+		left JOIN (
+			SELECT
+				SUM(sell.breach_days) breachDays,
+				COUNT(1) tradeCount,
+				SUM(sell.total_number) tradeTonnesSell,
+				SUM(buy.total_number) tradeTonnesBuy,
+				MAX(sell.contract_time) lastContractTime,
+				MIN(sell.contract_time) firstContractTime,
+				SUM(sell.total_amount) / SUM(sell.total_number) sellUnitPrice,
+				SUM(sell.total_amount) sellTotalAmount,
+				sell.company_id companyId,
+				sell.dept_id deptId,
+				SUM(buy.total_amount) / SUM(buy.total_number) buyUnitPrice,
+				SUM(buy.total_amount) buyTotalAmount,
+				SUM(sell.total_amount) / SUM(sell.total_number) - SUM(buy.total_amount) / SUM(buy.total_number) premium,
+				(SUM(sell.total_amount)-SUM(buy.total_amount))/SUM(buy.total_amount) grossProfitMargin
+			FROM
+				t_ctr_contract sell
+			JOIN t_ctr_contract buy ON sell.pair_code = buy.pair_code
+			WHERE sell.contract_status != 'C'
+			AND	sell.contract_type = 'S'
+			AND sell.business_type = 'ZY-BB'
+			AND buy.contract_type = 'B'
+			AND buy.business_type = 'ZY-BB'
+			<if test="notUserIds != null and notUserIds.size > 0 ">
+				and sell.match_user_id NOT IN
+				<foreach collection="notUserIds"  item="var" index="index" open="(" close=")" separator=",">
+					#{notUserIds[${index}],jdbcType=VARCHAR}
+				</foreach>
+			</if>
+			GROUP BY
+				sell.company_id
+		) con
+		on com.id = con.companyId
+		LEFT JOIN (
+		SELECT
+			sell.company_id companyId,
+			SUBSTRING_INDEX(GROUP_CONCAT(sell.dept_id ORDER BY sell.contract_time DESC), ',', 1) AS deptId,
+			SUBSTRING_INDEX(GROUP_CONCAT(sell.contract_time ORDER BY sell.contract_time DESC), ',', 1) AS lastContractTime,
+			SUBSTRING_INDEX(GROUP_CONCAT(sell.match_user_id ORDER BY sell.contract_time DESC), ',', 1) AS matchUserId
+		FROM
+			t_ctr_contract sell
+		JOIN t_ctr_contract buy ON buy.pair_code = sell.pair_code
+		WHERE sell.contract_status != 'C'
+		AND	sell.contract_type = 'S'
+		AND sell.business_type = 'ZY-BB'
+		AND buy.contract_type = 'B'
+		AND buy.business_type = 'ZY-BB'
+		<if test="notUserIds != null and notUserIds.size > 0 ">
+			and sell.match_user_id NOT IN
+			<foreach collection="notUserIds"  item="var" index="index" open="(" close=")" separator=",">
+				#{notUserIds[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		GROUP BY
+		sell.company_id
+		) max_con ON con.companyId = max_con.companyId AND con.lastContractTime = max_con.lastContractTime
+		    
+		LEFT JOIN (
+		SELECT
+		sell.company_id companyId,
+		MiN( sell.contract_time ) firstContractTime
+		FROM
+		t_ctr_contract sell
+		JOIN t_ctr_contract buy ON buy.pair_code = sell.pair_code
+		WHERE sell.contract_status != 'C'
+		AND	sell.contract_type = 'S'
+		AND sell.business_type = 'ZY-BB'
+		AND buy.contract_type = 'B'
+		AND buy.business_type = 'ZY-BB'
+		<if test="notUserIds != null and notUserIds.size > 0 ">
+			and sell.match_user_id NOT IN
+			<foreach collection="notUserIds"  item="var" index="index" open="(" close=")" separator=",">
+				#{notUserIds[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		GROUP BY
+		sell.company_id
+		) min_con ON con.companyId = min_con.companyId AND con.firstContractTime = min_con.firstContractTime
+		
+		where com.company_type='I'
+		) com_result
+		where 1=1
+		<if test="deptIdList != null and deptIdList.size() > 0">
+			and com_result.deptId in
+			<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{deptIdList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+
+		<include refid="Where_SearchVo"/>
+		order by com_result.lastContractTime desc
+	
+
+
+	</select>
+
+	<select id="findRptCompanyListNew" resultType="com.spt.bas.report.client.entity.RptCompany">
+		select * from (
+			SELECT
+			com.id id,
+			cbe.id companyId,
+			com.company_name companyName,
+			com.province_code provinceCode,
+			com.register_capital registerCapital,
+			com.credit_rating creditRating,
+			com.company_grade companyGrade,
+			com.picc_credit_amount piccCreditAmount,
+			zhongYin_credit.credit_amount zhongYinCreditAmount,
+			com.credit_days creditDays,
+			com.access_report_flg accessReportFlg,
+			com.on_line_flg onLineFlg,
+			com.actual_guarantee_flg actualGuaranteeFlg,
+			com.created_date createdDate,
+			cbe.breach_days breachDays,
+			cbe.trade_count tradeCount,
+			cbe.trade_tonnes_sell tradeTonnesSell,
+			cbe.trade_tonnes_buy tradeTonnesBuy,
+			cbe.sell_unit_price sellUnitPrice,
+			cbe.sell_total_amount sellTotalAmount,
+			cbe.buy_unit_price buyUnitPrice,
+			cbe.buy_total_amount buyTotalAmount,
+			cbe.premium premium,
+			cbe.gross_profit_margin grossProfitMargin,
+			cbe.last_contract_time lastContractTime,
+			cbe.first_contract_time firstContractTime,
+			cbe.dept_id deptId,
+			cbe.match_user_id matchUserId,
+			cbe.match_user_name matchUserName,
+			com.owner_of_account_id ownerOfAccountId,
+		    cbe.common_brand_number commonBrandNumber,
+		    cbe.legal_flg legalFlg
+			FROM t_bs_company com
+			LEFT JOIN t_bs_company_credit zhongYin_credit on com.id = zhongYin_credit.company_id and zhongYin_credit.credit_type = '2'
+			LEFT JOIN t_company_business_expansion cbe on com.id = cbe.company_id
+			
+			where com.company_type='I'
+			AND com.enable_flg = TRUE
+		) com_result
+		where 1=1
+		<if test="deptIdList != null and deptIdList.size() > 0">
+			and com_result.deptId in
+			<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{deptIdList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		
+		<include refid="Where_SearchVo"/>
+		order by com_result.lastContractTime desc
+
+
+
+	</select>
+
+	<select id="findRptCompanyToProductList" resultType="com.spt.bas.report.client.entity.RptCompanyToProduct">
+		SELECT COUNT(1) totalCount,c.company_id companyId,p.brand_number brandNumber,p.product_name productName,p.factory_name factoryName
+		FROM t_ctr_contract c 
+		INNER JOIN t_ctr_product p 
+		on c.id = p.ctr_contract_id 
+		WHERE c.contract_status != 'C' and c.contract_type='S' and c.business_type='ZY-BB'
+		<if test="notUserIds != null and notUserIds.size > 0 ">
+			and b.match_user_id NOT IN
+			<foreach collection="notUserIds"  item="var" index="index" open="(" close=")" separator=",">
+				#{notUserIds[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		GROUP BY c.company_id,p.brand_number 
+		ORDER BY c.company_id ASC,COUNT(1) DESC
+	</select>
+
+	<select id="findRptLegalList" resultType="com.spt.bas.report.client.entity.RptCompanyToProduct">
+		SELECT COUNT(1) totalCount,com.id companyId 
+		FROM t_credit_enterprise_basic_info bas 
+		    INNER JOIN t_bs_company com 
+		        ON bas.`name` = com.company_name 
+		    INNER JOIN t_credit_judicature_case cas 
+		        on bas.eid = cas.eid 
+		GROUP BY bas.name;
+	</select>
+	
+</mapper>

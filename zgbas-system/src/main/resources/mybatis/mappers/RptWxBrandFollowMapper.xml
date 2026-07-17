@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptWxBrandFollowMapper">
+	<resultMap id="FollowBrandResultMap" type="com.spt.bas.report.client.vo.RptFollowBrandVo">
+		<result property="productCd" column="productCd"/>
+		<result property="factoryNumber" column="factoryNumber"/>
+		<result property="attentedNumber" column="attentedNumber"/>
+		<result property="brandNumber" column="brandNumber"/>
+		<result property="productTypeId" column="productTypeId"/>
+		<result property="productName" column="productName"/>
+		<result property="userId" column="userId"/>
+		<association property="attentedBrandList" column="{productCd = productCd,userId = userId}" javaType="arraylist" select="attentedBrandList"/>
+		<association property="unAttentedBrandList" column="{productCd = productCd,userId = userId}" javaType="arraylist" select="unAttentedBrandList"/>
+	</resultMap>
+
+	<select id="attentedBrandList" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptBrandVo">
+		select distinct a.brand_number  as name,
+			   c.factoryNumber as factoryNumber,
+			   a.id            as brandId
+		from t_bas_brand a
+				 left join t_wx_brand_follow b on a.id = b.brand_id
+				 left join (
+			select a.brand_id, count(*) factoryNumber
+			from t_wx_brand_follow a
+			group by a.brand_id
+		) c on c.brand_id = a.id
+		where a.product_cd = #{productCd}
+		  and enterprise_id = 44
+		  and b.wx_user_id = #{userId}
+		group by a.brand_number
+	</select>
+
+	<select id="unAttentedBrandList" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptBrandVo">
+		select distinct a.brand_number             as name,
+			   a.id                       as brandId,
+			   ifnull(c.factoryNumber, 0) as factoryNumber
+		from (
+				 select a.brand_number, a.id
+				 from t_bas_brand a
+						  left join t_wx_brand_follow b on a.id = b.brand_id
+				 where a.product_cd = #{productCd}
+				   and a.enterprise_id = 44
+				   and a.id not in (select brand_id from t_wx_brand_follow where wx_user_id = #{userId})) a
+				 left join (
+			select a.brand_id, count(*) factoryNumber
+			from t_wx_brand_follow a
+			group by a.brand_id
+		) c on c.brand_id = a.id;
+	</select>
+
+	<select id="queryUserAttentList" resultMap="FollowBrandResultMap">
+		select x.TYPE_CODE                  as productCd,
+			   x.ID 						as productTypeId,
+			   count(distinct y.wx_user_id) as factoryNumber,
+			   ifnull(z.brandNumber, 0)     as brandNumber,
+			   ifnull(k.attentedNumber, 0)  as attentedNumber,
+			   x.TYPE_NAME                  as productName,
+			   #{userId} as userId
+		from (
+				 select b.*
+				 from t_bs_product_type_access a,
+					  t_bs_product_type b
+				 where a.product_cd = b.TYPE_CODE
+				   and a.enterprise_id = 44
+			 ) x
+				 left join t_wx_brand_follow y on x.ID = y.product_type_id
+				 left join (
+			select a.product_cd, count(*) as brandNumber
+			from t_bas_brand a
+			where a.enterprise_id = 44
+			group by a.product_cd
+		) z on z.product_cd = x.TYPE_CODE
+				 left join
+			 (
+				 select count(distinct brand_id) as attentedNumber, a.product_type_id from t_wx_brand_follow a
+				  where wx_user_id = #{userId}
+				  group by a.product_type_id
+			 ) k on k.product_type_id = x.ID
+		group by x.TYPE_CODE, x.ID;
+	</select>
+
+	<delete id="deleteByUserId">
+		delete t_wx_brand_follow a
+		<where>
+			a.user_id = #{userId}
+		</where>
+	</delete>
+
+	<select id="queryUserAttentNum" resultType="java.lang.Integer"></select>
+
+
+
+</mapper>
