@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptBaseCostMapper">
+
+    <resultMap id="RptResultMap" type="com.spt.bas.report.client.vo.RptBaseCostReportVo">
+        <id column="match_user_id" jdbcType="BIGINT" property="matchUserId" />
+        <result column="match_user_name" jdbcType="VARCHAR" property="matchUserName" />
+        <result column="branch_cd" jdbcType="VARCHAR" property="branchCd" />
+        <result column="branch_name" jdbcType="VARCHAR" property="branchName" />
+        <result column="base_date" jdbcType="VARCHAR" property="baseDate" />
+        <result column="wages" jdbcType="DECIMAL" property="wages" />
+        <result column="commission" jdbcType="DECIMAL" property="commission" />
+        <result column="other_cost" jdbcType="DECIMAL" property="otherCost" />
+        <result column="social_security" jdbcType="DECIMAL" property="socialSecurity" />
+        <result column="provident_fund" jdbcType="DECIMAL" property="providentFund" />
+        <result column="evection_cost" jdbcType="DECIMAL" property="evectionCost" />
+        <result column="total_cost" jdbcType="DECIMAL" property="totalCost" />
+        <result column="remark" jdbcType="VARCHAR" property="remark" />
+<!--        <collection property="contractSettlementList" ofType="com.spt.bas.client.entity.CtrContractSettlement" resultMap="ctrContractSettlementType"/>-->
+    </resultMap>
+
+    <resultMap id="ctrContractSettlementType" type="com.spt.bas.client.entity.CtrContractSettlement">
+        <result property="sellTotalAmount" column="sell_total_amount"/>
+        <result property="contractTime" column="contract_time"/>
+        <result property="buyTotalAmount" column="buy_total_amount"/>
+        <result property="dealNumber" column="deal_number"/>
+        <result property="transportAmount" column="transport_amount"/>
+        <result property="warehouseAmount" column="warehouse_amount"/>
+        <result property="steveDorageAmount" column="steve_dorage_amount"/>
+        <result property="id" column="contractId"/>
+    </resultMap>
+
+    <select id="selectBaseCostPage" resultMap="RptResultMap">
+        select b.id,
+        b.match_user_id,
+        b.match_user_name,
+        b.branch_cd,
+        b.branch_name,
+        b.base_date,
+        SUM(b.wages) wages,
+        SUM(b.commission) commission,
+        SUM(b.other_cost) other_cost,
+        SUM(b.social_security) social_security,
+        SUM(b.provident_fund) provident_fund,
+        SUM(b.evection_cost) evection_cost,
+        SUM(b.total_cost) total_cost,
+        b.remark,
+        MAX(b.created_date) created_date,
+        MAX(b.updated_date) updated_date
+        from t_rpt_base_cost b
+        <where>
+            <if test="baseStartDate != null and baseStartDate != ''">
+                and b.base_date >= #{baseStartDate}
+            </if>
+            <if test="baseEndDate != null and baseEndDate != ''">
+                and b.base_date <![CDATA[<=]]> #{baseEndDate}
+            </if>
+            <if test="branchCd != null and branchCd != ''">
+                and b.branch_cd = #{branchCd}
+            </if>
+            <if test="matchUserName != null and matchUserName != ''">
+                and b.match_user_name like CONCAT('%',#{matchUserName},'%')
+            </if>
+            <if test="branchCdList != null and branchCdList.size() != 0">
+                and b.branch_cd in
+                <foreach collection="branchCdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{branchCdList[${index}]}
+                </foreach>
+            </if>
+        </where>
+        group by
+        b.match_user_id
+        order by b.base_date desc, b.match_user_id asc
+    </select>
+    
+    <select id="selectBaseCostSum" resultMap="RptResultMap">
+        select
+        SUM(b.wages) wages,
+        SUM(b.commission) commission,
+        SUM(b.other_cost) other_cost,
+        SUM(b.social_security) social_security,
+        SUM(b.provident_fund) provident_fund,
+        SUM(b.evection_cost) evection_cost,
+        SUM(b.total_cost) total_cost
+        from t_rpt_base_cost b
+        <where>
+            <if test="baseStartDate != null and baseStartDate != ''">
+                and b.base_date >= #{baseStartDate}
+            </if>
+            <if test="baseEndDate != null and baseEndDate != ''">
+                and b.base_date <![CDATA[<=]]> #{baseEndDate}
+            </if>
+            <if test="branchCd != null and branchCd != ''">
+                and b.branch_cd = #{branchCd}
+            </if>
+            <if test="matchUserName != null and matchUserName != ''">
+                and b.match_user_name like CONCAT('%',#{matchUserName},'%')
+            </if>
+            <if test="branchCdList != null and branchCdList.size() != 0">
+                and b.branch_cd in
+                <foreach collection="branchCdList" item="item" index="index" open="(" close=")" separator=",">
+                    #{branchCdList[${index}]}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    
+    <select id="selectUserRoi" resultMap="RptResultMap">
+        select b.id,
+               b.match_user_id,
+               b.match_user_name,
+               b.branch_cd,
+               b.branch_name,
+               b.base_date,
+               SUM(b.wages) wages,
+               SUM(b.commission) commission,
+               SUM(b.other_cost) other_cost,
+               SUM(b.social_security) social_security,
+               SUM(b.provident_fund) provident_fund,
+               SUM(b.evection_cost) evection_cost,
+               SUM(b.total_cost) total_cost,
+               b.remark,
+               b.created_date,
+               b.updated_date
+        from t_rpt_base_cost b
+        <where>
+            <if test="param1 != null and param1 != ''">
+                and b.base_date >= #{param1}
+            </if>
+            <if test="param2 != null and param2 != ''">
+                and b.base_date <![CDATA[<=]]> #{param2}
+            </if>
+            <if test="param3 != null and param3.size() != 0">
+                and b.match_user_id in
+                <foreach collection="param3" item="item" index="index" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        group by
+        b.match_user_id
+        order by b.base_date desc, b.match_user_id asc
+    </select>
+
+    <select id="selectContractSettlements" resultType="com.spt.bas.client.entity.CtrContractSettlement">
+        SELECT
+        c.sell_match_user_id AS sellMatchUserId,
+        c.contract_time,
+        c.buy_total_amount,
+        c.sell_total_amount,
+        c.deal_number,
+        c.transport_amount,
+        c.warehouse_amount,
+        c.steve_dorage_amount,
+        c.id AS contractId,
+        c.sell_match_amount,
+        c.delivery_fee,
+        c.insurance_rate,
+        c.vat_amount,
+        c.print_amount
+        FROM
+        t_ctr_contract_settlement c
+        LEFT JOIN t_ctr_contract sell ON c.sell_contract_id = sell.id
+        WHERE
+        c.business_type = 'ZY-BB'
+        AND c.enable_flg = TRUE
+        AND sell.seal_flg = TRUE
+        <if test="param1 != null and param1 != ''">
+            AND date_format(c.contract_time, '%Y-%m') >= #{param1}
+        </if>
+        <if test="param2 != null and param2 != ''">
+            AND date_format(c.contract_time, '%Y-%m') <![CDATA[<=]]> #{param2}
+        </if>
+    </select>
+
+
+    <select id="findBaseCostAndContract" resultType="com.spt.bas.report.client.vo.RptBaseCostAndContractVo">
+        select b.match_user_name,
+               b.base_date,
+               b.match_user_id,
+               b.branch_cd,
+               b.branch_name,
+               b.wages,
+               c.sell_total_amount,
+               c.transport_amount,
+               c.warehouse_amount,
+               c.steve_dorage_amount,
+               c.buy_total_amount,
+               c.contract_time,
+               c.deal_number,
+               c.business_type,
+               c.match_credit_flg,
+               c.business_type_dcsx,
+               c.buy_contract_no,
+               c.sell_contract_no
+        from t_rpt_base_cost b
+                 join t_ctr_contract_settlement c on b.match_user_id = c.sell_match_user_id and c.business_type = 'ZY-BB' and c.enable_flg = true
+        <if test="param1 != null and param1 != ''">
+            and date_format(c.contract_time, '%Y-%m') = #{baseDate}
+        </if>
+        <where>
+            <if test="baseDate != null and baseDate != ''">
+                and b.base_date = #{baseDate}
+            </if>
+            <if test="branchCd != null and branchCd != ''">
+                and b.branch_cd = #{branchCd}
+            </if>
+            <if test="branchCds != null and branchCds.size() != 0">
+                and b.branch_cd in
+                <foreach collection="branchCds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="selectUser" resultMap="RptResultMap">
+        select *
+        from t_rpt_base_cost
+        <where>
+            <if test="_parameter != null and _parameter != ''">
+                base_date = #{_parameter}
+            </if>
+        </where>
+    </select>
+</mapper>
