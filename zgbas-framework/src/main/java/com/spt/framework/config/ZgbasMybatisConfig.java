@@ -19,9 +19,22 @@ import org.springframework.context.annotation.Configuration;
  * <p>No {@code DataSource} or {@code SqlSessionFactory} {@code @Bean} is declared here —
  * mybatis-plus-boot-starter auto-config binds to the {@code @Primary} DataSource for free
  * (RESEARCH §"Don't Hand-Roll"). The {@code PaginationInterceptor} is the only addition.
+ *
+ * <p><b>Phase 5 Wave 0 (D-P5-07 part 2)</b> — broadened {@code @MapperScan} from a single
+ * package string to a two-element array so the 53 ported {@code com.spt.bas.report.server.dao}
+ * mappers (all {@code @MyBatisDao} annotated) get registered alongside the Phase 2
+ * {@code SampleMapper}. Without this, startup hits
+ * {@code org.apache.ibatis.binding.BindingException: Invalid bound statement (not found)}
+ * on the first report query.
  */
 @Configuration
-@MapperScan(basePackages = "com.spt.bas.system.dao", annotationClass = MyBatisDao.class)
+@MapperScan(
+    basePackages = {
+        "com.spt.bas.system.dao",            // Phase 2 (SampleMapper)
+        "com.spt.bas.report.server.dao"      // Phase 5 (53 Rpt*Mapper)
+    },
+    annotationClass = MyBatisDao.class
+)
 public class ZgbasMybatisConfig {
 
     /**

@@ -96,10 +96,10 @@
                  @Bean XxlJobSpringExecutor (BasJobConfig, correctly EXCLUDED to Phase 6 per
                  INFRA-03). The Phase 6 exclusion is about task/ handlers, not the compile-time
                  jar dep that source basServer also declared.
-             report-client 2.0.1-SNAPSHOT (basServer/pom.xml + basCore/pom.xml ${snapshot.version}):
-                 types-only dep for service files importing com.spt.bas.report.client.* — the
-                 report module itself ports in Phase 5 (REPORT-01/02); the client jar provides
-                 compile-time contract types (entity/vo/remote interfaces) verbatim from source.
+             report-client 2.0.1-SNAPSHOT: REMOVED Phase 5 Wave 0 (05-01 D-P5-02) — 265 java
+                 (entity/vo/remote/config/constant/payload/utils) inlined verbatim into
+                 zgbas-system/src/main/java/com/spt/bas/report/client/, eliminating the types-only
+                 private-repo jar dep (对齐 Phase 4 basClient inline pattern, D-P2-07 照搬保包名).
              purchase-client 2.0.1-SNAPSHOT (same source): types-only dep for service files
                  importing com.spt.bas.purchase.wx.client.* — basWx deferred to v2 (WX-01/02);
                  client jar provides contract types verbatim from source.
@@ -136,13 +136,32 @@
         </dependency>
         <dependency>
             <groupId>com.spt.bas</groupId>
-            <artifactId>report-client</artifactId>
-            <version>2.0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.spt.bas</groupId>
             <artifactId>purchase-client</artifactId>
             <version>2.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <!-- Phase 5 Wave 0 (Plan 05-01 Rule 3 cascade): easyexcel 3.1.0 verbatim from source
+             basReport/reportClient/pom.xml. Required by 3 ported reportClient files
+             (entity/RptInvoiceDetailExcel, entity/RptInvoiceInfoExcel, utils/DateUtils) which
+             import com.alibaba.excel.{annotation.write.style, enums.poi}.* for @HeadStyle /
+             @ContentStyle / @ColumnWidth Excel export annotations. Source reportClient pom
+             declared this dep; the types-only report-client jar (now removed via D-P5-02 inline)
+             previously brought it in transitively. -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+        <!-- Phase 5 Wave 0 (Plan 05-01 Rule 3 cascade): cglib 3.1. Previously brought in
+             transitively via the report-client jar's spt-bas-client dependency (removed by
+             D-P5-02 inline). Phase 4 basServer file ApplyContractAdjustServiceImpl:30 imports
+             net.sf.cglib.beans.BeanMap (legacy non-Spring-repackaged cglib API). Adding the
+             explicit artifact restores the compile classpath to its pre-inline state. -->
+        <dependency>
+            <groupId>cglib</groupId>
+            <artifactId>cglib</artifactId>
+            <version>3.1</version>
         </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->

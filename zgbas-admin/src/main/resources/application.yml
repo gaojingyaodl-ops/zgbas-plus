@@ -45,7 +45,14 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath:/mybatis/mappers/*Mapper.xml
-  type-aliases-package: com.spt.bas.client.entity      # Pitfall 4 defense
+  # Phase 5 Wave 0 (D-P5-07 part 1): append report entity + vo packages so 53 Rpt*Mapper.xml
+  # resultType / parameterType FQNs resolve. mapper-locations unchanged — 53 report XML drop
+  # alongside SampleMapper.xml and are picked up by the existing glob.
+  # Pitfall 4 defense: client.entity kept; report.client.{entity,vo} added for report XML FQN refs.
+  type-aliases-package: >-
+    com.spt.bas.client.entity,
+    com.spt.bas.report.client.entity,
+    com.spt.bas.report.client.vo
 
 logging:
   level:
