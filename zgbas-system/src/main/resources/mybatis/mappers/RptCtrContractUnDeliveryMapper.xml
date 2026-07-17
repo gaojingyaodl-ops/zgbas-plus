@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractUnDeliveryMapper">
+	<!-- for findPageCtrContract 合同列表   -->
+	<resultMap id="CtrContractResultMap" type="com.spt.bas.report.client.vo.RptCtrContractUnDeliveryVo">
+		<result property="id" column="id"/>
+		<result property="contractNo" column="contractNo"/>
+		<result property="businessTypeDcsx" column="businessTypeDcsx"/>
+		<result property="productsName" column="productsName"/>
+		<result property="companyName" column="companyName"/>
+		<result property="totalNumber" column="totalNumber"/>
+		<result property="totalAmount" column="totalAmount"/>
+		<result property="warehouseNumber" column="warehouseNumber"/>
+		<result property="deliveryDateFrom" column="deliveryDateFrom"/>
+		<result property="matchUserName" column="matchUserName"/>
+		<result property="approveId" column="approveId"/>
+		<result property="applyCancelFlg" column="applyCancelFlg"/>
+	</resultMap>
+	
+	<!-- 首页风控统计 -->
+	<select id="findUnDeliveryPage" resultType="com.spt.bas.report.client.vo.RptCtrContractUnDeliveryVo">
+		SELECT if(#{contractType} = 'B',b.id,s.id) id,
+		       if(#{contractType} = 'B',b.contract_no,s.contract_no) contractNo,
+		       if(#{contractType} = 'B',b.contract_type,s.contract_type) contractType,
+			   if(#{contractType} = 'B',b.business_type_dcsx,s.business_type_dcsx) businessTypeDcsx,
+			   if(#{contractType} = 'B',b.products_name,s.products_name) productsName,
+			   if(#{contractType} = 'B',b.company_name,s.company_name) companyName,
+			   if(#{contractType} = 'B',b.total_number,s.total_number) totalNumber,
+			   if(#{contractType} = 'B',b.total_amount,s.total_amount) totalAmount,
+			   if(#{contractType} = 'B',b.warehouse_number,s.warehouse_number) warehouseNumber,
+			   if(#{contractType} = 'B',b.delivery_date_from,s.delivery_date_from) deliveryDateFrom,
+			   if(#{contractType} = 'B',b.match_user_name,s.match_user_name) matchUserName,
+			   if(#{contractType} = 'B',b.approve_id,s.approve_id) approveId,
+			   if(#{contractType} = 'B',b.apply_cancel_flg,s.apply_cancel_flg) applyCancelFlg,
+		       b.match_credit_flg matchCreditFlg
+		       
+		FROM t_ctr_contract b
+		INNER JOIN t_ctr_contract_rela r ON r.buy_contract_id=b.id
+		INNER JOIN t_ctr_contract s ON r.sell_contract_id=s.id
+		WHERE 1=1
+		<if test="contractType != null and contractType != '' and contractType eq 'B'.toString()">
+			AND b.enterprise_id = 44
+			AND b.STATUS != 'C'
+			AND b.contract_type = #{contractType}
+			<if test="matchCreditFlg != null">
+				AND b.match_credit_flg = #{matchCreditFlg}
+			</if>
+
+			<if test="contractNo != null and contractNo != ''">
+				AND b.contract_no LIKE "%"#{contractNo}"%"
+			</if>
+			<if test="companyName != null and companyName != ''">
+				AND b.company_name LIKE "%"#{companyName}"%"
+			</if>
+			<if test="ourCompanyName != null and ourCompanyName != ''">
+				AND b.our_company_name LIKE "%"#{ourCompanyName}"%"
+			</if>
+			<if test="deliveryDateTo != null and deliveryDateTo != ''">
+				AND #{deliveryDateTo} >=  DATE_FORMAT(b.delivery_date_to,'%Y-%m-%d')
+			</if>
+			<if test="deliveryDateFrom != null and deliveryDateFrom != ''">
+				AND DATE_FORMAT(b.delivery_date_to,'%Y-%m-%d') >= #{deliveryDateFrom}
+			</if>
+		</if>
+		<if test="contractType != null and contractType != '' and contractType eq 'S'.toString()">
+			AND s.enterprise_id = 44
+			AND s.STATUS != 'C'
+			AND s.contract_type = #{contractType}
+			<if test="matchCreditFlg != null">
+				AND s.match_credit_flg = #{matchCreditFlg}
+			</if>
+
+			<if test="contractNo != null and contractNo != ''">
+				AND s.contract_no LIKE "%"#{contractNo}"%"
+			</if>
+			<if test="companyName != null and companyName != ''">
+				AND s.company_name LIKE "%"#{companyName}"%"
+			</if>
+			<if test="ourCompanyName != null and ourCompanyName != ''">
+				AND s.our_company_name LIKE "%"#{ourCompanyName}"%"
+			</if>
+			<if test="deliveryDateTo != null and deliveryDateTo != ''">
+				AND #{deliveryDateTo} >=  DATE_FORMAT(s.delivery_date_to,'%Y-%m-%d')
+			</if>
+			<if test="deliveryDateFrom != null and deliveryDateFrom != ''">
+				AND DATE_FORMAT(s.delivery_date_to,'%Y-%m-%d') >= #{deliveryDateFrom}
+			</if>
+		</if>
+		
+		<if test="warehouseInCondition != null and warehouseInCondition != '' and warehouseInCondition eq 'WY'.toString()">
+			AND b.warehouse_number >= b.total_number
+		</if>
+		<if test="warehouseInCondition != null and warehouseInCondition != '' and warehouseInCondition eq 'WN'.toString()">
+			AND b.total_number > b.warehouse_number
+		</if>
+		
+		<if test="warehouseOutCondition != null and warehouseOutCondition != '' and warehouseOutCondition eq 'WY'.toString()">
+			AND s.warehouse_number >= s.total_number
+		</if>
+		<if test="warehouseOutCondition != null and warehouseOutCondition != '' and warehouseOutCondition eq 'WN'.toString()">
+			AND s.total_number > s.warehouse_number
+		</if>
+
+		<if test="payCondition != null and payCondition != '' and payCondition eq 'PY'.toString()">
+			AND b.dealed_amount >= b.total_amount
+		</if>
+		<if test="payCondition != null and payCondition != '' and payCondition eq 'PN'.toString()">
+			AND b.total_amount > b.dealed_amount
+		</if>
+		<if test="productType != null and productType eq 'NHG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'HG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		 order by b.id desc
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptPrintHistoryMapper">
+
+<insert id="addPrintHistory">
+    insert into t_print_history(
+    <if test="approveNo != null and approveNo != ''">
+        approve_no,
+    </if>
+    <if test="printId != null and printId != 0">
+        print_id,
+    </if>
+    <if test="printName != null and printName != ''">
+        print_name,
+    </if>
+    created_date)values(
+    <if test="approveNo != null and approveNo != ''">
+        #{approveNo},
+    </if>
+    <if test="printId != null and printId != 0">
+        #{printId},
+    </if>
+    <if test="printName != null and printName != ''">
+        #{printName},
+    </if>
+    sysdate())
+</insert>
+
+    <select id="selectPrintCountByApproveNo" resultType="java.lang.Integer">
+        select count(*)
+        from t_print_history
+        where approve_no = #{approveNo}
+        group by approve_no
+    </select>
+</mapper>

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractStatisticsMapper">
+	<!-- RptCtrContractStatistics中封装的查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="productName != null and productName != ''">
+			AND p.product_cd = #{productName}
+		</if>
+		<if test="companyName != null and companyName != ''">
+			AND c.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="matchUserName != null and matchUserName != ''">
+			AND c.match_user_name = #{matchUserName}
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND p.brand_number LIKE CONCAT('%',#{brandNumber},'%')
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c.dept_id = #{deptId}
+		</if>
+		<if test="contractTimeGTED != null">
+		<![CDATA[ AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeGTED}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="contractTimeLTD != null">
+		<![CDATA[ AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeLTD}, '%Y-%m-%d') ]]> 
+		</if>
+	</sql>
+	<!-- 进销存统计 -->
+	<!-- List<RptCtrContractStatistics> findBuyCtrContract(StatisticsVo vo); -->
+	<select id="findBuyCtrContract" resultType="com.spt.bas.report.client.entity.RptCtrContractStatistics">
+		SELECT
+			p.id AS id,
+			c.contract_no AS contractNo,
+			c.contract_attr AS contractAttr,
+			p.product_name AS productName,
+			p.brand_number AS brandNumber,
+			p.factory_name AS factoryName,
+			c.company_name AS companyName,
+			p.warehouse_name AS warehouseAddr,
+			p.deal_number AS dealNumber,
+			p.deal_price AS dealPrice,
+			c.contract_time AS buyDate,
+			c.pay_full_time AS payTime,
+			TIMESTAMPDIFF(HOUR, c.contract_time, now()) AS inWarehouseHours,
+			c.match_user_name AS matchUserName,
+			c.match_user_id AS matchUserId,
+			IFNULL(r1.deal_number, 0) AS salesNumber,
+			(
+				p.deal_number - IFNULL(r1.deal_number, 0)
+			) AS remainNumber,
+			(
+				(
+					p.deal_number - IFNULL(r1.deal_number, 0)
+				) * p.deal_price
+			) AS overplusPrice,
+			c.dept_id AS deptId,
+			IF(s.total_amount!='',IF(IFNULL((p1.deal_number*p1.deal_price/s.total_amount*s.dealed_amount)>=p.deal_number*p.deal_price,0),
+			0,p.deal_number*p.deal_price-IFNULL((p1.deal_number*p1.deal_price/s.total_amount*s.dealed_amount),0)),p.deal_number*p.deal_price) As occupation
+		FROM
+			t_ctr_contract AS c,
+			t_ctr_product AS p
+		LEFT JOIN (
+			SELECT
+				r.buy_product_id,
+				r.sell_product_id,
+				r.sell_contract_id,
+				sum(r.deal_number) AS deal_number
+			FROM
+				t_ctr_contract_rela AS r
+			GROUP BY
+				r.buy_product_id
+		) AS r1 ON p.id = r1.buy_product_id
+		LEFT JOIN t_ctr_contract s
+		ON s.id = r1.sell_contract_id
+		LEFT JOIN t_ctr_product p1
+		ON r1.sell_product_id = p1.id
+		WHERE
+			p.ctr_contract_id = c.id
+		AND c.contract_type = 'B'
+		AND c.enterprise_id = #{enterpriseId}
+		AND c.contract_status != 'C'
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY c.contract_time DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY c.contract_time ASC
+            </when>
+           	<otherwise>
+           		ORDER BY c.contract_time DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	<!-- RptCtrContractStatistics getContractStatistics(Map<String, Object> map); -->
+	<select id="getContractStatistics" resultType="com.spt.bas.report.client.entity.RptCtrContractStatistics">
+		SELECT SUM(p.deal_number) AS dealNumberTotal, SUM(IFNULL(r1.deal_number,0)) AS salesNumberTotal,
+		SUM(p.deal_number - IFNULL(r1.deal_number,0)) AS remainNumberTotal,
+		SUM((p.deal_number - IFNULL(r1.deal_number,0))*p.deal_price) AS overplusPriceTotal,
+		SUM(IF(s.dealed_amount>=p.deal_number*p.deal_price,0,p.deal_number*p.deal_price-s.dealed_amount))  As occupation
+		FROM t_ctr_contract AS c, t_ctr_product AS p LEFT JOIN 
+		(SELECT r.buy_product_id,r.sell_product_id,r.sell_contract_id, sum(r.deal_number) AS deal_number FROM t_ctr_contract_rela AS r GROUP BY r.buy_product_id) AS r1
+		ON p.id = r1.buy_product_id LEFT JOIN t_ctr_contract s ON s.id = r1.sell_contract_id LEFT JOIN t_ctr_product p1 ON r1.sell_product_id = p1.id
+		WHERE p.ctr_contract_id = c.id AND c.contract_type = 'B' AND c.enterprise_id = #{enterpriseId} AND c.contract_status != 'C'
+		<include refid="Where_SearchVo" />
+	</select>
+	<!-- List<RptCtrContractStatistics> findSaleCtrContract(Long productId); -->
+	<select id="findSaleCtrContract" resultType="com.spt.bas.report.client.entity.RptCtrContractStatistics">
+		SELECT c.contract_no AS contractNo, c.match_user_name AS matchUserName, c.company_name AS companyName,
+		p.deal_number AS salesNumber, p.deal_price AS dealPrice, p.total_price AS totalPrice, p.remain_number AS remainNumber,
+		c.pay_full_time AS deliveryDateFrom, c.delivery_date_to AS deliveryDateTo, c.bill_flg AS billFlg,
+		c.delivery_mode AS deliveryMode, c.delivery_type AS deliveryType, c.transport_amount AS transportAmount
+		FROM t_ctr_contract_rela AS r, t_ctr_contract AS c, t_ctr_product AS p
+		WHERE r.sell_contract_id = c.id AND r.sell_product_id = p.id 
+		AND r.buy_product_id = #{productId}
+	</select>
+	<!-- List<RptCtrContractStatistics> findContractGroupByProduct(StatisticsVo vo); -->
+	<select id="findContractGroupByProduct" resultType="com.spt.bas.report.client.entity.RptCtrContractStatistics">
+		SELECT p.product_name AS statisticsType,SUM(p.deal_number) AS dealNumber,SUM(p.total_price) AS totalPrice
+		FROM t_ctr_contract c,t_ctr_product p
+		WHERE c.id = p.ctr_contract_id AND c.contract_type = #{contractType} AND c.enterprise_id = #{enterpriseId}
+		AND c.contract_status != 'C'
+		<include refid="Where_SearchVo" />
+		GROUP BY p.product_name
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY SUM(p.deal_number) ASC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY SUM(p.deal_number) DESC
+            </when>
+           	<otherwise>
+           		ORDER BY SUM(p.deal_number) DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	<!-- List<RptCtrContractStatistics> findContractGroupByCompany(StatisticsVo vo); -->
+	<select id="findContractGroupByCompany" resultType="com.spt.bas.report.client.entity.RptCtrContractStatistics">
+		SELECT c.company_name AS statisticsType,SUM(p.deal_number) AS dealNumber,SUM(p.total_price) AS totalPrice
+		FROM t_ctr_contract c,t_ctr_product p
+		WHERE c.id = p.ctr_contract_id AND c.contract_type = #{contractType} AND c.enterprise_id = #{enterpriseId}
+		AND c.contract_status != 'C'
+		<include refid="Where_SearchVo" />
+		GROUP BY c.company_name
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY SUM(p.deal_number) ASC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY SUM(p.deal_number) DESC
+            </when>
+           	<otherwise>
+           		ORDER BY SUM(p.deal_number) DESC
+           	</otherwise>
+       	</choose>
+	</select>
+</mapper>

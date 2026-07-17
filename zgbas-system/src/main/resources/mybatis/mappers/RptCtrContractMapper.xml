@@ -1,0 +1,1066 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractMapper">
+
+    <!-- for findPageCtrContract 合同列表   -->
+    <resultMap id="CtrContractResultMap" type="com.spt.bas.report.client.vo.RptCtrContractVo">
+        <result property="serviceType" column="serviceType"/>
+        <result property="contractNo" column="contractNo"/>
+        <result property="deliveryType" column="deliveryType"/>
+        <result property="deliveryAddr" column="deliveryAddr"/>
+        <result property="warehouseId" column="warehouseId"/>
+        <result property="unit" column="unit"/>
+        <result property="totalAmount" column="totalAmount"/>
+        <result property="totalNumber" column="totalNumber"/>
+        <result property="contractTime" column="contractTime"/>
+        <result property="ourCompanyName" column="ourCompanyName"/>
+        <result property="deliveryDateFrom" column="deliveryDateFrom"/>
+        <result property="deliveryDateTo" column="deliveryDateTo"/>
+        <result property="contractEndTime" column="contractEndTime"/>
+        <result property="creditCycle" column="creditCycle"/>
+        <result property="contractStatus" column="contractStatus"/>
+        <result property="sealFlg" column="sealFlg"/>
+        <result property="receiptButton" column="receiptButton"/>
+        <result property="warehouseFlg" column="warehouseFlg"/>
+        <result property="dealedFlg" column="dealedFlg"/>
+        <result property="interestDealFlg" column="interestDealFlg"/>
+        <result property="billedFlg" column="billedFlg"/>
+        <result property="interestBilledFlg" column="interestBilledFlg"/>
+        <result property="confirmReceiptFlg" column="confirmReceiptFlg"/>
+        <result property="orverdurFlg" column="orverdurFlg"/>
+        <result property="ctrContractId" column="ctrContractId"/>
+        <result property="deliveryAddrSell" column="deliveryAddrSell"/>
+        <result property="payFullTime" column="payFullTime"/>
+        <association property="products" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="products"/>
+    </resultMap>
+
+    <!-- for getCtrContract 合同详细   -->
+    <resultMap id="CtrContractDetailsResultMap" type="com.spt.bas.report.client.vo.RptCtrContractDetailVo">
+        <result property="serviceType" column="serviceType"/>
+        <result property="contractNo" column="contractNo"/>
+        <result property="deliveryType" column="deliveryType"/>
+        <result property="deliveryAddr" column="deliveryAddr"/>
+        <result property="warehouseId" column="warehouseId"/>
+        <result property="unit" column="unit"/>
+        <result property="totalAmount" column="totalAmount"/>
+        <result property="totalNumber" column="totalNumber"/>
+        <result property="contractTime" column="contractTime"/>
+        <result property="ourCompanyName" column="ourCompanyName"/>
+        <result property="deliveryDateFrom" column="deliveryDateFrom"/>
+        <result property="deliveryDateTo" column="deliveryDateTo"/>
+        <result property="contractEndTime" column="contractEndTime"/>
+        <result property="creditCycle" column="creditCycle"/>
+        <result property="contractStatus" column="contractStatus"/>
+        <result property="sealFlg" column="sealFlg"/>
+        <result property="warehouseFlg" column="warehouseFlg"/>
+        <result property="dealedFlg" column="dealedFlg"/>
+        <result property="interestDealFlg" column="interestDealFlg"/>
+        <result property="billedFlg" column="billedFlg"/>
+        <result property="interestBilledFlg" column="interestBilledFlg"/>
+        <result property="confirmReceiptFlg" column="confirmReceiptFlg"/>
+        <result property="orverdurFlg" column="orverdurFlg"/>
+        <result property="ctrContractId" column="ctrContractId"/>
+
+        <result property="deliveryAddrSell" column="deliveryAddrSell"/>
+        <result property="warehouseAmount" column="warehouseAmount"/>
+        <result property="warehouseNumber" column="warehouseNumber"/>
+        <result property="contractRealEndTime" column="contractRealEndTime"/>
+        <result property="dealedAmount" column="dealedAmount"/>
+        <result property="dealedNumber" column="dealedNumber"/>
+        <result property="confirmReceiptAmount" column="confirmReceiptAmount"/>
+        <result property="confirmReceiptNumber" column="confirmReceiptNumber"/>
+        <result property="billedAmount" column="billedAmount"/>
+        <result property="billedNumber" column="billedNumber"/>
+        <result property="fileId" column="fileId"/>
+        <result property="invoiceFileId" column="invoiceFileId"/>
+        <result property="amountFileId" column="amountFileId"/>
+        <result property="warehouseFileId" column="warehouseFileId"/>
+        <result property="confirmReceiptFileId" column="confirmReceiptFileId"/>
+        <result property="payFullTime" column="payFullTime"/>
+        <association property="products" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="productsDetail"/>
+    </resultMap>
+
+    <!-- for  getServiceContract 服务合同详细  -->
+    <resultMap id="CtrServiceContractResultMap" type="com.spt.bas.report.client.vo.RptCtrServiceContractVo">
+        <result property="serviceContractNo" column="serviceContractNo"/>
+        <result property="totalAmount" column="totalAmount"/>
+        <result property="ourCompanyName" column="ourCompanyName"/>
+        <result property="contractStartTime" column="contractStartTime"/>
+        <result property="contractEndTime" column="contractEndTime"/>
+        <result property="creditCycle" column="creditCycle"/>
+        <result property="rate" column="rate"/>
+        <result property="dealedAmount" column="dealedAmount"/>
+        <result property="interestRate" column="interestRate"/>
+        <result property="interestAmount" column="interestAmount"/>
+        <result property="interestDays" column="interestDays"/>
+        <result property="receiveInterestAmount" column="receiveInterestAmount"/>
+        <result property="fileId" column="fileId"/>
+        <result property="contractStatus" column="contractStatus"/>
+        <result property="dealedFlg" column="dealedFlg"/>
+        <result property="billedAmount" column="billedAmount"/>
+        <result property="billedFlg" column="billedFlg"/>
+        <result property="orverdurFlg" column="orverdurFlg"/>
+    </resultMap>
+
+    <!-- for getDeliveryOutDetail 获取合同的发货详情   -->
+    <resultMap id="CtrWarehouseDetailResultMap" type="com.spt.bas.report.client.vo.RptCtrWarehouseDetailVo">
+        <result property="warehouseTotalAmount" column="warehouseTotalAmount"/>
+        <result property="warehouseTotalNumber" column="warehouseTotalNumber"/>
+        <result property="deliveryType" column="deliveryType"/>
+        <result property="deliveryAddr" column="deliveryAddr"/>
+        <result property="deliveryAddrSell" column="deliveryAddrSell"/>
+        <result property="warehouseId" column="warehouseId"/>
+        <result property="ctrContractId" column="ctrContractId"/>
+        <association property="deliveryList" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="deliveryList"/>
+    </resultMap>
+
+    <!-- for getUndeliveryOutDetail 获取合同未发货的详情   -->
+    <resultMap id="CtrUnDeliveryOutResultMap" type="com.spt.bas.report.client.vo.RptCtrUnDeliveryOutVo">
+        <result property="totalNumber" column="totalNumber"/>
+        <result property="totalAmount" column="totalAmount"/>
+        <result property="deliveryType" column="deliveryType"/>
+        <result property="deliveryAddr" column="deliveryAddr"/>
+        <result property="deliveryAddrSell" column="deliveryAddrSell"/>
+        <result property="warehouseId" column="warehouseId"/>
+        <result property="ctrContractId" column="ctrContractId"/>
+        <result property="qualityStandard" column="qualityStandard"/>
+        <association property="products" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="productsWithCtrUndeliveryOut"/>
+    </resultMap>
+    <!-- for getUndeliveryOutDetail 则一到车信息回调   -->
+    <resultMap id="ArriveVehicleResultMap" type="com.spt.bas.report.client.vo.RptArriveVehicleVo">
+        <result property="code" column="code"/>
+        <result property="waybillCode" column="waybillCode"/>
+        <result property="customerOrderCode" column="customerOrderCode"/>
+        <result property="arriveTime" column="arriveTime"/>
+    </resultMap>
+
+    <!--  for getPayDetail 查询支付货款的历史详情   -->
+        <resultMap id="CtrPayResultMap" type="com.spt.bas.report.client.vo.RptCtrPayVo">
+        <result property="dealedTotalAmount" column="dealedTotalAmount"/>
+        <result property="undealedTotalAmount" column="undealedTotalAmount"/>
+        <result property="ctrContractId" column="ctrContractId"/>
+        <association property="dealedList" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="selectDealedList"/>
+    </resultMap>
+
+    <!--  for getServicePayDetail 查询支付货款的历史详情   -->
+    <resultMap id="ServicePayResultMap" type="com.spt.bas.report.client.vo.RptCtrPayVo">
+        <result property="dealedTotalAmount" column="dealedTotalAmount"/>
+        <result property="undealedTotalAmount" column="undealedTotalAmount"/>
+        <result property="ctrContractId" column="ctrContractId"/>
+        <association property="dealedList" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="selectServiceDealedList"/>
+    </resultMap>
+
+    <!--  for getBillDetail 获取合同的货款开票的历史详情   -->
+    <resultMap id="CtrBillResultMap" type="com.spt.bas.report.client.vo.RptCtrBillVo">
+        <result property="billedTotalAmount" column="billedTotalAmount"/>
+        <result property="unbilledTotalAmount" column="unbilledTotalAmount"/>
+        <result property="ctrContractId" column="ctrContractId"/>
+        <association property="billedList" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="selectBilledList"/>
+    </resultMap>
+
+    <!--  for getConfirmReceiptDetail 获取合同的确认收货的历史详情   -->
+    <resultMap id="CtrConfirmReceiptResultMap" type="com.spt.bas.report.client.vo.RptCtrConfirmReceiptVo">
+        <result property="confirmReceiptTotalAmount" column="confirmReceiptTotalAmount"/>
+        <result property="ctrContractId" column="ctrContractId"/>
+        <result property="deliveryType" column="deliveryType"/>
+        <result property="deliveryAddrSell" column="deliveryAddrSell"/>
+        <result property="deliveryAddr" column="deliveryAddr"/>
+        <association property="confirmReceiptList" column="{ctrContractId = ctrContractId}" javaType="arraylist" select="selectConfirmReceiptList"/>
+    </resultMap>
+
+    <!--查询条件 -->
+    <sql id="Where_SearchVo">
+        <if test="serviceType != null and serviceType != ''">
+            <if test='serviceType == "1"'>
+                and a.delivery_mode = 'SX' and
+                a.settlement_type = '0'
+            </if>
+            <if test='serviceType == "2"'>
+                and a.delivery_mode = 'SX' and
+                a.settlement_type = '1'
+            </if>
+            <if test='serviceType == "3"'>
+                and (a.delivery_mode = 'SX' or a.settlement_type != null)
+            </if>
+            <if test='serviceType == "4"'>
+                and (a.delivery_mode != 'SX' or a.settlement_type = null)
+            </if>
+        </if>
+        <if test="productsName != null and productsName != ''">
+            AND d.content LIKE CONCAT('%',#{productsName},'%')
+        </if>
+        <if test="deliveryType != null and deliveryType != ''">
+            AND a.delivery_type = #{deliveryType}
+        </if>
+        <if test="contractStatus != null and contractStatus != ''">
+            AND a.contract_status_wx = #{contractStatus}
+        </if>
+        <if test="deliveryDateTo != null and deliveryDateTo != ''">
+            <![CDATA[AND DATE_FORMAT(a.delivery_date_to,'%Y-%m-%d') = DATE_FORMAT(#{deliveryDateTo},'%Y-%m-%d')]]>
+        </if>
+    </sql>
+    <!-- 合同列表 -->
+    <select id="findPageCtrContract" resultMap="CtrContractResultMap">
+        select a.contract_no         as contractNo,
+        a.delivery_type       as deliveryType,
+        a.delivery_addr       as deliveryAddr,
+        a.total_amount        as totalAmount,
+        a.total_number        as totalNumber,
+        a.contract_time       as contractTime,
+        a.our_company_name    as ourCompanyName,
+        a.delivery_date_from  as deliveryDateFrom,
+        a.delivery_date_to    as deliveryDateTo,
+        a.contract_end_time   as contractEndTime,
+        t.credit_days         as creditCycle,
+        a.contract_status_wx  as contractStatus,
+        a.warehouse_number > a.confirm_receive_number as receiptButtonFlag,
+        a.seal_flg            as sealFlg,
+        a.warehouse_flg       as warehouseFlg,
+        a.dealed_flg          as dealedFlg,
+        a.interest_deal_flg   as interestDealFlg,
+        a.billed_flg          as billedFlg,
+        a.interest_billed_flg as interestBilledFlg,
+        a.confirm_receipt_flg as confirmReceiptFlg,
+        a.orverdur_flg        as orverdurFlg,
+        a.pay_full_time       as payFullTime,
+        a.id as ctrContractId,
+        IF(a.business_type_dcsx in ('BL','DCSXBL') AND (a.debt_certificate_file_id is NULL OR a.debt_certificate_file_id = '') AND a.confirm_receipt_flg = true, TRUE, FALSE) as needDebtCertificateFlg,
+        a.debt_certificate_file_id as debtCertificateFileId,
+        a1.delivery_addr as deliveryAddrSell,
+        case
+            when (a.delivery_mode = 'SX' and
+            a.settlement_type = '0')
+            then '1'
+            when (a.delivery_mode = 'SX' and
+            a.settlement_type = '1')
+            then '2'
+            when (a.delivery_mode != 'SX' or a.delivery_mode = null or a.settlement_type = null)
+            then '4'
+            else '0' end as serviceType
+        from t_ctr_contract a
+        left join t_wx_company_user_detail c on a.company_id = c.company_id
+        left join
+        (
+        select GROUP_CONCAT(x.product_cd, x.product_name, x.brand_number) content, x.ctr_contract_id
+        from t_ctr_product x
+        group by x.ctr_contract_id
+        ) d on d.ctr_contract_id = a.id
+        left join t_ctr_contract_rela d1 on d1.sell_contract_id = a.id
+        left join t_ctr_contract a1 on a1.id = d1.buy_contract_id
+        left join t_apply_match_detail t on t.contract_no = a.contract_no
+        where a.contract_type = 'S'
+        and a.business_type = 'ZY-BB'
+        and c.user_id = #{userId}
+        and a.status != 'C'
+        <include refid="Where_SearchVo" />
+        <choose>
+            <when test="'asc' eq order">
+                ORDER BY a.created_date ASC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY a.created_date DESC
+            </when>
+            <otherwise>
+                ORDER BY a.created_date DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 合同详情 -->
+    <select id="getCtrContract" resultMap="CtrContractDetailsResultMap">
+        select a.contract_no         as contractNo,
+        a.delivery_type       as deliveryType,
+        a.delivery_addr       as deliveryAddr,
+        a.total_amount        as totalAmount,
+        a.total_number        as totalNumber,
+        a.contract_time       as contractTime,
+        a.our_company_name    as ourCompanyName,
+        a.delivery_date_from  as deliveryDateFrom,
+        a.delivery_date_to    as deliveryDateTo,
+        a.contract_end_time   as contractEndTime,
+        a.contract_end_time   as contractRealEndTime,
+        a.pay_full_time       as payFullTime,
+        t.credit_days         as creditCycle,
+        a.contract_status_wx  as contractStatus,
+        a.seal_flg            as sealFlg,
+        a.warehouse_flg       as warehouseFlg,
+        a.dealed_flg          as dealedFlg,
+        a.interest_deal_flg   as interestDealFlg,
+        a.billed_flg          as billedFlg,
+        a.interest_billed_flg as interestBilledFlg,
+        a.confirm_receipt_flg as confirmReceiptFlg,
+        a.orverdur_flg        as orverdurFlg,
+        a.id as ctrContractId,
+        a1.delivery_addr as deliveryAddrSell,
+        case
+            when (a.delivery_mode = 'SX' and
+                a.settlement_type = '0')
+            then '1'
+            when (a.delivery_mode = 'SX' and
+                a.settlement_type = '1')
+            then '2'
+            when (a.delivery_mode != 'SX' or a.delivery_mode = null or a.settlement_type = null)
+            then '4'
+            else '0' end as serviceType,
+
+        a.warehouse_amount as warehouseAmount,
+        a.warehouse_number as warehouseNumber,
+        a.dealed_amount as dealedAmount,
+        a.billed_amount as billedAmount,
+        a.sell_content_file_id as fileId,
+        a.invoice_file_id as invoiceFileId,
+        a.amount_file_id as amountFileId,
+        a.warehouse_file_id as warehouseFileId,
+        a.confirm_receive_number as confirmReceiptNumber,
+
+        a.breach_days as interestDays,
+        a.breach_amount as interestAmount,
+        a.receive_breach_amount as receiveInterestAmount
+
+        from t_ctr_contract a
+        left join t_wx_company_user_detail c on a.company_id = c.company_id
+        left join t_ctr_contract_rela d on d.sell_contract_id = a.id
+        left join t_ctr_contract a1 on a1.id = d.buy_contract_id
+        left join t_apply_match_detail t on t.contract_no = a.contract_no
+        where a.contract_type = 'S'
+        and a.business_type = 'ZY-BB'
+        and c.user_id = #{userId}
+        and a.contract_no = #{contractNo}
+        and a.status != 'C'
+    </select>
+
+    <select id="products" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptCtrProductVo">
+    select a.product_name as productName,
+       a.brand_number as brandNumber,
+       a.number_unit  as unit,
+       a.deal_price   as dealPrice,
+       a.deal_number  as dealNumber,
+       a.total_price  as dealAmount
+    from t_ctr_product a
+    where a.ctr_contract_id = #{ctrContractId}
+      and a.enterprise_id = 44
+	</select>
+
+    <select id="productsDetail" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptCtrProductDetailVo">
+    select a.product_name as productName,
+       a.brand_number as brandNumber,
+       a.number_unit  as unit,
+       a.deal_price   as dealPrice,
+       a.deal_number  as dealNumber,
+       a.total_price  as dealAmount,
+       a.factory_name as factoryName,
+       b.quality_standard as qualityStandard,
+       ifnull(a.warehouse_number, 0) * ifnull(a.deal_price, 0) as warehouseAmount,
+       ifnull(a.confirm_receipt_number, 0) * ifnull(a.deal_price, 0) as confirmReceiptAmount
+    from t_ctr_product a
+    left join t_ctr_contract b on a.ctr_contract_id = b.id
+    where a.ctr_contract_id = #{ctrContractId}
+      and a.enterprise_id = 44
+	</select>
+
+    <select id="getServiceContract" resultMap="CtrServiceContractResultMap">
+        select a.service_contract_no as serviceContractNo,
+               a.total_amount as totalAmount,
+               a.our_company_name as ourCompanyName,
+               a.contract_start_time as contractStartTime,
+               a.contract_end_time as contractEndTime,
+               b.credit_cycle as creditCycle,
+               a.rate as rate,
+               b.breach_rate as interestRate,
+               a.file_id as fileId,
+               a.orverdur_flg as orverdurFlg,
+               ifnull(b.service_billed_amount,0) as billedAmount,
+               ifnull(b.receive_service_amount,0) as dealedAmount,
+                c.budget_status as contractStatus,
+                b.breach_amount as interestAmount,
+                b.receive_breach_amount as receiveInterestAmount,
+                b.breach_days as interestDays
+        from t_ctr_contract b
+        left join t_ctr_service_contract a on a.ctr_contract_id = b.id
+                  left join t_budget_settlement c on b.id = c.sell_contract_id
+        where b.contract_no = #{contractNo}
+
+    </select>
+
+    <select id="getContractOperationList" resultType="com.spt.bas.report.client.vo.RptContractOperationVo">
+        select
+               b.id as operationId,
+               b.created_date as createdDate,
+               b.remark as subject
+               from t_ctr_contract a
+        left join t_ctr_contract_ophis b on a.id = b.ctr_contract_id
+        where a.contract_no = #{contractNo}
+        order by a.created_date desc
+    </select>
+
+    <select id="getDeliveryOutDetail" resultMap="CtrWarehouseDetailResultMap">
+        select a.warehouse_number as warehouseTotalNumber,
+               a.delivery_type    as deliveryType,
+               a.delivery_addr    as deliveryAddr,
+               (select x.delivery_addr
+                from t_ctr_contract x
+                         left join t_ctr_contract_rela y on x.id = y.buy_contract_id
+                where y.sell_contract_id = a.id
+               )                  as deliveryAddrSell,
+               a.id               as ctrContractId,
+               a.delivery_date_to as deliveryDate
+        from t_ctr_contract a
+        where contract_no = #{contractNo}
+    </select>
+
+    <select id="deliveryList" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptCtrWarehouseDeliveryVo">
+        select a.apply_no                                        as deliveryId,
+               a.waybill_code                                    as waybillCode,
+               a.warehouse_out_date                              as deliveryDateFrom,
+               b.product_name                                    as productName,
+               b.brand_number                                    as brandNumber,
+               ifnull(b.deal_price, 0) * ifnull(b.cur_number, 0) as warehouseAmount,
+               b.cur_number                                      as warehouseNumber,
+               a.file_id,
+               b.number_unit as unit,
+               a.confirm_flg
+        from t_apply_delivery_out a
+                 left join t_apply_product_detail b on a.id = b.apply_id
+        where contract_id = #{ctrContractId}
+          and apply_type = 'O'
+          and a.status = 'D'
+        order by a.id
+    </select>
+
+    <select id="getArriveVehicle" resultMap="ArriveVehicleResultMap">
+        select
+            a.code as code,
+            a.waybill_code as waybillCode,
+            a.customer_order_code    as customerOrderCode,
+            a.arrive_time    as arriveTime
+        from t_zy_call_back_arrive_vehicle a
+        where a.waybill_code = #{waybillCode}
+    </select>
+
+    <select id="getUndeliveryOutDetail" resultMap="CtrUnDeliveryOutResultMap">
+        select
+               a.total_number as totalNumber,
+               a.total_amount as totalAmount,
+               a.delivery_type    as deliveryType,
+               a.delivery_addr    as deliveryAddr,
+               (select x.delivery_addr
+                from t_ctr_contract x
+                         left join t_ctr_contract_rela y on x.id = y.buy_contract_id
+                where y.sell_contract_id = a.id
+               )                  as deliveryAddrSell,
+               a.id               as ctrContractId,
+               a.quality_standard as qualityStandard
+        from t_ctr_contract a
+        where contract_no = #{contractNo}
+    </select>
+
+    <select id="productsWithCtrUndeliveryOut" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptCtrUnDeliveryOutDetailVo">
+        select a.product_name                                         as productName,
+               a.brand_number                                         as brandNumber,
+               a.factory_name                                         as factoryName,
+               a.deal_price                                           as dealPrice,
+               ifnull(a.deal_number, 0) - ifnull(a.warehouse_number, 0) as dealNumber,
+               (ifnull(a.deal_number, 0) - ifnull(a.warehouse_number, 0)) * ifnull(a.deal_price, 0) as dealAmount,
+               a.number_unit as unit,
+               a.id as ctrProductId,
+               b.quality_standard as qualityStandard,
+               ifnull((select x.warehouse_number
+                from t_ctr_product x
+                         left join t_ctr_contract_rela y on x.ctr_contract_id = y.buy_contract_id
+                where y.sell_contract_id = #{ctrContractId}
+               ),0)  as deliveryInNumber
+        from t_ctr_product a
+            left join t_ctr_contract b on a.ctr_contract_id = b.id
+        where a.ctr_contract_id = #{ctrContractId}
+    </select>
+
+    <select id="getPayDetail" resultMap="CtrPayResultMap">
+            select a.dealed_amount                                        as dealedTotalAmount,
+                   IFNULL(a.total_amount, 0) - ifnull(a.dealed_amount, 0) as undealedTotalAmount,
+                   a.id               as ctrContractId
+            from t_ctr_contract a
+            where contract_no = #{contractNo}
+    </select>
+
+    <select id="selectDealedList" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptCtrPayDetailVo">
+            select a.apply_no as dealedId,
+                   a.created_date as dealedDate,
+                   a.receive_amount as dealedAmount,
+                   a.receive_type as dealedType,
+                   a.receive_mode as dealedMode,
+                   a.remark
+            from t_apply_receive a where a.contract_id = #{ctrContractId} and status = 'D'
+    </select>
+
+    <select id="selectServiceDealedList" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptCtrPayDetailVo">
+            select a.id as dealedId,
+                   a.created_date as dealedDate,
+                   a.receive_amount as dealedAmount,
+                   a.receive_mode as dealedMode,
+                   a.remark
+            from t_apply_service_receive a where a.contract_id = #{ctrContractId} and status = 'D'
+    </select>
+
+    <select id="findSerContractNoBySellContractNo" resultType="java.lang.String">
+        select a.service_contract_no
+            from t_ctr_service_contract a
+                     left join t_ctr_contract b on a.ctr_contract_id = b.id
+            where b.contract_no = #{contractNo}
+    </select>
+
+    <select id="getBillDetail" resultMap="CtrBillResultMap">
+        select a.billed_amount as billedTotalAmount,
+                IFNULL(a.total_amount, 0) - ifnull(a.billed_amount, 0) as unbilledTotalAmount,
+            a.id as ctrContractId
+        from t_ctr_contract a
+        where a.contract_no = #{contractNo}
+    </select>
+
+    <select id="getServiceBillDetail" resultMap="CtrBillResultMap">
+        select a.service_billed_amount as billedTotalAmount,
+                IFNULL(a.service_amount, 0) - ifnull(a.service_billed_amount, 0) as unbilledTotalAmount,
+        b.id as ctrContractId
+        from t_ctr_contract a
+        left join t_ctr_service_contract b on a.id = b.ctr_contract_id
+        where a.contract_no = #{contractNo}
+    </select>
+
+    <select id="selectBilledList" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptCtrBillDetailVo">
+        select a.apply_no       as billedId,
+               a.deal_amount    as billedAmount,
+               a.invoice_no     as billedNumber,
+               a.invoice_date   as billedDate,
+               a.bank_name,
+               a.bank_account,
+               a.tax_no,
+               a.company_phone  as contactPhone,
+               a.contact_person as contactPhone,
+               a.address        as contactAddress,
+               a.remark         as remark
+
+        from t_apply_invoice a
+        where a.contract_id =  #{ctrContractId}
+          and status = 'D'
+    </select>
+
+    <select id="getConfirmReceiptDetail" resultMap="CtrConfirmReceiptResultMap">
+        select a.confirm_receive_number as confirmReceiptTotalNumber,
+               a.delivery_type          as deliveryType,
+               a.delivery_addr          as deliveryAddr,
+               (select x.delivery_addr
+                from t_ctr_contract x
+                         left join t_ctr_contract_rela y on x.id = y.buy_contract_id
+                where y.sell_contract_id = a.id
+               )                        as deliveryAddrSell,
+               a.id                     as ctrContractId
+        from t_ctr_contract a
+        where contract_no = #{contractNo}
+    </select>
+
+    <select id="selectConfirmReceiptList" parameterType="java.util.Map" resultType="com.spt.bas.report.client.vo.RptCtrConfirmReceiptDetailVo">
+        select a.apply_no                                        as confirmReceiptId,
+               c.delivery_date                                   as deliveryDateTo,
+               b.product_name                                    as productName,
+               b.brand_number                                    as brandNumber,
+               ifnull(b.deal_price, 0) * ifnull(b.cur_number, 0) as confirmReceiptAmount,
+               b.cur_number                                      as confirmReceiptNumber,
+               a.file_id as uploadFileId,
+               b.number_unit as unit,
+               a.remark
+        from t_apply_confirm_receipt a
+                 left join t_apply_product_detail b on a.id = b.apply_id
+                 left join t_apply_match_detail c on c.contract_id = a.contract_id
+        where a.contract_id = #{ctrContractId}
+          and b.apply_type = 'G'
+          and a.status = 'D'
+        order by a.id;
+    </select>
+
+    <select id="getServicePayDetail" resultMap="ServicePayResultMap">
+        select a.service_amount as dealedTotalAmount,
+                   ifnull(a.service_amount,0) - ifnull(a.receive_service_amount,0) as undealedTotalAmount,
+                   a.id as ctrContractId
+            from t_ctr_contract a
+            where contract_no = #{contractNo}
+    </select>
+
+    <select id="getNobill" resultType="com.spt.bas.report.client.vo.RptNobillVo">
+        select ROUND(sum(total_amount + interest_amount) / 10000, 2) sumTotalMount,
+               count(*)                                              sumCount
+        from t_ctr_contract
+        where contract_status is not null
+        <!--          and contract_status in ('S', 'F1', 'F2', 'G1', 'G2', 'B')-->
+        and contract_status != 'C'
+        and match_credit_flg = true
+        and business_type = 'ZY-BB'
+        and billed_amount &lt; (total_amount + interest_amount)
+        <include refid="query"/>
+    </select>
+    <sql id="query" >
+        <if test="enterpriseId != null">
+            and enterprise_id = #{enterpriseId}
+        </if>
+        <if test="contractType != null and contractType != ''">
+            and contract_type = #{contractType}
+        </if>
+        <if test="currentUserId != null and userIdOrDept == false">
+            and match_user_id = #{currentUserId}
+        </if>
+        <if test="deptIds != null and deptIds.size() != 0 and userIdOrDept == false">
+            and dept_id in
+            <foreach collection="deptIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="userIdOrDept != null and userIdOrDept == true">
+            and(
+            <if test="currentUserId != null">
+                match_user_id = #{currentUserId}
+            </if>
+            <if test="businessTypeDcsx != null and businessTypeDcsx.size() != 0">
+                or business_type_dcsx in
+                <foreach collection="businessTypeDcsx" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="deptIds != null and deptIds.size() != 0">
+                or dept_id in
+                <foreach collection="deptIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="source != null and source != ''">
+                or (
+                source = #{source} and dept_id in
+                <if test="allDeptIds != null and allDeptIds.size() != 0">
+                    <foreach collection="allDeptIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                )
+            </if>
+            )
+        </if>
+    </sql>
+
+    <sql id="query2" >
+        <if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+            and c.match_user_id not in
+            <foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{hgMatchUserIdList[${index}]}
+            </foreach>
+        </if>
+        <if test="enterpriseId != null">
+            and c.enterprise_id = #{enterpriseId}
+        </if>
+        <if test="contractType != null and contractType != ''">
+            and c.contract_type = #{contractType}
+        </if>
+        <if test="currentUserId != null and userIdOrDept == false">
+            and c.match_user_id = #{currentUserId}
+        </if>
+        <if test="deptIds != null and deptIds.size() != 0 and userIdOrDept == false">
+            and c.dept_id in
+            <foreach collection="deptIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="userIdOrDept != null and userIdOrDept == true">
+            and(
+            <if test="currentUserId != null">
+                c.match_user_id = #{currentUserId}
+            </if>
+            <if test="businessTypeDcsx != null and businessTypeDcsx.size() != 0">
+                or c.business_type_dcsx in
+                <foreach collection="businessTypeDcsx" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="deptIds != null and deptIds.size() != 0">
+                or c.dept_id in
+                <foreach collection="deptIds" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="source != null and source != ''">
+                or (
+                c.source = #{source} c.and dept_id in
+                <if test="allDeptIds != null and allDeptIds.size() != 0">
+                    <foreach collection="allDeptIds" item="item" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+                </if>
+                )
+            </if>
+            )
+        </if>
+    </sql>
+
+    <select id="getBuinessStatistic" resultType="com.spt.bas.report.client.vo.RptIndexCommonVo">
+        select count(*) num,
+        <if test="dayOrMonth == 'day'">
+            '今日代采' typeName,
+        </if>
+        <if test="dayOrMonth == 'month'">
+            '本月代采' typeName,
+        </if>
+        ROUND(ifnull(sum(c.total_number), 0),2) tonnes,
+        ROUND(ifnull(sum(c.total_amount), 0)/10000,2) money,
+        #{statisticsType} as statisticsType
+        from t_ctr_contract c
+        where c.contract_status != 'C'
+        and c.business_type = 'ZY-BB'
+        and c.contract_type = 'S'
+        and c.match_credit_flg = false
+        <include refid="query2"/>
+        <if test="dayOrMonth == 'month' and statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m') = date_format(sysdate(), '%Y-%m')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m') = date_format(sysdate(), '%Y-%m')
+                </when>
+            </choose>
+        </if>
+        <if test="dayOrMonth == 'day' and statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m-%d') = date_format(sysdate(), '%Y-%m-%d')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m-%d') = date_format(sysdate(), '%Y-%m-%d')
+                </when>
+            </choose>
+        </if>
+        union all
+        select count(*) num,
+        <if test="dayOrMonth == 'day'">
+            '今日赊销'  typeName,
+        </if>
+        <if test="dayOrMonth == 'month'">
+            '本月赊销'  typeName,
+        </if>
+        ROUND(ifnull(sum(c.total_number), 0),2) tonnes,
+        ROUND(ifnull(sum(c.total_amount), 0)/10000,2) money,
+        #{statisticsType} as statisticsType
+        from t_ctr_contract c
+        where c.contract_status != 'C'
+        and c.business_type = 'ZY-BB'
+        and c.contract_type = 'S'
+        and c.match_credit_flg = true
+        <include refid="query2"/>
+        <if test="dayOrMonth == 'month' and statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m') = date_format(sysdate(), '%Y-%m')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m') = date_format(sysdate(), '%Y-%m')
+                </when>
+            </choose>
+        </if>
+        <if test="dayOrMonth == 'day' and statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m-%d') = date_format(sysdate(), '%Y-%m-%d')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m-%d') = date_format(sysdate(), '%Y-%m-%d')
+                </when>
+            </choose>
+        </if>
+        union all
+        select count(*) num,
+        <if test="dayOrMonth == 'day'">
+            '今日自营' typeName,
+        </if>
+        <if test="dayOrMonth == 'month'">
+            '本月自营'  typeName,
+        </if>
+        ROUND(ifnull(sum(c.total_number), 0),2) tonnes,
+        ROUND(ifnull(sum(c.total_amount), 0)/10000,2) money,
+        #{statisticsType} as statisticsType
+        from t_ctr_contract c
+        where c.contract_status != 'C'
+        and c.business_type = 'ZY-XS'
+        <include refid="query2"/>
+        <if test="dayOrMonth == 'month' and statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m') = date_format(sysdate(), '%Y-%m')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m') = date_format(sysdate(), '%Y-%m')
+                </when>
+            </choose>
+        </if>
+        <if test="dayOrMonth == 'day' and statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m-%d') = date_format(sysdate(), '%Y-%m-%d')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m-%d') = date_format(sysdate(), '%Y-%m-%d')
+                </when>
+            </choose>
+        </if>
+
+
+    </select>
+
+    <select id="getBuinessStatisticByMonth" resultType="com.spt.bas.report.client.vo.RptIndexCommonVo">
+        select count(*) num,
+        <if test="dayOrMonth == 'month'">
+            '本月代采' typeName,
+        </if>
+        ROUND(ifnull(sum(c.total_number), 0),2) tonnes,
+        ROUND(ifnull(sum(c.total_amount), 0)/10000,2) money,
+        #{statisticsType} as statisticsType
+        from t_ctr_contract c
+        where c.contract_status != 'C'
+        and c.business_type = 'ZY-BB'
+        and c.contract_type = 'S'
+        and c.match_credit_flg = false
+        <include refid="query2"/>
+        <if test="statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m') = date_format(#{queryDate}, '%Y-%m')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m') = date_format(#{queryDate}, '%Y-%m')
+                </when>
+            </choose>
+        </if>
+        union all
+        select count(*) num,
+        <if test="dayOrMonth == 'month'">
+            '本月赊销'  typeName,
+        </if>
+        ROUND(ifnull(sum(c.total_number), 0),2) tonnes,
+        ROUND(ifnull(sum(c.total_amount), 0)/10000,2) money,
+        #{statisticsType} as statisticsType
+        from t_ctr_contract c
+        where c.contract_status != 'C'
+        and c.business_type = 'ZY-BB'
+        and c.contract_type = 'S'
+        and c.match_credit_flg = true
+        <include refid="query2"/>
+        <if test="statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m') = date_format(#{queryDate}, '%Y-%m')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m') = date_format(#{queryDate}, '%Y-%m')
+                </when>
+            </choose>
+        </if>
+        union all
+        select count(*) num,
+        <if test="dayOrMonth == 'month'">
+            '本月自营'  typeName,
+        </if>
+        ROUND(ifnull(sum(c.total_number), 0),2) tonnes,
+        ROUND(ifnull(sum(c.total_amount), 0)/10000,2) money,
+        #{statisticsType} as statisticsType
+        from t_ctr_contract c
+        where c.contract_status != 'C'
+        and c.business_type = 'ZY-XS'
+        <include refid="query2"/>
+        <if test="statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    and date_format(c.seal_date, '%Y-%m') = date_format(#{queryDate}, '%Y-%m')
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    and date_format(c.delivery_date_to, '%Y-%m') = date_format(#{queryDate}, '%Y-%m')
+                </when>
+            </choose>
+        </if>
+    </select>
+
+    <select id="getPerformanceRanking" resultType="com.spt.bas.report.client.vo.RptIndexCommonVo">
+        select match_user_name                     as typeName,
+               round(sum(total_amount) / 10000, 2) as money,
+               round(sum(total_number), 2)         as tonnes,
+               count(match_user_id)                   num,
+               match_user_id                          userId,
+               #{statisticsType} as statisticsType
+        from t_ctr_contract c
+        where contract_status != 'C'
+          and business_type = 'ZY-BB'
+          and contract_type = 'S'
+        <if test="statisticsType != null">
+            <choose>
+                <when test="statisticsType eq 'QY'.toString()"><!-- 签约 -->
+                    AND date_format(seal_date, '%Y-%m') = #{dayOrMonth}
+                </when>
+                <when test="statisticsType eq 'JH'.toString()"><!-- 交货 -->
+                    AND date_format(delivery_date_to, '%Y-%m') = #{dayOrMonth}
+                </when>
+            </choose>
+        </if>
+        <if test="matchCreditFlg != null">
+            and match_credit_flg = #{matchCreditFlg}
+        </if>
+        <if test="userIds != null and userIds.size() != 0">
+            and match_user_id in
+            <foreach collection="userIds" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+            and c.match_user_id not in
+            <foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+                #{hgMatchUserIdList[${index}]}
+            </foreach>
+        </if>
+        group by match_user_id
+        order by sum(total_amount) desc
+        limit 7
+    </select>
+
+    <select id="grossProfitMargin" resultType="com.spt.bas.report.client.vo.RptGrossProfitMarginVo">
+        select 
+            date_format(s.seal_date, '%Y-%m') month,
+            ROUND(
+                sum(
+                    s.total_amount-b.total_amount-s.transport_amount-b.transport_amount-s.warehouse_amount-b.warehouse_amount
+                        -s.stevedorage-b.stevedorage-s.delivery_fee-b.delivery_fee
+                )/sum(b.total_amount)*100, 2
+            ) rate,
+            ROUND(SUM(b.total_amount)/10000, 6) buyTotalAmount,
+            ROUND(
+                sum(
+                    s.total_amount-b.total_amount-s.transport_amount-b.transport_amount-s.warehouse_amount-b.warehouse_amount
+                        -s.stevedorage-b.stevedorage-s.delivery_fee-b.delivery_fee
+                )/10000, 2
+            ) grossProfit,
+            ROUND(
+                sum(
+                    (s.total_amount-b.total_amount)/1.13
+                    - (b.transport_amount+s.transport_amount)/1.09
+                    - (b.warehouse_amount+b.delivery_fee+b.stevedorage+s.warehouse_amount+s.delivery_fee+s.stevedorage)/1.06
+                    - (
+                        (s.total_amount-b.total_amount)/1.13*0.13
+                        - (b.transport_amount+s.transport_amount)/1.09*0.09
+                        - (b.warehouse_amount+b.delivery_fee+b.stevedorage+s.warehouse_amount+s.delivery_fee+s.stevedorage)/1.06*0.06
+                        - (s.total_amount*(if(s.insurance_rate is null,0,s.insurance_rate)))/1.06
+                    )*0.12
+                    - (s.total_amount*(if(s.insurance_rate is null,0,s.insurance_rate)))/1.06
+                )/10000, 2
+            ) netGrossProfit,
+            ROUND(
+                sum(s.breach_amount-s.receive_breach_amount)/10000, 2
+            ) noReceiveBreachAmount
+
+        from t_ctr_contract s
+                 join t_ctr_contract_settlement r on s.id = r.sell_contract_id
+                 join t_ctr_contract b on r.buy_contract_id = b.id
+        where s.business_type = 'ZY-BB'
+            and s.contract_status != 'C'
+            and s.status != 'C'
+            and b.contract_status != 'C'
+            and b.status != 'C'
+            and s.seal_flg = TRUE
+            and b.seal_flg = TRUE
+        <if test="deptIdList != null and deptIdList.size() > 0">
+            and s.dept_id in
+            <foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+                #{deptIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        </if>
+
+        <if test="eighteenMonthList != null and eighteenMonthList.size() > 0">
+            and date_format(s.seal_date, '%Y-%m') in
+            <foreach collection="eighteenMonthList"  item="var" index="index" open="(" close=")" separator=",">
+                #{eighteenMonthList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        
+        
+        group by date_format(s.seal_date, '%Y-%m')
+        order by s.seal_date
+    </select>
+
+    <select id="getDcsxCapitalCost" resultType="com.spt.bas.report.client.vo.RptGrossProfitMarginVo">
+        select
+        date_format(s.seal_date, '%Y-%m') month,
+        ROUND(SUM(if(our.company_name is NULL, s.total_amount - dcsx.total_amount, dcsx.total_amount-b.total_amount)
+                + IFNULL((s.breach_amount*s.breach_days*0.1)/365,0) - IFNULL(s.receive_breach_amount,0))/1.13/10000,6)
+            dcsxCapitalCost
+        FROM t_ctr_contract_settlement r
+        INNER JOIN t_ctr_contract b ON b.id = r.buy_contract_id
+        INNER JOIN t_ctr_contract s ON s.id = r.sell_contract_id
+        LEFT JOIN t_ctr_dcsx dcsx ON dcsx.approve_id = b.approve_id
+        LEFT JOIN t_bs_company_our our ON dcsx.our_company_name = our.company_name AND our.our_company_flag=TRUE
+        LEFT JOIN t_bs_company_our our2 ON dcsx.company_name = our2.company_name AND our2.our_company_flag=TRUE
+        where s.business_type = 'ZY-BB'
+            and s.match_credit_flg = TRUE
+            and s.business_type_dcsx IN ('DCSXBL', 'DCSX', 'DCSXHDFK')
+            and s.seal_flg = TRUE
+            and b.seal_flg = TRUE
+            and s.status != 'C'
+            and b.status != 'C'
+        <if test="deptIdList != null and deptIdList.size() > 0">
+            and s.dept_id in
+            <foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+                #{deptIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        </if>
+
+        <if test="eighteenMonthList != null and eighteenMonthList.size() > 0">
+            and date_format(s.seal_date, '%Y-%m') in
+            <foreach collection="eighteenMonthList"  item="var" index="index" open="(" close=")" separator=",">
+                #{eighteenMonthList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        </if>
+
+        group by date_format(s.seal_date, '%Y-%m')
+        order by s.seal_date
+    </select>
+
+    <select id="getCapitalCost" resultType="com.spt.bas.report.client.vo.RptGrossProfitMarginVo">
+        select
+        date_format(s.seal_date, '%Y-%m') month,
+        ROUND(SUM(IFNULL(r.financial_service_amount,0))/1.13/10000,6) capitalCost
+        FROM t_ctr_contract_settlement r
+        INNER JOIN t_ctr_contract b ON b.id = r.buy_contract_id
+        INNER JOIN t_ctr_contract s ON s.id = r.sell_contract_id
+        where s.business_type = 'ZY-BB'
+        and s.match_credit_flg = TRUE
+        and s.business_type_dcsx not IN ('DCSXBL', 'DCSX', 'DCSXHDFK')
+        and s.seal_flg = TRUE
+        and b.seal_flg = TRUE
+        and s.status != 'C'
+        and b.status != 'C'
+        <if test="deptIdList != null and deptIdList.size() > 0">
+            and s.dept_id in
+            <foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+                #{deptIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        </if>
+
+        <if test="eighteenMonthList != null and eighteenMonthList.size() > 0">
+            and date_format(s.seal_date, '%Y-%m') in
+            <foreach collection="eighteenMonthList"  item="var" index="index" open="(" close=")" separator=",">
+                #{eighteenMonthList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        </if>
+
+        group by date_format(s.seal_date, '%Y-%m')
+        order by s.seal_date
+    </select>
+
+    <select id="findDataByUserIdAndDate" resultType="com.spt.bas.client.entity.CtrContract">
+        select *
+        from t_ctr_contract
+        where date_format(contract_time, '%Y-%m') = #{baseDate}
+          and match_user_id in
+        <foreach collection="userList" item="item" open="(" separator="," close=")">
+            #{item.matchUserId}
+        </foreach>
+    </select>
+</mapper>

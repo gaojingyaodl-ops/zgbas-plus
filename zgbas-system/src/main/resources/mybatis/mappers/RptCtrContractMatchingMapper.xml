@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractMatchingMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="businessNo != null and businessNo != ''">
+			AND c1.business_no LIKE CONCAT('%',#{businessNo},'%')
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND r.brand_number LIKE CONCAT('%',#{brandNumber},'%')
+		</if>
+		<if test="sellCompany != null and sellCompany != ''">
+			AND c1.company_name LIKE CONCAT('%',#{sellCompany},'%')
+		</if>
+		<if test="buyMatchName != null and buyMatchName != ''">
+			AND c2.match_user_name = #{buyMatchName}
+		</if>
+		<if test="sellMatchName != null and sellMatchName != ''">
+			AND c1.match_user_name = #{sellMatchName}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c1.dept_id = #{deptId}
+		</if>
+		<if test="beginTime != null">
+		<![CDATA[ AND DATE_FORMAT(c1.pay_full_time, '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="endTime != null">
+		<![CDATA[ AND DATE_FORMAT(c1.pay_full_time, '%Y-%m-%d') <= DATE_FORMAT(#{endTime}, '%Y-%m-%d') ]]> 
+		</if>
+	</sql>
+	<!-- 撮合考核统计 -->
+	<select id="findPageMatching" resultType="com.spt.bas.report.client.entity.RptCtrContractMatchingReport">
+		 SELECT
+			r.sell_contract_id AS sellId,
+			r.buy_contract_id AS buyId,
+			c1.pay_full_time AS sellPayTime,
+			r.product_name AS productName,
+			r.brand_number AS brandNumber,
+			r.factory_id AS factoryId,
+			r.factory_name AS factoryName,
+			r.deal_number AS sellNumber,
+			r.sell_price AS sellPrice,
+			r.sell_user_id AS sellMatchId,
+			r.sell_user_name AS sellMatchName,
+			r.buy_user_name AS buyMatchName,
+			r.buy_company_name AS buyCompanyName,
+			r.buy_company_id AS buyCompanyId,
+			r.buy_price AS buyPrice,
+			c2.pay_full_time AS buyPayTime,
+			r.sell_company_id AS sellCompanyId,
+			r.sell_company_name AS sellCompanyName,
+			c1.dept_id AS deptId,
+			r.deal_number AS buyNumber,
+			IFNULL(c1.transport_amount, 0) AS sellTransportAmount,
+			IFNULL(c2.transport_amount, 0) AS buyTransportAmount
+		FROM
+			t_ctr_contract c1
+		LEFT JOIN t_ctr_contract_rela r ON c1.id = r.sell_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.buy_contract_id
+		WHERE
+			c1.source = 'MS'
+		AND c1.pay_full_time != ''
+		AND c2.source = 'MB'
+		AND c1.pay_full_time = c2.pay_full_time
+		AND c1.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY r.id DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY r.id ASC
+            </when>
+           	<otherwise>
+           		ORDER BY r.id DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	<!-- 撮合考核统计合计 -->
+	<select id="findPageTotal" resultType="com.spt.bas.report.client.entity.RptCtrContractMatchingReport">
+		SELECT
+			SUM(r.deal_number) AS sellNumber,
+			SUM(
+				(
+					IFNULL(c2.transport_amount, 0)
+				) * r.deal_number / c1.total_number + (
+					IFNULL(c1.transport_amount, 0)
+				)
+			) AS transportAmount,
+			SUM(
+				(
+					r.sell_price - r.buy_price
+				) * r.deal_number
+			) AS balance,
+			SUM(
+				(
+					(
+						r.sell_price - r.buy_price
+					) * r.deal_number
+				) - (
+					IFNULL(c2.transport_amount, 0)
+				 * r.deal_number / c1.total_number + 
+					IFNULL(c1.transport_amount, 0)
+				)
+			) AS profit,
+			SUM(
+				(
+					(
+						r.sell_price - r.buy_price
+					) * r.deal_number
+				) - (
+					IFNULL(c2.transport_amount, 0)
+				 * r.deal_number / c1.total_number + 
+					IFNULL(c1.transport_amount, 0)
+				)
+			) * 0.4 AS bountyAmoun,
+			SUM(
+				(
+					(
+						r.sell_price - r.buy_price
+					) * r.deal_number
+				) - (
+					IFNULL(c2.transport_amount, 0)
+				 * r.deal_number / c1.total_number + 
+					IFNULL(c1.transport_amount, 0)
+				)
+			) * 0.2 AS bounty
+		FROM
+			t_ctr_contract c1
+		LEFT JOIN t_ctr_contract_rela r ON c1.id = r.sell_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.buy_contract_id
+		WHERE
+			c1.source = 'MS'
+		AND c1.pay_full_time != ''
+		AND c2.source = 'MB'
+		AND c1.pay_full_time = c2.pay_full_time
+		AND c1.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+	</select>
+</mapper>

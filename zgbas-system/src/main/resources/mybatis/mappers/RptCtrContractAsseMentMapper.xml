@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractAsseMentMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="businessNo != null and businessNo != ''">
+			AND c1.business_no LIKE CONCAT('%',#{businessNo},'%')
+		</if>
+		<if test="brandNumber != null and brandNumber != ''">
+			AND r.brand_Number LIKE CONCAT('%',#{brandNumber},'%')
+		</if>
+		<if test="sellCompany != null and sellCompany != ''">
+			AND r.sell_company_name LIKE CONCAT('%',#{sellCompany},'%')
+		</if>
+		<if test="buyMatchName != null and buyMatchName != ''">
+			AND r.buy_user_name = #{buyMatchName}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c1.dept_id = #{deptId}
+		</if>
+		<if test="beginTime != null">
+		<![CDATA[ AND DATE_FORMAT(c1.pay_full_time, '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="endTime != null">
+		<![CDATA[ AND DATE_FORMAT(c1.pay_full_time, '%Y-%m-%d') <= DATE_FORMAT(#{endTime}, '%Y-%m-%d') ]]> 
+		</if>
+	</sql>
+	<!-- 自营考核统计 -->
+	<!-- List<RptCtrContractAsseMentReport> findAssessment(AssementSearchVo searchVo); -->
+	<select id="findPageAssessment" resultType="com.spt.bas.report.client.entity.RptCtrContractAsseMentReport">
+		SELECT
+			r.buy_date AS buyDate,
+			r.product_name AS productName,
+			r.product_cd AS productCd,
+			r.brand_number AS brandNumber,
+			r.factory_id AS factoryId,
+			r.factory_name AS factoryName,
+			r.deal_number AS sellNumber,
+			r.buy_company_id AS buyCompanyId,
+			r.buy_company_name AS buyCompanyName,
+			r.buy_price As buyPrice,
+			(r.buy_price * r.deal_number) AS buyAmount,
+			IFNULL((c2.transport_amount * r.deal_number / c2.total_number),0) AS transAmount,
+			r.buy_user_id AS buyUserId,
+			r.buy_user_name AS buyUserName,
+			r.sell_price AS sellPrice,
+			(r.sell_price * r.deal_number) AS sellAmount,
+			r.sell_company_id AS sellCompanyId,
+			r.sell_company_name AS sellCompanyName,
+			r.sell_user_id AS sellUserId,
+			r.sell_user_name AS sellUserName,
+			c1.dept_id As sellDeptId,
+			c1.business_no As businessNo,
+			c1.pay_full_time As payTime,
+			c2.total_number As buyTotalNumber
+		FROM
+			t_ctr_contract c1
+		LEFT JOIN t_ctr_contract_rela r ON c1.id = r.sell_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.buy_contract_id
+		WHERE
+			c1.contract_type = 'S'
+		AND c1.total_amount = c1.dealed_amount
+		AND r.buy_date != ''
+		AND c1.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY c1.id DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY c1.id ASC
+            </when>
+           	<otherwise>
+           		ORDER BY c1.id DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	<!-- 自营考核统计合计 -->
+	<select id="findPageTotal" resultType="com.spt.bas.report.client.entity.RptCtrContractAsseMentReport">
+		SELECT
+			SUM(r.deal_number) AS sellNumber,
+			SUM(IFNULL((c2.transport_amount * r.deal_number / c2.total_number),0)) AS transAmount,
+			SUM(
+				r.sell_price * r.deal_number - r.buy_price * r.deal_number - (r.deal_number * 25) - (
+					IFNULL(
+						(
+							c2.transport_amount * r.deal_number / c2.total_number
+						),
+						0
+					)
+				)
+			) AS buyMatchProfit,
+			SUM(r.deal_number * 25) AS sellMatchProfit
+		FROM
+			t_ctr_contract c1
+		LEFT JOIN t_ctr_contract_rela r ON c1.id = r.sell_contract_id
+		LEFT JOIN t_ctr_contract c2 ON c2.id = r.buy_contract_id
+		WHERE
+			c1.contract_type = 'S'
+		AND c1.total_amount = c1.dealed_amount
+		AND r.buy_date != ''
+		AND c1.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+	</select>
+</mapper>

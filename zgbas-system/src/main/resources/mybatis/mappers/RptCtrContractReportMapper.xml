@@ -1,0 +1,1934 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractReportMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+	    <if test="contractNo != null and contractNo != ''">
+			AND c.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="companyName != null and companyName != ''">
+			AND c.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="matchUserName != null and matchUserName != ''">
+			AND c.match_user_name = #{matchUserName}
+		</if>
+		<if test="contractAttr != null and contractAttr != ''">
+			AND c.contract_attr = #{contractAttr}
+		</if>
+		<if test="businessType != null and businessType != ''">
+			AND c.business_type LIKE CONCAT('%',#{businessType},'%')
+		</if>
+		<if test="type != null and type != ''">
+			<choose>
+			<when test='type == "N"'>
+				AND c.contract_status = 'C'
+			</when>
+			<otherwise>
+				AND c.contract_status != 'C'
+			</otherwise>
+		</choose>
+		</if>
+		<if test="productName != null and productName != ''">
+			AND c.products_name LIKE CONCAT('%',#{productName},'%')
+		</if>
+     	<if test="contractTimeStart != null">
+		<![CDATA[AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="contractTimeEnd != null">
+		<![CDATA[AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="receiveTimeStart != null">
+		<![CDATA[AND DATE_FORMAT(r.receive_date, '%Y-%m-%d') >= DATE_FORMAT(#{receiveTimeStart}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="receiveTimeEnd != null">
+		<![CDATA[AND DATE_FORMAT(r.receive_date, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{receiveTimeEnd}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="deliveryMode != null and deliveryMode != ''">
+			AND c.delivery_mode = #{deliveryMode}
+		</if>
+		<if test="payType != null and payType != ''">
+			<choose>
+			<when test='payType == "PY"'>
+				AND (c.total_amount+c.interest_amount) = (c.dealed_amount-c.refund_amount)
+			</when>
+			<when test='payType == "PN"'>
+				AND (c.total_amount+c.interest_amount) > (c.dealed_amount-c.refund_amount)
+			</when>
+		</choose>
+		</if>
+		<if test="billType != null and billType != ''">
+			<choose>
+			<when test='billType == "BY"'>
+				AND (c.total_amount+c.interest_amount) = c.billed_amount
+			</when>
+			<when test='billType == "BN"'>
+				AND (c.total_amount+c.interest_amount) > c.billed_amount
+			</when>
+		</choose>
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c.our_company_name LIKE CONCAT('%',#{ourCompanyName},'%')
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c.dept_id = #{deptId}
+		</if>
+	</sql>
+
+	<!-- 已付款未入库明细 -->
+	<select id="findNotDeliveryInPage" resultType="com.spt.bas.report.client.entity.RptCtrContractReport">
+		SELECT
+			c.id AS id,
+			c.contract_type As contractType,
+			c.business_type AS businessType,
+			c.contract_no AS contractNo,
+			c.contract_attr AS contractAttr,
+			c.products_name AS productsName,
+			c.file_id AS fileId,
+			c.invoice_file_id AS invoiceFileId,
+			c.amount_file_id AS amountFileId,
+			c.warehouse_file_id AS warehouseFileId,
+			c.double_check_file_id AS doubleCheckFileId,
+			c.our_company_name AS ourCompanyName,
+			c.company_name AS companyName,
+			c.delivery_mode AS deliveryMode,
+			c.total_number AS totalNumber,
+			c.total_amount AS totalAmount,
+			c.pay_bond_time AS payBondTime,
+			c.pay_full_time AS payFullTIme,
+			c.dealed_amount AS dealedAmount,
+			a.real_pay_date AS lastPayDate,
+			c.delivery_date_to AS deliveryDateTo,
+			c.warehouse_number AS warehouseNumber,
+			a.real_warehose_date AS lastDeliveryDate,
+			c.billed_amount AS billedAmount,
+			a.real_bill_date AS lastBillDate,
+			c.contract_status AS contractStatus,
+			c.contract_time AS contractTime,
+			DATEDIFF(IFNULL(c.contract_end_time, Now()),c.contract_time) AS contractDifTime,
+			c.match_user_name AS matchUserName,
+			c.enterprise_id AS enterprise_id,
+			IF(INSTR(c.products_name,',')>0,'1','0') As moreProduct,
+			IF(t.id IS NOT NULL, '1','0') AS exitContractText,
+			ROUND(IF((c.dealed_amount-c.refund_amount)=c.total_amount,(c.total_number-c.warehouse_number),((c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number)-c.warehouse_number)),3) AS expectDeliveryInNum,
+			IF(IFNULL((SELECT COUNT(*) FROM t_apply_delivery_in i WHERE i.contract_id = c.id AND i.`status` = 'C'),0) > 0,true,false) As existDeliveryCancel
+		FROM
+			t_ctr_contract c
+		LEFT JOIN t_ctr_contract_apply a ON c.id = a.ctr_contract_id
+		LEFT JOIN t_ctr_contract_text t ON c.id = t.ctr_contract_id
+		WHERE
+			c.enterprise_id = #{enterpriseId}
+			AND c.contract_type = 'B'
+			AND (c.dealed_amount-c.refund_amount) >= c.bond_amount
+			AND IF((c.dealed_amount-c.refund_amount)=c.total_amount,(c.total_number-c.warehouse_number),((c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number)-c.warehouse_number)) > 0
+			<include refid="Where_SearchVo" />
+		ORDER BY c.id DESC
+	</select>
+
+	<!-- 已付款未入库明细 合计-->
+	<select id="findNotDeliveryInPageSum" resultType="com.spt.bas.report.client.entity.RptCtrContractReport">
+		SELECT
+			SUM(c.total_number) AS totalNumber,
+			SUM(c.total_amount) AS totalAmount,
+			SUM(c.dealed_amount-c.refund_amount) AS dealedAmount,
+			SUM(c.warehouse_number) AS warehouseNumber,
+			SUM(c.billed_amount) AS billedAmount,
+			SUM(ROUND(IF((c.dealed_amount-c.refund_amount)=c.total_amount,(c.total_number-c.warehouse_number),((c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number)-c.warehouse_number)),3)) AS expectDeliveryInNum
+		FROM
+			t_ctr_contract c
+		WHERE
+			c.enterprise_id = #{enterpriseId}
+			AND c.contract_type = 'B'
+			AND (c.dealed_amount-c.refund_amount) >= c.bond_amount
+			AND IF((c.dealed_amount-c.refund_amount)=c.total_amount,(c.total_number-c.warehouse_number),((c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number)-c.warehouse_number)) > 0
+			<include refid="Where_SearchVo" />
+	</select>
+
+
+
+
+	<!-- 未付款已入库明细 -->
+	<select id="findWasDeliveryInPage" resultType="com.spt.bas.report.client.entity.RptCtrContractReport">
+		SELECT
+			c.id AS id,
+			c.contract_type As contractType,
+			c.business_type AS businessType,
+			c.contract_no AS contractNo,
+			c.contract_attr AS contractAttr,
+			c.products_name AS productsName,
+			c.file_id AS fileId,
+			c.invoice_file_id AS invoiceFileId,
+			c.amount_file_id AS amountFileId,
+			c.warehouse_file_id AS warehouseFileId,
+			c.double_check_file_id AS doubleCheckFileId,
+			c.our_company_name AS ourCompanyName,
+			c.company_name AS companyName,
+			c.delivery_mode AS deliveryMode,
+			c.total_number AS totalNumber,
+			c.total_amount AS totalAmount,
+			c.pay_bond_time AS payBondTime,
+			c.pay_full_time AS payFullTIme,
+			c.dealed_amount AS dealedAmount,
+			a.real_pay_date AS lastPayDate,
+			c.delivery_date_to AS deliveryDateTo,
+			c.warehouse_number AS warehouseNumber,
+			a.real_warehose_date AS lastDeliveryDate,
+			c.billed_amount AS billedAmount,
+			a.real_bill_date AS lastBillDate,
+			c.contract_status AS contractStatus,
+			c.contract_time AS contractTime,
+			DATEDIFF(IFNULL(c.contract_end_time, Now()),c.contract_time) AS contractDifTime,
+			c.match_user_name AS matchUserName,
+			c.enterprise_id AS enterprise_id,
+			IF(INSTR(c.products_name,',')>0,'1','0') As moreProduct,
+			IF(t.id IS NOT NULL, '1','0') AS exitContractText,
+			ROUND(IF((c.dealed_amount-c.refund_amount)&lt;=c.bond_amount,c.warehouse_number,(c.warehouse_number-(c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number))),3) AS expectDeliveryInNum
+		FROM
+			t_ctr_contract c
+		LEFT JOIN t_ctr_contract_apply a ON c.id = a.ctr_contract_id
+		LEFT JOIN t_ctr_contract_text t ON c.id = t.ctr_contract_id
+		WHERE
+			c.enterprise_id = #{enterpriseId}
+			AND c.contract_type = 'B'
+			AND (c.dealed_amount-c.refund_amount) > 0
+			AND c.total_amount > (c.dealed_amount-c.refund_amount)
+			AND IF((c.dealed_amount-c.refund_amount)&lt;=c.bond_amount,c.warehouse_number,(c.warehouse_number-(c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number))) > 0
+			<include refid="Where_SearchVo" />
+		ORDER BY c.id DESC
+	</select>
+
+	<!-- 已付款未入库明细 合计-->
+	<select id="findWasDeliveryInPageSum" resultType="com.spt.bas.report.client.entity.RptCtrContractReport">
+		SELECT
+			SUM(c.total_number) AS totalNumber,
+			SUM(c.total_amount) AS totalAmount,
+			SUM(c.dealed_amount-c.refund_amount) AS dealedAmount,
+			SUM(c.warehouse_number) AS warehouseNumber,
+			SUM(c.billed_amount) AS billedAmount,
+			SUM(ROUND(IF((c.dealed_amount-c.refund_amount)&lt;=c.bond_amount,c.warehouse_number,(c.warehouse_number-(c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number))),3)) AS expectDeliveryInNum
+		FROM
+			t_ctr_contract c
+		WHERE
+			c.enterprise_id = #{enterpriseId}
+			AND c.contract_type = 'B'
+			AND (c.dealed_amount-c.refund_amount) > 0
+			AND c.total_amount > (c.dealed_amount-c.refund_amount)
+			AND IF((c.dealed_amount-c.refund_amount)&lt;=c.bond_amount,c.warehouse_number,(c.warehouse_number-(c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number))) > 0
+			<include refid="Where_SearchVo" />
+	</select>
+
+	<!-- 预售未采购明细表 -->
+	<select id="findPreSellPage" resultType="com.spt.bas.report.client.entity.RptCtrContractReport">
+		SELECT
+			c.id AS id,
+			c.contract_no AS contractNo,
+			c.business_type AS businessType,
+			c.our_company_name AS ourCompanyName,
+			c.company_name AS companyName,
+			c.total_amount AS totalAmount,
+			c.contract_time AS contractTime,
+			c.match_user_name AS matchUserName,
+			c.dept_id AS deptId
+		FROM
+			t_ctr_contract c
+		WHERE
+			c.source = 'L'
+		AND
+			c.enterprise_id = #{enterpriseId}
+		AND
+			c.link_contract_id is NULL
+		AND
+			c.status = 'D'
+		<include refid="Where_SearchVo" />
+		ORDER BY c.id DESC
+	</select>
+
+	<!-- 赊销收款明细表 -->
+	<select id="findSXReceivePage" resultType="com.spt.bas.report.client.entity.RptCtrContractReport">
+		SELECT
+			c.id AS id,
+			c.business_type As businessType,
+			c.contract_no AS contractNo,
+			c.our_company_name AS ourCompanyName,
+			c.company_name AS companyName,
+			r.receive_date As lastPayDate,
+			r.payed_amount AS dealedAmount,
+			r.receive_amount AS receiveAmount,
+			r.unpayed_amount AS unDealedAmount,
+			c.total_amount AS totalAmount,
+			c.match_user_name AS matchUserName,
+			c.pay_full_time AS payFullTime
+		FROM
+			t_apply_receive r
+			LEFT JOIN t_ctr_contract c ON c.id = r.contract_id
+		WHERE
+			r.enterprise_id = #{enterpriseId}
+		AND
+			r.`status` = 'D'
+		AND
+			c.business_type in('SX-SX','SX-HK')
+		<include refid="Where_SearchVo" />
+		ORDER BY r.id DESC
+	</select>
+
+	<!-- 已收款未出库明细 -->
+	<select id="findReceiveAndNotOutPage" resultType="com.spt.bas.report.client.entity.RptCtrContractReport">
+		SELECT
+			c.id AS id,
+			c.contract_type As contractType,
+			c.business_type AS businessType,
+			c.contract_no AS contractNo,
+			c.contract_attr AS contractAttr,
+			c.products_name AS productsName,
+			c.file_id AS fileId,
+			c.invoice_file_id AS invoiceFileId,
+			c.amount_file_id AS amountFileId,
+			c.warehouse_file_id AS warehouseFileId,
+			c.double_check_file_id AS doubleCheckFileId,
+			c.our_company_name AS ourCompanyName,
+			c.company_name AS companyName,
+			c.delivery_mode AS deliveryMode,
+			c.total_number AS totalNumber,
+			c.total_amount AS totalAmount,
+			c.pay_bond_time AS payBondTime,
+			c.pay_full_time AS payFullTIme,
+			c.dealed_amount AS dealedAmount,
+			a.real_pay_date AS lastPayDate,
+			c.delivery_date_to AS deliveryDateTo,
+			c.warehouse_number AS warehouseNumber,
+			a.real_warehose_date AS lastDeliveryDate,
+			c.billed_amount AS billedAmount,
+			a.real_bill_date AS lastBillDate,
+			c.contract_status AS contractStatus,
+			c.contract_time AS contractTime,
+			DATEDIFF(IFNULL(c.contract_end_time, Now()),c.contract_time) AS contractDifTime,
+			c.match_user_name AS matchUserName,
+			c.enterprise_id AS enterprise_id,
+			IF(INSTR(c.products_name,',')>0,'1','0') As moreProduct,
+			IF(t.id IS NOT NULL, '1','0') AS exitContractText,
+			ROUND(((c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number)-c.warehouse_number),3) As expectDeliveryInNum
+		FROM
+			t_ctr_contract c
+		LEFT JOIN t_ctr_contract_apply a ON c.id = a.ctr_contract_id
+		LEFT JOIN t_ctr_contract_text t ON c.id = t.ctr_contract_id
+		WHERE
+			c.enterprise_id = #{enterpriseId}
+			AND c.contract_type = 'S'
+			AND (c.dealed_amount-c.refund_amount) > c.bond_amount
+			AND (c.dealed_amount-c.refund_amount) &lt; c.total_amount
+			AND ROUND(((c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number)-c.warehouse_number),3) > 0
+			<include refid="Where_SearchVo" />
+		ORDER BY c.id DESC
+	</select>
+
+	<!-- 已收款未出库明细 合计-->
+	<select id="findReceiveAndNotOutPageSum" resultType="com.spt.bas.report.client.entity.RptCtrContractReport">
+		SELECT
+			SUM(c.total_number) AS totalNumber,
+			SUM(c.total_amount) AS totalAmount,
+			SUM(c.dealed_amount-c.refund_amount) AS dealedAmount,
+			SUM(c.warehouse_number) AS warehouseNumber,
+			SUM(c.billed_amount) AS billedAmount,
+			SUM(ROUND(((c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number)-c.warehouse_number),3)) AS expectDeliveryInNum
+		FROM
+			t_ctr_contract c
+		WHERE
+			c.enterprise_id = #{enterpriseId}
+			AND c.contract_type = 'S'
+			AND (c.dealed_amount-c.refund_amount) > c.bond_amount
+			AND (c.dealed_amount-c.refund_amount) &lt; c.total_amount
+			AND ROUND(((c.dealed_amount-c.refund_amount-c.bond_amount)/(c.total_amount/c.total_number)-c.warehouse_number),3) > 0
+			<include refid="Where_SearchVo" />
+	</select>
+	<!-- 查询业务成本统计表  -->
+	<select id="findRptBaseCostList" resultType="com.spt.bas.report.client.vo.RptBaseCostVo">
+		select * from t_rpt_base_cost rc where 1=1
+		<if test="baseDate != null and baseDate != ''">
+			and rc.base_date = #{baseDate}
+		</if>
+		
+	</select>
+	<!-- 毛利率统计  -->
+	<select id="findProfitPage" resultType="com.spt.bas.report.client.vo.RptCtrProfitVo">
+		SELECT
+			sc.dept_id AS deptId,
+			sc.match_user_id AS matchUserId,
+		    sc.match_user_name AS matchUserName,
+		    COUNT(1) AS orderCount,
+			SUM(sc.total_amount) AS sellTotalAmount,
+			SUM(bc.total_amount) AS buyTotalAmount,
+			SUM(sc.total_amount - bc.total_amount - bc.warehouse_amount - bc.transport_amount - sc.warehouse_amount - sc.transport_amount - bc.delivery_fee - sc.delivery_fee - sc.stevedorage - bc.stevedorage) AS profit,
+			ROUND(
+				sum(
+					(bc.transport_amount+sc.transport_amount)/1.09
+					+ (bc.warehouse_amount+bc.delivery_fee+bc.stevedorage+sc.warehouse_amount+sc.delivery_fee+sc.stevedorage)/1.06
+					+ (
+						(sc.total_amount-bc.total_amount)/1.13*0.13
+						- (bc.transport_amount+sc.transport_amount)/1.09*0.09
+						- (bc.warehouse_amount+bc.delivery_fee+bc.stevedorage+sc.warehouse_amount+sc.delivery_fee+sc.stevedorage)/1.06*0.06
+						- (sc.total_amount*(if(sc.insurance_rate is null,0,sc.insurance_rate)))/1.06
+					)*0.12
+					+ (sc.total_amount*(if(sc.insurance_rate is null,0,sc.insurance_rate)))/1.06
+				), 2
+			) AS cost,
+			ROUND(
+				sum(
+					(sc.total_amount-bc.total_amount)/1.13
+					- (bc.transport_amount+sc.transport_amount)/1.09
+					- (bc.warehouse_amount+bc.delivery_fee+bc.stevedorage+sc.warehouse_amount+sc.delivery_fee+sc.stevedorage)/1.06
+					- (
+						(sc.total_amount-bc.total_amount)/1.13*0.13
+						- (bc.transport_amount+sc.transport_amount)/1.09*0.09
+						- (bc.warehouse_amount+bc.delivery_fee+bc.stevedorage+sc.warehouse_amount+sc.delivery_fee+sc.stevedorage)/1.06*0.06
+						- (sc.total_amount*(if(sc.insurance_rate is null,0,sc.insurance_rate)))/1.06
+					)*0.12
+					- (sc.total_amount*(if(sc.insurance_rate is null,0,sc.insurance_rate)))/1.06
+				), 2
+			) AS margin,
+			CASE
+				WHEN #{noBusinessType} = 'Y' THEN '全部'
+				WHEN sc.match_credit_flg = TRUE AND sc.business_type = 'ZY-BB' THEN '赊销'
+				WHEN sc.match_credit_flg = FALSE AND sc.business_type = 'ZY-BB' THEN'代采'
+				END AS businessName
+		FROM
+				t_ctr_contract_settlement r
+				LEFT JOIN t_ctr_contract bc ON bc.id = r.buy_contract_id
+				LEFT JOIN t_ctr_contract sc ON sc.id = r.sell_contract_id
+		WHERE
+			sc.seal_flg = TRUE
+			AND sc.contract_status != 'C'
+			AND sc.status != 'C'
+			and bc.seal_flg = TRUE
+		  	and sc.business_type = 'ZY-BB'
+		  	AND sc.enterprise_id = #{enterpriseId}
+		<if test="contractTimeStart != null and contractTimeEnd != null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="contractTimeStart == null or contractTimeEnd == null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="myDeptIdList != null and myDeptIdList.size() > 0">
+			and sc.dept_id in
+			<foreach collection="myDeptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{myDeptIdList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="businessCode != null  and businessCode == 'SX'  ">
+			  AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = TRUE
+		</if>
+		<if test="businessCode != null  and businessCode == 'DC'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = FALSE
+		</if>
+		<if test="businessCode != null  and businessCode == 'ZY'  ">
+			AND sc.business_type != 'ZY-BB'
+		</if>
+		<if test="matchUserId != null ">
+			AND sc.match_user_id = #{matchUserId}
+		</if>
+		<choose>
+			<when test='searchType == "U" '>
+				GROUP BY sc.match_user_id,sc.dept_id,businessName,CONCAT(IFNULL(sc.match_user_id,''),IFNULL(sc.dept_id,''),IFNULL(businessName,''))
+			</when>
+			<otherwise>
+				GROUP BY sc.dept_id,businessName
+			</otherwise>
+		</choose>
+		order by deptId asc,margin desc
+	</select>
+
+	<select id="findTypeProfitPage" resultType="com.spt.bas.report.client.vo.RptCtrTypeProfitVo">
+		SELECT
+		sc.dept_id AS deptId,
+		sc.match_user_id AS matchUserId,
+		sc.match_user_name AS matchUserName,
+		COUNT(1) AS orderCount,
+		SUM(sc.total_amount) AS sellTotalAmount,
+		SUM(bc.total_amount) AS buyTotalAmount,
+		SUM(sc.total_amount - bc.total_amount - bc.warehouse_amount - bc.transport_amount - sc.warehouse_amount - sc.transport_amount - bc.delivery_fee - sc.delivery_fee - sc.stevedorage - bc.stevedorage) AS profit,
+		ROUND(
+			sum(
+				(bc.transport_amount+sc.transport_amount)/1.09
+				+ (bc.warehouse_amount+bc.delivery_fee+bc.stevedorage+sc.warehouse_amount+sc.delivery_fee+sc.stevedorage)/1.06
+				+ (
+					(sc.total_amount-bc.total_amount)/1.13*0.13
+					- (bc.transport_amount+sc.transport_amount)/1.09*0.09
+					- (bc.warehouse_amount+bc.delivery_fee+bc.stevedorage+sc.warehouse_amount+sc.delivery_fee+sc.stevedorage)/1.06*0.06
+					- (sc.total_amount*(if(sc.insurance_rate is null,0,sc.insurance_rate)))/1.06
+				)*0.12
+				+ (sc.total_amount*(if(sc.insurance_rate is null,0,sc.insurance_rate)))/1.06
+			), 2
+		) AS cost,
+		ROUND(
+
+			sum(
+				(sc.total_amount-bc.total_amount)/1.13
+				- (bc.transport_amount+sc.transport_amount)/1.09
+				- (bc.warehouse_amount+bc.delivery_fee+bc.stevedorage+sc.warehouse_amount+sc.delivery_fee+sc.stevedorage)/1.06
+				- (
+					(sc.total_amount-bc.total_amount)/1.13*0.13
+					- (bc.transport_amount+sc.transport_amount)/1.09*0.09
+					- (bc.warehouse_amount+bc.delivery_fee+bc.stevedorage+sc.warehouse_amount+sc.delivery_fee+sc.stevedorage)/1.06*0.06
+					- (sc.total_amount*(if(sc.insurance_rate is null,0,sc.insurance_rate)))/1.06
+				)*0.12
+				- (sc.total_amount*(if(sc.insurance_rate is null,0,sc.insurance_rate)))/1.06
+			), 2
+		) AS margin,
+		CASE
+		WHEN #{noBusinessType} = 'Y' THEN '全部'
+		WHEN sc.match_credit_flg = TRUE AND sc.business_type = 'ZY-BB' THEN '赊销'
+		WHEN sc.match_credit_flg = FALSE AND sc.business_type = 'ZY-BB' THEN'代采'
+		END AS businessName
+		FROM
+		t_ctr_contract_settlement r
+		LEFT JOIN t_ctr_contract bc ON bc.id = r.buy_contract_id
+		LEFT JOIN t_ctr_contract sc ON sc.id = r.sell_contract_id
+		WHERE
+		sc.seal_flg = TRUE
+		AND sc.contract_status != 'C'
+		AND sc.status != 'C'
+		and bc.seal_flg = TRUE
+		and sc.business_type = 'ZY-BB'
+		AND sc.enterprise_id = #{enterpriseId}
+		<if test="contractTimeStart != null and contractTimeEnd != null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="contractTimeStart == null or contractTimeEnd == null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="myDeptIdList != null and myDeptIdList.size() > 0">
+			and sc.dept_id in
+			<foreach collection="myDeptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{myDeptIdList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="businessCode != null  and businessCode == 'SX'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = TRUE
+		</if>
+		<if test="businessCode != null  and businessCode == 'DC'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = FALSE
+		</if>
+		<if test="businessCode != null  and businessCode == 'ZY'  ">
+			AND sc.business_type != 'ZY-BB'
+		</if>
+		<if test="matchUserId != null ">
+			AND sc.match_user_id = #{matchUserId}
+		</if>
+		<choose>
+			<when test='searchType == "U" '>
+				GROUP BY sc.match_user_id,sc.dept_id,businessName,CONCAT(IFNULL(sc.match_user_id,''),IFNULL(sc.dept_id,''),IFNULL(businessName,''))
+			</when>
+			<otherwise>
+				GROUP BY sc.dept_id,businessName
+			</otherwise>
+		</choose>
+		order by profit desc
+	</select>
+	<select id="getDcsxCapitalCost" resultType="com.spt.bas.report.client.vo.RptCtrTypeProfitVo">
+		select
+		sc.dept_id AS deptId,
+		CASE
+		WHEN #{noBusinessType} = 'Y' THEN '全部'
+		WHEN sc.match_credit_flg = TRUE AND sc.business_type = 'ZY-BB' THEN '赊销'
+		WHEN sc.match_credit_flg = FALSE AND sc.business_type = 'ZY-BB' THEN'代采'
+		END AS businessName,
+		ROUND(SUM(if(our.company_name is NULL, sc.total_amount - dcsx.total_amount, dcsx.total_amount-bc.total_amount)
+		+ IFNULL((sc.breach_amount*sc.breach_days*0.1)/365,0) - IFNULL(sc.receive_breach_amount,0))/1.13,6)
+		dcsxCapitalCost
+		FROM t_ctr_contract_settlement r
+		INNER JOIN t_ctr_contract bc ON bc.id = r.buy_contract_id
+		INNER JOIN t_ctr_contract sc ON sc.id = r.sell_contract_id
+		LEFT JOIN t_ctr_dcsx dcsx ON dcsx.approve_id = bc.approve_id
+		LEFT JOIN t_bs_company_our our ON dcsx.our_company_name = our.company_name AND our.our_company_flag=TRUE
+		LEFT JOIN t_bs_company_our our2 ON dcsx.company_name = our2.company_name AND our2.our_company_flag=TRUE
+		where sc.business_type = 'ZY-BB'
+		and sc.match_credit_flg = TRUE
+		and sc.business_type_dcsx IN ('DCSXBL', 'DCSX', 'DCSXHDFK')
+		and sc.seal_flg = TRUE
+		and bc.seal_flg = TRUE
+		and sc.status != 'C'
+		and bc.status != 'C'
+		<if test="contractTimeStart != null and contractTimeEnd != null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="contractTimeStart == null or contractTimeEnd == null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="myDeptIdList != null and myDeptIdList.size() > 0">
+			and sc.dept_id in
+			<foreach collection="myDeptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{myDeptIdList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="businessCode != null  and businessCode == 'SX'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = TRUE
+		</if>
+		<if test="businessCode != null  and businessCode == 'DC'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = FALSE
+		</if>
+		<if test="businessCode != null  and businessCode == 'ZY'  ">
+			AND sc.business_type != 'ZY-BB'
+		</if>
+		<if test="matchUserId != null ">
+			AND sc.match_user_id = #{matchUserId}
+		</if>
+		<choose>
+			<when test='searchType == "U" '>
+				GROUP BY sc.match_user_id,sc.dept_id,businessName,CONCAT(IFNULL(sc.match_user_id,''),IFNULL(sc.dept_id,''),IFNULL(businessName,''))
+			</when>
+			<otherwise>
+				GROUP BY sc.dept_id,businessName
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="getCapitalCost" resultType="com.spt.bas.report.client.vo.RptCtrTypeProfitVo">
+		select
+		sc.dept_id AS deptId,
+		CASE
+		WHEN #{noBusinessType} = 'Y' THEN '全部'
+		WHEN sc.match_credit_flg = TRUE AND sc.business_type = 'ZY-BB' THEN '赊销'
+		WHEN sc.match_credit_flg = FALSE AND sc.business_type = 'ZY-BB' THEN'代采'
+		END AS businessName,
+		ROUND(SUM(IFNULL(r.financial_service_amount,0))/1.13,6) capitalCost
+		FROM t_ctr_contract_settlement r
+		INNER JOIN t_ctr_contract bc ON bc.id = r.buy_contract_id
+		INNER JOIN t_ctr_contract sc ON sc.id = r.sell_contract_id
+		where sc.business_type = 'ZY-BB'
+		and sc.match_credit_flg = TRUE
+		and sc.business_type_dcsx not IN ('DCSXBL', 'DCSX', 'DCSXHDFK')
+		and sc.seal_flg = TRUE
+		and bc.seal_flg = TRUE
+		and sc.status != 'C'
+		and bc.status != 'C'
+		<if test="contractTimeStart != null and contractTimeEnd != null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="contractTimeStart == null or contractTimeEnd == null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.seal_date, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="myDeptIdList != null and myDeptIdList.size() > 0">
+			and sc.dept_id in
+			<foreach collection="myDeptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{myDeptIdList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="businessCode != null  and businessCode == 'SX'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = TRUE
+		</if>
+		<if test="businessCode != null  and businessCode == 'DC'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = FALSE
+		</if>
+		<if test="businessCode != null  and businessCode == 'ZY'  ">
+			AND sc.business_type != 'ZY-BB'
+		</if>
+		<if test="matchUserId != null ">
+			AND sc.match_user_id = #{matchUserId}
+		</if>
+		<choose>
+			<when test='searchType == "U" '>
+				GROUP BY sc.match_user_id,sc.dept_id,businessName,CONCAT(IFNULL(sc.match_user_id,''),IFNULL(sc.dept_id,''),IFNULL(businessName,''))
+			</when>
+			<otherwise>
+				GROUP BY sc.dept_id,businessName
+			</otherwise>
+		</choose>
+	</select>
+	
+	<!-- 合计 -->
+	<select  id="findProfitSum" resultType="com.spt.bas.report.client.vo.RptCtrProfitVo" >
+		SELECT
+		SUM(sc.total_amount) AS sellTotalAmount,
+		SUM(bc.total_amount) AS buyTotalAmount,
+		SUM(sc.total_amount - bc.total_amount) AS profit,
+		SUM(bc.warehouse_amount + bc.transport_amount + sc.warehouse_amount + sc.transport_amount + bc.delivery_fee + sc.delivery_fee) AS cost,
+		SUM(sc.total_amount - bc.total_amount - bc.warehouse_amount - bc.transport_amount - sc.warehouse_amount - sc.transport_amount - bc.delivery_fee - sc.delivery_fee - sc.stevedorage - bc.stevedorage) AS margin
+		FROM
+		t_ctr_contract_rela r
+		LEFT JOIN t_ctr_contract bc ON bc.id = r.buy_contract_id
+		LEFT JOIN t_ctr_contract sc ON sc.id = r.sell_contract_id
+		WHERE
+		sc.seal_flg = TRUE
+	    and bc.seal_flg = TRUE
+		AND sc.enterprise_id = #{enterpriseId}
+		<if test="contractTimeStart != null and contractTimeEnd != null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="contractTimeStart == null or contractTimeEnd == null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND DATE_FORMAT(sc.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND DATE_FORMAT(sc.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d') ]]>
+			</if>
+		</if>
+		<if test="deptId != null">
+			AND sc.dept_id = #{deptId}
+		</if>
+		<if test="myDeptIdList != null and myDeptIdList.size() > 0">
+			and sc.dept_id in
+			<foreach collection="myDeptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{myDeptIdList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="businessCode != null  and businessCode == 'SX'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = TRUE
+		</if>
+		<if test="businessCode != null  and businessCode == 'DC'  ">
+			AND sc.business_type = 'ZY-BB' AND sc.match_credit_flg = FALSE
+		</if>
+		<if test="businessCode != null  and businessCode == 'ZY'  ">
+			AND sc.business_type != 'ZY-BB'
+		</if>
+		<if test="matchUserId != null ">
+			AND sc.match_user_id = #{matchUserId}
+		</if>
+	</select>
+    <!-- 查询部门 -->
+	<select id="findProfitByDeptId" resultType="java.lang.Long">
+		SELECT
+			DISTINCT sc.dept_id AS deptId
+		FROM
+			t_ctr_contract_rela r
+				LEFT JOIN t_ctr_contract bc ON bc.id = r.buy_contract_id
+				LEFT JOIN t_ctr_contract sc ON sc.id = r.sell_contract_id
+		WHERE
+			sc.seal_flg = TRUE
+		  AND sc.enterprise_id = #{enterpriseId}
+		GROUP BY sc.dept_id,CONCAT(IFNULL(sc.business_type,''),IFNULL(sc.business_type_dcsx,''))
+	</select>
+
+	<!--默认利润计算参数-->
+	<select id="findCalculateParam" resultType="java.lang.String">
+		SELECT config_value FROM t_bs_product_config WHERE config_key = #{configKey} ORDER BY updated_date DESC LIMIT 1
+	</select>
+
+	<!--业务员利润计算配置表-->
+	<select id="findMatchProfitConfig" resultType="com.spt.bas.report.client.vo.RptMatchProfitConfig">
+		SELECT
+			match_user_id AS matchUserId,
+			match_user_name AS matchUserName,
+			buy_commission_rate AS buyCommissionRate,
+			sell_commission_rate AS sellCommissionRate,
+			marketing_rate AS marketingRate,
+			company_rate AS companyRate,
+			buy_head_commission_rate AS buyHeadCommissionRate,
+			sell_head_commission_rate AS sellHeadCommissionRate
+		FROM
+			t_bs_match_profits_config
+		GROUP BY match_user_id
+	</select>
+
+	<!--赊销业务提成计算明细表-->
+	<select id="findCreditBusinessCommissionPage" resultType="com.spt.bas.report.client.vo.RptCreditBusinessCommission">
+		SELECT
+		    t1.buType as businessTypeDesc,
+			s.contract_no AS contractNo,
+			s.company_name AS companyName,
+			s.match_user_name As sellMatchUserName,
+			b.match_user_name As buyMatchUserName,
+			s.total_number AS totalNumber,
+			s.total_amount AS sellTotalAmount,
+			b.total_amount AS buyTotalAmount,
+			b.deal_price AS buyPrice,
+			s.deal_price AS sellPrice,
+			b.pay_full_time AS payDate,
+			s.real_pay_full_time receiveDate,
+			s.appoint_pay_full_time AS appointPayDate,
+			s.confirm_date AS confirmReceiptDate,
+			IFNULL((b.transport_amount + s.transport_amount),0) AS transportAmount,
+			IFNULL((b.warehouse_amount + s.warehouse_amount),0) AS warehouseAmount,
+			s.breach_days AS breachDay,
+			s.breach_amount AS breachAmount,
+			s.credit_cycle AS creditCycle,
+		    case when s.delivery_fee is null then 0 else s.delivery_fee end as deliveryFee
+			FROM
+				t_ctr_contract_rela r
+				LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+				LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+		LEFT JOIN (SELECT id, CASE
+		WHEN
+		match_credit_flg = 1
+		AND business_type = 'ZY-BB' THEN
+		'赊销'
+		WHEN business_type IN ( 'ZY-CG', 'ZY-XS' ) THEN
+		'自营'
+		WHEN match_credit_flg = 0
+		AND business_type = 'ZY-BB' THEN
+		'代采' ELSE '其他'
+		END AS buType
+		FROM
+		t_ctr_contract
+		) AS t1 ON  t1.id = b.id
+			WHERE
+				s.business_type = 'ZY-BB'
+			  AND s.`status` != 'C'
+		<if test="contractNo != null and contractNo != ''" >
+			AND s.contract_no  like concat('%',#{contractNo},'%')
+		</if>
+		<if test="buType != null and buType != ''" >
+			AND t1.buType = #{buType}
+		</if>
+		<if test="sellMatchUserName != null and sellMatchUserName !='' ">
+			AND s.match_user_name = #{sellMatchUserName}
+		</if>
+		<if test="buyMatchUserName != null and buyMatchUserName !=''">
+			AND b.match_user_name = #{buyMatchUserName}
+		</if>
+		<if test="contractTimeStart != null and contractTimeEnd != null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND s.real_pay_full_time >= #{contractTimeStart} ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND s.real_pay_full_time<= #{contractTimeEnd} ]]>
+			</if>
+		</if>
+		<if test="contractTimeStart == null or contractTimeEnd == null">
+			<if test="contractTimeStart != null">
+				<![CDATA[AND s.real_pay_full_time = #{contractTimeStart} ]]>
+			</if>
+			<if test="contractTimeEnd != null">
+				<![CDATA[AND s.real_pay_full_time = #{contractTimeEnd} ]]>
+			</if>
+		</if>
+			ORDER BY
+				r.updated_date DESC
+	</select>
+
+	<select id="findRptContractPage" resultType="com.spt.bas.report.client.vo.RptCtrContractRptVo">
+		SELECT
+			c.id AS id,
+			c.approve_id AS approveId,
+			c.enterprise_id AS enterpriseId,
+			c.contract_type AS contractType,
+			c.business_no AS businessNo,
+			c.contract_no AS contractNo,
+			c.total_amount AS totalAmount,
+			c.contract_time AS contractTime,
+			c.company_id AS companyId,
+			c.company_name AS companyName,
+			c.our_company_name AS ourCompanyName,
+			c.delivery_type AS deliveryType,
+			c.pay_type AS payType,
+			c.total_number AS totalNumber,
+			c.delivery_mode AS deliveryMode,
+			c.delivery_addr AS deliveryAddr,
+			c.product_status AS productStatus,
+			c.contract_status AS contractStatus,
+			c.remark AS remark,
+			c.bond_rate AS bondRate,
+			c.bond_amount AS bondAmount,
+			c.`status` AS STATUS,
+			c.pay_full_time AS payFullTime,
+			c.appoint_pay_full_time AS appointPayFullTime,
+		    c.real_pay_full_time AS realPayFullTime,
+			c.match_user_id AS matchUserId,
+			c.match_user_name AS matchUserName,
+			c.delivery_date_from AS deliveryDateFrom,
+			c.delivery_date_to AS deliveryDateTo,
+			c.contact_name AS contactName,
+			c.contact_addr AS contactAddr,
+			c.bill_flg AS billFlg,
+			c.fond_flg AS fondFlg,
+			c.transport_amount AS transportAmount,
+			c.warehouse_amount AS warehouseAmount,
+			c.real_transport_amount AS realTransportAmount,
+			c.real_warehouse_amount AS realWarehouseAmount,
+			c.interest_amount AS interestAmount,
+			c.receive_interest_amount AS receiveInterestAmount,
+			c.breach_amount AS breachAmount,
+			c.receive_breach_amount AS receiveBreachAmount,
+			c.warehouse_flg AS warehouseFlg,
+			c.billed_amount AS billedAmount,
+			c.dealed_amount AS dealedAmount,
+			c.warehouse_number AS warehouseNumber,
+			c.stevedorage AS stevedorage,
+			c.source AS source,
+			c.link_contract_id AS linkContractId,
+			c.dept_id AS deptId,
+			c.products_name AS productsName,
+			c.long_flg AS longFlg,
+			c.quality_standard AS qualityStandard,
+			c.attach_delivery_time AS attachDeliveryTime,
+			c.extra_term AS extraTerm,
+			c.credit_flg AS creditFlg,
+			c.on_line_flg AS onLineFlg,
+			c.business_type AS businessType,
+			c.business_kind AS businessKind,
+			c.confirm_receive_number AS confirmReceiveNumber,
+			c.confirm_receipt_flg AS confirmReceiptFlg,
+			c.picc_push_flg AS piccPushFlg,
+			c.refund_amount AS refundAmount,
+			c.adjust_flg AS adjustFlg,
+			c.picc_remain_credit AS piccRemainCredit,
+			c.apply_cancel_flg AS applyCancelFlg,
+			c.match_credit_flg AS matchCreditFlg,
+			c.pair_code AS pairCode,
+			c.buy_content_file_id AS buyContentFileId,
+			c.seal_flg AS sealFlg,
+			c.seal_date AS sealDate,
+			c.service_amount AS serviceAmount,
+			c.receive_service_amount AS receiveServiceAmount,
+			c.service_billed_amount AS serviceBilledAmount,
+			c.dealed_flg AS dealedFlg,
+			c.interest_deal_flg AS interestDealFlg,
+			c.bill_flg AS billedFlg,
+			c.interest_billed_flg AS interestBilledFlg,
+			c.breach_days AS breachDays,
+			c.credit_cycle AS creditCycle,
+			c.picc_total_amount AS piccTotalAmount,
+			c.deal_price AS dealPrice,
+			c.deal_amount_no_tax AS dealAmountNoTax,
+			c.loss_amount AS lossAmount,
+			c.loss_number AS lossNumber,
+			c.loss_amount_by_logistics AS lossAmountByLogistics,
+			c.loss_amount_by_actual AS lossAmountByActual,
+			c.loss_amount_by_supplier AS lossAmountBySupplier,
+			c.loss_amount_by_our AS lossAmountByOur,
+			c.premium AS premium,
+			c.business_type_dcsx AS businessTypeDcsx,
+			c.contract_model AS contractModel,
+			c.delivery_fee AS deliveryFee,
+			c.carrier AS carrier,
+			c.customer_order_code AS customerOrderCode,
+			c.biddin_status AS biddinStatus,
+			c.sell_interest_amount AS sellInterestAmount,
+			c.apply_source AS applySource,
+			c.created_date AS createdDate,
+			c.updated_date AS updatedDate,
+			c.confirm_date AS confirmDate,
+			c.virtual_id AS virtualId,
+			c.virtual_type AS virtualType,
+			c.virtual_contract_id AS virtualContractId,
+		    c.virtual_contract_no AS virtualContractNo,
+		    c.discount_charge_target AS discountChargeTarget,
+		    c.discount_charge_amount AS discountChargeAmount,
+		    c.discount_receive_amount AS discountReceiveAmount,
+		    IF(t.id > 0 , true, false) AS existContractText,
+		    (c.total_amount - c.dealed_amount) AS receivablePrincipal,
+		    IF(c.total_amount &lt; c.dealed_amount, 0, (c.total_amount+c.breach_amount-c.dealed_amount-c.receive_breach_amount)) AS receivableBalance,
+		    c.insurance_rate AS insuranceRate,
+		    c.insurance_amount AS insuranceAmount,
+		    c.shipping_file_id AS shippingFileId
+		FROM
+			t_ctr_contract c left join t_ctr_contract_text t on c.id = t.ctr_contract_id
+		<where>
+			<if test="fundViewFlag == true">
+				AND c.fund_view_flag = true
+			</if>
+			<if	test="searchParams.EQL_enterpriseId != null and searchParams.EQL_enterpriseId != ''">
+				AND c.enterprise_id = #{searchParams.EQL_enterpriseId}
+			</if>
+			<if	test="searchParams.EQS_businessType != null and searchParams.EQS_businessType != ''">
+				AND c.business_type = #{searchParams.EQS_businessType}
+			</if>
+			<if	test="searchParams.EQB_matchCreditFlg == 'true'.toString">
+				AND c.match_credit_flg = true
+			</if>
+			<if	test="searchParams.EQB_matchCreditFlg == 'false'.toString">
+				AND c.match_credit_flg = false
+			</if>
+			<if	test="searchParams.EQS_contractType != null and searchParams.EQS_contractType != ''">
+				AND c.contract_type = #{searchParams.EQS_contractType}
+			</if>
+			<if	test="searchParams.LIKES_contractNo_OR_LIKES_virtualContractNo != null and searchParams.LIKES_contractNo_OR_LIKES_virtualContractNo != ''">
+				AND (c.contract_no LIKE CONCAT('%',#{searchParams.LIKES_contractNo_OR_LIKES_virtualContractNo},'%') OR c.virtual_contract_no LIKE CONCAT('%',#{searchParams.LIKES_contractNo_OR_LIKES_virtualContractNo},'%'))
+			</if>
+			<if	test="searchParams.LIKES_companyName != null and searchParams.LIKES_companyName != ''">
+				AND c.company_name LIKE CONCAT('%',#{searchParams.LIKES_companyName},'%')
+			</if>
+			<if	test="searchParams.LIKES_productsName != null and searchParams.LIKES_productsName != ''">
+				AND c.products_name LIKE CONCAT('%',#{searchParams.LIKES_productsName},'%')
+			</if>
+			<if	test="searchParams.LIKES_ourCompanyName != null and searchParams.LIKES_ourCompanyName != ''">
+				AND c.our_company_name LIKE CONCAT('%',#{searchParams.LIKES_ourCompanyName},'%')
+			</if>
+			<if test="searchParams.GTED_payFullTime != null and searchParams.GTED_payFullTime != ''">
+				<![CDATA[AND c.pay_full_time >= DATE_FORMAT(#{searchParams.GTED_payFullTime}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_payFullTime != null and searchParams.LTD_payFullTime != ''">
+				<![CDATA[AND c.pay_full_time <= DATE_FORMAT(#{searchParams.LTD_payFullTime}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="searchParams.GTED_deliveryDateTo != null and searchParams.GTED_deliveryDateTo != ''">
+				<![CDATA[AND c.delivery_date_to >= DATE_FORMAT(#{searchParams.GTED_deliveryDateTo}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_deliveryDateTo != null and searchParams.LTD_deliveryDateTo != ''">
+				<![CDATA[AND c.delivery_date_to <= DATE_FORMAT(#{searchParams.LTD_deliveryDateTo}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="searchParams.GTED_contractTime != null and searchParams.GTED_contractTime != ''">
+				<![CDATA[AND c.contract_time >= DATE_FORMAT(#{searchParams.GTED_contractTime}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_contractTime != null and searchParams.LTD_contractTime != ''">
+				<![CDATA[AND c.contract_time <= DATE_FORMAT(#{searchParams.LTD_contractTime}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="searchParams.GTED_confirmDate != null and searchParams.GTED_confirmDate != ''">
+				<![CDATA[AND c.confirm_date >= DATE_FORMAT(#{searchParams.GTED_confirmDate}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.GTED_sealDate != null and searchParams.GTED_sealDate != ''">
+				<![CDATA[AND c.seal_date >= DATE_FORMAT(#{searchParams.GTED_sealDate}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_sealDate != null and searchParams.LTD_sealDate != ''">
+				<![CDATA[AND c.seal_date <= DATE_FORMAT(#{searchParams.LTD_sealDate}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="searchParams.LTD_confirmDate != null and searchParams.LTD_confirmDate != ''">
+				<![CDATA[AND c.confirm_date <= DATE_FORMAT(#{searchParams.LTD_confirmDate}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="confirmFileDateBegin != null or confirmFileDateEnd != null">
+				AND EXISTS (SELECT r.contract_id FROM t_apply_confirm_receipt r WHERE r.contract_id = c.id AND r.`status` = 'D'
+				<if test="confirmFileDateBegin != null">
+					<![CDATA[AND r.updated_date >= DATE_FORMAT(#{confirmFileDateBegin}, '%Y-%m-%d 00:00:00') ]]>
+				</if>
+				<if test="confirmFileDateEnd != null">
+					<![CDATA[AND r.updated_date <= DATE_FORMAT(#{confirmFileDateEnd}, '%Y-%m-%d 23:59:59') ]]>
+				</if>
+				)
+			</if>
+			<if test="payCondition == 'PY'.toString()">
+				AND c.dealed_amount >= c.total_amount
+			</if>
+			<if test="payCondition == 'PN'.toString()">
+				AND c.dealed_amount &lt; c.total_amount
+			</if>
+			<if test="warehouseCondition == 'WY'.toString()">
+				AND c.warehouse_number >= c.total_number
+			</if>
+			<if test="warehouseCondition == 'WN'.toString()">
+				AND c.warehouse_number &lt; c.total_number
+			</if>
+			<if test="billCondition == 'BY'.toString()">
+				AND c.billed_amount >= c.total_amount
+			</if>
+			<if test="billCondition == 'BN'.toString()">
+				AND c.billed_amount &lt; c.total_amount
+			</if>
+			<if test="searchParams.GTEL_creditCycle != null and searchParams.GTEL_creditCycle != ''">
+				AND c.credit_cycle >= #{searchParams.GTEL_creditCycle}
+			</if>
+			<if test="searchParams.LTL_creditCycle != null and searchParams.LTL_creditCycle != ''">
+				AND c.credit_cycle &lt; #{searchParams.LTL_creditCycle}
+			</if>
+			<if	test="contractTypes == 'Y'.toString()">
+				AND c.contract_status != 'C'
+			</if>
+			<if	test="contractTypes == 'N'.toString()">
+				AND c.contract_status = 'C'
+			</if>
+			<if test="searchParams.EQS_performanceStatus != null and searchParams.EQS_performanceStatus != ''">
+				AND c.performance_status = #{searchParams.EQS_performanceStatus}
+			</if>
+			<if test="searchParams.EQS_matchUserId != null and searchParams.EQS_matchUserId != ''">
+				AND c.match_user_id = #{searchParams.EQS_matchUserId}
+			</if>
+			<if test="searchParams.EQS_deliveryMode != null and searchParams.EQS_deliveryMode != ''">
+				AND c.delivery_mode = #{searchParams.EQS_deliveryMode}
+			</if>
+			<if test="payDateChange == true">
+				AND DATE_FORMAT(c.pay_full_time, '%Y-%m-%d') != DATE_FORMAT(c.appoint_pay_full_time, '%Y-%m-%d')
+			</if>
+			<choose>
+				<when test="searchParams.EQS_businessType == 'ZY-CG'.toString() or searchParams.EQS_businessType == 'ZY-XS'.toString() or searchParams.EQS_businessType == 'KC-CG'.toString()">
+					<if test="companyNameList != null and companyNameList.size() > 0">
+						<if test="companyNameList != null and companyNameList.size() > 0">
+							AND c.our_company_name in
+							<foreach collection="companyNameList" item="item" index="index" open="(" close=")" separator=",">
+								#{companyNameList[${index}]}
+							</foreach>
+						</if>
+					</if>
+
+				</when>
+				<when test="companyNameList != null and companyNameList.size() > 0">
+					AND (
+					EXISTS ( SELECT m.id FROM t_apply_match m WHERE m.approve_id = c.approve_id AND (m.buy_our_company_name in
+					<foreach collection="companyNameList" item="item" index="index" open="(" close=")" separator=",">
+						#{companyNameList[${index}]}
+					</foreach> OR m.sell_our_company_name in
+					<foreach collection="companyNameList" item="item" index="index" open="(" close=")" separator=",">
+						#{companyNameList[${index}]}
+					</foreach> OR m.our_company_name in
+					<foreach collection="companyNameList" item="item" index="index" open="(" close=")" separator=",">
+						#{companyNameList[${index}]}
+					</foreach>)
+					))
+				</when>
+				<otherwise>
+					AND EXISTS (SELECT h.id FROM t_pm_approve_history h WHERE h.approve_id = c.approve_id AND h.approve_user_id = #{userId})
+				</otherwise>
+			</choose>
+		</where>
+		<choose>
+			<when test="businessType == 'ZY-BB'.toString()">
+				ORDER BY c.pair_code DESC, c.id ASC
+			</when>
+			<otherwise>
+				ORDER BY c.id DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findIndexRptContractPage" resultType="com.spt.bas.client.vo.ContractShowVo">
+		SELECT
+		c.id AS id,
+		c.approve_id AS approveId,
+		c.enterprise_id AS enterpriseId,
+		c.contract_type AS contractType,
+		c.business_no AS businessNo,
+		c.contract_no AS contractNo,
+		c.total_amount AS totalAmount,
+		c.contract_time AS contractTime,
+		c.company_id AS companyId,
+		c.company_name AS companyName,
+		c.our_company_name AS ourCompanyName,
+		c.delivery_type AS deliveryType,
+		c.pay_type AS payType,
+		c.total_number AS totalNumber,
+		c.delivery_mode AS deliveryMode,
+		c.delivery_addr AS deliveryAddr,
+		c.product_status AS productStatus,
+		c.contract_status AS contractStatus,
+		c.remark AS remark,
+		c.bond_rate AS bondRate,
+		c.bond_amount AS bondAmount,
+		c.`status` AS STATUS,
+		c.pay_full_time AS payFullTime,
+		c.appoint_pay_full_time AS appointPayFullTime,
+		c.real_pay_full_time AS realPayFullTime,
+		c.match_user_id AS matchUserId,
+		c.match_user_name AS matchUserName,
+		c.delivery_date_from AS deliveryDateFrom,
+		c.delivery_date_to AS deliveryDateTo,
+		c.contact_name AS contactName,
+		c.contact_addr AS contactAddr,
+		c.bill_flg AS billFlg,
+		c.fond_flg AS fondFlg,
+		c.transport_amount AS transportAmount,
+		c.warehouse_amount AS warehouseAmount,
+		c.real_transport_amount AS realTransportAmount,
+		c.real_warehouse_amount AS realWarehouseAmount,
+		c.interest_amount AS interestAmount,
+		c.receive_interest_amount AS receiveInterestAmount,
+		c.breach_amount AS breachAmount,
+		c.receive_breach_amount AS receiveBreachAmount,
+		c.warehouse_flg AS warehouseFlg,
+		c.billed_amount AS billedAmount,
+		c.dealed_amount AS dealedAmount,
+		c.warehouse_number AS warehouseNumber,
+		c.source AS source,
+		c.link_contract_id AS linkContractId,
+		c.dept_id AS deptId,
+		c.products_name AS productsName,
+		c.long_flg AS longFlg,
+		c.quality_standard AS qualityStandard,
+		c.attach_delivery_time AS attachDeliveryTime,
+		c.extra_term AS extraTerm,
+		c.credit_flg AS creditFlg,
+		c.on_line_flg AS onLineFlg,
+		c.business_type AS businessType,
+		c.business_kind AS businessKind,
+		c.confirm_receive_number AS confirmReceiveNumber,
+		c.confirm_receipt_flg AS confirmReceiptFlg,
+		c.picc_push_flg AS piccPushFlg,
+		c.refund_amount AS refundAmount,
+		c.adjust_flg AS adjustFlg,
+		c.picc_remain_credit AS piccRemainCredit,
+		c.apply_cancel_flg AS applyCancelFlg,
+		c.match_credit_flg AS matchCreditFlg,
+		c.pair_code AS pairCode,
+		c.buy_content_file_id AS buyContentFileId,
+		c.seal_flg AS sealFlg,
+		c.seal_date AS sealDate,
+		c.service_amount AS serviceAmount,
+		c.receive_service_amount AS receiveServiceAmount,
+		c.service_billed_amount AS serviceBilledAmount,
+		c.dealed_flg AS dealedFlg,
+		c.interest_deal_flg AS interestDealFlg,
+		c.bill_flg AS billedFlg,
+		c.interest_billed_flg AS interestBilledFlg,
+		c.breach_days AS breachDays,
+		c.credit_cycle AS creditCycle,
+		c.picc_total_amount AS piccTotalAmount,
+		c.deal_price AS dealPrice,
+		c.deal_amount_no_tax AS dealAmountNoTax,
+		c.loss_amount AS lossAmount,
+		c.loss_number AS lossNumber,
+		c.loss_amount_by_logistics AS lossAmountByLogistics,
+		c.loss_amount_by_actual AS lossAmountByActual,
+		c.loss_amount_by_supplier AS lossAmountBySupplier,
+		c.loss_amount_by_our AS lossAmountByOur,
+		c.premium AS premium,
+		c.business_type_dcsx AS businessTypeDcsx,
+		c.contract_model AS contractModel,
+		c.delivery_fee AS deliveryFee,
+		c.carrier AS carrier,
+		c.customer_order_code AS customerOrderCode,
+		c.biddin_status AS biddinStatus,
+		c.sell_interest_amount AS sellInterestAmount,
+		c.apply_source AS applySource,
+		c.created_date AS createdDate,
+		c.updated_date AS updatedDate,
+		c.confirm_date AS confirmDate,
+		IF(t.id > 0 , true, false) AS existContractText,
+		IF(c.total_amount &lt; c.dealed_amount, 0, (c.total_amount-c.dealed_amount)) AS receivableBalance,
+	    c.insurance_rate AS insuranceRate,
+		c.insurance_amount AS insuranceAmount,
+		c.shipping_file_id AS shippingFileId
+		FROM t_ctr_contract c 
+		left join t_ctr_contract_text t on c.id = t.ctr_contract_id
+		LEFT JOIN t_ctr_contract buy ON c.approve_id = buy.approve_id AND buy.contract_type = 'B'
+		LEFT JOIN t_ctr_contract sell ON c.approve_id = sell.approve_id AND sell.contract_type = 'S'
+		<where>
+		    and buy.dealed_amount >= buy.total_amount
+			and sell.seal_flg = true
+			<if	test="searchParams.EQL_enterpriseId != null and searchParams.EQL_enterpriseId != ''">
+				AND c.enterprise_id = #{searchParams.EQL_enterpriseId}
+			</if>
+			<if	test="searchParams.EQS_businessType != null and searchParams.EQS_businessType != ''">
+				AND c.business_type = #{searchParams.EQS_businessType}
+			</if>
+			<if	test="searchParams.EQB_matchCreditFlg == 'true'.toString">
+				AND c.match_credit_flg = true
+			</if>
+			<if	test="searchParams.EQB_matchCreditFlg == 'false'.toString">
+				AND c.match_credit_flg = false
+			</if>
+			<if	test="searchParams.EQS_contractType != null and searchParams.EQS_contractType != ''">
+				AND c.contract_type = #{searchParams.EQS_contractType}
+			</if>
+			<if	test="searchParams.LIKES_contractNo != null and searchParams.LIKES_contractNo != ''">
+				AND c.contract_no LIKE CONCAT('%',#{searchParams.LIKES_contractNo},'%')
+			</if>
+			<if	test="searchParams.LIKES_companyName != null and searchParams.LIKES_companyName != ''">
+				AND c.company_name LIKE CONCAT('%',#{searchParams.LIKES_companyName},'%')
+			</if>
+			<if	test="searchParams.LIKES_productsName != null and searchParams.LIKES_productsName != ''">
+				AND c.products_name LIKE CONCAT('%',#{searchParams.LIKES_productsName},'%')
+			</if>
+			<if	test="searchParams.LIKES_ourCompanyName != null and searchParams.LIKES_ourCompanyName != ''">
+				AND c.our_company_name LIKE CONCAT('%',#{searchParams.LIKES_ourCompanyName},'%')
+			</if>
+			<if test="searchParams.GTED_payFullTime != null and searchParams.GTED_payFullTime != ''">
+				<![CDATA[AND c.pay_full_time >= DATE_FORMAT(#{searchParams.GTED_payFullTime}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_payFullTime != null and searchParams.LTD_payFullTime != ''">
+				<![CDATA[AND c.pay_full_time <= DATE_FORMAT(#{searchParams.LTD_payFullTime}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="searchParams.GTED_deliveryDateTo != null and searchParams.GTED_deliveryDateTo != ''">
+				<![CDATA[AND c.delivery_date_to >= DATE_FORMAT(#{searchParams.GTED_deliveryDateTo}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_deliveryDateTo != null and searchParams.LTD_deliveryDateTo != ''">
+				<![CDATA[AND c.delivery_date_to <= DATE_FORMAT(#{searchParams.LTD_deliveryDateTo}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="searchParams.GTED_contractTime != null and searchParams.GTED_contractTime != ''">
+				<![CDATA[AND c.contract_time >= DATE_FORMAT(#{searchParams.GTED_contractTime}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_contractTime != null and searchParams.LTD_contractTime != ''">
+				<![CDATA[AND c.contract_time <= DATE_FORMAT(#{searchParams.LTD_contractTime}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="searchParams.GTED_sealDate != null and searchParams.GTED_sealDate != ''">
+				<![CDATA[AND c.seal_date >= DATE_FORMAT(#{searchParams.GTED_sealDate}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_sealDate != null and searchParams.LTD_sealDate != ''">
+				<![CDATA[AND c.seal_date <= DATE_FORMAT(#{searchParams.LTD_sealDate}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="searchParams.GTED_confirmDate != null and searchParams.GTED_confirmDate != ''">
+				<![CDATA[AND c.confirm_date >= DATE_FORMAT(#{searchParams.GTED_confirmDate}, '%Y-%m-%d 00:00:00') ]]>
+			</if>
+			<if test="searchParams.LTD_confirmDate != null and searchParams.LTD_confirmDate != ''">
+				<![CDATA[AND c.confirm_date <= DATE_FORMAT(#{searchParams.LTD_confirmDate}, '%Y-%m-%d 23:59:59') ]]>
+			</if>
+			<if test="confirmFileDateBegin != null or confirmFileDateEnd != null">
+				AND EXISTS (SELECT r.contract_id FROM t_apply_confirm_receipt r WHERE r.contract_id = c.id AND r.`status` = 'D'
+				<if test="confirmFileDateBegin != null">
+					<![CDATA[AND r.updated_date >= DATE_FORMAT(#{confirmFileDateBegin}, '%Y-%m-%d 00:00:00') ]]>
+				</if>
+				<if test="confirmFileDateEnd != null">
+					<![CDATA[AND r.updated_date <= DATE_FORMAT(#{confirmFileDateEnd}, '%Y-%m-%d 23:59:59') ]]>
+				</if>
+				)
+			</if>
+			<if test="payCondition == 'PY'.toString()">
+				AND c.dealed_amount >= c.total_amount
+			</if>
+			<if test="payCondition == 'PN'.toString()">
+				AND c.dealed_amount &lt; c.total_amount
+			</if>
+			<if test="warehouseCondition == 'WY'.toString()">
+				AND c.warehouse_number >= c.total_number
+			</if>
+			<if test="warehouseCondition == 'WN'.toString()">
+				AND c.warehouse_number &lt; c.total_number
+			</if>
+			<if test="billCondition == 'BY'.toString()">
+				AND c.billed_amount >= c.total_amount
+			</if>
+			<if test="billCondition == 'BN'.toString()">
+				AND c.billed_amount &lt; c.total_amount
+			</if>
+			<if test="searchParams.GTEL_creditCycle != null and searchParams.GTEL_creditCycle != ''">
+				AND c.credit_cycle >= #{searchParams.GTEL_creditCycle}
+			</if>
+			<if test="searchParams.LTL_creditCycle != null and searchParams.LTL_creditCycle != ''">
+				AND c.credit_cycle &lt;= #{searchParams.LTL_creditCycle}
+			</if>
+			<if	test="contractTypes == 'Y'.toString()">
+				AND c.contract_status != 'C'
+			</if>
+			<if	test="contractTypes == 'N'.toString()">
+				AND c.contract_status = 'C'
+			</if>
+			<if test="searchParams.EQS_performanceStatus != null and searchParams.EQS_performanceStatus != ''">
+				AND c.performance_status = #{searchParams.EQS_performanceStatus}
+			</if>
+			<if test="searchParams.EQS_matchUserId != null and searchParams.EQS_matchUserId != ''">
+				AND c.match_user_id = #{searchParams.EQS_matchUserId}
+			</if>
+			<if test="searchParams.EQS_deliveryMode != null and searchParams.EQS_deliveryMode != ''">
+				AND c.delivery_mode = #{searchParams.EQS_deliveryMode}
+			</if>
+			<if test="payDateChange == true">
+				AND DATE_FORMAT(c.pay_full_time, '%Y-%m-%d') != DATE_FORMAT(c.appoint_pay_full_time, '%Y-%m-%d')
+			</if>
+		</where>
+		<choose>
+			<when test="businessType == 'ZY-BB'.toString()">
+				ORDER BY c.pair_code DESC, c.id ASC
+			</when>
+			<otherwise>
+				ORDER BY c.id DESC
+			</otherwise>
+		</choose>
+	</select>
+
+	<select id="findRptSumPageContract" resultType="com.spt.bas.report.client.vo.RptCtrContractRptVo">
+		SELECT
+		   SUM(c.total_number) AS totalNubmer,
+		   SUM(c.warehouse_number) AS warehouseNumber,
+		   SUM(c.total_amount) AS totalAmount,
+		   SUM(c.dealed_amount) AS dealedAmount,
+		   SUM(c.billed_amount) AS billedAmount,
+		   SUM(c.warehouse_amount) AS warehouseAmount,
+		   SUM(c.transport_amount) AS transportAmount,
+		   SUM(c.stevedorage) AS stevedorage,
+		   SUM(c.breach_amount) AS breachAmount,
+		   SUM(c.receive_breach_amount) AS receiveBreachAmount,
+		   SUM(c.insurance_amount) AS interestAmount,
+		   SUM(IF(c.total_amount &lt; c.dealed_amount, 0, (c.total_amount-c.dealed_amount))) AS receivableBalance
+		FROM
+		t_ctr_contract c
+		<where>
+			<if test="fundViewFlag == true">
+				AND c.fund_view_flag = true
+			</if>
+			<if	test="searchParams.EQL_enterpriseId != null and searchParams.EQL_enterpriseId != ''">
+				AND c.enterprise_id = #{searchParams.EQL_enterpriseId}
+			</if>
+			<if	test="searchParams.EQS_businessType != null and searchParams.EQS_businessType != ''">
+				AND c.business_type = #{searchParams.EQS_businessType}
+			</if>
+			<if	test="searchParams.EQB_matchCreditFlg == 'true'.toString">
+				AND c.match_credit_flg = true
+			</if>
+			<if	test="searchParams.EQB_matchCreditFlg == 'false'.toString">
+				AND c.match_credit_flg = false
+			</if>
+			<if	test="searchParams.EQS_contractType != null and searchParams.EQS_contractType != ''">
+				AND c.contract_type = #{searchParams.EQS_contractType}
+			</if>
+			<if	test="searchParams.LIKES_contractNo_OR_LIKES_virtualContractNo != null and searchParams.LIKES_contractNo_OR_LIKES_virtualContractNo != ''">
+				AND (c.contract_no LIKE CONCAT('%',#{searchParams.LIKES_contractNo_OR_LIKES_virtualContractNo},'%') OR c.virtual_contract_no LIKE CONCAT('%',#{searchParams.LIKES_contractNo_OR_LIKES_virtualContractNo},'%'))
+			</if>
+			<if	test="searchParams.LIKES_companyName != null and searchParams.LIKES_companyName != ''">
+				AND c.company_name LIKE CONCAT('%',#{searchParams.LIKES_companyName},'%')
+			</if>
+			<if	test="searchParams.LIKES_productsName != null and searchParams.LIKES_productsName != ''">
+				AND c.products_name LIKE CONCAT('%',#{searchParams.LIKES_productsName},'%')
+			</if>
+			<if	test="searchParams.LIKES_ourCompanyName != null and searchParams.LIKES_ourCompanyName != ''">
+				AND c.our_company_name LIKE CONCAT('%',#{searchParams.LIKES_ourCompanyName},'%')
+			</if>
+			<if test="searchParams.GTED_payFullTime != null and searchParams.GTED_payFullTime != ''">
+				<![CDATA[AND DATE_FORMAT(c.pay_full_time, '%Y-%m-%d') >= DATE_FORMAT(#{searchParams.GTED_payFullTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="searchParams.LTD_payFullTime != null and searchParams.LTD_payFullTime != ''">
+				<![CDATA[AND DATE_FORMAT(c.pay_full_time, '%Y-%m-%d') <= DATE_FORMAT(#{searchParams.LTD_payFullTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="searchParams.GTED_deliveryDateTo != null and searchParams.GTED_deliveryDateTo != ''">
+				<![CDATA[AND DATE_FORMAT(c.delivery_date_to, '%Y-%m-%d') >= DATE_FORMAT(#{searchParams.GTED_deliveryDateTo}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="searchParams.LTD_deliveryDateTo != null and searchParams.LTD_deliveryDateTo != ''">
+				<![CDATA[AND DATE_FORMAT(c.delivery_date_to, '%Y-%m-%d') <= DATE_FORMAT(#{searchParams.LTD_deliveryDateTo}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="searchParams.GTED_contractTime != null and searchParams.GTED_contractTime != ''">
+				<![CDATA[AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{searchParams.GTED_contractTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="searchParams.LTD_contractTime != null and searchParams.LTD_contractTime != ''">
+				<![CDATA[AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{searchParams.LTD_contractTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="payCondition == 'PY'.toString()">
+				AND c.dealed_amount >= c.total_amount
+			</if>
+			<if test="payCondition == 'PN'.toString()">
+				AND c.dealed_amount &lt; c.total_amount
+			</if>
+			<if test="warehouseCondition == 'WY'.toString()">
+				AND c.warehouse_number >= c.total_number
+			</if>
+			<if test="warehouseCondition == 'WN'.toString()">
+				AND c.warehouse_number &lt; c.total_number
+			</if>
+			<if test="billCondition == 'BY'.toString()">
+				AND c.billed_amount >= c.total_amount
+			</if>
+			<if test="billCondition == 'BN'.toString()">
+				AND c.billed_amount &lt; c.total_amount
+			</if>
+			<if test="searchParams.GTEL_creditCycle != null and searchParams.GTEL_creditCycle != ''">
+				AND c.credit_cycle >= #{searchParams.GTEL_creditCycle}
+			</if>
+			<if test="searchParams.LTL_creditCycle != null and searchParams.LTL_creditCycle != ''">
+				AND c.credit_cycle &lt; #{searchParams.LTL_creditCycle}
+			</if>
+			<if	test="contractTypes == 'Y'.toString()">
+				AND c.contract_status != 'C'
+			</if>
+			<if	test="contractTypes == 'N'.toString()">
+				AND c.contract_status = 'C'
+			</if>
+			<if test="searchParams.EQS_performanceStatus != null and searchParams.EQS_performanceStatus != ''">
+				AND c.performance_status = #{searchParams.EQS_performanceStatus}
+			</if>
+			<if test="searchParams.EQS_matchUserId != null and searchParams.EQS_matchUserId != ''">
+				AND c.match_user_id = #{searchParams.EQS_matchUserId}
+			</if>
+			<if test="searchParams.EQS_deliveryMode != null and searchParams.EQS_deliveryMode != ''">
+				AND c.delivery_mode = #{searchParams.EQS_deliveryMode}
+			</if>
+			<if test="payDateChange == true">
+				AND DATE_FORMAT(c.pay_full_time, '%Y-%m-%d') != DATE_FORMAT(c.appoint_pay_full_time, '%Y-%m-%d')
+			</if>
+			<choose>
+				<when test="searchParams.EQS_businessType == 'ZY-CG'.toString() or searchParams.EQS_businessType == 'ZY-XS'.toString()">
+					<if test="companyNameList != null and companyNameList.size() > 0">
+						AND c.our_company_name in
+						<foreach collection="companyNameList" item="item" index="index" open="(" close=")" separator=",">
+							#{companyNameList[${index}]}
+						</foreach>
+					</if>
+				</when>
+				<when test="companyNameList != null and companyNameList.size() > 0">
+					AND (
+					EXISTS ( SELECT m.id FROM t_apply_match m WHERE m.approve_id = c.approve_id AND (m.buy_our_company_name in
+					<foreach collection="companyNameList" item="item" index="index" open="(" close=")" separator=",">
+						#{companyNameList[${index}]}
+					</foreach> OR m.sell_our_company_name in
+					<foreach collection="companyNameList" item="item" index="index" open="(" close=")" separator=",">
+						#{companyNameList[${index}]}
+					</foreach> OR m.our_company_name in
+					<foreach collection="companyNameList" item="item" index="index" open="(" close=")" separator=",">
+						#{companyNameList[${index}]}
+					</foreach>)
+					))
+				</when>
+				<otherwise>
+					AND EXISTS (SELECT h.id FROM t_pm_approve_history h WHERE h.approve_id = c.approve_id AND h.approve_user_id = #{userId})
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+	
+	<select id="findIndexRptSumPageContract" resultType="com.spt.bas.report.client.vo.RptCtrContractRptVo">
+		SELECT
+		   SUM(c.total_number) AS totalNubmer,
+		   SUM(c.warehouse_number) AS warehouseNumber,
+		   SUM(c.total_amount) AS totalAmount,
+		   SUM(c.dealed_amount) AS dealedAmount,
+		   SUM(c.billed_amount) AS billedAmount,
+		   SUM(c.insurance_amount) AS interestAmount,
+		   SUM(IF(c.total_amount &lt; c.dealed_amount, 0, (c.total_amount-c.dealed_amount))) AS receivableBalance
+		FROM t_ctr_contract c
+		left join t_ctr_contract_text t on c.id = t.ctr_contract_id
+		LEFT JOIN t_ctr_contract buy ON c.approve_id = buy.approve_id AND buy.contract_type = 'B'
+		LEFT JOIN t_ctr_contract sell ON c.approve_id = sell.approve_id AND sell.contract_type = 'S'
+		<where>
+			and buy.dealed_amount >= buy.total_amount
+			and sell.seal_flg = true
+			<if	test="searchParams.EQL_enterpriseId != null and searchParams.EQL_enterpriseId != ''">
+				AND c.enterprise_id = #{searchParams.EQL_enterpriseId}
+			</if>
+			<if	test="searchParams.EQS_businessType != null and searchParams.EQS_businessType != ''">
+				AND c.business_type = #{searchParams.EQS_businessType}
+			</if>
+			<if	test="searchParams.EQB_matchCreditFlg == 'true'.toString">
+				AND c.match_credit_flg = true
+			</if>
+			<if	test="searchParams.EQB_matchCreditFlg == 'false'.toString">
+				AND c.match_credit_flg = false
+			</if>
+			<if	test="searchParams.EQS_contractType != null and searchParams.EQS_contractType != ''">
+				AND c.contract_type = #{searchParams.EQS_contractType}
+			</if>
+			<if	test="searchParams.LIKES_contractNo != null and searchParams.LIKES_contractNo != ''">
+				AND c.contract_no LIKE CONCAT('%',#{searchParams.LIKES_contractNo},'%')
+			</if>
+			<if	test="searchParams.LIKES_companyName != null and searchParams.LIKES_companyName != ''">
+				AND c.company_name LIKE CONCAT('%',#{searchParams.LIKES_companyName},'%')
+			</if>
+			<if	test="searchParams.LIKES_productsName != null and searchParams.LIKES_productsName != ''">
+				AND c.products_name LIKE CONCAT('%',#{searchParams.LIKES_productsName},'%')
+			</if>
+			<if	test="searchParams.LIKES_ourCompanyName != null and searchParams.LIKES_ourCompanyName != ''">
+				AND c.our_company_name LIKE CONCAT('%',#{searchParams.LIKES_ourCompanyName},'%')
+			</if>
+			<if test="searchParams.GTED_payFullTime != null and searchParams.GTED_payFullTime != ''">
+				<![CDATA[AND c.appoint_pay_full_time >= #{searchParams.GTED_payFullTime} ]]>
+			</if>
+			<if test="searchParams.LTD_payFullTime != null and searchParams.LTD_payFullTime != ''">
+				<![CDATA[AND c.appoint_pay_full_time <= #{searchParams.LTD_payFullTime} ]]>
+			</if>
+			<if test="searchParams.GTED_deliveryDateTo != null and searchParams.GTED_deliveryDateTo != ''">
+				<![CDATA[AND c.delivery_date_to >= #{searchParams.GTED_deliveryDateTo} ]]>
+			</if>
+			<if test="searchParams.LTD_deliveryDateTo != null and searchParams.LTD_deliveryDateTo != ''">
+				<![CDATA[AND c.delivery_date_to <= #{searchParams.LTD_deliveryDateTo} ]]>
+			</if>
+			<if test="searchParams.GTED_contractTime != null and searchParams.GTED_contractTime != ''">
+				<![CDATA[AND c.contract_time >= #{searchParams.GTED_contractTime} ]]>
+			</if>
+			<if test="searchParams.LTD_contractTime != null and searchParams.LTD_contractTime != ''">
+				<![CDATA[AND c.contract_time <= #{searchParams.LTD_contractTime} ]]>
+			</if>
+			<if test="payCondition == 'PY'.toString()">
+				AND c.dealed_amount >= c.total_amount
+			</if>
+			<if test="payCondition == 'PN'.toString()">
+				AND c.dealed_amount &lt; c.total_amount
+			</if>
+			<if test="warehouseCondition == 'WY'.toString()">
+				AND c.warehouse_number >= c.total_number
+			</if>
+			<if test="warehouseCondition == 'WN'.toString()">
+				AND c.warehouse_number &lt; c.total_number
+			</if>
+			<if test="billCondition == 'BY'.toString()">
+				AND c.billed_amount >= c.total_amount
+			</if>
+			<if test="billCondition == 'BN'.toString()">
+				AND c.billed_amount &lt; c.total_amount
+			</if>
+			<if test="searchParams.GTEL_creditCycle != null and searchParams.GTEL_creditCycle != ''">
+				AND c.credit_cycle >= #{searchParams.GTEL_creditCycle}
+			</if>
+			<if test="searchParams.LTL_creditCycle != null and searchParams.LTL_creditCycle != ''">
+				AND c.credit_cycle &lt;= #{searchParams.LTL_creditCycle}
+			</if>
+			<if	test="contractTypes == 'Y'.toString()">
+				AND c.contract_status != 'C'
+			</if>
+			<if	test="contractTypes == 'N'.toString()">
+				AND c.contract_status = 'C'
+			</if>
+			<if test="searchParams.EQS_performanceStatus != null and searchParams.EQS_performanceStatus != ''">
+				AND c.performance_status = #{searchParams.EQS_performanceStatus}
+			</if>
+			<if test="searchParams.EQS_matchUserId != null and searchParams.EQS_matchUserId != ''">
+				AND c.match_user_id = #{searchParams.EQS_matchUserId}
+			</if>
+			<if test="searchParams.EQS_deliveryMode != null and searchParams.EQS_deliveryMode != ''">
+				AND c.delivery_mode = #{searchParams.EQS_deliveryMode}
+			</if>
+			<if test="payDateChange == true">
+				AND DATE_FORMAT(c.pay_full_time, '%Y-%m-%d') != DATE_FORMAT(c.appoint_pay_full_time, '%Y-%m-%d')
+			</if>
+		</where>
+	</select>
+
+
+	<select id="findRptContractWarnPage" resultType="com.spt.bas.report.client.entity.RptCtrContractWarnReport">
+		SELECT
+			c.id AS contractId,
+			c.contract_no AS contractNo,
+			c.approve_id AS approveId,
+			c.business_type_dcsx AS businessTypeDcsx,
+			c.products_name AS productNames,
+			c.company_id AS companyId,
+			c.company_name AS companyName,
+			c.our_company_name AS ourCompanyName,
+			IFNULL(b.picc_credit_amount, 0) AS piccCreditAmount,
+			c.total_number AS totalNumber,
+			c.total_amount AS totalAmount,
+			c.dealed_amount AS receiveAmount,
+			IF( c.dealed_amount > c.total_amount, c.total_amount, c.total_amount - c.dealed_amount ) AS receivableAmount,
+			c.match_user_id AS matchUserId,
+			c.match_user_name AS matchUserName,
+			c.dept_id AS deptId,
+			c.appoint_pay_full_time AS appointPayFullTime,
+			IF( c.confirm_receive_number > c.total_number, c.total_number, c.confirm_receive_number ) AS confirmReceiptNumber,
+			c.confirm_date AS confirmDate,
+			c.credit_cycle AS creditCycle,
+			c.breach_days AS breachDays,
+			c.breach_amount AS breachAmount,
+			c.performance_status AS performanceStatus,
+			c.latest_bill_date AS latestBillDate,
+			(SELECT f.notify_content FROM t_ctr_contract_follow f WHERE f.ctr_contract_id = c.id ORDER BY f.id DESC LIMIT 1) AS notifyContent,
+			d.company_name AS fundCompanyName,
+			case
+				when COALESCE(c.billed_amount,0) &gt;= c.total_amount+COALESCE(c.interest_amount,0) then '已开票'
+				when COALESCE(c.billed_amount,0) &lt; c.total_amount+COALESCE(c.interest_amount,0) then '未开票'
+				else '未开票'
+			end as 'invoiceBillName'
+		FROM
+			t_ctr_contract c
+			LEFT JOIN t_bs_company b ON c.company_id = b.id
+			LEFT JOIN t_ctr_dcsx d on d.approve_id = c.approve_id AND d.business_type = 'ZY-BB'
+		WHERE
+			c.contract_type = 'S'
+		  AND c.match_credit_flg = TRUE
+		  AND c.breach_days > 0
+		  AND c.contract_status != 'D'
+		  AND c.contract_status != 'C'
+		<include refid="Warn_Where_SearchVo"></include>
+		ORDER BY
+			c.breach_days DESC
+	</select>
+
+	<sql id="Warn_Where_SearchVo">
+		AND c.performance_status != 'P'
+		<if test="contractNo != null and contractNo != ''">
+			AND c.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="companyName != null and companyName != ''">
+			AND c.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="matchUserId != null and matchUserId != ''">
+			AND c.match_user_id = #{matchUserId}
+		</if>
+		<if test="contractStartDate != null">
+			<![CDATA[AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractStartDate}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="contractEndDate != null">
+			<![CDATA[AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{contractEndDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="latestBillstartDate != null">
+			<![CDATA[AND DATE_FORMAT(c.latest_bill_date, '%Y-%m-%d') >= DATE_FORMAT(#{latestBillstartDate}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="latestBillEndDate != null">
+			<![CDATA[AND DATE_FORMAT(c.latest_bill_date, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{latestBillEndDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="breachType == 'A'.toString()">
+			AND c.breach_days &lt;= 14 AND c.breach_days &gt; 0
+		</if>
+		<if test="breachType == 'B'.toString()">
+			AND c.breach_days &lt;= 30 AND c.breach_days &gt; 14
+		</if>
+		<if test="breachType == 'C'.toString()">
+			AND c.breach_days &gt; 30
+		</if>
+		<if test="piccStartCreditAmount != null and piccStartCreditAmount >= 0">
+			AND b.picc_credit_amount &gt;= #{piccStartCreditAmount}
+		</if>
+		<if test="piccEndCreditAmount != null and piccEndCreditAmount >= 0">
+			AND b.picc_credit_amount &lt; #{piccEndCreditAmount}
+		</if>
+		<if test="overderType == 'H'.toString()">
+			AND c.breach_days &gt;= 14 AND c.performance_status = 'A'
+		</if>
+		<if test="overderType == 'C'.toString()">
+			AND (c.performance_status IN ('D', 'S', 'P', 'B' ) OR (c.breach_days > 0 AND c.performance_status != 'A'))
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c.dept_id = #{deptId}
+		</if>
+		<if test="confirmReceiveType == 'Y'.toString()">
+			AND c.confirm_receive_number >= c.total_number
+		</if>
+		<if test="confirmReceiveType == 'H'.toString()">
+			AND c.confirm_receive_number > 0 AND c.confirm_receive_number &lt; c.total_number
+		</if>
+		<if test="confirmReceiveType == 'N'.toString()">
+			AND c.confirm_receive_number &lt;= 0
+		</if>
+		<if test="fundCompanyName != null and fundCompanyName != ''">
+			AND d.company_name LIKE CONCAT('%',#{fundCompanyName},'%')
+		</if>
+		<if test="performanceStatus!=null and performanceStatus!=''">
+			AND c.performance_status =#{performanceStatus}
+		</if>
+		<if test="performanceStatusList != null and performanceStatusList.size() > 0">
+			and c.performance_status in
+			<foreach collection="performanceStatusList"  item="var" index="index" open="(" close=")" separator=",">
+				#{performanceStatusList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="invoiceBillCondition!=null and invoiceBillCondition !=''">
+
+			<if test="invoiceBillCondition == 'BY'">
+				AND COALESCE(c.billed_amount,0) &gt;= c.total_amount+COALESCE(c.interest_amount,0)
+			</if>
+
+			<if test="invoiceBillCondition == 'BN'">
+				AND COALESCE(c.billed_amount,0) &lt; c.total_amount+COALESCE(c.interest_amount,0)
+			</if>
+		</if>
+		<if test="deptIdList != null and deptIdList.size() > 0">
+			and c.dept_id in
+			<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{deptIdList[${index}],jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'NHG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and c.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'HG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and c.match_user_id in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</sql>
+
+	<select id="findRptContractWarnSum" resultType="com.spt.bas.report.client.entity.RptCtrContractWarnReport">
+		SELECT
+		    SUM(IF( c.dealed_amount > c.total_amount, c.total_amount, c.total_amount - c.dealed_amount )) AS receivableAmount,
+		    SUM(c.breach_amount) AS breachAmount
+		FROM
+			t_ctr_contract c
+		LEFT JOIN t_bs_company b ON c.company_id = b.id
+		LEFT JOIN t_ctr_dcsx d on d.approve_id = c.approve_id AND d.business_type = 'ZY-BB'
+		WHERE
+			c.contract_type = 'S'
+			AND c.match_credit_flg = TRUE
+			AND c.breach_days > 0
+			AND c.contract_status != 'D'
+			AND c.contract_status != 'C'
+			<include refid="Warn_Where_SearchVo"></include>
+	</select>
+
+	<select id="mergeChainExport" resultType="com.spt.bas.report.client.vo.RptExportChainVo">
+		SELECT * FROM (
+		SELECT
+		s.approve_id AS approveId,
+		s.contract_no AS contractNo,
+		CASE
+			WHEN s.virtual_contract_no IS NOT NULL THEN v.contract_no
+			ELSE s.contract_no
+		END AS targetContractNo,
+		'买' AS tag,
+		'1' AS sort,
+		'B' AS contractType,
+		s.our_company_name AS ourCompanyName,
+		s.company_name AS companyName,
+		s.products_name AS productNames,
+		s.total_number AS totalNumber,
+		s.appoint_pay_full_time AS appointPayFullTime,
+		s.confirm_date AS confirmDate,
+		(SELECT MAX( i.warehouse_in_date ) FROM t_apply_delivery_in i WHERE i.contract_no = targetContractNo AND i.`status` = 'D') AS deliveryDate,
+		s.contract_time AS contractTime,
+		s.deal_price AS dealPrice,
+		s.total_amount AS totalAmount,
+		s.credit_cycle AS creditDays,
+		(SELECT MAX(r.pay_date) FROM t_apply_pay r WHERE r.contract_no = targetContractNo AND r.`status` = 'D') AS
+		receiveDate,
+		s.dealed_amount AS receiveAmount,
+		(s.total_amount-s.dealed_amount) AS needReceiveAmount,
+		s.billed_amount AS billAmount,
+		(SELECT MAX(i.in_invoice_date) FROM t_apply_invoice_received i WHERE i.contract_no = targetContractNo AND i.`status` = 'D') AS
+		billDate,
+		s.company_id
+		FROM
+		t_ctr_contract s
+		LEFT JOIN t_ctr_contract v ON s.virtual_contract_id = v.id
+		WHERE
+		s.approve_id IN
+		<foreach collection="approveIdList" item="var" index="index" open="(" close=")" separator=",">
+			#{approveIdList[${index}],jdbcType=VARCHAR}
+		</foreach>
+		AND s.contract_type = 'B'
+		AND s.special_chain_flag = false
+		
+		UNION
+		SELECT
+		s.approve_id AS approveId,
+		s.contract_no AS contractNo,
+		CASE
+			WHEN s.virtual_contract_no IS NOT NULL THEN v.contract_no
+			ELSE s.contract_no
+		END AS targetContractNo,
+		'买' AS tag,
+		'2' AS sort,
+		'B' AS contractType,
+		s.our_company_name AS ourCompanyName,
+		s.company_name AS companyName,
+		s.products_name AS productNames,
+		s.total_number AS totalNumber,
+		s.appoint_pay_full_time AS appointPayFullTime,
+		s.confirm_date AS confirmDate,
+		(SELECT MAX( i.warehouse_in_date ) FROM t_apply_delivery_in i WHERE i.contract_no = targetContractNo AND i.`status` = 'D') AS deliveryDate,
+		s.contract_time AS contractTime,
+		s.deal_price AS dealPrice,
+		s.total_amount AS totalAmount,
+		s.credit_cycle AS creditDays,
+		(SELECT MAX(r.pay_date) FROM t_apply_pay r WHERE r.contract_no = targetContractNo AND r.`status` = 'D') AS
+		receiveDate,
+		s.dealed_amount AS receiveAmount,
+		(s.total_amount-s.dealed_amount) AS needReceiveAmount,
+		s.billed_amount AS billAmount,
+		(SELECT MAX(i.in_invoice_date) FROM t_apply_invoice_received i WHERE i.contract_no = targetContractNo AND i.`status` = 'D') AS
+		billDate,
+		s.company_id
+		FROM
+		t_ctr_contract s
+		LEFT JOIN t_ctr_contract v ON s.virtual_contract_id = v.id
+		WHERE
+		s.approve_id IN
+		<foreach collection="approveIdList" item="var" index="index" open="(" close=")" separator=",">
+			#{approveIdList[${index}],jdbcType=VARCHAR}
+		</foreach>
+		AND s.contract_type = 'B'
+		AND s.special_chain_flag = true
+		UNION
+		
+		SELECT
+		d.approve_id AS approveId,
+		d.contract_no AS contractNo,
+		'' AS targetContractNo,
+		'买' AS tag,
+		'3' AS sort,
+		'X' AS contractType,
+		d.our_company_name AS ourCompanyName,
+		d.company_name AS companyName,
+		d.products_name AS productNames,
+		d.total_number AS totalNumber,
+		d.buy_pay_full_time AS appointPayFullTime,
+		d.confirm_date AS confirmDate,
+		null AS deliveryDate,
+		d.contract_time AS contractTime,
+		d.deal_price AS dealPrice,
+		d.total_amount AS totalAmount,
+		null AS creditDays,
+		(SELECT MAX(p.pay_date) FROM t_apply_pay p WHERE p.contract_no = d.contract_no AND p.`status` = 'D') AS
+		receiveDate,
+		d.dealed_amount AS receiveAmount,
+		(d.total_amount-d.dealed_amount) AS needReceiveAmount,
+		d.billed_amount AS billAmount,
+		COALESCE(
+			(SELECT MAX(i.in_invoice_date)
+				FROM t_apply_invoice_received i
+				WHERE i.contract_no = d.contract_no
+				AND i.status = 'D'),
+			(SELECT MAX(i.invoice_date)
+				FROM t_apply_invoice i
+				WHERE i.contract_no = d.contract_no
+				AND i.status = 'D')
+		) AS billDate,
+		d.company_id
+		FROM
+		t_ctr_dcsx d
+		WHERE
+		d.id IN
+		<foreach collection="contractIdList" item="var" index="index" open="(" close=")" separator=",">
+			#{contractIdList[${index}],jdbcType=VARCHAR}
+		</foreach>
+		UNION
+		SELECT
+		s.approve_id AS approveId,
+		s.contract_no AS contractNo,
+		'' AS targetContractNo,
+		'卖' AS tag,
+		'4' AS sort,
+		'S' AS contractType,
+		s.our_company_name AS ourCompanyName,
+		s.company_name AS companyName,
+		s.products_name AS productNames,
+		s.total_number AS totalNumber,
+		s.appoint_pay_full_time AS appointPayFullTime,
+		s.confirm_date AS confirmDate,
+		(SELECT MAX(o.warehouse_out_date) FROM t_apply_delivery_out o WHERE o.contract_no = s.contract_no AND o.`status`
+		= 'D') AS deliveryDate,
+		s.contract_time AS contractTime,
+		s.deal_price AS dealPrice,
+		s.total_amount AS totalAmount,
+		s.credit_cycle AS creditDays,
+		(SELECT MAX(r.receive_date) FROM t_apply_receive r WHERE r.contract_no = s.contract_no AND r.`status` = 'D') AS
+		receiveDate,
+		s.dealed_amount AS receiveAmount,
+		(s.total_amount-s.dealed_amount) AS needReceiveAmount,
+		s.billed_amount AS billAmount,
+		(SELECT MAX(i.invoice_date) FROM t_apply_invoice i WHERE i.contract_no = s.contract_no AND i.`status` = 'D') AS
+		billDate,
+		s.company_id
+		FROM
+		t_ctr_contract s
+		WHERE
+		s.approve_id IN
+		<foreach collection="approveIdList" item="var" index="index" open="(" close=")" separator=",">
+			#{approveIdList[${index}],jdbcType=VARCHAR}
+		</foreach>
+		AND s.contract_type = 'S') t ORDER BY t.approveId DESC,t.sort ASC
+	</select>
+
+	<select id="findBaseCostGroupByDate" resultType="com.spt.bas.report.client.vo.RptBaseCostVo">
+		SELECT
+			match_user_id,
+			sum(total_cost) as'totalCost'
+		FROM
+			t_rpt_base_cost
+		WHERE
+			base_date REGEXP '^[0-9]{4}-(0[1-9]|1[0-2])$'
+			<if test="baseDateStart!=null and baseDateStart!=''">
+				AND base_date &gt;=#{baseDateStart}
+			</if>
+			<if test="baseDateEnd!=null and baseDateEnd!=''">
+				AND base_date &lt;=#{baseDateEnd}
+			</if>
+		group by match_user_id
+	</select>
+</mapper>

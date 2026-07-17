@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractSellOnCreditMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="businessType != null and businessType != ''">
+			AND c.business_type LIKE CONCAT('%',#{businessType},'%')
+		</if>
+		<if test="companyName != null and companyName != ''">
+			AND c.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c.our_company_name LIKE CONCAT('%',#{ourCompanyName},'%')
+		</if>
+	    <if test="contractNo != null and contractNo != ''">
+			AND c.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		<choose>
+            <when test="'0'.toString() eq piccPushFlg">
+              	AND c.picc_push_flg =0
+            </when>
+            <when test="'1' .toString() eq piccPushFlg">
+              	AND c.picc_push_flg =1
+            </when>
+            <when test="'3' .toString() eq piccPushFlg">
+              	AND c.picc_receive_flg =1
+            </when>
+            <when test="'4' .toString() eq piccPushFlg">
+              	AND c.picc_receive_flg =1
+            </when>
+     	</choose>
+     	<if test="confirmDateGTED != null">
+		<![CDATA[ AND c.confirm_date >= #{confirmDateGTED}]]> 
+		</if>
+		<if test="confirmDateLTD != null">
+		<![CDATA[ AND c.confirm_date < #{confirmDateLTD}]]> 
+		</if>
+	</sql>
+
+	<!-- 赊销合同-->
+	<select id="findPageReceiveDetail" resultType="com.spt.bas.report.client.entity.RptCtrContractSellOnCreditReport">
+		SELECT
+			c.id AS id,
+			c.contract_type AS contractType,
+			c.contract_no AS contractNo,
+			c.products_name AS productsName,
+			c.company_name AS companyName,
+			c.total_number AS totalNumber,
+			c.total_amount AS totalAmount,
+			c.dealed_amount AS dealedAmount,
+			c.contract_status AS contractStatus,
+			c.pay_full_time AS payFullTime,
+			c.pay_bond_time AS payBondTime,
+			c.contract_time AS contractTime,
+			c.match_user_name AS matchUserName,
+			c.our_company_name AS ourCompanyName,
+			c.dept_id AS deptId,
+			c.confirm_receive_number AS confirmReceiveNumber,
+			c.warehouse_number AS warehouseNumber,
+			c.business_type AS businessType,
+			c.confirm_date AS confirmDate,
+			c.delivery_mode AS deliveryMode,
+			c.picc_push_flg AS piccPushFlg,
+			c.picc_message As piccMessage,
+			c.picc_receive_flg As piccReceiveFlg,
+			c.picc_receive_message As piccReceiveMessage,
+			r.payed_amount AS payedAmount,
+			r.receive_date AS receiveDate,
+			r. STATUS AS STATUS,
+			r.receive_amount AS receiveAmount,
+			i.deal_amount AS dealAmount,
+			t.content AS exitContractText,
+			IF(DATEDIFF((IFNULL((SELECT MAX(re.receive_date) FROM t_apply_receive re WHERE re.contract_id = c.id),NOW())),c.pay_full_time) &gt;0,c.total_amount-r.receive_amount,0) AS overdueAmount,
+			c.source	
+		FROM
+			t_ctr_contract AS c
+			LEFT JOIN t_apply_receive AS r ON c.id = r.contract_id
+			LEFT JOIN t_apply_invoice AS i ON c.id = i.contract_id
+			LEFT JOIN t_ctr_contract_text AS t ON c.id = t.ctr_contract_id
+		WHERE
+			c.contract_status != 'C'
+		AND
+			c.business_type != '' 
+		AND
+			c.credit_flg = true
+		AND c.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY c.contract_time DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY c.contract_time ASC
+            </when>
+           	<otherwise>
+           		ORDER BY c.contract_time DESC
+           	</otherwise>
+       	</choose>
+	</select>
+</mapper>

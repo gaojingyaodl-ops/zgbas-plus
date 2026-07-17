@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractPayAndReceiveMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="productsName != null and productsName != ''">
+			AND c.products_name LIKE CONCAT('%',#{productsName},'%')
+		</if>
+		<if test="companyName != null and companyName != ''">
+			AND c.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="businessType != null and businessType != ''">
+			AND c.business_type LIKE CONCAT('%',#{businessType},'%')
+		</if>
+		<if test="matchUserName != null and matchUserName != ''">
+			AND c.match_user_name = #{matchUserName}
+		</if>
+		<if test="deliveryMode != null and deliveryMode != ''">
+			AND c.delivery_mode LIKE CONCAT('%',#{deliveryMode},'%')
+		</if>
+	    <if test="contractNo != null and contractNo != ''">
+			AND c.contract_no LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="contractStatus != null and contractStatus != ''">
+			AND c.contract_status =#{contractStatus}
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c.our_company_name LIKE CONCAT('%',#{ourCompanyName},'%')
+		</if>
+     	<if test="contractTimeGTED != null">
+		<![CDATA[ AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeGTED}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="contractTimeLTD != null">
+		<![CDATA[ AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{contractTimeLTD}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]> 
+		</if>
+	</sql>
+	<!-- 应付明细表 -->
+	<select id="findPagePay" resultType="com.spt.bas.report.client.entity.RptCtrContractPayAndReceiveReport">
+		SELECT
+			c.contract_type AS contractType,
+			c.contract_no AS contractNo,
+			c.products_name AS productsName,
+			c.business_type AS businessType,
+			c.company_name AS companyName,
+			c.total_number AS totalNumber,
+			c.total_amount AS totalAmount,
+			(c.dealed_amount - c.refund_amount) AS dealedAmount,
+			c.contract_status AS contractStatus,
+			c.pay_full_time AS payFullTime,
+			c.pay_bond_time AS payBondTime,
+			c.contract_time AS contractTime,
+			c.match_user_name AS matchUserName,
+			c.our_company_name AS ourCompanyName,
+			c.source As source,
+			IF(c.pay_bond_time IS NULL,'A',IF((CURDATE()&lt;=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)&lt;=c.pay_bond_time),'D',IF((CURDATE()&gt;c.pay_bond_time AND CURDATE()&lt;=c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),'A',IF((CURDATE()&gt;c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),'W','E')))) AS shouldPayType,
+			IF(c.pay_bond_time IS NULL,(c.total_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&lt;=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)&lt;=c.pay_bond_time),(c.bond_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&gt;c.pay_bond_time AND CURDATE()&lt;=c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),(c.total_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&gt;c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),(c.total_amount-c.dealed_amount+c.refund_amount),'0')))) AS shouldAmount,
+			IF(c.pay_bond_time IS NULL,c.pay_full_time,IF((CURDATE()&lt;=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)&lt;=c.pay_bond_time),c.pay_bond_time,IF((CURDATE()&gt;c.pay_bond_time AND CURDATE()&lt;=c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),c.pay_full_time,IF((CURDATE()&gt;c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),c.pay_full_time,c.pay_full_time)))) AS shouldPayDate
+		FROM
+			t_ctr_contract AS c
+		WHERE
+			c.contract_type = 'B'
+		AND c.total_amount != (c.dealed_amount - c.refund_amount)
+		AND c.contract_status != 'C'
+		AND c.enterprise_id = #{enterpriseId}
+		AND (IF(c.pay_bond_time IS NULL,(c.total_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&lt;=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)&lt;=c.pay_bond_time),(c.bond_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&gt;c.pay_bond_time AND CURDATE()&lt;=c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),(c.total_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&gt;c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),(c.total_amount-c.dealed_amount+c.refund_amount),'0'))))) > 0
+		<include refid="Where_SearchVo" />
+		<if test="beginTime != null">
+			<![CDATA[AND DATE_FORMAT(IF(c.pay_bond_time IS NULL,c.pay_full_time,IF((CURDATE()<=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)<=c.pay_bond_time),c.pay_bond_time,IF((CURDATE()>c.pay_bond_time AND CURDATE()<=c.pay_full_time AND (c.dealed_amount-c.refund_amount)<c.total_amount),c.pay_full_time,IF((CURDATE()>c.pay_full_time AND (c.dealed_amount-c.refund_amount)<c.total_amount),c.pay_full_time,c.pay_full_time)))), '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="endTime != null">
+			<![CDATA[AND DATE_FORMAT(IF(c.pay_bond_time IS NULL,c.pay_full_time,IF((CURDATE()<=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)<=c.pay_bond_time),c.pay_bond_time,IF((CURDATE()>c.pay_bond_time AND CURDATE()<=c.pay_full_time AND (c.dealed_amount-c.refund_amount)<c.total_amount),c.pay_full_time,IF((CURDATE()>c.pay_full_time AND (c.dealed_amount-c.refund_amount)<c.total_amount),c.pay_full_time,c.pay_full_time)))), '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{endTime}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]> 
+		</if>
+		<if test="shouldPayType != null and shouldPayType != ''">
+			AND IF(c.pay_bond_time IS NULL,'A',IF((CURDATE()&lt;=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)&lt;=c.pay_bond_time),'D',IF((CURDATE()&gt;c.pay_bond_time AND CURDATE()&lt;=c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),'A',IF((CURDATE()&gt;c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),'W','E')))) = #{shouldPayType}
+		</if>
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY c.contract_time DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY c.contract_time ASC
+            </when>
+           	<otherwise>
+           		ORDER BY c.contract_time DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	
+	<select id="findPayTotalPage" resultType="com.spt.bas.report.client.entity.RptCtrContractPayAndReceiveReport">
+		SELECT
+			SUM(ROUND(c.total_number,2)) AS totalNumber,
+			SUM(ROUND(c.total_amount,2)) AS totalAmount,
+			SUM(ROUND((c.dealed_amount - c.refund_amount),2)) AS dealedAmount,
+			SUM(ROUND(IF(c.pay_bond_time IS NULL,(c.total_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&lt;=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)&lt;=c.pay_bond_time),(c.bond_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&gt;c.pay_bond_time AND CURDATE()&lt;=c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),(c.total_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&gt;c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),(c.total_amount-c.dealed_amount+c.refund_amount),'0')))),2)) AS shouldAmount
+		FROM
+			t_ctr_contract AS c
+		WHERE
+			c.contract_type = 'B'
+		AND c.total_amount != (c.dealed_amount - c.refund_amount)
+		AND c.contract_status != 'C'
+		AND c.enterprise_id = #{enterpriseId}
+		AND (IF(c.pay_bond_time IS NULL,(c.total_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&lt;=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)&lt;=c.pay_bond_time),(c.bond_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&gt;c.pay_bond_time AND CURDATE()&lt;=c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),(c.total_amount-c.dealed_amount+c.refund_amount),IF((CURDATE()&gt;c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),(c.total_amount-c.dealed_amount+c.refund_amount),'0'))))) > 0
+		<include refid="Where_SearchVo" />
+		<if test="beginTime != null">
+			<![CDATA[AND DATE_FORMAT(IF(c.pay_bond_time IS NULL,c.pay_full_time,IF((CURDATE()<=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)<=c.pay_bond_time),c.pay_bond_time,IF((CURDATE()>c.pay_bond_time AND CURDATE()<=c.pay_full_time AND (c.dealed_amount-c.refund_amount)<c.total_amount),c.pay_full_time,IF((CURDATE()>c.pay_full_time AND (c.dealed_amount-c.refund_amount)<c.total_amount),c.pay_full_time,c.pay_full_time)))), '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]> 
+		</if>
+		<if test="endTime != null">
+			<![CDATA[AND DATE_FORMAT(IF(c.pay_bond_time IS NULL,c.pay_full_time,IF((CURDATE()<=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)<=c.pay_bond_time),c.pay_bond_time,IF((CURDATE()>c.pay_bond_time AND CURDATE()<=c.pay_full_time AND (c.dealed_amount-c.refund_amount)<c.total_amount),c.pay_full_time,IF((CURDATE()>c.pay_full_time AND (c.dealed_amount-c.refund_amount)<c.total_amount),c.pay_full_time,c.pay_full_time)))), '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{endTime}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]> 
+		</if>
+		<if test="shouldPayType != null and shouldPayType != ''">
+			AND IF(c.pay_bond_time IS NULL,'A',IF((CURDATE()&lt;=c.pay_bond_time AND (c.dealed_amount-c.refund_amount)&lt;=c.pay_bond_time),'D',IF((CURDATE()&gt;c.pay_bond_time AND CURDATE()&lt;=c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),'A',IF((CURDATE()&gt;c.pay_full_time AND (c.dealed_amount-c.refund_amount)&lt;c.total_amount),'W','E')))) = #{shouldPayType}
+		</if>
+	</select>
+	
+	<!-- 应收统计表 -->
+	<select id="findPageReceive" resultType="com.spt.bas.report.client.entity.RptCtrContractPayAndReceiveReport">
+		SELECT
+		    c.id AS id,
+			c.contract_type AS contractType,
+			c.contract_no AS contractNo,
+			c.products_name AS productsName,
+			c.business_type AS businessType,
+			c.company_name AS companyName,
+			c.total_number AS totalNumber,
+			c.total_amount AS totalAmount,
+			c.delivery_mode AS deliveryMode,<!-- #交货方式 -->
+			(c.dealed_amount-c.refund_amount)  AS dealedAmount,<!-- #收款 -->
+			c.total_amount-dealed_amount AS shouldAmount,<!-- 应收 -->
+			c.contract_status AS contractStatus,
+			c.pay_full_time AS payFullTime,
+			c.pay_bond_time AS payBondTime,
+			c.contract_time AS contractTime,
+			c.match_user_name AS matchUserName,
+			c.our_company_name AS ourCompanyName,
+			c.warehouse_number AS warehouseNumber,<!-- 出库数量 -->
+			a.real_warehose_date AS realWarehoseDate,<!--  实际出库日期 -->
+			c.confirm_receive_number AS confirmReceiveNumber,<!-- 确认收货数量 -->
+			c.confirm_date AS confirmDate,<!-- 最后收货日期 -->
+			a.apply_pay_amount AS receiveAmount,
+			a.real_pay_date AS receiveDate,
+			c.source
+		FROM
+			t_ctr_contract AS c
+			LEFT JOIN t_ctr_contract_apply a on c.id=a.ctr_contract_id
+		WHERE
+			c.contract_type = 'S'	
+		AND c.total_amount != c.dealed_amount
+		AND c.contract_status != 'C'
+		AND c.contract_status != 'B'
+		AND c.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY c.contract_time DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY c.contract_time ASC
+            </when>
+           	<otherwise>
+           		ORDER BY c.contract_time DESC
+           	</otherwise>
+       	</choose>
+	</select>
+	
+	<!-- 应收统计  -->
+	<select id="findPageReceiveSum" resultType="com.spt.bas.report.client.entity.RptCtrContractPayAndReceiveReport">
+		SELECT
+			SUM(c.total_number) AS sumTotalNumber,
+			SUM(c.total_amount) AS sumTotalAmount,
+			SUM(c.warehouse_number) AS sumWarehouseNumber,
+			SUM(c.confirm_receive_number) AS sumConfirmReceiveNumber,
+			SUM(c.dealed_amount) AS sumReceiveAmount,
+			SUM(c.dealed_amount) AS sumDealedAmount,
+			SUM(c.total_amount-dealed_amount ) AS sumShouldAmount
+			FROM
+				t_ctr_contract AS c
+		WHERE
+			c.contract_type = 'S'	
+			AND c.total_amount != c.dealed_amount
+			AND c.contract_status != 'C'
+			AND c.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+            <when test="'asc' eq order">
+                ORDER BY c.contract_time DESC
+            </when>
+            <when test="'desc' eq order">
+                ORDER BY c.contract_time ASC
+            </when>
+           	<otherwise>
+           		ORDER BY c.contract_time DESC
+           	</otherwise>
+       	</choose>
+	</select>
+</mapper>

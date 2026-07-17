@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractFinanceVoMapper">
+	<select id="findContractFinancePage" resultType="com.spt.bas.report.client.vo.RptCtrContractFinanceVo">
+		SELECT
+		t.id,
+		t.contract_no as contractNo,
+		t.company_name as companyName,
+		t.our_company_name as ourCompanyName,
+		t.products_name as productName,
+		t.total_number as totalNumber,
+		t.total_amount as totalAmount,
+		IFNULL(t.breach_amount, 0) - IFNULL(t.receive_breach_amount, 0) as noReceiveBreachAmount,
+		t.contract_time as contractTime,
+		t.match_user_id as matchUserId,
+		t.match_user_name as matchUserName,
+		t.dealed_amount as dealedAmount,
+		t.pay_full_time as payFullTime,
+		t.billed_amount as billedAmount,
+		a.real_bill_date as realBillDate,
+		t.business_type as businessType,
+		t.match_credit_flg as matchCreditFlg,
+		t.approve_id as approveId,
+		t.dept_id as deptId
+		FROM t_ctr_contract t
+		LEFT JOIN t_ctr_contract_apply a ON a.ctr_contract_id = t.id
+		<choose>
+			<when test="statisticalType eq 'A'.toString() and statisticalType != null"><!-- 待收进项发票 -->
+				WHERE t.seal_flg = TRUE
+				AND t.billed_amount <![CDATA[ < ]]> t.total_amount
+				AND t.contract_type = 'B' 
+				AND t.business_type = 'ZY-BB' AND t.enterprise_id = 44
+			</when>
+			<when test="statisticalType eq 'B'.toString() and statisticalType != null"><!-- 已收待开销项发票 -->
+				left JOIN t_ctr_contract_rela r ON t.id = r.sell_contract_id
+				left JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+				WHERE b.billed_amount <![CDATA[ >= ]]> b.total_amount
+				AND t.billed_amount <![CDATA[ < ]]> t.total_amount
+				AND t.contract_type = 'S' AND t.business_type = 'ZY-BB' AND t.enterprise_id = 44
+			</when>
+			<when test="statisticalType eq 'C'.toString() and statisticalType != null"><!-- 未收已开销项发票 -->
+				left JOIN t_ctr_contract_rela r ON t.id = r.sell_contract_id
+				left JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+				WHERE b.billed_amount <![CDATA[ < ]]> b.total_amount
+			
+				AND t.billed_amount <![CDATA[ >= ]]> t.total_amount
+				AND t.contract_type = 'S' AND t.business_type = 'ZY-BB' AND t.enterprise_id = 44
+			</when>
+			<when test="statisticalType eq 'D'.toString() and statisticalType != null"><!-- 待开销项发票 -->
+				WHERE t.seal_flg = TRUE
+				AND t.billed_amount <![CDATA[ < ]]> t.total_amount
+				AND t.contract_type = 'S'
+				AND t.business_type = 'ZY-BB' AND t.enterprise_id = 44
+			</when>
+			<when test="statisticalType eq 'E'.toString() and statisticalType != null"><!-- 赊销应付货款 -->
+				WHERE t.seal_flg = TRUE
+				AND t.dealed_amount <![CDATA[ < ]]> t.total_amount
+				AND t.contract_type = 'B'
+				AND t.business_type = 'ZY-BB' AND t.match_credit_flg = TRUE AND t.enterprise_id = 44
+			</when>
+			<when test="statisticalType eq 'F'.toString() and statisticalType != null"><!-- 代采应付货款 -->
+				WHERE t.seal_flg = true
+				AND t.dealed_amount <![CDATA[ < ]]> t.total_amount
+				AND t.contract_type = 'B'
+				AND t.business_type = 'ZY-BB' AND t.match_credit_flg = FALSE AND t.enterprise_id = 44
+			</when>
+			<when test="statisticalType eq 'G'.toString() and statisticalType != null"><!-- 已付款未发货 -->
+				left JOIN t_ctr_contract_rela r ON t.id = r.sell_contract_id
+				left JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+				WHERE b.dealed_amount <![CDATA[ >= ]]> b.total_amount
+				AND t.dealed_amount <![CDATA[ < ]]> t.total_amount
+				AND t.warehouse_number <![CDATA[ < ]]> t.total_number
+				AND t.contract_type = 'S' AND t.business_type = 'ZY-BB' AND t.enterprise_id = 44
+				AND t.match_credit_flg = true
+			</when>
+			<when test="statisticalType eq 'H'.toString() and statisticalType != null"><!-- 待签约 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.status = 'D'
+				AND t.seal_flg = FALSE
+			</when>
+			<when test="statisticalType eq 'I'.toString() and statisticalType != null"><!-- 待入库 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.total_number > t.warehouse_number
+			</when>
+			<when test="statisticalType eq 'J'.toString() and statisticalType != null"><!-- 待出库 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.total_number > t.warehouse_number
+			</when>
+			<when test="statisticalType eq 'K'.toString() and statisticalType != null"><!-- 待确认收货 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.warehouse_number >= t.total_number
+				AND t.confirm_receipt_flg = FALSE
+			</when>
+			<when test="statisticalType eq 'L'.toString() and statisticalType != null"><!-- 待付款 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.total_amount > t.dealed_amount
+			</when>
+			<when test="statisticalType eq 'M'.toString() and statisticalType != null"><!-- 待收款 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.total_amount > t.dealed_amount
+			</when>
+			<when test="statisticalType eq 'N'.toString() and statisticalType != null"><!-- 待收票 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.warehouse_number = t.total_number
+				AND t.total_amount > t.billed_amount
+			</when>
+			<when test="statisticalType eq 'O'.toString() and statisticalType != null"><!-- 待开票 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.warehouse_number = t.total_number
+				AND t.total_amount > t.billed_amount
+			</when>
+			<when test="statisticalType eq 'P'.toString() and statisticalType != null"><!-- 已完成 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.dealed_amount = t.total_amount
+				AND t.billed_amount = t.total_amount
+				AND t.warehouse_number = t.total_number
+				AND t.breach_amount = t.receive_breach_amount
+			</when>
+			<when test="statisticalType eq 'Q'.toString() and statisticalType != null"><!-- 作废 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+			</when>
+			<when test="statisticalType eq 'R'.toString() and statisticalType != null"><!-- 罚金不足 -->
+				WHERE t.enterprise_id = 44
+				AND t.business_type = 'ZY-BB'
+				AND t.seal_flg = TRUE
+				AND t.breach_amount > t.receive_breach_amount
+			</when>
+			<otherwise>
+				where 1=1
+			</otherwise>
+		</choose>
+		<if test="businessType != null">
+			<choose>
+				<when test="businessType eq 'SX'.toString()"><!-- 赊销 -->
+					AND t.business_type = 'ZY-BB'
+					AND t.enterprise_id = 44
+					AND t.match_credit_flg = TRUE
+				</when>
+				<when test="businessType eq 'DC'.toString()"><!-- 代采 -->
+					AND t.business_type = 'ZY-BB'
+					AND t.enterprise_id = 44
+					AND t.match_credit_flg = FALSE
+				</when>
+			</choose>
+		</if>
+		<if test="contractStatus != null">
+			<choose>
+				<when test="contractStatus eq 'Y'.toString()"><!-- 有效 -->
+					AND t.contract_status <![CDATA[ <> ]]> 'C'
+				</when>
+				<when test="contractStatus eq 'N'.toString()"><!-- 作废 -->
+					AND t.contract_status = 'C'
+				</when>
+			</choose>
+		</if>
+		<if test="contractNo != null and contractNo != '' ">
+			and t.contract_no  LIKE CONCAT('%',#{contractNo},'%')
+		</if>
+		<if test="companyName != null and companyName != '' ">
+			and t.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="ourCompanyNames != null and ourCompanyNames.size() != 0">
+			and t.our_company_name in
+			<foreach collection="ourCompanyNames" item="item" index="index" open="(" close=")" separator=",">
+				#{ourCompanyNames[${index}]}
+			</foreach>
+		</if>
+		<if test="contractType != null and contractType != '' ">
+			and t.contract_type = #{contractType}
+		</if>
+		<if test="contractTimeBegin != null and contractTimeBegin != '' ">
+			<![CDATA[ AND DATE_FORMAT(t.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{contractTimeBegin}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="contractTimeEnd != null and contractTimeEnd != ''">
+			<![CDATA[AND DATE_FORMAT(t.contract_time, '%Y-%m-%d') < DATE_ADD(DATE_FORMAT(#{contractTimeEnd}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+		<if test="productType != null and productType eq 'NHG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and t.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		<if test="productType != null and productType eq 'HG'.toString() and hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and t.match_user_id in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+		order by t.id desc
+	</select>
+</mapper>

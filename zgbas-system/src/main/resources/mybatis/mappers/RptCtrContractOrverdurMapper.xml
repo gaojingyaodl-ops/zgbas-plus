@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCtrContractOrverdurMapper">
+	<!--查询条件 -->
+	<sql id="Where_SearchVo">
+		<if test="contractNo != null and contractNo != ''">
+			AND c.contract_no = #{contractNo}
+		</if>
+		<if test="companyName != null and companyName != ''">
+			AND c.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="matchUserName != null and matchUserName != ''">
+			AND c.match_user_Name = #{matchUserName}
+		</if>
+		<if test="deliveryMode != null and deliveryMode != ''">
+			AND c.delivery_mode = #{deliveryMode}
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND c.our_company_name LIKE CONCAT('%',#{ourCompanyName},'%')
+		</if>
+		<if test="productsName != null and productsName != ''">
+			AND c.products_name LIKE CONCAT('%',#{productsName},'%')
+		</if>
+		<if test="beginTime != null">
+		<![CDATA[ AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') >= DATE_FORMAT(#{beginTime}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="endTime != null">
+		<![CDATA[ AND DATE_FORMAT(c.contract_time, '%Y-%m-%d') <= DATE_FORMAT(#{endTime}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="matchUserId != null and matchUserId != ''">
+			AND c.match_user_id = #{matchUserId}
+		</if>
+		<if test="deptId != null and deptId != ''">
+			AND c.dept_id = #{deptId}
+		</if>
+		<if test="deptIdList != null and deptIdList != ''">
+			AND c.dept_id in 
+			<foreach collection="deptIdList" index="index" item="id" open="(" separator="," close=")">
+				#{id}
+			</foreach>
+		</if>
+		<if test="status != null and status != ''">
+			<if test="status=='NI'">
+				AND c.total_number > c.warehouse_number
+			</if>
+			<if test="status=='F3'">
+				AND c.total_amount > c.dealed_amount
+			</if>
+			<if test="status=='NP'">
+				AND c.total_amount > c.billed_amount
+			</if>
+		</if>
+		<if test="contractTypes != null and contractTypes != ''">
+			<if test='contractTypes=="Y"'>
+				AND c.contract_status != 'C'
+			</if>
+			<if test='contractTypes=="N"'>
+				AND c.contract_status = 'C'
+			</if>
+		</if>
+	</sql>
+	<!-- 逾期收付款查询 -->
+	<!-- date_sub(CURDATE(),interval 1 day) -->
+	<select id="findPageOrverdur" resultType="com.spt.bas.report.client.entity.RptCtrContractOrverdur" 
+	parameterType="com.spt.bas.report.client.entity.RptCtrContractOrverdur">
+		SELECT
+		c.id AS id,
+		c.source AS source,
+		c.business_type As businessType,
+		c.contract_no AS contractNo,
+		c.products_name AS productsName,
+		c.company_name AS companyName,
+		c.total_number AS totalNumber,
+		c.warehouse_number AS warehouseNumber,
+		c.bond_amount AS bondAmount,
+		c.total_amount AS totalAmount,
+		c.dealed_amount AS dealedAmount,
+		c.billed_amount AS billedAmount,
+		c.contract_status AS contractStatus,
+		c.pay_full_time AS payFullTime,
+		c.pay_bond_time AS payBondTime,
+		c.contract_time AS contractTime,
+		c.match_user_name AS matchUserName,
+		c.dept_id AS deptId,
+		c.delivery_mode As deliveryMode,
+		c.our_company_name As ourCompanyName,
+		f.`status` As replyStatus
+		FROM
+		t_ctr_contract c
+		LEFT JOIN t_ctr_contract_follow f 
+		ON c.id = f.ctr_contract_id
+		WHERE
+		IF (
+			'invoice' = #{searchType},
+			c.dealed_amount > c.billed_amount AND date_add(CURDATE(),interval 2 day) > c.pay_full_time,
+			(IF (c.dealed_amount >= c.bond_amount,
+				c.total_amount > c.dealed_amount AND CURDATE() >= c.pay_full_time,
+				c.bond_amount > c.dealed_amount AND CURDATE() >= c.pay_bond_time)
+			)
+		)
+		AND c.contract_type = #{contractType}
+		AND c.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+			<when test="'asc' eq order">
+				ORDER BY c.id DESC
+			</when>
+			<when test="'desc' eq order">
+				ORDER BY c.id DESC
+			</when>
+			<otherwise>
+				ORDER BY c.id DESC
+			</otherwise>
+		</choose>
+	</select>
+	<!-- 逾期收付款报表合计 -->
+	<select id="findPageTotal" resultType="com.spt.bas.report.client.entity.RptCtrContractOrverdur" 
+	parameterType="com.spt.bas.report.client.entity.RptCtrContractOrverdur">
+		SELECT
+		SUM(c.total_number) As totalNumber,
+		SUM(c.warehouse_number) As warehouseNumber,
+		SUM(c.bond_amount) As bondAmount,
+		SUM(c.total_amount) As totalAmount,
+		SUM(c.dealed_amount) As dealedAmount,
+		SUM(c.billed_amount) As billedAmount,
+		SUM(IF(c.pay_full_time > CURDATE(),c.bond_amount,c.total_amount-c.dealed_amount)) As orverdurAmount
+		FROM
+		t_ctr_contract c
+		WHERE
+		IF (
+			'invoice' = #{searchType},
+			c.total_amount > c.billed_amount AND date_add(CURDATE(),interval 2 day) > c.pay_full_time,
+			(IF (c.dealed_amount >= c.bond_amount,
+				c.total_amount > c.dealed_amount AND CURDATE() > c.pay_full_time,
+				c.bond_amount > c.dealed_amount AND CURDATE() > c.pay_bond_time)
+			)
+		)
+		AND c.contract_type = #{contractType}
+		AND c.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+	</select>
+	<!-- 查询所有逾期信息 -->
+	<select id="findAllOrverdur" resultType="com.spt.bas.report.client.entity.RptCtrContractOrverdur">
+		SELECT
+		c.id AS id,
+		c.source AS source,
+		c.business_type As businessType,
+		c.contract_no AS contractNo,
+		c.products_name AS productsName,
+		c.company_name AS companyName,
+		c.total_number AS totalNumber,
+		c.warehouse_number AS warehouseNumber,
+		c.bond_amount AS bondAmount,
+		c.total_amount AS totalAmount,
+		c.dealed_amount AS dealedAmount,
+		c.billed_amount AS billedAmount,
+		IF(c.pay_full_time > CURDATE(),
+		c.bond_amount,c.total_amount-c.dealed_amount) As orverdurAmount,
+		c.contract_status AS contractStatus,
+		c.pay_full_time AS payFullTime,
+		c.pay_bond_time AS payBondTime,
+		c.contract_time AS contractTime,
+		c.match_user_name AS matchUserName,
+		c.dept_id AS deptId
+		FROM
+		t_ctr_contract c
+		WHERE
+		IF (
+		c.dealed_amount >= c.bond_amount,
+		c.total_amount > c.dealed_amount
+		AND CURDATE() > c.pay_full_time,
+		c.bond_amount > c.dealed_amount
+		AND CURDATE() > c.pay_bond_time
+		)
+		<!-- AND c.enterprise_id = #{enterpriseId} -->
+		AND c.orverdur_flg IS NULL
+		AND c.contract_status != 'C'
+		AND c.company_id != ''
+		ORDER BY c.id DESC
+	</select>
+	
+	<!-- 新-预期收款表 -->
+	<select id="findReceivePageOrverdur" resultType="com.spt.bas.report.client.entity.RptCtrContractOrverdur" 
+	parameterType="com.spt.bas.report.client.entity.RptCtrContractOrverdur">
+		SELECT
+		c.id AS id,
+		c.source AS source,
+		c.business_type As businessType,
+		c.contract_no AS contractNo,
+		c.products_name AS productsName,
+		c.company_name AS companyName,
+		c.total_number AS totalNumber,
+		c.warehouse_number AS warehouseNumber,
+		c.bond_amount AS bondAmount,
+		c.total_amount AS totalAmount,
+		c.dealed_amount AS dealedAmount,
+		c.billed_amount AS billedAmount,
+		c.contract_status AS contractStatus,
+		c.pay_full_time AS payFullTime,
+		c.pay_bond_time AS payBondTime,
+		c.contract_time AS contractTime,
+		c.match_user_name AS matchUserName,
+		c.dept_id AS deptId,
+		c.delivery_mode As deliveryMode,
+		c.our_company_name As ourCompanyName,
+		c.total_amount - c.dealed_amount As orverdurAmount,
+		f.`status` As replyStatus
+		FROM
+		t_ctr_contract c
+		LEFT JOIN t_ctr_contract_follow f 
+		ON c.id = f.ctr_contract_id
+		WHERE
+		1 = 1
+		<!-- AND c.delivery_mode != 'XKHH' -->
+		<!-- AND c.warehouse_number = c.total_number -->
+		AND date(now()) > c.pay_full_time
+		AND c.total_amount > c.dealed_amount
+		AND c.contract_type = #{contractType}
+		AND c.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+		<choose>
+			<when test="'asc' eq order">
+				ORDER BY c.id DESC
+			</when>
+			<when test="'desc' eq order">
+				ORDER BY c.id DESC
+			</when>
+			<otherwise>
+				ORDER BY c.id DESC
+			</otherwise>
+		</choose>
+	</select>
+	<!-- 逾期收付款报表合计 -->
+	<select id="findReceivePageTotal" resultType="com.spt.bas.report.client.entity.RptCtrContractOrverdur" 
+	parameterType="com.spt.bas.report.client.entity.RptCtrContractOrverdur">
+		SELECT
+		SUM(c.total_number) As totalNumber,
+		SUM(c.warehouse_number) As warehouseNumber,
+		SUM(c.bond_amount) As bondAmount,
+		SUM(c.total_amount) As totalAmount,
+		SUM(c.dealed_amount) As dealedAmount,
+		SUM(c.billed_amount) As billedAmount,
+		SUM(IF(c.pay_full_time > CURDATE(),c.bond_amount,c.total_amount-c.dealed_amount)) As orverdurAmount
+		FROM
+		t_ctr_contract c
+		WHERE
+		1 = 1
+		<!-- AND c.delivery_mode != 'XKHH' -->
+		<!-- AND c.warehouse_number = c.total_number -->
+		AND date(now()) > c.pay_full_time
+		AND c.total_amount > c.dealed_amount
+		AND c.contract_type = #{contractType}
+		AND c.enterprise_id = #{enterpriseId}
+		<include refid="Where_SearchVo" />
+	</select>
+	
+</mapper>
