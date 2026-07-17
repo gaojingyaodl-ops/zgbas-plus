@@ -79,3 +79,22 @@ res:
   mobile:
     login:
       url: ${RES_MOBILE_LOGIN_URL}
+# Phase 4 Wave 4 (Plan 04-06): BFF controller @Value placeholders (D-P2-13 prod externalization).
+basData:
+  md5:
+    secret:
+      key: basData_md5_key
+  server:
+    url: ${BASDATA_SERVER_URL}
+down:
+  wordOutputUrl: ${DOWN_WORD_OUTPUT_URL}
+fact:
+  bis:
+    url: ${FACT_BIS_URL}
+    secret:
+      secretKey: ${FACT_BIS_SECRET_KEY}
+trade:
+  app:
+    secret: ${TRADE_APP_SECRET}
+  login:
+    url: ${TRADE_LOGIN_URL}
