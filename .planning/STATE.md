@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: "Completed 04-02-PLAN.md (Wave 1: 238 contracts + 14 data carriers)"
-last_updated: "2026-07-17T03:48:22.796Z"
+stopped_at: "Completed 04-04-PLAN.md (Wave 2b service + PM absorption + merged compile gate GREEN)"
+last_updated: "2026-07-17T04:47:06.714Z"
 last_activity: 2026-07-17
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 17
-  completed_plans: 13
-  percent: 43
+  completed_plans: 15
+  percent: 88
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 04 (core-business) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-07-17
 
-Progress: [████████░░] 76%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -61,6 +61,7 @@ Progress: [████████░░] 76%
 | Phase 03 P04 | 12 | 2 tasks | 3 files |
 | Phase 04 P01 | 10min | 2 tasks | 7 files |
 | Phase 04 P02 | 5min | 2 tasks | 253 files |
+| Phase 04 P04 | 12 | 3 tasks | 585 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,11 @@ Recent decisions affecting current work:
 - [Phase 04]: Phase 4 04-02 commit order reversed: Task 2 (data carriers) before Task 1 (remote contracts) — bidirectional compile coupling (ICtrContractClient needs dto.CtrContractDto, IRiskApplyClient needs common.*) resolved per plan's anticipated reorder
 - [Phase 04]: Phase 4 04-02 stub upgrade: IApproveWaitDealClient + IPmProcessClient Phase 3 stubs replaced with source-real @FeignClient extends BaseClient contracts; IndexController unaffected (method signatures preserved: getUserWaitDealNum, findAccess); zgbas-admin sanity compile green
 - [Phase 04]: Phase 4 04-02 PM-domain 13 contracts ported verbatim as source-real interfaces; D-P4-02 stub-degradation deferred to Plan 04-06 BFF field layer (@Autowired(required=false)), not at contract interface layer
+- [Phase ?]: test
+- [Phase ?]: [Phase 04]: Phase 4 04-04 Wave 2b done: basServer service 241 iface + 248 impl + 5 域子包 44 (ctr/logistics/performance/rt/stock) = 533 files ported verbatim; PM absorbed per Decision A (annotation/cache/dao/service/util 51 files); merged compile gate GREEN closes 04-03 + 04-04 (cascade 320->0 via Rule 3 completion + Rule 1 source-bug fixes)
+- [Phase ?]: [Phase 04]: Phase 4 04-04 Rule 3 cascade deps verbatim source basServer/basCore pom: pdfbox 2.0.29 + xxl-job-core 2.3.0 (compile-time only, P6 scheduling excluded) + report-client + purchase-client 2.0.1-SNAPSHOT (types-only, P5/v2 defer) + spring-cloud-alibaba-commons + nacos-common (util classes only, Phase 2 #9 nacos-discovery stays in force)
+- [Phase ?]: [Phase 04]: Phase 4 04-04 Rule 1 source-bug fixes (latent in feat-系统重构v5.0): TokenUtil.createToken(Map,String) overload added as 1-line delegate (fixes 3 source callers basServer/web/basWx); BasicErrorController Date->LocalDateTime (ErrorResp field type); pmClient constant/PmConstants.java inlined (Phase 2 oversight)
+- [Phase ?]: [Phase 04]: Phase 4 04-04 Phase 6 placement correction: command/BasCommandExecutor + package-info removed (has @XxlJob method + imports 4 task/ classes). 04-03 SUMMARY established @XxlJob handler -> P6 rule but Wave 2a command/ had leaked it; Phase 6 re-ports command + task cluster (xxl-job -> RuoYi quartz)
 
 ### Pending Todos
 
@@ -111,6 +117,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-17T03:48:22.790Z
+Last session: 2026-07-17T04:46:49.179Z
 Stopped at: Completed 04-02-PLAN.md (Wave 1: 238 contracts + 14 data carriers)
 Resume file: None

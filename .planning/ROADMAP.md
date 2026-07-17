@@ -127,7 +127,7 @@ Plans:
 
 **Wave 2b (合并编译单元)** *(blocked on Wave 2a — 含 04-03 延迟 gate)*
 
-- [ ] 04-04-PLAN.md — basServer service + impl + 域子包（ctr/logistics/performance/rt/stock）~533 **+ 吸收 PM 模块**(service/dao/cache/util/annotation ~50，排除 1 xxl-job task 至 P6；entity/vo/constant Phase2 pmClient 已迁待核验) + 级联 pom(wltea/IK·httpmime·QLExpress)。**合并编译门** `mvn -pl zgbas-system -am compile` `^\[ERROR]`=0 在此关闭
+- [x] 04-04-PLAN.md — basServer service + impl + 域子包（ctr/logistics/performance/rt/stock）~533 **+ 吸收 PM 模块**(service/dao/cache/util/annotation ~50，排除 1 xxl-job task 至 P6；entity/vo/constant Phase2 pmClient 已迁待核验) + 级联 pom(wltea/IK·httpmime·QLExpress)。**合并编译门** `mvn -pl zgbas-system -am compile` `^\[ERROR]`=0 在此关闭
 
 **Wave 3** *(blocked on Wave 2b)*
 
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
-| 4. 核心业务迁移 | 3/6 | In Progress|  |
+| 4. 核心业务迁移 | 4/6 | In Progress|  |
 | 5. 报表迁移 | 0/TBD | Not started | - |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
