@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptPmApproveMapper">
+    <select id="getApproveCount" resultType="java.lang.Integer">
+        select count(*)
+        from t_pm_approve
+        where status = 'A'
+          and curr_approver_user_id is not null
+          and curr_approver_user_id like concat('%|',#{currentUserId},'|%')
+          and enable_flg = true
+    </select>
+
+    <select id="getPmApproveByParam" resultType="com.spt.bas.report.client.vo.RptBisPmApproveResVo">
+        select a.approve_no,
+               p.process_code,
+               c.deal_amount,
+               c.cost_type
+        from t_pm_process p
+                 join t_pm_approve a on p.id = a.process_id
+                 join t_apply_business_pay c on a.id = c.approve_id
+        where p.enable_flg = true
+          and a.enable_flg = true
+          and c.status = 'D'
+          and a.status = 'D'
+          and p.process_code in ('APPLY_MANAGE_BUSINESS_PAY', 'APPLY_OPERATING_BUSINESS_PAY')
+          and a.create_user_id = #{userId}
+          and date_format(a.created_date, '%Y-%m') = #{ym}
+    </select>
+
+    <select id="getSettlementBusinessDate" resultType="com.spt.bas.report.client.vo.RptCtrContractSettlementDateVo">
+        SELECT
+            rd.approveId,
+            bd.buyContractId,
+            rd.sellContractId,
+            rd.receiveApproveDate,
+            bd.receiveBillApproveDate,
+            cd.confirmReceiptApproveDate
+        FROM
+            (SELECT
+                 t.approve_id AS approveId,
+                 r.contract_id AS sellContractId,
+                 MAX(a.last_approve_date) AS receiveApproveDate
+             FROM
+                 t_apply_receive r
+                     INNER JOIN t_pm_approve a ON r.approve_id = a.id AND a.`status` = 'D'
+                     INNER JOIN t_ctr_contract t ON t.id = r.contract_id
+             WHERE
+                 r.contract_id IN
+                <foreach collection="sellContractIdList" item="sellContractId" separator="," open="(" close=")">
+                    #{sellContractId}
+                </foreach>
+             AND r.contract_no = t.contract_no
+             GROUP BY
+                 r.contract_id) rd
+                LEFT JOIN
+            (SELECT
+                 t.approve_id AS approveId,
+                 n.contract_id AS buyContractId,
+                 MAX(a.last_approve_date) AS receiveBillApproveDate
+             FROM
+                 t_apply_invoice_received n
+                     INNER JOIN t_pm_approve a ON n.approve_id = a.id AND a.`status` = 'D'
+                     INNER JOIN t_ctr_contract t ON t.id = n.contract_id
+             WHERE
+                 n.contract_id IN
+                <foreach collection="buyContractIdList" item="buyContractId" separator="," open="(" close=")">
+                    #{buyContractId}
+                </foreach>
+                AND n.contract_no = t.contract_no
+             GROUP BY
+                 n.contract_id) bd ON rd.approveId = bd.approveId
+                LEFT JOIN
+            (SELECT
+                 t.approve_id AS approveId,
+                 MAX(a.last_approve_date) AS confirmReceiptApproveDate
+             FROM
+                 t_apply_confirm_receipt c
+                     INNER JOIN t_pm_approve a ON c.approve_id = a.id AND a.`status` = 'D'
+                     INNER JOIN t_ctr_contract t ON t.id = c.contract_id
+             WHERE
+                 c.contract_id IN
+                <foreach collection="sellContractIdList" item="sellContractId" separator="," open="(" close=")">
+                    #{sellContractId}
+                </foreach>
+                AND c.contract_no = t.contract_no
+             GROUP BY
+                c.contract_id) cd ON cd.approveId = bd.approveId
+    </select>
+</mapper>

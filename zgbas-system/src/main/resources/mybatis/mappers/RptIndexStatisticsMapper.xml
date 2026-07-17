@@ -1,0 +1,547 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptIndexStatisticsMapper">
+	<!-- 首页风控统计 -->
+	<select id="findIndexRiskStatistics" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(sum(c.total_amount)/10000,2) is null,0,ROUND(sum(c.total_amount)/10000,2)) totalAmount,
+			   if(ROUND(sum(c.breach_amount-c.receive_breach_amount),2) is null,0,ROUND(sum(c.breach_amount-c.receive_breach_amount),2)) totalBreachAmount,
+		       if(ROUND(sum(c.total_number),3) is null,0,ROUND(sum(c.total_number),3)) totalNumber,
+			   #{statisticsType} statisticsType
+		FROM t_ctr_contract c
+		WHERE
+		      c.contract_type = 'S'
+			  and c.contract_status != 'C'
+			  and c.contract_status != 'D'
+			  and c.enterprise_id = 44
+			  and c.match_credit_flg=true
+			  AND c.breach_days > 0
+		<if test="statisticsType != null and statisticsType != ''">
+			AND c.performance_status = #{statisticsType}
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and c.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+	<!-- 首页风控统计-未发货-->
+	<select id="findIndexRiskStatisticsNoDeliverDoods" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(sum(s.total_amount)/10000,2) is null,0,ROUND(sum(s.total_amount)/10000,2)) totalAmount,
+			   if(ROUND(sum(s.breach_amount-s.receive_breach_amount),2) is null,0,ROUND(sum(s.breach_amount-s.receive_breach_amount),2)) totalBreachAmount,
+			   if(ROUND(sum(s.total_number),3) is null,0,ROUND(sum(s.total_number),3)) totalNumber,
+			   'F' statisticsType
+		FROM t_ctr_contract b
+		INNER JOIN t_ctr_contract_rela r ON r.buy_contract_id=b.id
+		INNER JOIN t_ctr_contract s ON r.sell_contract_id=s.id
+
+		WHERE s.contract_status != 'C'
+		and s.contract_type='S'
+		and s.enterprise_id = 44
+		and b.dealed_amount >= b.total_amount
+		and s.total_number > s.warehouse_number
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+
+	</select>
+	<!-- 财务统计  待收进项发票	合同签订、上游采购发票未收-->
+	<select id="findBuyUnReceivedFinanceInvoice" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(b.total_amount - b.billed_amount)/10000,2) is null,0,ROUND(SUM(b.total_amount - b.billed_amount)/10000,2)) totalAmount,
+			   'A' statisticsType,
+			   b.our_company_name ourCompanyName,
+		       '待收进项发票' statisticsTypeName,
+		       '1' dispOrderNo,
+				#{businessType} businessType
+		FROM t_ctr_contract b
+		WHERE
+			b.contract_status != 'C'
+			and b.contract_type='B'
+			and b.business_type='ZY-BB'
+			and b.enterprise_id = 44
+			and b.seal_flg = true
+			and b.total_amount > b.billed_amount
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0">
+			and b.our_company_name in
+			<foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND b.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="businessType != null">
+			<choose>
+				<when test="businessType eq 'SX'.toString()"><!-- 赊销 -->
+					AND b.match_credit_flg = TRUE
+				</when>
+				<when test="businessType eq 'DC'.toString()"><!-- 代采 -->
+					AND b.match_credit_flg = FALSE
+				</when>
+			</choose>
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and b.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+	<!-- 财务统计 - 已收待开销项发票 上游采购发票已收，下游销售发票未开-->
+	<select id="findBuyReceivedSellUnReceivedFinanceInvoice" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1)                              totalCount,
+			   if(ROUND(SUM(s.total_amount - s.billed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.billed_amount)/10000,2)) totalAmount,
+			   'B' statisticsType,
+				s.our_company_name ourCompanyName,
+				'已收未开发票' statisticsTypeName,
+				'2' dispOrderNo,
+				#{businessType} businessType,
+				s.match_credit_flg matchCreditFlg
+		FROM t_ctr_contract s
+		INNER JOIN t_ctr_contract_rela r
+			ON s.id = r.sell_contract_id
+		INNER JOIN t_ctr_contract b
+			ON r.buy_contract_id = b.id
+		WHERE s.contract_status != 'C'
+			and s.contract_type='S'
+			and s.business_type='ZY-BB'
+	   	 	and s.enterprise_id = 44
+			and b.billed_amount >= b.total_amount
+			and s.total_amount > s.billed_amount
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0">
+			and s.our_company_name in
+			<foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND s.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="businessType != null">
+			<choose>
+				<when test="businessType eq 'SX'.toString()"><!-- 赊销 -->
+					AND s.match_credit_flg = TRUE
+				</when>
+				<when test="businessType eq 'DC'.toString()"><!-- 代采 -->
+					AND s.match_credit_flg = FALSE
+				</when>
+			</choose>
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+
+	<!-- 财务统计 - 未收已开销项发票 上游采购发票未收，下游销售发票已开 -->
+	<select id="findBuyUnReceivedSellReceivedFinanceInvoice" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount)/10000,2)) totalAmount,
+			   'C' statisticsType,
+				s.our_company_name ourCompanyName,
+				'未收已开发票' statisticsTypeName,
+				'3' dispOrderNo,
+				#{businessType} businessType
+		FROM t_ctr_contract s
+		INNER JOIN t_ctr_contract_rela r
+			ON s.id=r.sell_contract_id
+		INNER JOIN t_ctr_contract b
+			ON r.buy_contract_id=b.id
+		WHERE
+			s.contract_status != 'C'
+			and s.contract_type='S'
+			and s.business_type='ZY-BB'
+			and s.enterprise_id = 44
+			and b.total_amount > b.billed_amount
+			and s.billed_amount >= s.total_amount
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0">
+			and s.our_company_name in
+			<foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND s.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="businessType != null">
+			<choose>
+				<when test="businessType eq 'SX'.toString()"><!-- 赊销 -->
+					AND s.match_credit_flg = TRUE
+				</when>
+				<when test="businessType eq 'DC'.toString()"><!-- 代采 -->
+					AND s.match_credit_flg = FALSE
+				</when>
+			</choose>
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+	<!-- 财务统计  待开销项发票	合同签订、下游发票未开 -->
+	<select id="findSealFlgSellUnReceivedFinanceInvoice" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount - s.billed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.billed_amount)/10000,2)) totalAmount,
+			   'D' statisticsType,
+				s.our_company_name ourCompanyName,
+				'待开销项发票' statisticsTypeName,
+				'4' dispOrderNo,
+		       #{businessType} businessType
+		FROM t_ctr_contract s
+		WHERE
+			s.contract_status != 'C'
+			and s.contract_type='S'
+			and s.business_type='ZY-BB'
+			and s.enterprise_id = 44
+			and s.seal_flg = true
+			and s.total_amount > s.billed_amount
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0">
+			and s.our_company_name in
+			<foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND s.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="businessType != null">
+			<choose>
+				<when test="businessType eq 'SX'.toString()"><!-- 赊销 -->
+					AND s.match_credit_flg = TRUE
+				</when>
+				<when test="businessType eq 'DC'.toString()"><!-- 代采 -->
+					AND s.match_credit_flg = FALSE
+				</when>
+			</choose>
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+	<!-- 财务统计 - 赊销应付货款 合同签订、上游采购货款未付 -->
+	<select id="findSxBuyUnReceivedFinancePay" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			if(ROUND(SUM(t.total_amount - t.dealed_amount)/10000,2) is null,0,ROUND(SUM(t.total_amount - t.dealed_amount)/10000,2)) totalAmount,
+			'E' statisticsType,
+			t.our_company_name ourCompanyName,
+			'代采赊销应付' statisticsTypeName,
+			'5' dispOrderNo,
+			#{businessType} businessType
+		FROM t_ctr_dcsx t
+		WHERE
+			t.status != 'C'
+		and t.enterprise_id = 44
+		and t.seal_flg = true
+		AND t.business_type = 'ZY-BB'
+		and t.total_amount > t.dealed_amount
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0">
+			and t.our_company_name in
+			<foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND t.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and t.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+	<!-- 代采应付货款  合同签订、上游采购货款未付 -->
+	<select id="findDcBuyUnReceivedFinancePay" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(b.total_amount - b.dealed_amount)/10000,2) is null,0,ROUND(SUM(b.total_amount - b.dealed_amount)/10000,2)) totalAmount,
+			   'F' statisticsType,
+				b.our_company_name ourCompanyName,
+				'代采应付' statisticsTypeName,
+				'6' dispOrderNo,
+				#{businessType} businessType
+		FROM t_ctr_contract b
+		WHERE
+			b.contract_status != 'C'
+			and b.contract_type='B'
+			and b.business_type='ZY-BB'
+			and b.enterprise_id = 44
+			and b.seal_flg = true
+			and b.match_credit_flg=false
+			and b.total_amount > b.dealed_amount
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0">
+			and b.our_company_name in
+			<foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND b.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="businessType != null">
+			<choose>
+				<when test="businessType eq 'SX'.toString()"><!-- 赊销 -->
+					AND b.match_credit_flg = TRUE
+				</when>
+				<when test="businessType eq 'DC'.toString()"><!-- 代采 -->
+					AND b.match_credit_flg = FALSE
+				</when>
+			</choose>
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and b.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+	<!-- 未来7天应收未收的销售货款 已出库，且还未付款 -->
+	<select id="findSellUnPayFinance" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2)) totalAmount,
+			   #{startDate} payFullTime
+		FROM t_ctr_contract s
+		WHERE
+			s.contract_status != 'C'
+		and s.contract_type='S'
+		and s.business_type='ZY-BB'
+		and s.enterprise_id = 44
+		and s.warehouse_number >= s.total_number
+		and s.total_amount > s.dealed_amount
+		and s.pay_full_time BETWEEN #{startDate} and #{endDate}
+	</select>
+	<!-- 未收款统计	已付款未发货 : 赊销，上游已付款，下游未发货，未收款-->
+	<select id="findBuyPaySellUnPayFinance" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2)) totalAmount,
+			   'G' statisticsType,
+			   '已付款未发货' statisticsTypeName,
+			   '7' dispOrderNo,
+				#{businessType} businessType
+		FROM t_ctr_contract s
+		INNER JOIN t_ctr_contract_rela r
+			ON s.id=r.sell_contract_id
+		INNER JOIN t_ctr_contract b
+			ON r.buy_contract_id=b.id
+		WHERE
+			s.contract_status != 'C'
+			and s.contract_type='S'
+			and s.enterprise_id = 44
+			and s.business_type='ZY-BB'
+			and s.match_credit_flg=true
+			and b.dealed_amount >= b.total_amount
+			and s.total_number > s.warehouse_number
+			and s.total_amount > s.dealed_amount
+		<if test="ourCompanyNameList != null and ourCompanyNameList.size > 0">
+			and s.our_company_name in
+			<foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+				#{item}
+			</foreach>
+		</if>
+		<if test="ourCompanyName != null and ourCompanyName != ''">
+			AND s.our_company_name = #{ourCompanyName}
+		</if>
+		<if test="businessType != null">
+			<choose>
+				<when test="businessType eq 'SX'.toString()"><!-- 赊销 -->
+					AND s.match_credit_flg = TRUE
+				</when>
+				<when test="businessType eq 'DC'.toString()"><!-- 代采 -->
+					AND s.match_credit_flg = FALSE
+				</when>
+			</choose>
+		</if>
+		<if test="hgMatchUserIdList != null and hgMatchUserIdList.size() != 0">
+			and s.match_user_id not in
+			<foreach collection="hgMatchUserIdList" item="item" index="index" open="(" close=")" separator=",">
+				#{hgMatchUserIdList[${index}]}
+			</foreach>
+		</if>
+	</select>
+	<!-- 未收款统计	已发货未到还款日 :	赊销、上游已付款、下游未收全款，下游已发货，未到还款日-->
+	<select id="findNotArrivedSellUnPayFinance" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2)) totalAmount,
+			   'B' statisticsType,
+			   '已发货未到还款日' statisticsTypeName
+		FROM t_ctr_contract_settlement t
+				LEFT JOIN t_ctr_contract s ON t.sell_contract_id = s.id
+				LEFT JOIN t_ctr_contract b ON t.buy_contract_id = b.id
+		WHERE s.`status` != 'C'
+			and s.contract_status != 'C'
+			and s.enterprise_id = 44
+			and s.business_type='ZY-BB'
+			and s.match_credit_flg=true
+			and s.seal_flg=TRUE
+			and b.seal_flg=TRUE
+			AND b.dealed_amount >= b.total_amount
+			AND s.total_amount > s.dealed_amount
+			
+			AND s.warehouse_number >= s.total_number
+			AND s.appoint_pay_full_time >= NOW()
+	</select>
+	<!-- 未收款统计	已发货已过还款日 :	赊销、上游已付款、下游未收全款，下游已发货，已过还款日 -->
+	<select id="findArrivedSellUnPayFinance" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2)) totalAmount,
+			   'C' statisticsType,
+			   '已发货已过还款日' statisticsTypeName
+		FROM t_ctr_contract_settlement t
+				 LEFT JOIN t_ctr_contract s ON t.sell_contract_id = s.id
+				 LEFT JOIN t_ctr_contract b ON t.buy_contract_id = b.id
+		WHERE s.`status` != 'C'
+			and s.contract_status != 'C'
+			and s.enterprise_id = 44
+			and s.business_type='ZY-BB'
+			and s.match_credit_flg=true
+			and s.seal_flg=TRUE
+			and b.seal_flg=TRUE
+			AND b.dealed_amount >= b.total_amount
+			AND s.total_amount > s.dealed_amount
+			
+			AND s.warehouse_number >= s.total_number
+			AND NOW() > s.appoint_pay_full_time
+	</select>
+	<!-- 未收款统计	未发货未到还款日 :	赊销、上游已付款、下游未收全款，下游未发货，未到还款日-->
+	<select id="findNotUnArrivedSellUnPayFinance" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2)) totalAmount,
+			   'D' statisticsType,
+			   '未发货未过还款日' statisticsTypeName
+		FROM t_ctr_contract_settlement t
+				 LEFT JOIN t_ctr_contract s ON t.sell_contract_id = s.id
+				 LEFT JOIN t_ctr_contract b ON t.buy_contract_id = b.id
+		WHERE s.`status` != 'C'
+			and s.contract_status != 'C'
+			and s.enterprise_id = 44
+			and s.business_type='ZY-BB'
+			and s.match_credit_flg=true
+			and s.seal_flg=TRUE
+			and b.seal_flg=TRUE
+			AND b.dealed_amount >= b.total_amount
+			AND s.total_amount > s.dealed_amount
+			
+			AND s.total_number > s.warehouse_number
+			AND s.appoint_pay_full_time >= NOW()
+	</select>
+	<!-- 未收款统计	已发货已过还款日 :	赊销、上游已付款、下游未收全款，下游已发货，已过还款日 -->
+	<select id="findUnArrivedSellUnPayFinance" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2)) totalAmount,
+			   'E' statisticsType,
+			   '未发货已过还款日' statisticsTypeName
+		FROM t_ctr_contract_settlement t
+				 LEFT JOIN t_ctr_contract s ON t.sell_contract_id = s.id
+				 LEFT JOIN t_ctr_contract b ON t.buy_contract_id = b.id
+		WHERE s.`status` != 'C'
+			and s.contract_status != 'C'
+			and s.enterprise_id = 44
+			and s.business_type='ZY-BB'
+			and s.match_credit_flg=true
+			and s.seal_flg=TRUE
+			and b.seal_flg=TRUE
+			AND b.dealed_amount >= b.total_amount
+			AND s.total_amount > s.dealed_amount
+			
+			AND s.total_number > s.warehouse_number
+			AND NOW() > s.appoint_pay_full_time
+	</select>
+	
+	<select id="findUnPayFinanceSum" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT count(1) totalCount,
+			   if(ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount - s.dealed_amount)/10000,2)) totalAmount,
+			   'Sum' statisticsType,
+			   '合计' statisticsTypeName
+		FROM t_ctr_contract_settlement t
+				 LEFT JOIN t_ctr_contract s ON t.sell_contract_id = s.id
+				 LEFT JOIN t_ctr_contract b ON t.buy_contract_id = b.id
+		WHERE s.`status` != 'C'
+			and s.contract_status != 'C'
+			and s.enterprise_id = 44
+			and s.business_type='ZY-BB'
+			and s.match_credit_flg=true
+			and s.seal_flg=TRUE
+			and b.seal_flg=TRUE
+			AND b.dealed_amount >= b.total_amount
+			AND s.total_amount > s.dealed_amount
+	</select>
+	<!-- 销售周数据查询 过去10周业务金额统计-->
+	<select id="findSalesWeekData" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT if(ROUND(SUM(s.total_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount)/10000,2)) totalAmount,
+		       #{businessType} businessType,
+		       s.match_credit_flg matchCreditFlg,
+			   WEEK(#{startDate}) week,
+			   date_format(#{startDate}, '%Y') year,
+			   date_format(#{startDate}, '%Y-%m-%d') startDate
+		FROM
+			t_ctr_contract s
+		WHERE
+			s.contract_status != 'C'
+		and s.contract_type='S'
+		and s.enterprise_id = 44
+		and s.business_type=#{businessType}
+		<if test="matchCreditFlg != null">
+			and s.match_credit_flg=#{matchCreditFlg}
+		</if>
+		and s.seal_date BETWEEN #{startDate} and #{endDate}
+	</select>
+	<select id="findTotalSalesWeekData" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT if(ROUND(SUM(s.total_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount)/10000,2)) totalAmount,
+		s.match_credit_flg matchCreditFlg,
+		WEEK(#{startDate}) week,
+	    date_format(#{startDate}, '%Y') year,
+	    date_format(#{startDate}, '%Y-%m-%d') startDate
+		FROM
+		t_ctr_contract s
+		WHERE
+		s.contract_status != 'C'
+		and s.contract_type='S'
+		and s.enterprise_id = 44
+		and s.business_type in ('ZY-BB','ZY-XS')
+		and s.seal_date BETWEEN #{startDate} and #{endDate}
+	</select>
+	<!-- 销售月数据查询 过去10月业务金额统计-->
+	<select id="findSalesMonthData" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT if(ROUND(SUM(s.total_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount)/10000,2)) totalAmount,
+		#{businessType} businessType,
+		s.match_credit_flg matchCreditFlg,
+		#{month} month
+		FROM
+		t_ctr_contract s
+		WHERE
+		s.contract_status != 'C'
+		and s.contract_type='S'
+		and s.enterprise_id = 44
+		and s.business_type=#{businessType}
+		<if test="matchCreditFlg != null">
+			and s.match_credit_flg=#{matchCreditFlg}
+		</if>
+		and date_format(s.seal_date, '%Y-%m') = #{month}
+	</select>
+	<select id="findTotalSalesMonthData" resultType="com.spt.bas.report.client.vo.RptIndexStatisticsVo">
+		SELECT if(ROUND(SUM(s.total_amount)/10000,2) is null,0,ROUND(SUM(s.total_amount)/10000,2)) totalAmount,
+			   s.match_credit_flg matchCreditFlg,
+			   #{month} month
+		FROM
+			t_ctr_contract s
+		WHERE
+			s.contract_status != 'C'
+		and s.contract_type='S'
+		and s.enterprise_id = 44
+		and s.business_type in ('ZY-BB','ZY-XS')
+		and date_format(s.seal_date, '%Y-%m') = #{month}
+	</select>
+	
+</mapper>

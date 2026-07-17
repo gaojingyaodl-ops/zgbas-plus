@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptCreditAmountMonitorMapper">
+
+	<sql id="Where_SearchVo">
+		<if test="companyName != null and companyName != ''">
+			and com_result.companyName like CONCAT('%',#{companyName},'%')
+		</if>
+		<if test="deptId != null ">
+			and com_result.deptId like CONCAT('%',#{deptId},'%')
+		</if>
+		<if test="matchUserId != null ">
+			and com_result.matchUserId = #{matchUserId}
+		</if>
+		<if test="piccFlg != null ">
+			and com_result.piccFlg = #{piccFlg}
+		</if>
+		<if test="creditCategory != null and creditCategory != ''">
+			and com_result.creditCategory like CONCAT('%',#{creditCategory},'%')
+		</if>
+		<if test="creditRating != null and creditRating != ''">
+			and com_result.creditRating = #{creditRating}
+		</if>
+		<if test="excessAmountStart != null ">
+			<![CDATA[and com_result.excessAmount >= #{excessAmountStart} ]]>
+		</if>
+		<if test="excessAmountEnd != null ">
+			<![CDATA[and com_result.excessAmount <= #{excessAmountEnd} ]]>
+		</if>
+		<if test="excessRateStart != null ">
+			<![CDATA[and com_result.excessRate >= #{excessRateStart} ]]>
+		</if>
+		<if test="excessRateEnd != null ">
+			<![CDATA[and com_result.excessRate <= #{excessRateEnd} ]]>
+		</if>
+		<if test="receiveAmountStart != null ">
+			<![CDATA[and com_result.receiveAmount >= #{receiveAmountStart} ]]>
+		</if>
+		<if test="receiveAmountEnd != null ">
+			<![CDATA[and com_result.receiveAmount <= #{receiveAmountEnd} ]]>
+		</if>
+	</sql>
+
+	<resultMap id="CreditAmountMonitorResultMap" type="com.spt.bas.report.client.entity.RptCreditAmountMonitor">
+		<!-- 基础字段映射 -->
+		<id property="companyId" column="companyId"/>
+		<result property="companyName" column="companyName"/>
+		<result property="piccFlg" column="piccFlg"/>
+		<result property="piccCreditAmount" column="piccCreditAmount"/>
+		<result property="daDiCreditAmount" column="daDiCreditAmount"/>
+		<result property="usedCreditAmount" column="usedCreditAmount"/>
+		<result property="liabilityFlg" column="liabilityFlg"/>
+		<result property="accessReportFlg" column="accessReportFlg"/>
+		<result property="creditRating" column="creditRating"/>
+		<result property="creditOrdersNum" column="creditOrdersNum"/>
+		<result property="contractStartDate" column="contractStartDate"/>
+		<result property="receiveAmount" column="receiveAmount"/>
+		<result property="overdueAmount" column="overdueAmount"/>
+		<result property="overdueDays7" column="overdueDays7"/>
+		<result property="overdueDays15" column="overdueDays15"/>
+		<result property="overdueDays30" column="overdueDays30"/>
+		<result property="deptId" column="deptId"/>
+		<result property="matchUserId" column="matchUserId"/>
+		<result property="matchUserName" column="matchUserName"/>
+		<result property="excessAmount" column="excessAmount"/>
+		<result property="excessGrossProfit" column="excessGrossProfit"/>
+		<result property="excessRate" column="excessRate"/>
+
+		<!-- 一对多关联的 List 映射，映射 t_bs_company_credit 列表 -->
+		<collection property="companyCreditList" ofType="com.spt.bas.client.entity.BsCompanyCredit">
+			<result property="creditType" column="creditType"/>
+			<result property="creditAmount" column="creditAmount"/>
+			<result property="usedCreditAmount" column="usedCreditAmount2"/>
+			<result property="effectiveDate" column="effectiveDate"/>
+			<result property="expiryDate" column="expiryDate"/>
+			<result property="temporaryAmount" column="temporaryAmount"/>
+			<result property="temporaryExpiryDate" column="temporaryExpiryDate"/>
+			<result property="enableFlg" column="enableFlg"/>
+			<result property="createdUserId" column="createdUserId"/>
+			<result property="createdUserName" column="createdUserName"/>
+		</collection>
+	</resultMap>
+
+
+	<select id="findCreditAmountMonitorList" resultMap="CreditAmountMonitorResultMap">
+		select * from (
+			SELECT
+				con.companyId,
+				con.companyName,
+				com.piccFlg,
+				com.piccCreditAmount,
+				com.daDiCreditAmount,
+				com.usedCreditAmount,
+				com.liabilityFlg,
+				com.accessReportFlg,
+				com.creditRating,
+				com.creditCategory,
+				con.creditOrdersNum,
+				con.contractStartDate,
+				con.receiveAmount,
+				con.overdueAmount,
+				con.overdueDays7,
+				con.overdueDays15,
+				con.overdueDays30,
+				con.deptId,
+				con.matchUserId,
+				con.matchUserName,
+				if((con.receiveAmount-com.piccCreditAmount)>0,con.receiveAmount-com.piccCreditAmount,0) excessAmount,
+				if((con.receiveAmount-com.piccCreditAmount)>0,con.receiveAmount-com.piccCreditAmount,0)*if(che.grossProfitMargin>0,che.grossProfitMargin,0) excessGrossProfit,
+				ROUND(if((con.receiveAmount-com.piccCreditAmount)>0,con.receiveAmount-com.piccCreditAmount,0)/com.piccCreditAmount*100,2)
+				excessRate,
+				bs_credit.creditType,
+				bs_credit.creditAmount,
+				bs_credit.usedCreditAmount2,
+				bs_credit.effectiveDate,
+				bs_credit.expiryDate,
+				bs_credit.temporaryAmount,
+				bs_credit.temporaryExpiryDate,
+				bs_credit.enableFlg,
+				bs_credit.createdUserId,
+				bs_credit.createdUserName
+			FROM
+				(
+					SELECT
+						company_id AS companyId,
+						company_name AS companyName,
+						COUNT(*) AS creditOrdersNum,
+						MIN(contract_time) AS contractStartDate,
+						SUM(total_amount-dealed_amount) receiveAmount,
+						SUM(if(orverdur_flg = true,total_amount-dealed_amount,0)) overdueAmount,
+						<![CDATA[SUM(CASE WHEN breach_days >= 7 AND breach_days < 15 THEN 1 ELSE 0 END)]]> AS overdueDays7,
+						<![CDATA[SUM(CASE WHEN breach_days >= 15 AND breach_days < 30 THEN 1 ELSE 0 END)]]> AS overdueDays15,
+						SUM(CASE WHEN breach_days >= 30 THEN 1 ELSE 0 END) AS overdueDays30,
+						SUBSTRING_INDEX(GROUP_CONCAT(dept_id ORDER BY contract_time DESC), ',', 1) AS deptId,
+						SUBSTRING_INDEX(GROUP_CONCAT(match_user_id ORDER BY contract_time DESC), ',', 1) AS matchUserId,
+						SUBSTRING_INDEX(GROUP_CONCAT(match_user_name ORDER BY contract_time DESC), ',', 1) AS matchUserName
+					FROM
+						t_ctr_contract
+					WHERE
+						business_type = 'ZY-BB'
+					AND contract_type = 'S'
+					AND match_credit_flg = true
+					AND contract_status != 'C'
+					AND status != 'C'
+					GROUP BY
+					company_id
+				) con
+			LEFT JOIN
+				(
+					SELECT
+						id companyId,
+						company_name companyName,
+						if(picc_flg=1, true, false) piccFlg,
+						if(picc_flg=1,picc_credit_amount,'500000.00') piccCreditAmount,
+						da_di_credit_amount daDiCreditAmount,
+						used_credit_amount usedCreditAmount,
+						if(access_report_flg=1,'是','否') accessReportFlg,
+						if(actual_guarantee_flg=1,'是','否') liabilityFlg,
+						credit_rating creditRating,
+						credit_category creditCategory
+					FROM
+						t_bs_company
+				) com
+			ON com.companyId = con.companyId
+			LEFT JOIN 
+				(
+					SELECT
+						company_id companyId,
+						gross_profit_margin grossProfitMargin
+					from
+						t_company_business_expansion
+				) che
+			on con.companyId = che.companyId
+			LEFT JOIN
+				(
+					SELECT
+					    company_id companyId,
+						enterprise_id enterpriseId,
+						credit_type creditType,
+						credit_amount creditAmount,
+						used_credit_amount usedCreditAmount2,
+						effective_date effectiveDate,
+						expiry_date expiryDate,
+						temporary_amount temporaryAmount,
+						temporary_expiry_date temporaryExpiryDate,
+						enable_flg enableFlg,
+						created_user_id createdUserId,
+						created_user_name createdUserName
+					FROM
+						t_bs_company_credit
+				) bs_credit
+			ON con.companyId = bs_credit.companyId
+	    ) com_result
+		where 1=1
+		<include refid="Where_SearchVo"/>
+		order by com_result.excessAmount desc
+	</select>
+</mapper>

@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptFactBisReportMapper">
+
+
+	<select id="findModifiedBusiness" resultType="com.spt.bas.report.client.entity.RptFactBisModifiedBusinessVo">
+		SELECT
+			SUM(IFNULL(r.sell_total_amount,0)) as totalAmount,
+			SUM(IFNULL(r.deal_number,0)) as totalNumber,
+			SUM(IFNULL(r.sell_total_amount,0) - IFNULL(r.buy_total_amount,0) - 
+			    IFNULL(r.transport_amount,0) - IFNULL(r.warehouse_amount,0) - 
+			    IFNULL(r.steve_dorage_amount,0) - IFNULL(r.delivery_fee,0)
+			) as grossProfit,
+			SUM(IFNULL(r.financial_service_amount,0)) as capitalCost,
+			SUM(IFNULL(r.after_tax_spread_amount,0)) as netMargin
+		FROM
+			t_ctr_contract_settlement r
+			LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+			LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+		WHERE
+			r.enable_flg = TRUE
+			and s.seal_flg = TRUE
+			and b.seal_flg = TRUE
+
+			<if test="deptIdList != null and deptIdList.size > 0 ">
+				and r.dept_id IN
+				<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+					#{var}
+				</foreach>
+			</if>
+
+			<if test="sealStartDate != null">
+				<![CDATA[AND DATE_FORMAT(s.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{sealStartDate}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="sealEndDate != null">
+				<![CDATA[AND DATE_FORMAT(s.seal_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{sealEndDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+			</if>
+		    
+	</select>
+
+	<select id="findModifiedBusinessCost" resultType="com.spt.bas.report.client.entity.RptFactBisModifiedBusinessVo">
+		SELECT
+			SUM(IFNULL(c.social_security,0)  + IFNULL(c.provident_fund,0)) socialSecurity,
+			SUM(IFNULL(c.evection_cost,0)) evectionAmount,
+			SUM(IFNULL(c.wages,0) + IFNULL(c.commission,0)) personnelSalary,
+			SUM(IFNULL(c.total_cost,0)) operatingCosts
+		FROM t_rpt_base_cost c
+		<where>
+			<if test="monthList != null and monthList.size > 0 ">
+				and c.base_date IN
+				<foreach collection="monthList"  item="var" index="index" open="(" close=")" separator=",">
+					#{var}
+				</foreach>
+			</if>
+			<if test="userIdList != null and userIdList.size > 0 ">
+				and c.match_user_id IN
+				<foreach collection="userIdList"  item="var" index="index" open="(" close=")" separator=",">
+					#{var}
+				</foreach>
+			</if>
+			
+		</where>
+	
+
+	</select>
+
+	<select id="findModifiedBusinessPay" resultType="com.spt.bas.report.client.entity.RptFactBisModifiedBusinessVo">
+		SELECT 
+		    SUM(IFNULL(p.deal_amount,0)) operatingCosts 
+		FROM t_apply_business_pay p
+		<where>
+			p.`status` = 'D' and p.cost_type = '12'
+			
+			<if test="userIdList != null and userIdList.size > 0 ">
+				and p.apply_user_id IN
+				<foreach collection="userIdList"  item="var" index="index" open="(" close=")" separator=",">
+					#{var}
+				</foreach>
+			</if>
+			<if test="sealStartDate != null">
+				<![CDATA[AND DATE_FORMAT(p.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{sealStartDate}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="sealEndDate != null">
+				<![CDATA[AND DATE_FORMAT(p.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{sealEndDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+			</if>
+		</where>
+
+
+	</select>
+
+	<select id="findBusinessAnalysis" resultType="com.spt.bas.report.client.entity.RptFactBisBusinessAnalysisResultVo">
+		SELECT
+			SUM(IFNULL(r.sell_total_amount,0)) as totalAmount,
+			SUM(IFNULL(r.deal_number,0)) as totalNumber,
+			SUM(IFNULL(r.sell_total_amount,0) - IFNULL(r.buy_total_amount,0) -
+			IFNULL(r.transport_amount,0) - IFNULL(r.warehouse_amount,0) -
+			IFNULL(r.steve_dorage_amount,0) - IFNULL(r.delivery_fee,0)
+			) as grossProfit,
+			SUM(IFNULL(r.financial_service_amount,0)) as capitalCost
+		FROM
+		t_ctr_contract_settlement r
+		LEFT JOIN t_ctr_contract s ON r.sell_contract_id = s.id
+		LEFT JOIN t_ctr_contract b ON r.buy_contract_id = b.id
+		WHERE
+		  r.enable_flg = TRUE 
+		  and r.business_type = 'ZY-BB'
+		  and s.seal_flg = TRUE
+		  and b.seal_flg = TRUE
+			
+		<if test="matchCreditFlg != null">
+			and r.match_credit_flg = #{matchCreditFlg}
+		</if>
+		<if test="deptIdList != null and deptIdList.size > 0 ">
+			and r.dept_id IN
+			<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+				#{var}
+			</foreach>
+		</if>
+
+		<if test="sealStartDate != null">
+			<![CDATA[AND DATE_FORMAT(s.seal_date, '%Y-%m-%d') >= DATE_FORMAT(#{sealStartDate}, '%Y-%m-%d') ]]>
+		</if>
+		<if test="sealEndDate != null">
+			<![CDATA[AND DATE_FORMAT(s.seal_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{sealEndDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+		</if>
+
+	</select>
+	
+	<select id="findWorkTarget" resultType="com.spt.bas.report.client.entity.RptFactBisBusinessWorkTargetResultVo">
+		SELECT
+		SUM(IFNULL(w.target_total_amount,0)) targetTotalAmount
+		FROM work_target w
+		<where>
+			<if test="monthList != null and monthList.size > 0 ">
+				and w.target_month IN
+				<foreach collection="monthList"  item="var" index="index" open="(" close=")" separator=",">
+					#{var}
+				</foreach>
+			</if>
+			<if test="branchCdList != null and branchCdList.size > 0 ">
+				and w.branch_cd IN
+				<foreach collection="branchCdList"  item="var" index="index" open="(" close=")" separator=",">
+					#{var}
+				</foreach>
+			</if>
+			<if test="targetType != null and targetType != ''">
+				and w.target_type = #{targetType}
+			</if>
+
+		</where>
+	</select>
+
+	<select id="findHumanResourceCostsAnalysis" resultType="com.spt.bas.report.client.entity.RptFactBisHumanResourceCostsAnalysisVo">
+		select t1.recruitmentCosts,
+		t2.trainingCosts,
+		t3.rentPropertyCosts,
+		t4.officeCosts,
+		t5.businessEntertainmentCosts
+		
+		from 
+			(SELECT
+			SUM(IFNULL(bp.deal_amount,0)) recruitmentCosts
+			FROM
+			t_apply_business_pay bp
+			LEFT JOIN t_pm_approve pa ON pa.id = bp.approve_id
+			LEFT JOIN t_pm_process pp ON pp.id = pa.process_id
+			<where>
+				bp.status = 'D'
+				AND process_code = 'APPLY_MANAGE_BUSINESS_PAY'
+				AND bp.cost_type = '22'
+				<if test="deptIdList != null and deptIdList.size > 0 ">
+					and bp.dept_id IN
+					<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="startDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{startDate}, '%Y-%m-%d') ]]>
+				</if>
+				<if test="endDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{endDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+				</if>
+			</where>
+			) t1,
+			(SELECT
+			SUM(IFNULL(bp.deal_amount,0)) trainingCosts
+			FROM
+			t_apply_business_pay bp
+			LEFT JOIN t_pm_approve pa ON pa.id = bp.approve_id
+			LEFT JOIN t_pm_process pp ON pp.id = pa.process_id
+			<where>
+				bp.status = 'D'
+				AND process_code = 'APPLY_MANAGE_BUSINESS_PAY'
+				AND bp.cost_type = '23'
+				<if test="deptIdList != null and deptIdList.size > 0 ">
+					and bp.dept_id IN
+					<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="startDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{startDate}, '%Y-%m-%d') ]]>
+				</if>
+				<if test="endDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{endDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+				</if>
+			</where>
+			) t2,
+			(
+				SELECT
+				IFNULL(t31.rentPropertyCosts1, 0) + IFNULL(t32.rentPropertyCosts2, 0) AS rentPropertyCosts
+				FROM
+				(
+				SELECT SUM(IFNULL(bp.deal_amount,0)) AS rentPropertyCosts1
+				FROM t_apply_business_pay bp
+				LEFT JOIN t_pm_approve pa ON pa.id = bp.approve_id
+				LEFT JOIN t_pm_process pp ON pp.id = pa.process_id
+				WHERE
+				bp.status = 'D'
+				AND pp.process_code = 'APPLY_MANAGE_BUSINESS_PAY'
+				AND bp.cost_type IN ('4','5','6')
+				<if test="userIdList != null and userIdList.size > 0 ">
+					and bp.apply_user_id IN
+					<foreach collection="userIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="startDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{startDate}, '%Y-%m-%d') ]]>
+				</if>
+				<if test="endDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{endDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+				</if>
+				) t31,
+				(
+				SELECT SUM(IFNULL(bp.deal_amount,0)) AS rentPropertyCosts2
+				FROM t_apply_business_pay bp
+				LEFT JOIN t_pm_approve pa ON pa.id = bp.approve_id
+				LEFT JOIN t_pm_process pp ON pp.id = pa.process_id
+				WHERE
+				bp.status = 'D'
+				AND pp.process_code = 'APPLY_OPERATING_BUSINESS_PAY'
+				AND bp.cost_type IN ('5','18','23')
+				<if test="userIdList != null and userIdList.size > 0 ">
+					and bp.apply_user_id IN
+					<foreach collection="userIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="startDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{startDate}, '%Y-%m-%d') ]]>
+				</if>
+				<if test="endDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{endDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+				</if>
+				) t32
+			) t3,
+			(
+				SELECT
+				IFNULL(t41.officeCosts1, 0) + IFNULL(t42.officeCosts2, 0) AS officeCosts
+				FROM
+				(
+				SELECT SUM(IFNULL(bp.deal_amount,0)) AS officeCosts1
+				FROM t_apply_business_pay bp
+				LEFT JOIN t_pm_approve pa ON pa.id = bp.approve_id
+				LEFT JOIN t_pm_process pp ON pp.id = pa.process_id
+				WHERE
+				bp.status = 'D'
+				AND pp.process_code = 'APPLY_MANAGE_BUSINESS_PAY'
+				AND bp.cost_type IN ('7','8')
+				<if test="deptIdList != null and deptIdList.size > 0 ">
+					and bp.dept_id IN
+					<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="startDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{startDate}, '%Y-%m-%d') ]]>
+				</if>
+				<if test="endDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{endDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+				</if>
+				) t41,
+				(
+				SELECT SUM(IFNULL(bp.deal_amount,0)) AS officeCosts2
+				FROM t_apply_business_pay bp
+				LEFT JOIN t_pm_approve pa ON pa.id = bp.approve_id
+				LEFT JOIN t_pm_process pp ON pp.id = pa.process_id
+				WHERE
+				bp.status = 'D'
+				AND pp.process_code = 'APPLY_OPERATING_BUSINESS_PAY'
+				AND bp.cost_type IN ('19','20')
+				<if test="deptIdList != null and deptIdList.size > 0 ">
+					and bp.dept_id IN
+					<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="startDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{startDate}, '%Y-%m-%d') ]]>
+				</if>
+				<if test="endDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{endDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+				</if>
+				) t42
+			) t4,
+			(
+				SELECT
+				IFNULL(t51.businessEntertainmentCosts1, 0) + IFNULL(t52.businessEntertainmentCosts2, 0) AS businessEntertainmentCosts
+				FROM
+				(
+				SELECT SUM(IFNULL(bp.deal_amount,0)) AS businessEntertainmentCosts1
+				FROM t_apply_business_pay bp
+				LEFT JOIN t_pm_approve pa ON pa.id = bp.approve_id
+				LEFT JOIN t_pm_process pp ON pp.id = pa.process_id
+				WHERE
+				bp.status = 'D'
+				AND pp.process_code = 'APPLY_MANAGE_BUSINESS_PAY'
+				AND bp.cost_type IN ('12','13')
+				<if test="deptIdList != null and deptIdList.size > 0 ">
+					and bp.dept_id IN
+					<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="notUserIdList != null and notUserIdList.size > 0 ">
+					and bp.apply_user_id NOT IN
+					<foreach collection="notUserIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="startDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{startDate}, '%Y-%m-%d') ]]>
+				</if>
+				<if test="endDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{endDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+				</if>
+				) t51,
+				(
+				SELECT SUM(IFNULL(bp.deal_amount,0)) AS businessEntertainmentCosts2
+				FROM t_apply_business_pay bp
+				LEFT JOIN t_pm_approve pa ON pa.id = bp.approve_id
+				LEFT JOIN t_pm_process pp ON pp.id = pa.process_id
+				WHERE
+				bp.status = 'D'
+				AND pp.process_code = 'APPLY_OPERATING_BUSINESS_PAY'
+				AND bp.cost_type IN ('6','8','21')
+				<if test="deptIdList != null and deptIdList.size > 0 ">
+					and bp.dept_id IN
+					<foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="notUserIdList != null and notUserIdList.size > 0 ">
+					and bp.apply_user_id NOT IN
+					<foreach collection="notUserIdList"  item="var" index="index" open="(" close=")" separator=",">
+						#{var}
+					</foreach>
+				</if>
+				<if test="startDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') >= DATE_FORMAT(#{startDate}, '%Y-%m-%d') ]]>
+				</if>
+				<if test="endDate != null">
+					<![CDATA[AND DATE_FORMAT(bp.request_pay_date, '%Y-%m-%d') <= DATE_ADD(DATE_FORMAT(#{endDate}, '%Y-%m-%d'),INTERVAL 1 DAY) ]]>
+				</if>
+				) t52
+			) t5
+		                               
+			
+
+
+	</select>
+
+</mapper>
