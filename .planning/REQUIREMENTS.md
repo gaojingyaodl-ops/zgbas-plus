@@ -61,7 +61,7 @@
 
 - [ ] **BIZ-01**: 合同/授信/库存/放款等核心供应链业务（源 basServer JPA）迁入 `zgbas-system`
 - [ ] **BIZ-02**: 业务 Controller / BFF（源 web）迁入 `zgbas-admin`
-- [ ] **BIZ-03**: 业务间原 Feign 调用改为同进程 Service 直调，行为等价
+- [x] **BIZ-03**: 业务间原 Feign 调用改为同进程 Service 直调，行为等价
 
 ### 报表迁移 (REPORT)
 
@@ -124,7 +124,7 @@
 | AUTH-04 | Phase 3 | Complete |
 | BIZ-01 | Phase 4 | Pending |
 | BIZ-02 | Phase 4 | Pending |
-| BIZ-03 | Phase 4 | Pending |
+| BIZ-03 | Phase 4 | Complete |
 | REPORT-01 | Phase 5 | Pending |
 | REPORT-02 | Phase 5 | Pending |
 | PERSIST-02 | Phase 5 | Pending |

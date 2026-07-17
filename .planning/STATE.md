@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Phase 4 context gathered
-last_updated: "2026-07-17T01:56:57.928Z"
-last_activity: 2026-07-17 -- Phase 4 planning complete
+last_updated: "2026-07-17T03:34:57.869Z"
+last_activity: 2026-07-17
 progress:
   total_phases: 7
   completed_phases: 3
   total_plans: 17
-  completed_plans: 11
+  completed_plans: 12
   percent: 43
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 单进程启动即可跑通全部供应链业务（登录 → 核心业务 → 报表 → 定时任务），行为对齐旧系统 zgbas
-**Current focus:** Phase 4 — 核心业务迁移
+**Current focus:** Phase 04 — core-business
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
+Phase: 04 (core-business) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-07-17 -- Phase 4 planning complete
+Last activity: 2026-07-17
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 71%
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Progress: [██████████] 100%
 | Phase 03 P02 | 4 | 2 tasks | 10 files |
 | Phase 03 P03 | 2 | 2 tasks | 2709 files |
 | Phase 03 P04 | 12 | 2 tasks | 3 files |
+| Phase 04 P01 | 10min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,10 @@ Recent decisions affecting current work:
 - [Phase ?]: WebSocketServer @OnOpen stub via comment-out (Phase 4 IApproveWaitDealClient) + full frontend 608 templates/742 JS-CSS copied
 - [Phase 03-04]: D-P3-13 startup gate — 14-test @SpringBootTest(RANDOM_PORT) proves Shiro beans wire + endpoints reachable, BUT ⚠ NON-HERMETIC: clean `mvn test` ERRORS (Could not resolve placeholder 'SPT_APP_SECRET'); passes only with `DB_PASSWORD`+`SPT_APP_SECRET` exported locally (03-01 un-excluded ToolsShiroConfig → authOpenFacade became eager startup dep; dev placeholders have no default). Accepted per user Option 4 (local-export = passing)
 - [Phase ?]: Prod auth config externalized: mock-backdoor OFF in prod (empty placeholder), thymeleaf.cache=true (03-04)
+- [Phase ?]: Phase 4 D-P4-01 方案 A 落地: 放宽 @EnableFeignClients 扫 com.spt.bas.client.remote + basServerConfig bean + spt.bas.server.url=localhost:8080 让 238 契约 SpEL 自回环到本进程 (04-01)
+- [Phase ?]: Phase 4 D-P4-01a path 前缀: BasFeignPathConfig.basServerPathStripper RequestInterceptor 剥离 spt-bas-server/ 前缀, 不设单体 context-path 保 Phase 3 AUTH-03 Shiro 根路径链 (04-01)
+- [Phase ?]: Phase 4 D-P4-04 rocketmq: rocketmq-spring-boot-starter:2.2.2 在 zgbas-system pom 声明 (源 basCore/pom.xml verbatim); 懒连接启动验证不阻塞; dev yml 占位带默认, prod 全占位 D-P2-13 (04-01)
+- [Phase ?]: Phase 4 WR-02 占位脚手架: ZgbasApplicationTest 扩 4 @Disabled (Wave 3/4 移除后激活) + 1 feignSelfLoopbackWiring_probe Wave 0 即运行 (fail-fast 验 D-P4-01/01a); 现 19 test 14 旧+5 新全绿 (04-01)
 
 ### Pending Todos
 
@@ -101,6 +106,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-16T16:19:55.627Z
+Last session: 2026-07-17T03:34:57.863Z
 Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-core-business/04-CONTEXT.md
+Resume file: None

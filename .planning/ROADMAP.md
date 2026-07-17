@@ -115,7 +115,7 @@ Plans:
 Plans:
 **Wave 0** *(前置接线，无阻塞)*
 
-- [ ] 04-01-PLAN.md — D-P4-01 方案 A Feign 自回环接线 + D-P4-01a path 前缀剥离 + rocketmq pom/yml + WR-02 验收脚手架
+- [x] 04-01-PLAN.md — D-P4-01 方案 A Feign 自回环接线 + D-P4-01a path 前缀剥离 + rocketmq pom/yml + WR-02 验收脚手架
 
 **Wave 1** *(blocked on Wave 0)*
 
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
-| 4. 核心业务迁移 | 0/TBD | Not started | - |
+| 4. 核心业务迁移 | 1/6 | In Progress|  |
 | 5. 报表迁移 | 0/TBD | Not started | - |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
