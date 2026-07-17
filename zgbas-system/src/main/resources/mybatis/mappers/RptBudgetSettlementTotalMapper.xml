@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptBudgetSettlementTotalMapper">
+
+	<select id="findSettlementTotalList" resultType="com.spt.bas.report.client.vo.RptBudgetSettlementTotalVo">
+	SELECT
+		distinct extract(year_month from s.summary_date) settlementDate,
+		s.sell_match_user_id matchUserId,
+		sum(s.sell_match_amount) sellMatchAmount,
+		sum(s.buy_match_amount) buyMatchAmount,
+		sum(s.sell_head_commission_amount) sellHeadCommissionAmount,
+		sum(s.buy_head_commission_amount) buyHeadCommissionAmount
+		FROM t_ctr_contract_settlement s where s.settle_status = '2' and  s.business_type = 'ZY-BB'
+		and s.match_credit_flg =  #{matchCreditFlg}
+		and s.settle_total_flg = false
+	GROUP BY s.sell_match_user_id, extract(year_month from s.summary_date)
+
+	</select>
+
+	<select id="findDCTotalList" resultType="com.spt.bas.report.client.vo.RptBudgetSettlementTotalVo">
+	SELECT
+		IFNULL(extract(year_month from s.summary_date),0) settlementDate,
+		s.sell_match_user_id matchUserId,
+		IFNULL(sum(s.sell_match_amount),0) sellMatchAmount,
+		IFNULL(sum(s.buy_match_amount),0) buyMatchAmount,
+		IFNULL(sum(s.sell_head_commission_amount),0) sellHeadCommissionAmount,
+		IFNULL(sum(s.buy_head_commission_amount),0) buyHeadCommissionAmount
+		FROM t_ctr_contract_settlement s where s.settle_status = '2' and  s.business_type = 'ZY-BB'
+		and s.settle_total_flg = false
+		and s.match_credit_flg =  #{matchCreditFlg}
+		and s.sell_match_user_id = #{matchUserId}
+		and extract(year_month from s.summary_date) = #{settlementDate}
+	GROUP BY s.sell_match_user_id, extract(year_month from s.summary_date)
+
+	</select>
+
+
+	<select id="findSettleListId" resultType="java.lang.Long">
+		SELECT
+		s.id
+		FROM t_ctr_contract_settlement s where s.settle_status = '2' and  s.business_type = 'ZY-BB'
+		and s.settle_total_flg = false
+		and s.match_credit_flg =  #{matchCreditFlg}
+		<if test="matchUserId != null and matchUserId != '' ">
+			and s.sell_match_user_id = #{matchUserId}
+		</if>
+		<if test="settlementDate != null and settlementDate != '' ">
+			and extract(year_month from s.summary_date) = #{settlementDate}
+		</if>
+
+	</select>
+
+
+</mapper>

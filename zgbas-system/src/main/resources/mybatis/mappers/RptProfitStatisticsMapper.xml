@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptProfitStatisticsMapper">
+
+    <sql id="Where_SearchVo">
+        <if test="deptIdList != null and deptIdList.size() > 0">
+            and sell.dept_id in
+            <foreach collection="deptIdList"  item="var" index="index" open="(" close=")" separator=",">
+                #{deptIdList[${index}],jdbcType=VARCHAR}
+            </foreach>
+        </if>
+    </sql>
+    
+    <select id="getRptProfitStatistics" resultType="com.spt.bas.report.client.entity.RptProfitStatistics">
+        SELECT 
+               ROUND(ifNULL(dc.total_sell_amount,0)/1.13,3) AS monthDcBusinessIncome,
+               ROUND(ifNULL(dcYear.total_sell_amount,0)/1.13,3) AS yearDcBusinessIncome,
+               ROUND(ifNULL(dcsx.total_sell_amount,0)/1.13,3) AS monthDcsxBusinessIncome,
+               ROUND(ifNULL(dcsxYear.total_sell_amount,0)/1.13,3) AS yearDcsxBusinessIncome,
+               ROUND(ifNULL(dc.total_buy_amount,0)/1.13,3)  AS monthDcBusinessCosts,
+               ROUND(ifNULL(dcYear.total_buy_amount,0)/1.13,3)  AS yearDcBusinessCosts,
+               ROUND(ifNULL(dcsx.total_buy_amount,0)/1.13,3)  AS monthDcsxBusinessCosts,
+               ROUND(ifNULL(dcsxYear.total_buy_amount,0)/1.13,3)  AS yearDcsxBusinessCosts,
+               ROUND((ifNULL(dc.total_transport_amount,0)+ifNULL(dcsx.total_transport_amount,0))/1.09,3) AS monthTransportFee,
+               ROUND((ifNULL(dcYear.total_transport_amount,0)+ifNULL(dcsxYear.total_transport_amount,0))/1.09,3) AS yearTransportFee,
+               ROUND((ifNULL(dc.total_warehouse_amount,0)+ifNULL(dcsx.total_warehouse_amount,0))/1.06,3) AS monthWarehouseAmount,
+               ROUND((ifNULL(dcYear.total_warehouse_amount,0)+ifNULL(dcsxYear.total_warehouse_amount,0))/1.06,3) AS yearWarehouseAmount,
+               ROUND(ifNULL(dcsx.financialServiceAmountSum,0),3) AS monthFinancialServiceAmount,
+               ROUND(ifNULL(dcsxYear.financialServiceAmountSum,0),3) AS yearFinancialServiceAmount,
+               ROUND((ifNULL(dcsx.financialServiceAmountSum,0)+ifNULL(dcsx.dcsxOverdueInterestSum,0))/1.13,3) AS monthCapitalCost,
+               ROUND((ifNULL(dcsxYear.financialServiceAmountSum,0)+ifNULL(dcsxYear.dcsxOverdueInterestSum,0))/1.13,3) AS yearCapitalCost,
+               ROUND(ifNULL(disMonth.monthDiscountCost,0),3) AS monthDiscountCost,
+               ROUND(ifNULL(disYear.yearDiscountCost,0),3) AS yearDiscountCost,
+               ROUND(ifNULL(dc.monthInsuranceFee,0) + ifNULL(dcsx.monthInsuranceFee,0),3) AS monthInsuranceFee,
+               ROUND(ifNULL(dcYear.yearInsuranceFee,0) + ifNULL(dcsxYear.yearInsuranceFee,0),3) AS yearInsuranceFee,
+               ROUND(ifNULL(dc.monthTaxes,0) + ifNULL(dcsx.monthTaxes,0),3) AS monthTaxes,
+               ROUND(ifNULL(dcYear.yearTaxes,0) + ifNULL(dcsxYear.yearTaxes,0),3) AS yearTaxes,
+               ROUND(ifNULL(baseCostMonth.monthPersonCost,0),3) AS monthPersonCost,
+               ROUND(ifNULL(baseCostYear.yearPersonCost,0),3) AS yearPersonCost,
+               ROUND(ifNULL(baseCostMonth.monthTravelExpensesFee,0),3) AS monthTravelExpensesFee,
+               ROUND(ifNULL(baseCostYear.yearTravelExpensesFee,0),3) AS yearTravelExpensesFee,
+               ROUND(ifNULL(baseCostMonth.monthOtherFee,0),3) AS monthOtherFee,
+               ROUND(ifNULL(baseCostYear.yearOtherFee,0),3) AS yearOtherFee
+               
+        FROM (
+            -- 代采（本月）
+            SELECT SUM(buy.total_amount)  AS total_buy_amount,
+                     SUM(sell.total_amount) AS total_sell_amount,
+                     SUM(ifNULL(buy.transport_amount,0) + ifNULL(sell.transport_amount,0)) total_transport_amount,
+                     SUM(ifNULL(buy.warehouse_amount,0) + ifNULL(sell.warehouse_amount,0)
+                         + ifNULL(buy.delivery_fee,0) + ifNULL(sell.delivery_fee,0)
+                         + ifNULL(buy.stevedorage,0) + ifNULL(sell.stevedorage,0)
+                     ) total_warehouse_amount,
+                     SUM((sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06) monthInsuranceFee,
+                     SUM(GREATEST(0,(
+                        (sell.total_amount-buy.total_amount)/1.13*0.13
+                        - (buy.transport_amount+sell.transport_amount)/1.09*0.09
+                        - (buy.warehouse_amount+buy.delivery_fee+buy.stevedorage+sell.warehouse_amount+sell.delivery_fee+sell.stevedorage)/1.06*0.06
+                        - (sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06
+                    )*0.12) + sell.total_amount/1.13*0.0003) monthTaxes
+              FROM t_ctr_contract_settlement r
+                       INNER JOIN t_ctr_contract buy ON buy.id = r.buy_contract_id
+                       INNER JOIN t_ctr_contract sell ON sell.id = r.sell_contract_id
+              WHERE sell.business_type = 'ZY-BB'
+                AND sell.match_credit_flg = FALSE
+                AND buy.seal_flg = TRUE
+                AND sell.seal_flg = TRUE
+                AND buy.STATUS != 'C' 
+                AND sell.STATUS != 'C'
+                AND sell.contract_time
+                AND DATE_FORMAT(sell.contract_time,'%Y-%m') = #{searchMonth}
+                <include refid="Where_SearchVo"/>
+             ) AS dc,
+             -- 代采（本年）
+             (SELECT SUM(buy.total_amount)  AS total_buy_amount,
+                     SUM(sell.total_amount) AS total_sell_amount,
+                     SUM(ifNULL(buy.transport_amount,0) + ifNULL(sell.transport_amount,0)) total_transport_amount,
+                     SUM(ifNULL(buy.warehouse_amount,0) + ifNULL(sell.warehouse_amount,0)
+                         + ifNULL(buy.delivery_fee,0) + ifNULL(sell.delivery_fee,0)
+                         + ifNULL(buy.stevedorage,0) + ifNULL(sell.stevedorage,0)
+                     ) total_warehouse_amount,
+                     SUM((sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06) yearInsuranceFee,
+                     SUM(GREATEST(0,(
+                        (sell.total_amount-buy.total_amount)/1.13*0.13
+                        - (buy.transport_amount+sell.transport_amount)/1.09*0.09
+                        - (buy.warehouse_amount+buy.delivery_fee+buy.stevedorage+sell.warehouse_amount+sell.delivery_fee+sell.stevedorage)/1.06*0.06
+                        - (sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06
+                    )*0.12) + sell.total_amount/1.13*0.0003) yearTaxes
+              FROM t_ctr_contract_settlement r
+                       INNER JOIN t_ctr_contract buy ON buy.id = r.buy_contract_id
+                       INNER JOIN t_ctr_contract sell ON sell.id = r.sell_contract_id
+              WHERE sell.business_type = 'ZY-BB'
+                AND sell.match_credit_flg = FALSE
+                AND buy.seal_flg = TRUE
+                AND sell.seal_flg = TRUE
+                AND buy.STATUS != 'C' 
+                AND sell.STATUS != 'C'
+                AND sell.contract_time
+                AND DATE_FORMAT(sell.contract_time,'%Y') = #{searchYear}
+                <include refid="Where_SearchVo"/>
+             ) AS dcYear,
+             -- 代采赊销（本月）
+             (SELECT SUM(buy.total_amount)  AS total_buy_amount,
+                     SUM(sell.total_amount) AS total_sell_amount,
+                     SUM(ifNULL(buy.transport_amount,0) + ifNULL(sell.transport_amount,0)) total_transport_amount,
+                     SUM(ifNULL(buy.warehouse_amount,0) + ifNULL(sell.warehouse_amount,0)
+                             + ifNULL(buy.delivery_fee,0) + ifNULL(sell.delivery_fee,0)
+                             + ifNULL(buy.stevedorage,0) + ifNULL(sell.stevedorage,0)
+                     ) total_warehouse_amount,
+                     SUM(if(our.company_name is NULL, sell.total_amount - dcsx.total_amount, dcsx.total_amount-buy.total_amount)) financialServiceAmountSum,
+                     SUM(IFNULL((sell.breach_amount*sell.breach_days*0.1)/365,0) - IFNULL(sell.receive_breach_amount,0)) dcsxOverdueInterestSum,
+                     SUM((sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06) monthInsuranceFee,
+                     SUM(GREATEST(0,(
+                        (if(our.company_name is NULL, dcsx.total_amount - buy.total_amount, sell.total_amount-dcsx.total_amount))/1.13*0.13
+                        - (buy.transport_amount+sell.transport_amount)/1.09*0.09
+                        - (buy.warehouse_amount+buy.delivery_fee+buy.stevedorage+sell.warehouse_amount+sell.delivery_fee+sell.stevedorage)/1.06*0.06
+                        - (if(our.company_name is NULL, dcsx.total_amount, sell.total_amount)*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06
+                    )*0.12) + if(our.company_name is NULL, dcsx.total_amount, sell.total_amount)/1.13*0.0003) monthTaxes
+              FROM t_ctr_contract_settlement r
+                       INNER JOIN t_ctr_contract buy ON buy.id = r.buy_contract_id
+                       INNER JOIN t_ctr_contract sell ON sell.id = r.sell_contract_id
+                       LEFT JOIN t_ctr_dcsx dcsx ON dcsx.approve_id = buy.approve_id
+                       LEFT JOIN t_bs_company_our our ON dcsx.our_company_name = our.company_name AND our.our_company_flag=TRUE
+                       LEFT JOIN t_bs_company_our our2 ON dcsx.company_name = our2.company_name AND our2.our_company_flag=TRUE
+              WHERE sell.business_type = 'ZY-BB'
+                AND sell.match_credit_flg = TRUE
+                AND sell.business_type_dcsx IN ('DCSXBL', 'DCSX', 'DCSXHDFK')
+                AND buy.seal_flg = TRUE
+                AND sell.seal_flg = TRUE
+                AND buy.STATUS != 'C' 
+                AND sell.STATUS != 'C'
+                AND DATE_FORMAT(sell.contract_time,'%Y-%m') = #{searchMonth}
+                <include refid="Where_SearchVo"/>
+             ) AS dcsx,
+             -- 代采赊销（本年）
+             (SELECT SUM(buy.total_amount)  AS total_buy_amount,
+                     SUM(sell.total_amount) AS total_sell_amount,
+                     SUM(ifNULL(buy.transport_amount,0) + ifNULL(sell.transport_amount,0)) total_transport_amount,
+                     SUM(ifNULL(buy.warehouse_amount,0) + ifNULL(sell.warehouse_amount,0)
+                         + ifNULL(buy.delivery_fee,0) + ifNULL(sell.delivery_fee,0)
+                         + ifNULL(buy.stevedorage,0) + ifNULL(sell.stevedorage,0)
+                     ) total_warehouse_amount,
+                     SUM(if(our.company_name is NULL, sell.total_amount - dcsx.total_amount, dcsx.total_amount-buy.total_amount)) financialServiceAmountSum,
+                     SUM(IFNULL((sell.breach_amount*sell.breach_days*0.1)/365,0) - IFNULL(sell.receive_breach_amount,0)) dcsxOverdueInterestSum,
+                     SUM((sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06) yearInsuranceFee,
+                     SUM(GREATEST(0,(
+                            (if(our.company_name is NULL, dcsx.total_amount - buy.total_amount, sell.total_amount-dcsx.total_amount))/1.13*0.13
+                          - (buy.transport_amount+sell.transport_amount)/1.09*0.09
+                          - (buy.warehouse_amount+buy.delivery_fee+buy.stevedorage+sell.warehouse_amount+sell.delivery_fee+sell.stevedorage)/1.06*0.06
+                          - (if(our.company_name is NULL, dcsx.total_amount, sell.total_amount)*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06
+                      )*0.12) + if(our.company_name is NULL, dcsx.total_amount, sell.total_amount)/1.13*0.0003) yearTaxes
+              FROM t_ctr_contract_settlement r
+                       INNER JOIN t_ctr_contract buy ON buy.id = r.buy_contract_id
+                       INNER JOIN t_ctr_contract sell ON sell.id = r.sell_contract_id
+                       LEFT JOIN t_ctr_dcsx dcsx ON dcsx.approve_id = buy.approve_id
+                       LEFT JOIN t_bs_company_our our ON dcsx.our_company_name = our.company_name AND our.our_company_flag=TRUE
+                       LEFT JOIN t_bs_company_our our2 ON dcsx.company_name = our2.company_name AND our2.our_company_flag=TRUE
+              WHERE sell.business_type = 'ZY-BB'
+                AND sell.match_credit_flg = TRUE
+                AND sell.business_type_dcsx IN ('DCSXBL', 'DCSX', 'DCSXHDFK')
+                AND buy.seal_flg = TRUE
+                AND sell.seal_flg = TRUE
+                AND buy.STATUS != 'C' 
+                AND sell.STATUS != 'C'
+                AND DATE_FORMAT(sell.contract_time,'%Y') = #{searchYear}
+                <include refid="Where_SearchVo"/>
+             ) AS dcsxYear,
+             -- 贴现成本（本月）             
+             (SELECT SUM(IFNULL(ar.discount_amount, 0)) monthDiscountCost
+              FROM t_apply_receive ar
+              WHERE contract_id is NULL
+                AND apply_no is NULL
+                AND status = 'D'
+                AND DATE_FORMAT(ar.receive_date, '%Y-%m') = #{searchMonth}
+              ) AS disMonth,
+             -- 贴现成本（本年）
+             (SELECT SUM(IFNULL(ar.discount_amount, 0)) yearDiscountCost
+              FROM t_apply_receive ar
+              WHERE contract_id is NULL
+                AND apply_no is NULL
+                AND status = 'D'
+                AND DATE_FORMAT(ar.receive_date, '%Y') = #{searchYear}
+            ) AS disYear,
+             -- 业务成本（本月）
+             (SELECT SUM(IFNULL(wages, 0) + IFNULL(social_security, 0) + IFNULL(provident_fund, 0) + IFNULL(commission, 0)) monthPersonCost,
+                     SUM(IFNULL(evection_cost, 0))                         monthTravelExpensesFee,
+                     SUM(IFNULL(other_cost, 0))                            monthOtherFee
+              FROM t_rpt_base_cost
+              WHERE base_date = #{searchMonth}
+             ) AS baseCostMonth,
+             -- 业务成本（本年）
+             (SELECT SUM(IFNULL(total_cost, 0) - IFNULL(evection_cost, 0)) yearPersonCost,
+                     SUM(IFNULL(evection_cost, 0))                         yearTravelExpensesFee,
+                     SUM(IFNULL(other_cost, 0))                            yearOtherFee
+              FROM t_rpt_base_cost
+              WHERE base_date LIKE CONCAT('%',#{searchYear},'%')
+             ) AS baseCostYear;
+    </select>
+
+
+    <select id="getRptProfitStatisticsByRealPayFullTime" resultType="com.spt.bas.report.client.entity.RptProfitStatistics">
+        SELECT
+        ROUND(ifNULL(dc.total_sell_amount,0)/1.13,3) AS monthDcBusinessIncome,
+        ROUND(ifNULL(dcYear.total_sell_amount,0)/1.13,3) AS yearDcBusinessIncome,
+        ROUND(ifNULL(dcsx.total_sell_amount,0)/1.13,3) AS monthDcsxBusinessIncome,
+        ROUND(ifNULL(dcsxYear.total_sell_amount,0)/1.13,3) AS yearDcsxBusinessIncome,
+        ROUND(ifNULL(dc.total_buy_amount,0)/1.13,3)  AS monthDcBusinessCosts,
+        ROUND(ifNULL(dcYear.total_buy_amount,0)/1.13,3)  AS yearDcBusinessCosts,
+        ROUND(ifNULL(dcsx.total_buy_amount,0)/1.13,3)  AS monthDcsxBusinessCosts,
+        ROUND(ifNULL(dcsxYear.total_buy_amount,0)/1.13,3)  AS yearDcsxBusinessCosts,
+        ROUND((ifNULL(dc.total_transport_amount,0)+ifNULL(dcsx.total_transport_amount,0))/1.09,3) AS monthTransportFee,
+        ROUND((ifNULL(dcYear.total_transport_amount,0)+ifNULL(dcsxYear.total_transport_amount,0))/1.09,3) AS yearTransportFee,
+        ROUND((ifNULL(dc.total_warehouse_amount,0)+ifNULL(dcsx.total_warehouse_amount,0))/1.06,3) AS monthWarehouseAmount,
+        ROUND((ifNULL(dcYear.total_warehouse_amount,0)+ifNULL(dcsxYear.total_warehouse_amount,0))/1.06,3) AS yearWarehouseAmount,
+        ROUND(ifNULL(dcsx.financialServiceAmountSum,0),3) AS monthFinancialServiceAmount,
+        ROUND(ifNULL(dcsxYear.financialServiceAmountSum,0),3) AS yearFinancialServiceAmount,
+        ROUND((ifNULL(dcsx.financialServiceAmountSum,0)+ifNULL(dcsx.dcsxOverdueInterestSum,0))/1.13,3) AS monthCapitalCost,
+        ROUND((ifNULL(dcsxYear.financialServiceAmountSum,0)+ifNULL(dcsxYear.dcsxOverdueInterestSum,0))/1.13,3) AS yearCapitalCost,
+        ROUND(ifNULL(disMonth.monthDiscountCost,0),3) AS monthDiscountCost,
+        ROUND(ifNULL(disYear.yearDiscountCost,0),3) AS yearDiscountCost,
+        ROUND(ifNULL(dc.monthInsuranceFee,0) + ifNULL(dcsx.monthInsuranceFee,0),3) AS monthInsuranceFee,
+        ROUND(ifNULL(dcYear.yearInsuranceFee,0) + ifNULL(dcsxYear.yearInsuranceFee,0),3) AS yearInsuranceFee,
+        ROUND(ifNULL(dc.monthTaxes,0) + ifNULL(dcsx.monthTaxes,0),3) AS monthTaxes,
+        ROUND(ifNULL(dcYear.yearTaxes,0) + ifNULL(dcsxYear.yearTaxes,0),3) AS yearTaxes,
+        ROUND(ifNULL(baseCostMonth.monthPersonCost,0),3) AS monthPersonCost,
+        ROUND(ifNULL(baseCostYear.yearPersonCost,0),3) AS yearPersonCost,
+        ROUND(ifNULL(baseCostMonth.monthTravelExpensesFee,0),3) AS monthTravelExpensesFee,
+        ROUND(ifNULL(baseCostYear.yearTravelExpensesFee,0),3) AS yearTravelExpensesFee,
+        ROUND(ifNULL(baseCostMonth.monthOtherFee,0),3) AS monthOtherFee,
+        ROUND(ifNULL(baseCostYear.yearOtherFee,0),3) AS yearOtherFee
+
+        FROM (
+        -- 代采（本月）
+        SELECT SUM(buy.total_amount)  AS total_buy_amount,
+        SUM(sell.total_amount) AS total_sell_amount,
+        SUM(ifNULL(buy.transport_amount,0) + ifNULL(sell.transport_amount,0)) total_transport_amount,
+        SUM(ifNULL(buy.warehouse_amount,0) + ifNULL(sell.warehouse_amount,0)
+        + ifNULL(buy.delivery_fee,0) + ifNULL(sell.delivery_fee,0)
+        + ifNULL(buy.stevedorage,0) + ifNULL(sell.stevedorage,0)
+        ) total_warehouse_amount,
+        SUM((sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06) monthInsuranceFee,
+        SUM(ifNULL(r.surcharge_amount,0) + ifNULL(r.print_amount,0)) monthTaxes
+        FROM t_ctr_contract_settlement r
+        INNER JOIN t_ctr_contract buy ON buy.id = r.buy_contract_id
+        INNER JOIN t_ctr_contract sell ON sell.id = r.sell_contract_id
+        WHERE sell.business_type = 'ZY-BB'
+        AND sell.match_credit_flg = FALSE
+        AND buy.seal_flg = TRUE
+        AND sell.seal_flg = TRUE
+        AND buy.STATUS != 'C'
+        AND sell.STATUS != 'C'
+        AND sell.contract_time
+        AND DATE_FORMAT(r.receive_date,'%Y-%m') = #{searchMonth}
+        <include refid="Where_SearchVo"/>
+        ) AS dc,
+        -- 代采（本年）
+        (SELECT SUM(buy.total_amount)  AS total_buy_amount,
+        SUM(sell.total_amount) AS total_sell_amount,
+        SUM(ifNULL(buy.transport_amount,0) + ifNULL(sell.transport_amount,0)) total_transport_amount,
+        SUM(ifNULL(buy.warehouse_amount,0) + ifNULL(sell.warehouse_amount,0)
+        + ifNULL(buy.delivery_fee,0) + ifNULL(sell.delivery_fee,0)
+        + ifNULL(buy.stevedorage,0) + ifNULL(sell.stevedorage,0)
+        ) total_warehouse_amount,
+        SUM((sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06) yearInsuranceFee,
+        SUM(ifNULL(r.surcharge_amount,0) + ifNULL(r.print_amount,0)) yearTaxes
+        FROM t_ctr_contract_settlement r
+        INNER JOIN t_ctr_contract buy ON buy.id = r.buy_contract_id
+        INNER JOIN t_ctr_contract sell ON sell.id = r.sell_contract_id
+        WHERE sell.business_type = 'ZY-BB'
+        AND sell.match_credit_flg = FALSE
+        AND buy.seal_flg = TRUE
+        AND sell.seal_flg = TRUE
+        AND buy.STATUS != 'C'
+        AND sell.STATUS != 'C'
+        AND sell.contract_time
+        AND DATE_FORMAT(r.receive_date,'%Y') = #{searchYear}
+        <include refid="Where_SearchVo"/>
+        ) AS dcYear,
+        -- 代采赊销（本月）
+        (SELECT SUM(buy.total_amount)  AS total_buy_amount,
+        SUM(sell.total_amount) AS total_sell_amount,
+        SUM(ifNULL(buy.transport_amount,0) + ifNULL(sell.transport_amount,0)) total_transport_amount,
+        SUM(ifNULL(buy.warehouse_amount,0) + ifNULL(sell.warehouse_amount,0)
+        + ifNULL(buy.delivery_fee,0) + ifNULL(sell.delivery_fee,0)
+        + ifNULL(buy.stevedorage,0) + ifNULL(sell.stevedorage,0)
+        ) total_warehouse_amount,
+        SUM(IFNULL(r.financial_service_amount, 0)) financialServiceAmountSum,
+        SUM(IFNULL((sell.breach_amount*sell.breach_days*0.1)/365,0) - IFNULL(sell.receive_breach_amount,0)) dcsxOverdueInterestSum,
+        SUM((sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06) monthInsuranceFee,
+        SUM(ifNULL(r.surcharge_amount,0) + ifNULL(r.print_amount,0)) monthTaxes
+        FROM t_ctr_contract_settlement r
+        INNER JOIN t_ctr_contract buy ON buy.id = r.buy_contract_id
+        INNER JOIN t_ctr_contract sell ON sell.id = r.sell_contract_id
+        WHERE sell.business_type = 'ZY-BB'
+        AND sell.match_credit_flg = TRUE
+        AND sell.business_type_dcsx IN ('DCSXBL', 'DCSX', 'DCSXHDFK')
+        AND buy.seal_flg = TRUE
+        AND sell.seal_flg = TRUE
+        AND buy.STATUS != 'C'
+        AND sell.STATUS != 'C'
+        AND DATE_FORMAT(r.receive_date,'%Y-%m') = #{searchMonth}
+        <include refid="Where_SearchVo"/>
+        ) AS dcsx,
+        -- 代采赊销（本年）
+        (SELECT SUM(buy.total_amount)  AS total_buy_amount,
+        SUM(sell.total_amount) AS total_sell_amount,
+        SUM(ifNULL(buy.transport_amount,0) + ifNULL(sell.transport_amount,0)) total_transport_amount,
+        SUM(ifNULL(buy.warehouse_amount,0) + ifNULL(sell.warehouse_amount,0)
+        + ifNULL(buy.delivery_fee,0) + ifNULL(sell.delivery_fee,0)
+        + ifNULL(buy.stevedorage,0) + ifNULL(sell.stevedorage,0)
+        ) total_warehouse_amount,
+        SUM(IFNULL(r.financial_service_amount, 0)) financialServiceAmountSum,
+        SUM(IFNULL((sell.breach_amount*sell.breach_days*0.1)/365,0) - IFNULL(sell.receive_breach_amount,0)) dcsxOverdueInterestSum,
+        SUM((sell.total_amount*(if(sell.insurance_rate is null,0,sell.insurance_rate)))/1.06) yearInsuranceFee,
+        SUM(ifNULL(r.surcharge_amount,0) + ifNULL(r.print_amount,0)) yearTaxes
+        FROM t_ctr_contract_settlement r
+        INNER JOIN t_ctr_contract buy ON buy.id = r.buy_contract_id
+        INNER JOIN t_ctr_contract sell ON sell.id = r.sell_contract_id
+        WHERE sell.business_type = 'ZY-BB'
+        AND sell.match_credit_flg = TRUE
+        AND sell.business_type_dcsx IN ('DCSXBL', 'DCSX', 'DCSXHDFK')
+        AND buy.seal_flg = TRUE
+        AND sell.seal_flg = TRUE
+        AND buy.STATUS != 'C'
+        AND sell.STATUS != 'C'
+        AND DATE_FORMAT(r.receive_date,'%Y') = #{searchYear}
+        <include refid="Where_SearchVo"/>
+        ) AS dcsxYear,
+        -- 贴现成本（本月）
+        (SELECT SUM(IFNULL(ar.discount_amount, 0)) monthDiscountCost
+        FROM t_apply_receive ar
+        WHERE contract_id is NULL
+        AND apply_no is NULL
+        AND status = 'D'
+        AND DATE_FORMAT(ar.receive_date, '%Y-%m') = #{searchMonth}
+        ) AS disMonth,
+        -- 贴现成本（本年）
+        (SELECT SUM(IFNULL(ar.discount_amount, 0)) yearDiscountCost
+        FROM t_apply_receive ar
+        WHERE contract_id is NULL
+        AND apply_no is NULL
+        AND status = 'D'
+        AND DATE_FORMAT(ar.receive_date, '%Y') = #{searchYear}
+        ) AS disYear,
+        -- 业务成本（本月）
+        (SELECT SUM(IFNULL(wages, 0) + IFNULL(social_security, 0) + IFNULL(provident_fund, 0) + IFNULL(commission, 0)) monthPersonCost,
+        SUM(IFNULL(evection_cost, 0))                         monthTravelExpensesFee,
+        SUM(IFNULL(other_cost, 0))                            monthOtherFee
+        FROM t_rpt_base_cost
+        WHERE base_date = #{searchMonth}
+        ) AS baseCostMonth,
+        -- 业务成本（本年）
+        (SELECT SUM(IFNULL(total_cost, 0) - IFNULL(evection_cost, 0)) yearPersonCost,
+        SUM(IFNULL(evection_cost, 0))                         yearTravelExpensesFee,
+        SUM(IFNULL(other_cost, 0))                            yearOtherFee
+        FROM t_rpt_base_cost
+        WHERE base_date LIKE CONCAT('%',#{searchYear},'%')
+        ) AS baseCostYear;
+    </select>
+
+</mapper>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptFundReceivableStatisticsMapper">
+
+    <select id="findPage" resultType="com.spt.bas.report.client.entity.RptFundReceivableStatistics">
+        SELECT
+            a.company_name,
+            a.company_abbr,
+            count(1) as 'receivableContractNum',
+            SUM(COALESCE(b.breach_amount, 0) - COALESCE(b.receive_breach_amount, 0)) AS 'receivableBreachAmount',
+            sum(
+                COALESCE(b.total_amount, 0) - COALESCE(b.dealed_amount, 0) + COALESCE(b.breach_amount, 0) - COALESCE(b.receive_breach_amount, 0)
+                ) as 'receivableBalance'
+        FROM
+            t_bs_company_dcsx a
+                left join t_ctr_contract b on b.our_company_name = a.company_name
+        <where>
+            b.contract_type = 'S'
+            and b.enterprise_id = 44
+            and b.contract_status!= 'C'
+            and b.business_type ='ZY-BB'
+            AND b.match_credit_flg = TRUE
+            and a.enable_flg = '1'
+            and (
+                COALESCE(b.total_amount, 0)+ COALESCE(b.interest_amount, 0) - COALESCE(b.dealed_amount, 0)
+            ) >0
+
+            <if test="deptId!=null and deptId!=''">
+                and b.dept_id = #{deptId}
+            </if>
+
+            <if test="contractTimeBegin!=null and contractTimeBegin!=''">
+                AND  DATE_FORMAT(b.contract_time, '%Y-%m-%d') &gt;= #{contractTimeBegin}
+            </if>
+
+            <if test="contractTimeEnd!=null and contractTimeEnd!=''">
+                AND  DATE_FORMAT(b.contract_time, '%Y-%m-%d') &lt;= #{contractTimeEnd}
+            </if>
+
+            <if test="companyNameList != null and companyNameList.size()>0">
+                and a.company_name in
+                <foreach collection="companyNameList" index="index" item="item" open="(" separator="," close=")">
+                    #{companyNameList[${index}],jdbcType=VARCHAR}
+                </foreach>
+            </if>
+
+        </where>
+        GROUP BY
+            a.company_name,
+            a.company_abbr
+        order by sum(
+        COALESCE(b.total_amount, 0) - COALESCE(b.dealed_amount, 0) + COALESCE(b.breach_amount, 0) - COALESCE(b.receive_breach_amount, 0)
+        )  desc
+    </select>
+</mapper>

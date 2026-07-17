@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptRegionMonthSalesMapper">
+
+    <select id="getRegionMonthSalesList" resultType="com.spt.bas.report.client.entity.RptRegionMonthSales">
+        SELECT
+            a.dept_id "deptId",
+            DATE_FORMAT(a.contract_time, '%Y-%m') AS "contractTime",
+            ROUND(SUM(a.total_amount) / 1000000, 2) "sumTotalAmount"
+        FROM
+            t_ctr_contract a
+        WHERE
+            a.business_type = 'ZY-BB'
+            and a.contract_status !='C'
+            and a.contract_type = 'S'
+            <if test="monthBegin!=null and monthBegin!=''">
+                and DATE_FORMAT(a.contract_time, '%Y-%m') &gt;=#{monthBegin}
+            </if>
+            <if test="monthEnd!=null and monthEnd!=''">
+                and DATE_FORMAT(a.contract_time, '%Y-%m') &lt;=#{monthEnd}
+            </if>
+            <if test="deptIdList!=null and deptIdList.size()>0">
+                and a.dept_id in
+                <foreach collection="deptIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        group by a.dept_id,contractTime
+        order by a.dept_id desc,contractTime asc
+    </select>
+</mapper>

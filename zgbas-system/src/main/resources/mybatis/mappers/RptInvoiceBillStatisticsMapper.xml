@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.spt.bas.report.server.dao.RptInvoiceBillStatisticsMapper">
+
+    <select id="findInvoiceBill" resultType="com.spt.bas.report.client.entity.RptInvoiceBillStatistics">
+        SELECT
+        a.our_company_name,
+        DATE_FORMAT( a.invoice_date, '%Y-%m' ) "invoiceDate",
+        sum( a.deal_amount ) "invoiceAmount",
+        sum(ROUND( a.deal_amount / b.total_amount * b.total_number, 2 )) "invoiceNumber"
+        FROM
+        t_apply_invoice a
+        INNER JOIN t_ctr_contract b ON b.contract_no = a.contract_no
+        <where>
+            a.STATUS = 'D'
+            AND b.status != 'C'
+            <if test="invoiceDate !=null and invoiceDate!=''">
+                AND DATE_FORMAT( a.invoice_date, '%Y-%m' ) =#{invoiceDate}
+            </if>
+            <if test="ourCompanyNameList !=null and ourCompanyNameList.size()>0">
+                AND a.our_company_name in
+                <foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+                    #{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY
+        a.our_company_name,
+        invoiceDate
+        ORDER BY
+        invoiceDate DESC
+    </select>
+
+    <select id="findInvoiceReceiveBill" resultType="com.spt.bas.report.client.entity.RptInvoiceBillStatistics">
+        SELECT
+        a.company_name "ourCompanyName",
+        DATE_FORMAT( a.invoice_date, '%Y-%m' ) "invoiceDate",
+        sum( a.deal_amount ) "invoiceReceiveAmount",
+        sum(ROUND( a.deal_amount / b.total_amount * b.total_number, 2 )) "invoiceReceiveNumber"
+        FROM
+        t_apply_invoice a
+        INNER JOIN t_ctr_dcsx b ON b.contract_no = a.contract_no
+        <where>
+            a.STATUS = 'D'
+            AND b.status != 'C'
+            <if test="invoiceDate !=null and invoiceDate!=''">
+                AND DATE_FORMAT( a.invoice_date, '%Y-%m' ) =#{invoiceDate}
+            </if>
+            <if test="ourCompanyNameList !=null and ourCompanyNameList.size()>0">
+                AND a.company_name in
+                <foreach collection="ourCompanyNameList" item="item" index="index" open="(" close=")" separator=",">
+                    #{ourCompanyNameList[${index}],jdbcType=VARCHAR}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY
+        a.company_name,
+        invoiceDate
+        ORDER BY
+        invoiceDate DESC
+    </select>
+</mapper>
