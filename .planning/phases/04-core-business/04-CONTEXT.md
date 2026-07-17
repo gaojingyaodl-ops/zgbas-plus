@@ -8,9 +8,9 @@
 
 把源 `basServer` 核心供应链业务（合同/授信/库存/放款等）的 **Service + REST 契约实现** 迁入 `zgbas-system`，`web` 的 **BFF controller** 迁入 `zgbas-admin`，业务间原 Feign 调用改为**同进程 bean 直调**（interface-as-contract），使核心业务在单进程内端到端可用。本期交付三件事（BIZ-01/02/03）：
 
-1. **Service 层 + REST 契约实现迁入 `zgbas-system`**（BIZ-01）：源 `basCore/basServer` 的 `service`（241）+ `api`（224 个 `@RestController implements I*Client`）+ 业务依赖的 infra（cache/util/enums/annotation/filter/listener，筛选照搬）迁入单体。实体（239）+ Dao（229）+ basClient 契约（remote 238 `@FeignClient`）+ vo/dto 已在 Phase 2 落位，本期补齐剩余 `basClient` 数据载体（dto/util/common/riskScore 等）。
+1. **Service 层 + REST 契约实现迁入 `zgbas-system`**（BIZ-01）：源 `basCore/basServer` 的 `service`（241 接口 + 248 impl + 域子包 44）+ `api`（224 个 `@RestController extends BaseApi`，**非 implements I*Client**，经研究修正）+ 业务依赖的 infra（cache/util/enums/annotation/filter/listener/command/event + **rocketmq 22**，筛选照搬）迁入单体。实体（239）+ Dao（229）+ vo/constant/cache + basClient remote 契约**仅 4 个**（`IBsDictClient`/`IBsCompanyOurClient`/`IApproveWaitDealClient`/`IPmProcessClient`）在 Phase 2/3 落位——**剩余 ~234 remote 契约 + dto/util/common/riskScore/config 是本期 Wave 1 实际工作**（经研究修正，非"Phase 2 已全内联 238"）。
 2. **BFF controller 迁入 `zgbas-admin`**（BIZ-02）：源 `web` 的 267 个 BFF controller 照搬（保包名 `com.spt.bas.web.*`），其对 `I*Client` 的 `@Autowired` 改解析为同进程本地 `@RestController` bean。
-3. **业务间 Feign → 同进程直调**（BIZ-03）：沿用 Phase 2 D-P2-10 interface-as-contract —— `@RestController implements I*Client` 原样保留，Feign 旁路（P2 已收窄到仅 cfca），`@Autowired I*Client` 解析为本地 controller bean，无网络跳。
+3. **业务间 Feign → 同进程自回环**（BIZ-03）：⚠ 经研究修正（见 D-P4-01）——放宽 Feign 扫 `com.spt.bas.client.remote` + `spt.bas.server.url=http://localhost:8080`，224 个 `extends BaseApi` api 照搬零修改（不加 implements），`@Autowired I*Client` 解析为 Feign proxy 自回环到本进程 api 端点（同进程 HTTP 跳，无跨进程跳；行为等价）。
 
 **不在本期（明确边界）：**
 - **xxl-job `task` handler（basServer/task 23 个）** → **Phase 6**（quartz）。本期 infra 筛选照搬时**排除 task 包**。
@@ -26,8 +26,9 @@
 <decisions>
 ## Implementation Decisions
 
-### 调用机制 Feign → 进程内 (BIZ-03 核心)
-- **D-P4-01: interface-as-contract（沿用 D-P2-10）。** `basServer/api` 的 224 个 `@RestController implements I*Client` **原样照搬**进 `zgbas-system`。Feign 保持 Phase 2 收窄态（`@EnableFeignClients(basePackages=..., "com.spt.sign.client.remote")` 仅 cfca），`basClient/remote` 的 238 个 `@FeignClient` 契约**不再生成 Feign proxy** → `@Autowired I*Client` 解析为本地 controller bean。roadmap 措辞「Service 直调」在此读作「同进程 bean 调用（无 Feign 网络跳）」，与 D-P2-10 + `InProcessContract` proof 一致。**不拆 controller 契约层、不重写为真·Service 直调**（重写 238 契约的所有调用点、破坏照搬原则、丢失对外 HTTP 接口）。
+### 调用机制 Feign → 同进程自回环 (BIZ-03 核心) — ⚠ D-P4-01 经研究证伪修正
+- **D-P4-01: Feign 自回环（方案 A，2026-07-17 用户确认修正原决策）。** 原「`@RestController implements I*Client` 原样照搬 + 解析为本地 bean + 无网络跳」的前提**已被 04-RESEARCH.md §D-P4-01 Critical Finding 证伪**：源 `basServer/api` 224 个 `@RestController` 实测 **0/224 `implements I*Client`**（全部 `extends BaseApi<Entity>` 独立控制器），且 `BaseApi.findPage` 返回 `Page<T>` vs `BaseClient.findPage` 返回 `PageDown<T>`（`PageDown extends PageImpl implements Page`）协变返回方向相反——加 `implements` 后每文件仍需手写 `findPage` 桥接，机械不可行。**修正决策（方案 A）**：放宽 `@EnableFeignClients(basePackages={"com.spt.sign.client.remote","com.spt.bas.client.remote"})` + 配 `spt.bas.server.url=http://localhost:8080`；224 个 `extends BaseApi` api **照搬零修改**（不加 implements）；238 契约的 `@Autowired I*Client` 解析为 **Feign proxy 自回环到本进程 8080 的 api 端点**。行为等价（源即 Feign-over-HTTP，localhost 等价），照搬保真最高。**承认偏离**：D-P4-01 原「无网络跳」措辞放弃——存在同进程 HTTP 跳（无跨进程跳），换取 224 处零修改，与项目「行为等价优先 + 照搬」核心价值一致。弃方案 B（224 手写适配，违反照搬）/ C（FactoryBean，侵入式新代码）。
+- **D-P4-01a: path 前缀处理（方案 A 子决策，留 planning 落地）。** 源 basServer `server.servlet.context-path=/spt-bas-server`，238 契约 `path=BasConstants.SERVER_NAME+"/..."` 含 `spt-bas-server` 前缀；单体 D-P2-16 根 `/`，api 照搬后暴露在 `/apply/brand/*`。**优先 Feign path 覆盖**（yml `feign.client.config` 或契约级 `path=` 覆盖去掉前缀，非侵入）——**不设单体 context-path**（会破坏 Phase 3 已验的 Shiro `/login`/`/index` 根路径，AUTH-03 回归风险）。若 Feign path 覆盖不可行（RESEARCH 假设 A3），planner 作 `checkpoint:human-verify` 上报，不擅自改 238 契约。
 - **D-P4-02: 无本地实现的契约 stub 降级（Claude discretion，对齐 Phase 3 D-P3-10）。** 238 契约中**无本地 `@RestController` 实现的**（约 14 个，疑为 report→P5 / purchase→v2 / auth 已外部 HTTP）用 `@Autowired(required=false)` + null 守卫 stub，业务降级裸 404，后续 phase 接通。**具体清单留 research/planning 枚举确认**（对照 basClient/remote 238 契约 vs basServer/api 224 实现的差集 + report/purchase/auth 来源）。
 
 ### 迁移切片与测序
@@ -85,7 +86,7 @@
   - `basCore/basServer/src/main/java/com/spt/bas/server/task/`（23 xxl-job handler）→ **不迁（Phase 6）**
   - `basCore/basServer/src/main/resources/db/migration/V20211129_1__Drop_tmp_product.sql`（唯一 Flyway 迁移，移除）
   - `basCore/basClient/src/main/java/com/spt/bas/client/{dto,vo,util,common,constant,riskScore}/`（~570 数据载体）→ Wave 1 迁入 `zgbas-system`
-  - `basCore/basClient/src/main/java/com/spt/bas/client/remote/`（238 `@FeignClient` 契约 `I*Client`）→ **Phase 2 已内联**，本期作 interface-as-contract 契约源
+  - `basCore/basClient/src/main/java/com/spt/bas/client/remote/`（238 `@FeignClient` 契约 `I*Client`）→ **Phase 2/3 仅内联 4 个**（IBsDictClient/IBsCompanyOurClient/IApproveWaitDealClient/IPmProcessClient），**剩余 ~234 是本期 Wave 1 内联目标**（经研究修正），作 Feign 自回环契约源（D-P4-01 方案 A）
   - `basCore/basClient/src/main/java/com/spt/bas/client/entity/`（239 实体）→ **Phase 2 已内联**
   - `web/src/main/java/com/spt/bas/web/controller/`（267 BFF controller）→ Wave 4 迁入 `zgbas-admin`
 
@@ -113,7 +114,7 @@
 > zgbas-plus 当前为 **Phase 3 完成态**：骨架 + spt-tools 全量内联 + 双 ORM 单 DataSource + 外部 SDK bean + nacos 删除 + Shiro 登录链路激活 + 全量前端模板/静态资源照搬。zgbas-system 已含 entity(239)/dao(229)/remote 契约(238)/vo 等（Phase 2），Phase 4 补 Service + REST 实现 + BFF controller。
 
 ### Reusable Assets
-- **已内联 `basClient/remote` 238 个 `@FeignClient` 契约**（`zgbas-system/com.spt.bas.client.remote.*`）—— interface-as-contract 的接口侧，直接被 `@RestController implements` + `@Autowired` 复用，无需重写。
+- **`basClient/remote` 契约 Phase 2/3 仅内联 4 个**（`zgbas-system/com.spt.bas.client.remote.*`）——经研究修正，**剩余 ~234 是本期 Wave 1 内联目标**；作 Feign 自回环（D-P4-01 方案 A）的契约侧，被 `@Autowired` 复用解析为 Feign proxy 自回环到本进程 api 端点。
 - **Phase 2 `@Primary` Druid DataSource + `JpaTransactionManager`** —— 业务 `@Transactional` 直接生效，无需事务设计。
 - **Phase 2 `InProcessContractTest`**（`zgbas-admin`）—— WR-02 扩展对象，本期加 MockMvc HTTP 断言。
 - **Phase 3 stub-port 模式**（`@Autowired(required=false)` + null 守卫）—— D-P4-02 无实现契约降级复用此模式。
