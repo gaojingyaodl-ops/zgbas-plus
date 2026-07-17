@@ -109,9 +109,33 @@ Plans:
 
   1. 合同/授信/库存/放款等核心业务实体与 Service（源 basServer JPA）迁入 zgbas-system，JPA 增删改查可用（PERSIST-01 基础设施支撑实体/Dao 落位）
   2. 业务 Controller / BFF（源 web）迁入 zgbas-admin，核心业务 HTTP 接口可访问
-  3. 业务间原 Feign 调用改为同进程 Service 直调，行为等价
+  3. 业务间原 Feign 调用改为同进程 Feign 自回环（D-P4-01 方案 A，2026-07-17 修正锁定），行为等价
 
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+**Wave 0** *(前置接线，无阻塞)*
+
+- [ ] 04-01-PLAN.md — D-P4-01 方案 A Feign 自回环接线 + D-P4-01a path 前缀剥离 + rocketmq pom/yml + WR-02 验收脚手架
+
+**Wave 1** *(blocked on Wave 0)*
+
+- [ ] 04-02-PLAN.md — basClient 数据载体照搬（remote 234 契约 + dto/util/common/riskScore 14，合计 ~249 文件）
+
+**Wave 2a** *(blocked on Wave 1)*
+
+- [ ] 04-03-PLAN.md — basServer infra 照搬（cache/util/enums/annotation/filter/listener/command/event/rocketmq 22/config 选择性 6，~82 文件）+ dedup FrameworkConfig + exclude BasJobConfig
+
+**Wave 2b** *(blocked on Wave 2a — RESEARCH Pitfall 5 gotcha 级联)*
+
+- [ ] 04-04-PLAN.md — basServer service + impl + 域子包（ctr/logistics/performance/rt/stock）照搬 ~533 文件
+
+**Wave 3** *(blocked on Wave 2b)*
+
+- [ ] 04-05-PLAN.md — basServer api @RestController 照搬 224 文件（extends BaseApi，零 implements I*Client — D-P4-01 方案 A 关键约束）
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 04-06-PLAN.md — web BFF controller 照搬 267 文件 + D-P4-02 stub-port（~5-15 无实现契约降级）+ 最终验收（WR-02 HTTP proof + 全 mvn compile + D-P4-01..06 逐项核验）
 
 ### Phase 5: 报表迁移
 
