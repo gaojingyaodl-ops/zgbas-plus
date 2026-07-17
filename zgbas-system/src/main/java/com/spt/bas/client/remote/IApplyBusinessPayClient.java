@@ -1,0 +1,26 @@
+package com.spt.bas.client.remote;
+
+import com.spt.bas.client.constant.BasConstants;
+import com.spt.bas.client.entity.ApplyBusinessPay;
+import com.spt.bas.client.vo.ApplyBusinessPayVo;
+import com.spt.bas.client.vo.FileIdUpdateVo;
+import com.spt.tools.core.exception.WebApplicationException;
+import com.spt.tools.data.service.BaseClient;
+import com.spt.tools.data.vo.PageDown;
+import com.spt.tools.http.feign.FeignConfig;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+
+@FeignClient(qualifier = "applyBusinessPayClient",name = BasConstants.SERVER_NAME,path= BasConstants.SERVER_NAME+"/business/pay",url=BasConstants.SERVER_URL,configuration=FeignConfig.class)
+public interface IApplyBusinessPayClient extends BaseClient<ApplyBusinessPay> {
+
+	@RequestMapping(value = "updateFileId")
+	public void updateFileId(@RequestBody FileIdUpdateVo vo);
+
+	@PostMapping("findPageContract")
+	PageDown<ApplyBusinessPayVo> findPageContract(@RequestBody ApplyBusinessPayVo queryVo);
+}
+

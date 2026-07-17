@@ -1,15 +1,50 @@
-// STUB — Phase 4 ports the real interface from spt-bas-client. Temporary for Phase 3 IndexController compilation.
 package com.spt.bas.client.remote;
 
+
+import com.spt.bas.client.constant.BasConstants;
+import com.spt.bas.client.entity.ApproveWaitDeal;
+import com.spt.bas.client.entity.CtrContract;
+import com.spt.bas.client.vo.ApproveWaitDealVo;
 import com.spt.bas.client.vo.ApproveWaitSearchVo;
+import com.spt.tools.core.bean.PageSearchVo;
+import com.spt.tools.data.service.BaseClient;
+import com.spt.tools.data.vo.PageDown;
+import com.spt.tools.http.feign.FeignConfig;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-/**
- * Temporary stub contract. Phase 4 replaces this with the real
- * {@code spt-bas-client} FeignClient interface. IndexController injects it via
- * {@code @Autowired(required = false)} so the absence of a runtime bean degrades
- * business-data calls gracefully (D-P3-10) without breaking startup.
- */
-public interface IApproveWaitDealClient {
+import java.util.List;
 
-    Long getUserWaitDealNum(ApproveWaitSearchVo vo);
+
+@FeignClient(name = BasConstants.SERVER_NAME, path = BasConstants.SERVER_NAME+"/wait/deal", url = BasConstants.SERVER_URL, configuration = FeignConfig.class)
+public interface IApproveWaitDealClient extends BaseClient<ApproveWaitDeal> {
+
+    @PostMapping(value = "/findPageWaitDeal")
+    PageDown<ApproveWaitDeal> findPageWaitDeal(@RequestBody PageSearchVo searchVo);
+
+    @PostMapping(value = "/findPageWaitDealById")
+    PageDown<ApproveWaitDeal> findPageWaitDealById(@RequestBody PageSearchVo searchVo);
+
+    @PostMapping(value = "/updateStatus")
+    void updateStatus(@RequestBody ApproveWaitSearchVo searchVo);
+
+    @PostMapping(value = "/updateFlg")
+    void updateFlg(@RequestBody ApproveWaitSearchVo searchVo);
+
+    @PostMapping(value = "/findPageWaitDealCount")
+    List<ApproveWaitDeal> findPageWaitDealCount(@RequestBody ApproveWaitSearchVo searchVo);
+
+    @PostMapping(value = "/findSubject")
+    String findSubject(@RequestBody ApproveWaitSearchVo searchVo);
+
+    @PostMapping(value = "/doContractSaveWaitDeal")
+    void doContractSaveWaitDeal(@RequestBody CtrContract searchVo);
+
+    // 添加待办事项
+    @PostMapping("/saveWaitDeal")
+    void saveWaitDeal(@RequestBody ApproveWaitDealVo vo);
+
+    @PostMapping("/getUserWaitDealNum")
+    Long getUserWaitDealNum(@RequestBody ApproveWaitSearchVo searchVo);
 }

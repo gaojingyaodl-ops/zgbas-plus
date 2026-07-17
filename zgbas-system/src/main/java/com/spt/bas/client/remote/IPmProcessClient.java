@@ -1,18 +1,39 @@
-// STUB — Phase 4 ports the real interface from spt-bas-client. Temporary for Phase 3 IndexController compilation.
 package com.spt.bas.client.remote;
-
-import com.spt.pm.entity.PmProcess;
-import com.spt.pm.vo.PmProcessSearchVo;
 
 import java.util.List;
 
-/**
- * Temporary stub contract. Phase 4 replaces this with the real
- * {@code spt-bas-client} FeignClient interface. IndexController injects it via
- * {@code @Autowired(required = false)} so the absence of a runtime bean degrades
- * business-data calls gracefully (D-P3-10) without breaking startup.
- */
-public interface IPmProcessClient {
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-    List<PmProcess> findAccess(PmProcessSearchVo searchVo);
+import com.spt.bas.client.constant.BasConstants;
+import com.spt.pm.entity.PmProcess;
+import com.spt.pm.vo.PmProcessSearchVo;
+import com.spt.tools.data.easyui.EasyTreeNode;
+import com.spt.tools.data.service.BaseClient;
+import com.spt.tools.http.feign.FeignConfig;
+
+
+@FeignClient(name = BasConstants.SERVER_NAME,path= BasConstants.SERVER_NAME+"/pm/process",url=BasConstants.SERVER_URL,configuration=FeignConfig.class)
+public interface IPmProcessClient extends BaseClient<PmProcess> {
+	@PostMapping("findAccess")
+	public List<PmProcess> findAccess(@RequestBody PmProcessSearchVo searchVo);
+	
+	@PostMapping(value = "getAllProcess")
+	public EasyTreeNode getAllProcess(@RequestBody PmProcessSearchVo searchVo);
+	
+	@PostMapping(value = "findByEnterpriseId")
+	public List<PmProcess> findByEnterpriseId(@RequestBody PmProcessSearchVo searchVo);
+	
+	@PostMapping("findByProcessCode")
+	public PmProcess findByProcessCode(@RequestBody PmProcessSearchVo searchVo);
+	
+	@PostMapping(value = "findStartUserByProcess")
+	public Long findStartUserByProcess(@RequestBody PmProcess process);
+	
+	@PostMapping(value = "findByEnterpriseIdAndEnableFlgTrue")
+	public List<PmProcess> findByEnterpriseIdAndEnableFlgTrue(@RequestBody Long enterpriseId);
+	@PostMapping(value = "initPmProcessList")
+	public  String initPmProcessList();
 }
+
