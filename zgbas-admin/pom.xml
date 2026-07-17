@@ -46,6 +46,24 @@
             <groupId>com.spt</groupId>
             <artifactId>spt-sign-client</artifactId>
         </dependency>
+        <!-- Phase 4 Wave 4 (D-P2-08 verbatim from source web/pom.xml): EasyExcel for BFF excel export utils -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+        <!-- Phase 4 Wave 4: screw-core CollectionUtils used by CtrContractTextController -->
+        <dependency>
+            <groupId>cn.smallbun.screw</groupId>
+            <artifactId>screw-core</artifactId>
+            <version>1.0.5</version>
+        </dependency>
+        <!-- Phase 4 Wave 4 (D-P2-08 verbatim from source web/pom.xml): html2image for GenerationUtil -->
+        <dependency>
+            <groupId>gui.ava</groupId>
+            <artifactId>html2image</artifactId>
+            <version>0.9</version>
+        </dependency>
         <!-- Context-load smoke test (BUILD-04) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

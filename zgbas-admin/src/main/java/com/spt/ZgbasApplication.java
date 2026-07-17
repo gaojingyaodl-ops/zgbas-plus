@@ -58,6 +58,15 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * requires excluding the generic ancestor so the basServer customisation wins (Rule 3 blocking
  * auto-fix, Plan 04-05 — same precedent as the FeignConfig exclusion above).
  *
+ * <p>Phase 4 Wave 4 (Plan 04-06) added a fourth assignable-type exclusion:
+ * {@code com.spt.bas.web.config.BasicErrorController}. The source web module ships its own
+ * BasicErrorController (the front-end error controller for BFF routes), nearly identical to the
+ * basServer customisation above. BFF controllers reference it for the static
+ * {@code getErrorResp(Exception)} utility method. Both {@code @Controller} classes share the
+ * simple name {@code BasicErrorController} → same default bean name → conflict. The basServer
+ * version remains the active ErrorController (decided in Plan 04-05); the web version stays on
+ * classpath for its static method but is not registered as a bean (Rule 3 blocking auto-fix).
+ *
  * <p>Phase 3 (AUTH-01..04, D-P3-01): {@code com.spt.tools.shiro.config.ToolsShiroConfig} is now
  * UN-excluded — the previously-dormant Shiro auto-config engages now that a concrete Realm
  * ({@code com.spt.bas.web.shiro.ShiroDbRealm}, @Component, ported in Plan 03-01) satisfies the
@@ -77,7 +86,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         type = FilterType.ASSIGNABLE_TYPE,
         classes = { com.spt.tools.http.feign.FeignConfig.class,
                     com.spt.sign.client.config.FeignConfig.class,
-                    com.spt.tools.http.interceptor.BasicErrorController.class }
+                    com.spt.tools.http.interceptor.BasicErrorController.class,
+                    com.spt.bas.web.config.BasicErrorController.class }
     )
 )
 // Phase 4 D-P4-01 方案 A (corrected 2026-07-17): widen @EnableFeignClients to also scan
