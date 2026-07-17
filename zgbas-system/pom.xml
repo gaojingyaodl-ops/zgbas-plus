@@ -103,11 +103,12 @@
              purchase-client 2.0.1-SNAPSHOT (same source): types-only dep for service files
                  importing com.spt.bas.purchase.wx.client.* — basWx deferred to v2 (WX-01/02);
                  client jar provides contract types verbatim from source.
-             spring-cloud-alibaba-commons 2021.0.1.0 + nacos-common 1.4.2: utility classes only
-                 (com.alibaba.cloud.commons.lang.StringUtils, com.alibaba.nacos.common.utils.
-                 {StringUtils,CollectionUtils}) used by ~4 service impls. NO autoconfig /
-                 NO discovery — Phase 2 #9 (nacos discovery deleted) stays in force; these are
-                 inert util jars that do not trigger @EnableDiscoveryClient wiring.
+             spring-cloud-alibaba-commons + nacos-common: REMOVED — restores constraint #9
+                 (nacos deleted, Phase 2 既定模式). The 9 utility imports that pointed at
+                 com.alibaba.cloud.commons.lang.StringUtils / com.alibaba.nacos.common.utils.
+                 {StringUtils,CollectionUtils} were rewritten to apache commons
+                 (org.apache.commons.lang3.StringUtils / org.apache.commons.collections4.
+                 CollectionUtils), both already resolvable transitively to zgbas-system.
              All jars verified present in local repo (/Users/alan/App/Repository). -->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -142,16 +143,6 @@
             <groupId>com.spt.bas</groupId>
             <artifactId>purchase-client</artifactId>
             <version>2.0.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.cloud</groupId>
-            <artifactId>spring-cloud-alibaba-commons</artifactId>
-            <version>2021.0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.alibaba.nacos</groupId>
-            <artifactId>nacos-common</artifactId>
-            <version>1.4.2</version>
         </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->

@@ -1,6 +1,6 @@
 package com.spt.bas.server.service.impl;
 
-import com.alibaba.cloud.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import com.spt.bas.client.constant.BasConstants;
 import com.spt.bas.client.entity.ApplyCompanyTitle;
 import com.spt.bas.client.entity.CtrContract;

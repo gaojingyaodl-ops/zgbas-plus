@@ -1,7 +1,7 @@
 package com.spt.bas.server.service.impl;
 
 import cn.hutool.core.date.DateUtil;
-import com.alibaba.cloud.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import com.spt.auth.sdk.entity.SysDeptSdk;
 import com.spt.auth.sdk.open.IAuthOpenFacade;
 import com.spt.bas.client.constant.BasConstants;

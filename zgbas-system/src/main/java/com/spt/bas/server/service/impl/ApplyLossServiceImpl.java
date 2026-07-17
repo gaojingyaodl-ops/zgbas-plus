@@ -1,6 +1,6 @@
 package com.spt.bas.server.service.impl;
 
-import com.alibaba.nacos.common.utils.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import com.spt.bas.client.constant.BasConstants;
 import com.spt.bas.client.entity.ApplyLoss;
 import com.spt.bas.client.entity.BsDictData;

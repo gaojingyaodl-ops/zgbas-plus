@@ -140,7 +140,7 @@ public class ApplyPayServiceImpl extends BaseService<ApplyPay> implements IApply
             // 赊销收票申请，如果上游企业不是我方企业、奥顺宇、塑融云，在上游付款审批完成后(旧逻辑)
             // applyInvoiceReceivedService.autoInitiatedCompleteInvoiceReceived(contract, pay.getPayAmount());
 
-            if (com.alibaba.cloud.commons.lang.StringUtils.equals("F", pay.getPayMode())){
+            if (StringUtils.equals("F", pay.getPayMode())){
                 fundAmountFlowService.addFundFlow(pay.getOurCompanyName(), pay.getCompanyName(), pay.getPayAmount().negate(), FundFlowEnum.VirtualPayment, approve);
             }
 
@@ -195,7 +195,7 @@ public class ApplyPayServiceImpl extends BaseService<ApplyPay> implements IApply
             stockDetailService.save(stockDetail);
         }
 
-        if (com.alibaba.cloud.commons.lang.StringUtils.equals("F", pay.getPayMode())){
+        if (StringUtils.equals("F", pay.getPayMode())){
             fundAmountFlowService.addFundFlow(pay.getOurCompanyName(), pay.getCompanyName(), pay.getPayAmount(), FundFlowEnum.VirtualPaymentCancel, approve);
         }
     }
