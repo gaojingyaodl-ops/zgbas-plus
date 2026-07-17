@@ -632,16 +632,16 @@ public class ReportClientConfig {
 
 **其它所有 claims 均 [VERIFIED: 源码 / 单体 grep] 或 [CITED: 项目内 CONTEXT.md / REQUIREMENTS.md / PROJECT.md / ROADMAP.md / CLAUDE.md]。**
 
-## Open Questions
+## Open Questions (RESOLVED — answers fixed during Phase 5 planning, 2026-07-17)
 
-1. **Wave 切片粒度由 planner 决定** —— 本研究给 6-wave 建议（W0 接线 / W1-W4 按域 / W5 api / W6 验收）。Planner 可合并 W1+W2 或拆分 W4（Ctr* family 太大 15 mapper）。约束：W0 先 / W3 先于 W4（service dep） / W5 最后 / W6 验收。
-   - Recommendation: W1+W2 可合并为单 wave（21 mapper，低 cross-dep）；W4 Ctr* 单独成 wave 保 compile gate 稳。
+1. **Wave 切片粒度** —— planner 选择了 3 个域 wave（21+13+19=53），未合并；mapperless `SummaryRoi`/`UserRoi` 显式在 05-03 处理，`Ctr*` 在 05-04 单独成 wave 保 compile gate 稳。
+   - RESOLVED: W1=05-02 (21 Mapper 低风险域) / W2=05-03 (13 dependency-critical + mapperless SummaryRoi) / W3=05-04 (19 Ctr*+misc closes 53/53)。硬约束 W0先 / 05-03 先于 05-04 / 05-05(api) 最后 / 05-06 验收 全部经 `depends_on` 强制。
 
-2. **`spt.bas.report.url` 是否已在 application-prod.yml** —— 本研究未查 prod profile。Planner Wave 0 应同时检查 dev + prod（prod 可能需不同 URL 或占位）。
-   - Recommendation: 复用 Phase 4 D-P2-13 prod 占位策略（`#{...}` 或 placeholder）。
+2. **`spt.bas.report.url` 在 prod profile** —— Phase 4 已在 `application-prod.yml:35-36` 放 `${SPT_BAS_REPORT_URL}`（plan-checker VERIFIED）。Wave 0 无需再加 prod 键。
+   - RESOLVED: 已就位，05-01 Wave 0 不重做（避免 redo Phase 4 已落资产）。
 
-3. **Phase 4 9 个 svc refs 调用路径覆盖** —— Wave 6 HTTP proof 应跑哪些 BFF 路由？建议 `BusinessOverviewController.findBusinessOverviewList`（触发 `IRptBusinessOverviewClient`）+ `MyIndexController.homeData`（触发 `IRptIndexReportClient`）+ 任一 `/rpt/findPage` 直连。
-   - Recommendation: planner 列具体 3 个 proof 路由 + 期望响应 shape。
+3. **Wave 6 HTTP proof 路由** —— planner 在 05-06 指定了具体路由 + 期望响应 shape。
+   - RESOLVED: `/spt-bas-report/rpt/fundReceivableStatistics/findPage`（直连 report api，断言 200 + Page shape）+ `/business/overview/api/findBusinessOverviewList`（BFF→Feign 自回环→report api 全链路，证明 D-P5-03 闭环 + 解除 D-P4-02 stub 降级）。
 
 ## Environment Availability
 
