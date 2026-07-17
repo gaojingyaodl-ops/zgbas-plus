@@ -40,15 +40,41 @@
         </dependency>
 
         <!-- Phase 4 D-P4-04: rocketmq-spring-boot-starter verbatim from source basCore/pom.xml
-             (<rocketmq-version>2.2.2</rocketmq-version>). Wave 2 infra照搬 includes the 22-file
-             basServer/rocketmq package; three non-rocketmq files (api/MQApi, api/WorkTargetApi,
-             command/BasCommandExecutor) import it at compile time. The starter's producer is
-             lazy-connecting — context boot does NOT contact the broker (RESEARCH A2), so it is
-             safe for the D-P4-06 startup verification. Version pinned per D-P2-08 (no 2.3.x bump). -->
+             (<rocketmq-version>2.2.2</rocketmq-version>). Wave 2 infra照搬 includes the rocketmq
+             package (producer/listener/dto/util/tags/send/customProperties — 14 safe files);
+             three non-rocketmq files (api/MQApi, api/WorkTargetApi, command/BasCommandExecutor)
+             import it at compile time. The starter's producer is lazy-connecting — context boot
+             does NOT contact the broker (RESEARCH A2), safe for D-P4-06 startup verification.
+             Version pinned per D-P2-08 (no 2.3.x bump).
+             NOTE: rocketmq/task/8 (Synchronized*Task) are @XxlJob handlers — excluded to Phase 6
+             alongside basServer/task/23 per INFRA-03 (RESEARCH miscount corrected, safe=14 not 22). -->
         <dependency>
             <groupId>org.apache.rocketmq</groupId>
             <artifactId>rocketmq-spring-boot-starter</artifactId>
             <version>2.2.2</version>
+        </dependency>
+
+        <!-- Phase 4 Wave 2a Rule 3: PDF + sign-client deps verbatim from source basServer/pom.xml.
+             Required by ported infra (util/HtmlToPdf, util/FLKPDFUtil, filter/impl/AutoSealPdfSignFilterImpl).
+             spt-sign-client version managed by root dependencyManagement (1.0.0-SNAPSHOT). -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf</artifactId>
+            <version>9.1.20</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itextpdf</artifactId>
+            <version>5.5.13.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itext-asian</artifactId>
+            <version>5.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.spt</groupId>
+            <artifactId>spt-sign-client</artifactId>
         </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
