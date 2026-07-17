@@ -123,15 +123,15 @@ Plans:
 
 **Wave 2a** *(blocked on Wave 1)*
 
-- [ ] 04-03-PLAN.md — basServer infra 照搬（cache/util/enums/annotation/filter/listener/command/event/rocketmq 22/config 选择性 6，~82 文件）+ dedup FrameworkConfig + exclude BasJobConfig
+- [x] 04-03-PLAN.md — basServer infra 照搬（cache/util/enums/annotation/filter/listener/command/event/rocketmq **14 安全**(8 @XxlJob task→P6)/config 选择性 6）+ dedup FrameworkConfig + exclude BasJobConfig。**⚠ 编译门结构性延迟**：infra↔service↔PM 互联（源单模块），per-wave 绿不可达（320 ERROR），编译门后移至合并单元齐后（决策 A，见 04-03-SUMMARY）
 
-**Wave 2b** *(blocked on Wave 2a — RESEARCH Pitfall 5 gotcha 级联)*
+**Wave 2b (合并编译单元)** *(blocked on Wave 2a — 含 04-03 延迟 gate)*
 
-- [ ] 04-04-PLAN.md — basServer service + impl + 域子包（ctr/logistics/performance/rt/stock）照搬 ~533 文件
+- [ ] 04-04-PLAN.md — basServer service + impl + 域子包（ctr/logistics/performance/rt/stock）~533 **+ 吸收 PM 模块**(service/dao/cache/util/annotation ~50，排除 1 xxl-job task 至 P6；entity/vo/constant Phase2 pmClient 已迁待核验) + 级联 pom(wltea/IK·httpmime·QLExpress)。**合并编译门** `mvn -pl zgbas-system -am compile` `^\[ERROR]`=0 在此关闭
 
 **Wave 3** *(blocked on Wave 2b)*
 
-- [ ] 04-05-PLAN.md — basServer api @RestController 照搬 224 文件（extends BaseApi，零 implements I*Client — D-P4-01 方案 A 关键约束）
+- [ ] 04-05-PLAN.md — basServer api @RestController 照搬 224 **+ PM api 13**（extends BaseApi，零 implements I*Client — D-P4-01 方案 A 关键约束）
 
 **Wave 4** *(blocked on Wave 3)*
 
@@ -186,7 +186,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 1. 编译止血 + 骨架 | 1/1 | Complete    | 2026-07-16 |
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
-| 4. 核心业务迁移 | 2/6 | In Progress|  |
+| 4. 核心业务迁移 | 3/6 | In Progress|  |
 | 5. 报表迁移 | 0/TBD | Not started | - |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
