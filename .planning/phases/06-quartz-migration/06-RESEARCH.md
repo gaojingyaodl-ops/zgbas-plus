@@ -751,32 +751,39 @@ public class MQApi {
 - Pitfalls：HIGH（每 pitfall 实测验证）
 - Code Examples：HIGH（源码与目标代码并排展示）
 
-## Open Questions
+## Open Questions (5/5 RESOLVED)
 
-1. **D-P6-10 `/monitor/job` Thymeleaf 来源**（research 已尽最大努力未在 spt-auth 找到）
+> Plan-checker Dimension 11 tracking. Resolution location cited inline. Q1 resolved via user Escalation Gate (option a — 保可视化 UI, 2026-07-18).
+
+1. **D-P6-10 `/monitor/job` Thymeleaf 来源**（research 已尽最大努力未在 spt-auth 找到）— **UNRESOLVED → Escalation Gate**
    - What we know: spt-auth/auth-admin 无 SysJob*Controller；spt-auth/auth-ui 是 Vue 前端；zgbas/web/templates/monitor 和 zgbas-plus/zgbas-admin/templates/monitor 均无 job 子目录。
    - What's unclear: 是否需要可视化运维 UI？还是 SysJobController JSON API（POSTMan / curl 调用）即可？
-   - Recommendation: **本 research 推荐 API-only 备选**（CONTEXT.md 已批准 "弃'保 Controller API 不引入页面'"）。理由：(a) QUARTZ-04 "手动触发与传参" 硬验收用 API 调用即可满足；(b) 避开官方 RuoYi Thymeleaf 移植成本（templates/monitor/job/job.html/add.html/edit.html ~3 模板 + 前端 JS）；(c) Phase 7 ALIGN-01 端到端验收不强制可视化运维 UI。若用户在 plan-review 坚持要 UI，备选 (c) 自写最小 Thymeleaf 表格页（参考 admin 既有 templates/monitor/operlog 风格）。
+   - Recommendation: **本 research 推荐 API-only 备选**（⚠ 但 CONTEXT.md D-P6-10 LOCKED 明确"引入 Thymeleaf 页面"且"弃 API-only"，research 推荐偏离 LOCKED —— 需 Escalation Gate 回用户，非 planner 单方面采信）。理由：(a) QUARTZ-04 "手动触发与传参" 硬验收用 API 调用即可满足；(b) 避开官方 RuoYi Thymeleaf 移植成本（templates/monitor/job/job.html/add.html/edit.html ~3 模板 + 前端 JS）；(c) Phase 7 ALIGN-01 端到端验收不强制可视化运维 UI。若用户在 plan-review 坚持要 UI，备选 (c) 自写最小 Thymeleaf 表格页（参考 admin 既有 templates/monitor/operlog 风格）。
+   - **STATUS: ✅ RESOLVED (user 2026-07-18 选 option a — 保可视化 UI)。planner 加 task：仿 zgbas-plus 现有 `templates/monitor/operlog` 风格自建最小 `/monitor/job` Thymeleaf 页（列表 + 启停 + 手动触发 + 传参），后端用已迁的 SysJobController。菜单接入作 `checkpoint:human-blocked`（运维 external spt-auth sys_menu INSERT 一行）。不改 CONTEXT.md（LOCKED 决策保原义）。**
 
 2. **Synchronized*Task 内部依赖分析粒度**（D-P6-11 落地关键）
    - What we know: 源 SynchronizedCtrContractTask.synchronizedAllCtrContract() 是 8 个 Synchronized*Task 的 1 个 handler 方法；它 @Autowired 多个 service 完成数据同步业务。
    - What's unclear: 每个 Synchronized*Task 的 handler 方法体是否 1:1 对应一个 service.method（直接下沉），还是 1:N（需在 service 加组合方法）。
    - Recommendation: Planner 在 Wave 1 前置一个 "Synchronized*Task + command executor 内部依赖分析" task，对 8 个 Synchronized*Task + BasCommandExecutor + ReportCommandExecutor + BasWebCommand 各方法生成 "handler method → service method 映射表"，再决策每个 MQApi 端点的直调目标。
+   - **RESOLVED: 06-03 Task 2 落地（dependency map）；06-04 Task 2 消费该 map 做 MQApi 直调改造。⚠ plan-checker warning 6 要求 06-03 verify 加 `grep -c 'synchronized.*Task' 06-03-SUMMARY.md = 8` 完整性断言，防映射漏项。**
 
 3. **菜单接入机制**（D-P6-10 flagged）
    - What we know: zgbas 用动态菜单（authOpenFacade HTTP 调外部 spt-auth 取）；外部 spt-auth 的 sys_menu 表是权威源；monolith 本地无 sys_menu 表。
    - What's unclear: 用户是否需要在本期为 `/monitor/job` 在外部 spt-auth sys_menu 加一行（operational change），还是延后到 Phase 7 用户验收时手动加，还是不需要（API-only 模式无菜单需求）。
    - Recommendation: 若走 API-only 备选（Q1），无需菜单接入。若走可视化 UI，则外部 spt-auth sys_menu INSERT 一行 `('定时任务', '2', '2', 'job', 'monitor/job/index', ...)` —— 这是 operational task 不在代码 PR 内，planner 标 `checkpoint:human-blocked` 由用户/运维执行。
+   - **STATUS: ✅ RESOLVED (随 Q1 option a) — 走可视化 UI 路径 → external spt-auth `sys_menu` INSERT 一行 `('定时任务','2','2','job','monitor/job/index',...)` 作 `checkpoint:human-blocked`（operational task，不在代码 PR 内，由用户/运维执行）。**
 
 4. **xxl-job admin DB 导出格式**（D-P6-01 落地关键）
    - What we know: 外部 xxl-job admin 是 xxl-job 2.3.0 标准部署，`xxl_job_info` 表 schema 公开（github.com/xuxueli/xxl-job/blob/2.3.0/xxl-job-admin/src/main/resources/xxl-job.sql）。
    - What's unclear: 用户以何种形式提供（mysqldump / CSV / 手抄列表）；是否包含已废弃任务（D-P6-03 ③）。
    - Recommendation: Planner 在 Wave 0 后立即 `checkpoint:human-blocked`，附 "xxl_job_info 表导出指引"（指出关键列：executor_handler / executor_param / executor_route_strategy / executor_block_strategy / executor_timeout / executor_fail_retry_count / glue_source / trigger_status）。
+   - **RESOLVED: 06-05 Task 1 `checkpoint:human-blocked`（附导出指引）→ 06-05 Task 2 翻译 → 06-05 Task 3 `checkpoint:human-verify`；fallback D-P6-03（无 cron/manual PAUSED + placeholder cron `0 0 0 1 1 ? 2099`、废弃跳过）已编码。**
 
 5. **Constants.JOB_WHITELIST_STR 收紧粒度**
    - What we know: 默认 `{"com.ruoyi"}`，本期改 `{"com.spt"}` 即可让所有 com.spt.quartz.task.* bean 通过。
    - What's unclear: 是否需要更严（如 `{"com.spt.quartz.task"}`）防未来误注入。
    - Recommendation: 用 `{"com.spt"}` —— 与 monolith 主包名一致，灵活；运维若担心可后期收紧。
+   - **RESOLVED: 06-01 Task 2 落地（`Constants.JOB_WHITELIST_STR = {"com.spt"}`）。plan-checker warning 确认无 blocker。**
 
 ## Validation Architecture
 

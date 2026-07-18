@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: "Phase 06 context gathered (12 decisions: cron export+translate, sampling dry-run, handler→quartz module, RuoYi UI, behavior-equivalence scope)"
-last_updated: "2026-07-18T06:06:17.758Z"
-last_activity: "2026-07-18 -- /index Thymeleaf @shiroUtil SpEL fixed (49682cf: ShiroUtil @Component("shiroUtil") — bean registration lost in web->monolith merge); 2 prior /index fixes ConfigUtil.init (d0a388e); Phase 5 startup-verify in progress"
+last_updated: "2026-07-18T08:26:49.553Z"
+last_activity: 2026-07-18 -- Phase 06 planning complete
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 23
+  total_plans: 29
   completed_plans: 23
   percent: 71
 ---
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 Phase: 05 (report-migration) — COMPLETE (committed)
 Plan: 6 of 6
-Status: Phase 05 committed (feat 8fbea05 + docs 2955004) & ROADMAP marked complete; /index render fixes in progress (d0a388e ConfigUtil.init, 49682cf ShiroUtil bean); Phase 06 not yet started
-Last activity: 2026-07-18 -- /index Thymeleaf @shiroUtil SpEL fixed (49682cf: ShiroUtil @Component("shiroUtil") — bean registration lost in web->monolith merge); 2 prior /index fixes ConfigUtil.init (d0a388e); Phase 5 startup-verify in progress
+Status: Ready to execute
+Last activity: 2026-07-18 -- Phase 06 planning complete
 
 Progress: [██████████] 100%
 
