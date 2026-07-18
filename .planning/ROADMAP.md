@@ -202,7 +202,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 2 + Wave 3 — BasCommandExecutor @Autowired task/ 类)*
 
-- [ ] 06-04-PLAN.md — 3 个 command executor（BasCommandExecutor + ReportCommandExecutor + BasWebCommand）迁 com.spt.quartz.task + D-P6-11 MQApi HTTP 端点保留 + 内部改直调 service iface + 合并编译门（QUARTZ-03 编译维度关闭）
+- [x] 06-04-PLAN.md — 3 个 command executor（BasCommandExecutor + ReportCommandExecutor + BasWebCommand）迁 com.spt.quartz.task + D-P6-11 MQApi HTTP 端点保留 + 内部改直调 service iface + 合并编译门（QUARTZ-03 编译维度关闭）
 
 **Wave 5** *(blocked on Wave 4 — checkpoint:human-blocked + checkpoint:human-verify)*
 
@@ -236,5 +236,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
 | 4. 核心业务迁移 | 6/6 | Complete   | 2026-07-17 |
 | 5. 报表迁移 | 6/6 | Complete | 2026-07-18 |
-| 6. 定时任务迁移 | 3/6 | In Progress|  |
+| 6. 定时任务迁移 | 4/6 | In Progress|  |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
