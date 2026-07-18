@@ -3,6 +3,7 @@
  */
 package com.spt.bas.server.listener;
 
+import com.spt.auth.sdk.cache.ConfigUtil;
 import com.spt.auth.sdk.cache.DictUtil;
 import com.spt.auth.sdk.cache.UserCache;
 import com.spt.bas.server.cache.BsCompanyOurUtil;
@@ -41,6 +42,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 		// 初始化缓存
 		DictUtil.init(appCode);
+		ConfigUtil.init();
 		BsDictUtil.init();
 		BsCompanyOurUtil.init();
 		UserCache.init();
