@@ -19,10 +19,10 @@ import java.util.ArrayList;
  * land in {@code com.spt.quartz.task}; {@code IRptWeChatWorkService} stays in its Phase 5 package
  * {@code com.spt.bas.report.server.service} (D-P6-09: only handler self-package changes).
  *
- * <p>Pitfall 6: the source {@code @XxlJob(value = "executeCommand")} was shared across 3 executors;
- * sys_job rows now distinguish them by bean name. The {@code XxlJobHelper.getJobParam()} fallback
- * is deleted because {@code commandline} is now passed directly by {@code JobInvokeUtil.invokeMethod}
- * reflection.
+ * <p>Pitfall 6: the source annotation-based routing (xxl-job shared {@code executeCommand}
+ * value across 3 executors); sys_job rows now distinguish them by bean name. The source job-param
+ * fallback is deleted because {@code commandline} is now passed directly by
+ * {@code JobInvokeUtil.invokeMethod} reflection.
  *
  * <p>Sub-commands (for 06-05 D-P6-02 sys_job translation):
  * <ul>

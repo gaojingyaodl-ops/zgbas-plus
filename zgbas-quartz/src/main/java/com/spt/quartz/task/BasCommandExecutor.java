@@ -48,9 +48,9 @@ import java.util.stream.Collectors;
  * {@link BudgetSettlementTask} / {@link CtrContractScheduleTask} / {@link DcsxAutoApplyPayTask})
  * were ported to {@code com.spt.quartz.task} in 06-02, so the imports resolve same-package.
  *
- * <p>Pitfall 6: the source {@code @XxlJob(value = "executeCommand")} was shared across 3 executors
- * (BasCommandExecutor / ReportCommandExecutor / BasWebCommand). In quartz mode, sys_job rows
- * distinguish them by bean name in {@code invoke_target}. The {@code XxlJobHelper.getJobParam()}
+ * <p>Pitfall 6: the source annotation-based routing (xxl-job shared {@code executeCommand}
+ * value across 3 executors: BasCommandExecutor / ReportCommandExecutor / BasWebCommand). In quartz
+ * mode, sys_job rows distinguish them by bean name in {@code invoke_target}. The source job-param
  * fallback is deleted because {@code commandline} is now passed directly by
  * {@code JobInvokeUtil.invokeMethod} reflection (sys_job.invoke_target conveys the arg).
  *
