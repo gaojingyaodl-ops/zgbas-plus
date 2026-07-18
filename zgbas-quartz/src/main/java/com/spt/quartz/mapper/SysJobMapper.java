@@ -1,6 +1,7 @@
 package com.spt.quartz.mapper;
 
 import com.spt.quartz.domain.SysJob;
+import com.spt.tools.mybatis.annotation.MyBatisDao;
 
 import java.util.List;
 
@@ -9,6 +10,7 @@ import java.util.List;
  *
  * @author ruoyi
  */
+@MyBatisDao
 public interface SysJobMapper {
     /**
      * 查询调度任务日志集合

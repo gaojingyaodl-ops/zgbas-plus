@@ -26,12 +26,21 @@ import org.springframework.context.annotation.Configuration;
  * {@code SampleMapper}. Without this, startup hits
  * {@code org.apache.ibatis.binding.BindingException: Invalid bound statement (not found)}
  * on the first report query.
+ *
+ * <p><b>Phase 6 Wave 1 (QUARTZ-01 / research §Pitfall 2&amp;7)</b> — added a third
+ * element {@code "com.spt.quartz.mapper"} so the RuoYi quartz mappers
+ * ({@code SysJobMapper}, {@code SysJobLogMapper}, both {@code @MyBatisDao} annotated)
+ * get scanned. The corresponding {@code SysJobMapper.xml} / {@code SysJobLogMapper.xml}
+ * live at {@code zgbas-quartz/src/main/resources/mybatis/mappers/} so the existing
+ * {@code mybatis-plus.mapper-locations=classpath:/mybatis/mappers/*Mapper.xml}
+ * glob resolves them with no yml change.
  */
 @Configuration
 @MapperScan(
     basePackages = {
         "com.spt.bas.system.dao",            // Phase 2 (SampleMapper)
-        "com.spt.bas.report.server.dao"      // Phase 5 (53 Rpt*Mapper)
+        "com.spt.bas.report.server.dao",     // Phase 5 (53 Rpt*Mapper)
+        "com.spt.quartz.mapper"              // Phase 6 (RuoYi quartz SysJobMapper / SysJobLogMapper)
     },
     annotationClass = MyBatisDao.class
 )
