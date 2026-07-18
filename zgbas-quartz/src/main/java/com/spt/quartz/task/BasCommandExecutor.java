@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
@@ -54,8 +55,21 @@ import java.util.stream.Collectors;
  * fallback is deleted because {@code commandline} is now passed directly by
  * {@code JobInvokeUtil.invokeMethod} reflection (sys_job.invoke_target conveys the arg).
  *
+ * <p><b>Phase 6 06-06 (D-P6-06 fail-fast caught wiring defect — Rule 1 auto-fix):</b>
+ * added {@code @Primary}. The pre-existing {@code com.spt.tools.core.cmd.CommandExecutor}
+ * (zgbas-common) has {@code @Autowired(required=false) ICommand commandExecutor;} which expects
+ * a single {@code ICommand} bean. In the source microservices each module had at most one
+ * {@code ICommand} impl, so the injection was unambiguous. The Phase 6 06-04 monolith convergence
+ * puts all three ICommand implementations ({@code basCommandExecutor} / {@code basWebCommand} /
+ * {@code reportCommandExecutor}) in the same Spring context, breaking startup with
+ * {@code NoUniqueBeanDefinitionException}. {@code @Primary} on BasCommandExecutor resolves the
+ * ambiguity in favor of the most feature-complete executor (56 sub-commands vs 2 / 3). The other
+ * two beans remain addressable by name via {@code sys_job.invoke_target} and via
+ * {@code context.getBean("reportCommandExecutor")} / {@code context.getBean("basWebCommand")}.
+ *
  * @author wlddh
  */
+@Primary
 @Component("basCommandExecutor")
 public class BasCommandExecutor implements ICommand {
 	private Logger logger = LoggerFactory.getLogger(getClass());
