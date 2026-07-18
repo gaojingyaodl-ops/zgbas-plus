@@ -13,7 +13,6 @@ import com.spt.pm.entity.PmProcess;
 import com.spt.tools.data.annotation.ServiceTransactional;
 import com.spt.tools.jpa.dao.BaseDao;
 import com.spt.tools.jpa.service.BaseService;
-import com.xxl.job.core.context.XxlJobHelper;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -169,7 +168,6 @@ public class CtrContractProfitServiceImpl extends BaseService<CtrContractProfit>
         List<CtrContract> changeContractList;
         List<ApplyCtrDCSX> changeDCSXList;
         log.info("refreshProfitData approveNo:{}", approveNo);
-        XxlJobHelper.log("refreshProfitData approveNo:{}", approveNo);
         if (StringUtils.isNotBlank(approveNo)) {
             PmApprove pmApprove = pmApproveDao.findByApproveNo(approveNo);
             changeContractList = ctrContractDao.findAllContractByApproveId(Objects.nonNull(pmApprove) ? pmApprove.getId() : 0L);
@@ -179,7 +177,6 @@ public class CtrContractProfitServiceImpl extends BaseService<CtrContractProfit>
             changeDCSXList = applyDcsxDao.findChangeDCSXList();
         }
         log.info("refreshProfitData 上下游合同更新条数:{},中游合同更新条数:{}", changeContractList.size(), changeDCSXList.size());
-        XxlJobHelper.log("refreshProfitData 上下游合同更新条数:{},中游合同更新条数:{}", changeContractList.size(), changeDCSXList.size());
 
         this.executorUpdateContract(changeContractList);
 

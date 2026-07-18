@@ -90,12 +90,12 @@
                  pm/service/impl/PmProcessAutoStepServiceImpl import org.wltea.expression.*.
              pdfbox 2.0.29 (basServer/pom.xml): service/impl/CtrContractDownloadService imports
                  org.apache.pdfbox.{multipdf,pdmodel}.*.
-             xxl-job-core 2.3.0 (basServer/pom.xml): the jar provides XxlJobHelper for
-                 service/impl/CtrContractProfitServiceImpl's diagnostic logging (XxlJobHelper.log).
-                 NOTE: this jar dep does NOT enable xxl-job scheduling — that requires
-                 @Bean XxlJobSpringExecutor (BasJobConfig, correctly EXCLUDED to Phase 6 per
-                 INFRA-03). The Phase 6 exclusion is about task/ handlers, not the compile-time
-                 jar dep that source basServer also declared.
+             xxl-job-core 2.3.0: REMOVED Phase 6 Wave 1 (06-01 INFRA-03) — source basServer/pom.xml
+                 had this jar to provide XxlJobHelper for diagnostic logging in
+                 service/impl/CtrContractProfitServiceImpl; Phase 6 translates those
+                 calls to log.info (CONTEXT.md Discretion "直接删 XxlJobHelper.log 行最干净").
+                 The xxl-job executor (BasJobConfig + XxlJobSpringExecutor bean) was
+                 already EXCLUDED from Phase 4; this pom removal completes INFRA-03.
              report-client 2.0.1-SNAPSHOT: REMOVED Phase 5 Wave 0 (05-01 D-P5-02) — 265 java
                  (entity/vo/remote/config/constant/payload/utils) inlined verbatim into
                  zgbas-system/src/main/java/com/spt/bas/report/client/, eliminating the types-only
@@ -128,11 +128,6 @@
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>2.0.29</version>
-        </dependency>
-        <dependency>
-            <groupId>com.xuxueli</groupId>
-            <artifactId>xxl-job-core</artifactId>
-            <version>2.3.0</version>
         </dependency>
         <dependency>
             <groupId>com.spt.bas</groupId>
