@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Phase 05 committed & marked complete; /index NPE fixed; ready for Phase 06
-last_updated: "2026-07-18T11:44:50+08:00"
-last_activity: 2026-07-18 -- /index post-login NPE fixed (d0a388e: ConfigUtil.init() added to ApplicationStartup — auth-sdk cache was never inited, lost in web->monolith migration); ready for Phase 06
+stopped_at: Phase 05 committed & marked complete; /index render bugs being fixed; ready for Phase 06
+last_updated: "2026-07-18T12:29:07+08:00"
+last_activity: 2026-07-18 -- /index Thymeleaf @shiroUtil SpEL fixed (49682cf: ShiroUtil @Component("shiroUtil") — bean registration lost in web->monolith merge); 2 prior /index fixes ConfigUtil.init (d0a388e); Phase 5 startup-verify in progress
 progress:
   total_phases: 7
   completed_phases: 5
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 Phase: 05 (report-migration) — COMPLETE (committed)
 Plan: 6 of 6
-Status: Phase 05 committed (feat 8fbea05 + docs 2955004) & ROADMAP marked complete; /index NPE fixed (d0a388e); Phase 06 not yet started
-Last activity: 2026-07-18 -- /index post-login NPE fixed (d0a388e: ConfigUtil.init() added to ApplicationStartup — auth-sdk cache was never inited, lost in web->monolith migration); ready for Phase 06
+Status: Phase 05 committed (feat 8fbea05 + docs 2955004) & ROADMAP marked complete; /index render fixes in progress (d0a388e ConfigUtil.init, 49682cf ShiroUtil bean); Phase 06 not yet started
+Last activity: 2026-07-18 -- /index Thymeleaf @shiroUtil SpEL fixed (49682cf: ShiroUtil @Component("shiroUtil") — bean registration lost in web->monolith merge); 2 prior /index fixes ConfigUtil.init (d0a388e); Phase 5 startup-verify in progress
 
 Progress: [██████████] 100%
 
@@ -129,6 +129,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260718-blh | Phase 5 housekeeping — mark report migration complete + commit W4-W6 | 2026-07-18 | 8fbea05+2955004 | [260718-blh-phase-5-housekeeping-roadmap-phase-5-com](./quick/260718-blh-phase-5-housekeeping-roadmap-phase-5-com/) |
 | 260718-g93 | Fix /index NPE — add ConfigUtil.init() to ApplicationStartup | 2026-07-18 | d0a388e | [260718-g93-index-npe-applicationstartup-configutil-](./quick/260718-g93-index-npe-applicationstartup-configutil-/) |
+| 260718-hal | Fix /index Thymeleaf NPE — register ShiroUtil bean for @shiroUtil SpEL | 2026-07-18 | 49682cf | [260718-hal-index-thymeleaf-npe-shiroutil-bean-shiro](./quick/260718-hal-index-thymeleaf-npe-shiroutil-bean-shiro/) |
 
 ## Deferred Items
 
