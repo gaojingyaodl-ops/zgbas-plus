@@ -80,13 +80,15 @@
 	</select>
 
 	<delete id="deleteByUserId">
-		delete t_wx_brand_follow a
-		<where>
-			a.user_id = #{userId}
-		</where>
+		delete from t_wx_brand_follow
+		where wx_user_id = #{userId}
 	</delete>
 
-	<select id="queryUserAttentNum" resultType="java.lang.Integer"></select>
+	<select id="queryUserAttentNum" resultType="java.lang.Integer">
+		select count(1)
+		from t_wx_brand_follow
+		where wx_user_id = #{userId}
+	</select>
 
 
 

@@ -19,7 +19,7 @@ import java.util.*;
  * @version 1.0.0
  * @date 2025/1/13 15:58
  */
-@Service
+@Service("reportRptBaseCostServiceImpl")
 public class RptBaseCostServiceImpl implements IRptBaseCostService {
 
     @Autowired

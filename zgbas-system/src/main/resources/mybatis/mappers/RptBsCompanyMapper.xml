@@ -71,6 +71,9 @@
 
 		<if test="companyName != null and companyName != '' ">
 			AND bc.company_name LIKE CONCAT('%',#{companyName},'%')
+		</if>
+
+		<if test="companyName != null and companyName != '' and matchUserId != null and matchUserId != '' ">
 			UNION
 			SELECT
 			bc.id AS id,
@@ -123,6 +126,26 @@
 			AND IF(ISNULL(ac.default_flg),1 = 1,ac.default_flg = true)
 			AND bc.enterprise_id = #{enterpriseId}
 			AND bc.company_name LIKE CONCAT('%',#{companyName},'%')
+			AND (bc.match_user_id IS NULL OR bc.company_type = 'T')
+			AND bc.id NOT IN (
+				SELECT c.id
+				FROM t_bs_company c
+				WHERE c.enable_flg = true
+				<if test="searchType == 'SX'">
+					AND c.total_credit_amount > 0
+				</if>
+				AND c.enterprise_id = #{enterpriseId}
+				AND (
+					c.match_user_id = #{matchUserId}
+					OR EXISTS (
+						SELECT bs.id
+						FROM t_bs_company_share bs
+						WHERE c.id = bs.company_id
+						AND bs.shared_user_id = #{matchUserId}
+						AND bs.enterprise_id = #{enterpriseId}
+					)
+				)
+			)
 		</if>
 
 	</select>

@@ -64,8 +64,8 @@
 			IFNULL(DATEDIFF(IFNULL(c1.pay_full_time,(SELECT DATE_ADD(s.delivery_time,INTERVAL s.credit_days DAY) FROM t_apply_sell s WHERE s.contract_id = c1.id)),c2.pay_full_time),0) As creditDays,
 			(SELECT MAX(r.receive_date) FROM t_apply_receive r WHERE r.contract_id = c1.id AND r.`status` = 'D') As maxReceiveDate,
 			(SELECT MAX(p.pay_date) FROM t_apply_pay p WHERE p.contract_id = c2.id AND p.`status` = 'D') As maxPayDate,
-			IFNULL((SELECT SUM((DATEDIFF(maxReceiveDate,ar.receive_date))*ar.receive_amount) FROM t_apply_receive ar WHERE ar.contract_id = c1.id AND ar.`status` = 'D'),0) As sellInterest,
-			IFNULL((SELECT SUM((DATEDIFF(maxPayDate,ap.pay_date))*ap.pay_amount) FROM t_apply_pay ap WHERE ap.contract_id = c2.id AND ap.`status` = 'D'),0) As buyInterest,
+			IFNULL((SELECT SUM((DATEDIFF((SELECT MAX(r2.receive_date) FROM t_apply_receive r2 WHERE r2.contract_id = c1.id AND r2.`status` = 'D'),ar.receive_date))*ar.receive_amount) FROM t_apply_receive ar WHERE ar.contract_id = c1.id AND ar.`status` = 'D'),0) As sellInterest,
+			IFNULL((SELECT SUM((DATEDIFF((SELECT MAX(p2.pay_date) FROM t_apply_pay p2 WHERE p2.contract_id = c2.id AND p2.`status` = 'D'),ap.pay_date))*ap.pay_amount) FROM t_apply_pay ap WHERE ap.contract_id = c2.id AND ap.`status` = 'D'),0) As buyInterest,
 			IF(IFNULL(ROUND((SELECT SUM(DATEDIFF(tr.receive_date,(IFNULL(c1.pay_full_time,(SELECT DATE_ADD(s.delivery_time,INTERVAL s.credit_days DAY) FROM t_apply_sell s WHERE s.contract_id = c1.id))))*(r.deal_number/c1.total_number)*tr.receive_amount*0.001) FROM t_apply_receive tr WHERE tr.contract_id = c1.id AND tr.status = 'D'),2),0)&lt;0,0,IFNULL(ROUND((SELECT SUM(DATEDIFF(tr.receive_date,(IFNULL(c1.pay_full_time,(SELECT DATE_ADD(s.delivery_time,INTERVAL s.credit_days DAY) FROM t_apply_sell s WHERE s.contract_id = c1.id))))*(r.deal_number/c1.total_number)*tr.receive_amount*0.001) FROM t_apply_receive tr WHERE tr.contract_id = c1.id AND tr.status = 'D'),2),0)) AS interestAmount
 		FROM
 			t_ctr_contract_rela r

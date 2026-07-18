@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
-@MyBatisDao
+@MyBatisDao("reportRptBaseCostMapper")
 public interface RptBaseCostMapper {
 
 

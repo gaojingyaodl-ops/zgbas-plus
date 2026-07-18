@@ -1,7 +1,18 @@
 package com.spt;
 
 import com.spt.bas.client.remote.IBsCompanyOurClient;
+import com.spt.bas.client.vo.ContractSearchVo;
+import com.spt.bas.report.client.entity.RptBusinessOverview;
+import com.spt.bas.report.client.entity.RptFundReceivableStatistics;
+import com.spt.bas.report.client.vo.RptBusinessOverviewSearchVo;
+import com.spt.bas.report.client.vo.RptFundReceivableStatisticsVo;
+import com.spt.bas.report.client.vo.RptCtrContractRptVo;
+import com.spt.bas.report.server.dao.RptBusinessOverviewMapper;
+import com.spt.bas.report.server.dao.RptCtrContractReportMapper;
+import com.spt.bas.report.server.dao.RptFundReceivableStatisticsMapper;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.shiro.mgt.SecurityManager;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,9 +20,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.web.servlet.HandlerExecutionChain;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.sql.DataSource;
 
@@ -59,6 +73,18 @@ class ZgbasApplicationTest {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Autowired
+    private SqlSessionFactory sqlSessionFactory;
+
+    @Autowired
+    private RptFundReceivableStatisticsMapper rptFundReceivableStatisticsMapper;
+
+    @Autowired
+    private RptCtrContractReportMapper rptCtrContractReportMapper;
+
+    @Autowired
+    private RptBusinessOverviewMapper rptBusinessOverviewMapper;
 
     @Test
     void contextLoads() {
@@ -269,5 +295,94 @@ class ZgbasApplicationTest {
         com.spt.tools.core.bean.LocalServerConfig reportServerConfig = context.getBean(
             "reportServerConfig", com.spt.tools.core.bean.LocalServerConfig.class);
         assertThat(reportServerConfig.getUrl()).contains("localhost:8080");
+    }
+
+    @Test
+    void allReportMappersResolve() {
+        assertThat(sqlSessionFactory.getConfiguration().hasStatement(
+            "com.spt.bas.report.server.dao.RptFundReceivableStatisticsMapper.findPage"))
+            .as("RptFundReceivableStatisticsMapper.findPage should resolve")
+            .isTrue();
+        assertThat(sqlSessionFactory.getConfiguration().hasStatement(
+            "com.spt.bas.report.server.dao.RptCtrContractReportMapper.findRptContractPage"))
+            .as("RptCtrContractReportMapper.findRptContractPage should resolve")
+            .isTrue();
+        assertThat(sqlSessionFactory.getConfiguration().hasStatement(
+            "com.spt.bas.report.server.dao.RptBusinessOverviewMapper.findBusinessOverviewList"))
+            .as("RptBusinessOverviewMapper.findBusinessOverviewList should resolve")
+            .isTrue();
+    }
+
+    @Test
+    void reportApiPathPrefixWiring_probe() throws Exception {
+        RequestMappingHandlerMapping mapping = context.getBean(RequestMappingHandlerMapping.class);
+
+        MockHttpServletRequest fundReceivableRequest = new MockHttpServletRequest(
+            "POST", "/spt-bas-report/rpt/fundReceivableStatistics/findPage");
+        HandlerExecutionChain fundReceivableHandler = mapping.getHandler(fundReceivableRequest);
+        assertThat(fundReceivableHandler)
+            .as("/spt-bas-report/rpt/fundReceivableStatistics/findPage should map to a report api handler")
+            .isNotNull();
+
+        MockHttpServletRequest baseCostRequest = new MockHttpServletRequest(
+            "POST", "/spt-bas-report/rpt/baseCost/findPage");
+        HandlerExecutionChain baseCostHandler = mapping.getHandler(baseCostRequest);
+        assertThat(baseCostHandler)
+            .as("/spt-bas-report/rpt/baseCost/findPage should map to a report api handler")
+            .isNotNull();
+
+        MockHttpServletRequest businessPayRequest = new MockHttpServletRequest(
+            "POST", "/spt-bas-report/rpt/businessPay/findPageContract");
+        HandlerExecutionChain businessPayHandler = mapping.getHandler(businessPayRequest);
+        assertThat(businessPayHandler)
+            .as("/spt-bas-report/rpt/businessPay/findPageContract should map to a report api handler")
+            .isNotNull();
+    }
+
+    @Disabled("D-P5-08 sample query proof — activate manually with real DB seeded data")
+    @Test
+    void sampleReportQuery_proof() {
+        RptFundReceivableStatisticsVo fundReceivableSearch = new RptFundReceivableStatisticsVo();
+        fundReceivableSearch.setPage(1);
+        fundReceivableSearch.setRows(10);
+        java.util.List<RptFundReceivableStatistics> fundReceivableRows =
+            rptFundReceivableStatisticsMapper.findPage(fundReceivableSearch);
+        assertThat(fundReceivableRows)
+            .as("RptFundReceivableStatisticsMapper.findPage should return rows with seeded real DB data")
+            .isNotNull()
+            .isNotEmpty();
+
+        ContractSearchVo contractSearch = new ContractSearchVo();
+        contractSearch.setPage(1);
+        contractSearch.setRows(10);
+        java.util.List<RptCtrContractRptVo> contractRows =
+            rptCtrContractReportMapper.findRptContractPage(contractSearch);
+        assertThat(contractRows)
+            .as("RptCtrContractReportMapper.findRptContractPage should return rows with seeded real DB data")
+            .isNotNull()
+            .isNotEmpty();
+
+        RptBusinessOverviewSearchVo businessOverviewSearch = new RptBusinessOverviewSearchVo();
+        java.util.List<RptBusinessOverview> businessOverviewRows =
+            rptBusinessOverviewMapper.findBusinessOverviewList(businessOverviewSearch);
+        assertThat(businessOverviewRows)
+            .as("RptBusinessOverviewMapper.findBusinessOverviewList should return rows with seeded real DB data")
+            .isNotNull()
+            .isNotEmpty();
+    }
+
+    @Test
+    void reportHttpReachability_proof() {
+        ResponseEntity<String> reportApiResponse = restTemplate.postForEntity(
+            "/spt-bas-report/rpt/fundReceivableStatistics/findPage", null, String.class);
+        assertThat(reportApiResponse.getStatusCodeValue())
+            .as("/spt-bas-report/rpt/fundReceivableStatistics/findPage should not return 404")
+            .isNotEqualTo(404);
+
+        ResponseEntity<String> businessOverviewResponse = restTemplate.postForEntity(
+            "/spt-bas-report/business/overview/api/findBusinessOverviewList", null, String.class);
+        assertThat(businessOverviewResponse.getStatusCodeValue())
+            .as("/spt-bas-report/business/overview/api/findBusinessOverviewList should not return 404")
+            .isNotEqualTo(404);
     }
 }

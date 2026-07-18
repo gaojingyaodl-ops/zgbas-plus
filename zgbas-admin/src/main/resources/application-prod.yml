@@ -99,6 +99,10 @@ trade:
     secret: ${TRADE_APP_SECRET}
   login:
     url: ${TRADE_LOGIN_URL}
+weChatWork:
+  webhook:
+    url: ${WECHAT_WORK_WEBHOOK_URL}
+    url2: ${WECHAT_WORK_WEBHOOK_URL2}
 # Phase 4 Wave 3 (Plan 04-05 Rule 3): remaining placeholder keys referenced by ported
 # basServer service impls (照搬 source basServer application.properties /
 # application-prod.properties). Non-secret invariant values (boolean feature flags + the
