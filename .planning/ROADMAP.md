@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: 认证首页** - Shiro 登录链路 + 动态菜单首页端到端可用 (completed 2026-07-16)
 - [x] **Phase 4: 核心业务迁移** - 合同/授信/库存/放款 basServer JPA 业务迁入，Controller 迁入 admin (completed 2026-07-17)
 - [x] **Phase 5: 报表迁移** - 53 套 mybatis 报表迁入，查询行为等价 (completed 2026-07-18)
-- [ ] **Phase 6: 定时任务迁移** - xxl-job 删除，64 handler 迁入 RuoYi quartz
+- [x] **Phase 6: 定时任务迁移** - xxl-job 删除，64 handler 迁入 RuoYi quartz (completed 2026-07-18)
 - [ ] **Phase 7: 行为对齐验证** - 单服务端到端可用，与旧系统 zgbas 行为等价
 
 ## Phase Details
@@ -210,7 +210,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5)*
 
-- [ ] 06-06-PLAN.md — 扩 ZgbasApplicationTest 加 4 quartz probe/proof（D-P6-06 启动期 Scheduler fail-fast + D-P6-04 抽样 dry-run + D-P6-05 只读真跑 / 写类空跑分级）+ 全 reactor mvn test 绿 + Phase 6 收口
+- [x] 06-06-PLAN.md — 扩 ZgbasApplicationTest 加 4 quartz probe/proof（D-P6-06 启动期 Scheduler fail-fast + D-P6-04 抽样 dry-run + D-P6-05 只读真跑 / 写类空跑分级）+ 全 reactor mvn test 绿 + Phase 6 收口
 
 ### Phase 7: 行为对齐验证
 
@@ -236,5 +236,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
 | 4. 核心业务迁移 | 6/6 | Complete   | 2026-07-17 |
 | 5. 报表迁移 | 6/6 | Complete | 2026-07-18 |
-| 6. 定时任务迁移 | 5/6 | In Progress|  |
+| 6. 定时任务迁移 | 6/6 | Complete   | 2026-07-18 |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
