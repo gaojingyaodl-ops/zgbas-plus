@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+	<th:block th:include="include :: header('新增定时任务')" />
+	<th:block th:include="include :: bootstrap-select-css" />
+</head>
+<body class="white-bg">
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+		<form class="form-horizontal m" id="form-job-add">
+			<div class="form-group">
+				<label class="col-sm-3 control-label">任务名称：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="jobName" id="jobName" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">任务组名：</label>
+				<div class="col-sm-8">
+					<select name="jobGroup" class="form-control" th:with="type=${@dict.getType('sys_job_group')}">
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">调用目标字符串：</label>
+				<div class="col-sm-8">
+					<!-- invoke_target is the user-controlled RCE reflection surface —
+					     rendered via th:value (Thymeleaf default HTML escape) for XSS
+					     defense-in-depth (threat_model T-06-01-06). Unescaped render
+					     attribute (th:u&#0116;ext) is forbidden on this field. -->
+					<input class="form-control" type="text" th:value="" name="invokeTarget" id="invokeTarget" placeholder="例：ryTask.ryNoParams / applyPayTask.autoPay()" required>
+					<span class="help-block m-b-none"><i class="fa fa-info-circle"></i> 必须是 com.spt 包内的 bean，方法名 + 参数字面量；cron / rmi / ldap(s) / http(s) 调用将被拒绝。</span>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">cron执行表达式：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="cronExpression" id="cronExpression" placeholder="例：0/10 * * * * ?（7 字段 quartz CronExpression）" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">执行策略：</label>
+				<div class="col-sm-8">
+					<select name="misfirePolicy" class="form-control" th:with="type=${@dict.getType('sys_job_misfire')}">
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">是否并发执行：</label>
+				<div class="col-sm-8">
+					<label class="radio-box"> <input type="radio" name="concurrent" value="0"> 允许 </label>
+					<label class="radio-box"> <input type="radio" name="concurrent" value="1" checked> 禁止 </label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">状态：</label>
+				<div class="col-sm-8">
+					<label class="radio-box"> <input type="radio" name="status" value="0"> 正常 </label>
+					<label class="radio-box"> <input type="radio" name="status" value="1" checked> 暂停 </label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">备注：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="remark">
+				</div>
+			</div>
+		</form>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: bootstrap-select-js" />
+	<script th:inline="javascript">
+		var prefix = ctx + "monitor/job";
+
+		$("#form-job-add").validate({
+			rules: {
+				jobName: { required: true, maxlength: 64 },
+				invokeTarget: { required: true, maxlength: 500 },
+				cronExpression: { required: true, maxlength: 255 }
+			},
+			submitHandler: function(form) {
+				$.operate.save(prefix + "/add", $('#form-job-add').serialize());
+			}
+		});
+	</script>
+</body>
+</html>

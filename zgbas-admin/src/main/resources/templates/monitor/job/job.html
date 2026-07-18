@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+	<th:block th:include="include :: header('定时任务列表')" />
+	<th:block th:include="include :: bootstrap-select-css" />
+</head>
+<body class="gray-bg">
+	<div class="container-div">
+		<div class="row">
+			<div class="col-sm-12 search-collapse">
+				<form id="job-form">
+					<div class="select-list">
+						<ul>
+							<li>
+								<label>任务名称： </label><input type="text" name="jobName"/>
+							</li>
+							<li>
+								<label>任务组名： </label><select name="jobGroup" th:with="type=${@dict.getType('sys_job_group')}">
+									<option value="">所有</option>
+									<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+								</select>
+							</li>
+							<li>
+								<label>任务状态：</label><select name="status" th:with="type=${@dict.getType('sys_job_status')}">
+									<option value="">所有</option>
+									<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+								</select>
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('job-form', 'bootstrap-table')"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+
+			<div class="btn-group-sm" id="toolbar" role="group">
+				<a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="monitor:job:add">
+					<i class="fa fa-plus"></i> 新增
+				</a>
+				<a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="monitor:job:edit">
+					<i class="fa fa-edit"></i> 修改
+				</a>
+				<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="monitor:job:remove">
+					<i class="fa fa-remove"></i> 删除
+				</a>
+				<a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="monitor:job:export">
+					<i class="fa fa-download"></i> 导出
+				</a>
+			</div>
+
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table"></table>
+			</div>
+		</div>
+	</div>
+
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: bootstrap-select-js" />
+	<script th:inline="javascript">
+		var editFlag = [[${@permission.hasPermi('monitor:job:edit')}]];
+		var removeFlag = [[${@permission.hasPermi('monitor:job:remove')}]];
+		var statusFlag = [[${@permission.hasPermi('monitor:job:changeStatus')}]];
+		var runFlag = [[${@permission.hasPermi('monitor:job:run')}]];
+		var prefix = ctx + "monitor/job";
+
+		$(function() {
+		    var options = {
+		        url: prefix + "/list",
+		        createUrl: prefix + "/add",
+		        updateUrl: prefix + "/edit/{id}",
+		        removeUrl: prefix + "/remove",
+		        exportUrl: prefix + "/export",
+		        sortName: "createTime",
+		        sortOrder: "desc",
+		        modalName: "定时任务",
+		        escape: true,
+		        showPageGo: true,
+		        columns: [{
+		            checkbox: true
+		        },
+		        {
+		            field: 'jobId',
+		            title: '任务编号'
+		        },
+		        {
+		            field: 'jobName',
+		            title: '任务名称'
+		        },
+		        {
+		            field: 'jobGroup',
+		            title: '任务组名',
+		            formatter: function(value, row, index) {
+		                return $.table.selectDictLabel(groups, value);
+		            }
+		        },
+		        {
+		            field: 'invokeTarget',
+		            title: '调用目标字符串'
+		        },
+		        {
+		            field: 'cronExpression',
+		            title: '执行表达式'
+		        },
+		        {
+		            field: 'status',
+		            title: '状态',
+		            align: 'center',
+		            formatter: function(value, row, index) {
+		                return statusTools(value, row);
+		            }
+		        },
+		        {
+		            field: 'nextValidTime',
+		            title: '下次执行时间'
+		        },
+		        {
+		            title: '操作',
+		            align: 'center',
+		            formatter: function(value, row, index) {
+		                var actions = [];
+		                actions.push('<a class="btn btn-success btn-xs ' + runFlag + '" href="javascript:void(0)" onclick="runJob(\'' + row.jobId + '\')"><i class="fa fa-play"></i>执行一次</a> ');
+		                actions.push('<a class="btn btn-success btn-xs ' + editFlag + '" href="javascript:void(0)" onclick="$.operate.edit(\'' + row.jobId + '\')"><i class="fa fa-edit"></i>编辑</a> ');
+		                actions.push('<a class="btn btn-danger btn-xs ' + removeFlag + '" href="javascript:void(0)" onclick="$.operate.remove(\'' + row.jobId + '\')"><i class="fa fa-remove"></i>删除</a>');
+		                return actions.join('');
+		            }
+		        }]
+		    };
+		    $.table.init(options);
+		});
+
+		// D-P6-10 手动触发：调 PUT /monitor/job/run 触发指定任务立即执行一次
+		function runJob(jobId) {
+		    $.modal.confirm("确认要立即执行一次该定时任务吗？", function() {
+		        $.operate.post(prefix + "/run", { "jobId": jobId });
+		    });
+		}
+
+		// 任务状态切换（0正常 / 1暂停）
+		function statusTools(value, row) {
+		    if (value == '1') {
+		        return '<i class=\"badge badge-danger\">已暂停</i> <a class=\"btn btn-success btn-xs ' + statusFlag + '\" href=\"javascript:void(0)\" onclick=\"startJob(\'' + row.jobId + '\', \'' + row.jobGroup + '\')\"><i class=\"fa fa-play\"></i> 启动</a>';
+		    } else if (value == '0') {
+		        return '<i class=\"badge badge-primary\">运行中</i> <a class=\"btn btn-warning btn-xs ' + statusFlag + '\" href=\"javascript:void(0)\" onclick=\"pauseJob(\'' + row.jobId + '\', \'' + row.jobGroup + '\')\"><i class=\"fa fa-pause\"></i> 暂停</a>';
+		    }
+		}
+
+		function startJob(jobId, jobGroup) {
+		    $.modal.confirm("确认要启动该定时任务吗？", function() {
+		        $.operate.put(prefix + "/changeStatus", { "jobId": jobId, "jobGroup": jobGroup, "status": "0" });
+		    });
+		}
+
+		function pauseJob(jobId, jobGroup) {
+		    $.modal.confirm("确认要暂停该定时任务吗？", function() {
+		        $.operate.put(prefix + "/changeStatus", { "jobId": jobId, "jobGroup": jobGroup, "status": "1" });
+		    });
+		}
+	</script>
+</body>
+</html>
