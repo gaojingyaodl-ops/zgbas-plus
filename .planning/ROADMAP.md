@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: 基础设施** - spt-tools 内联、双 ORM 共存、外部 Bean 注入、配置收敛、删 nacos、Feign 进程内化 (completed 2026-07-16)
 - [x] **Phase 3: 认证首页** - Shiro 登录链路 + 动态菜单首页端到端可用 (completed 2026-07-16)
 - [x] **Phase 4: 核心业务迁移** - 合同/授信/库存/放款 basServer JPA 业务迁入，Controller 迁入 admin (completed 2026-07-17)
-- [ ] **Phase 5: 报表迁移** - 53 套 mybatis 报表迁入，查询行为等价
+- [x] **Phase 5: 报表迁移** - 53 套 mybatis 报表迁入，查询行为等价 (completed 2026-07-18)
 - [ ] **Phase 6: 定时任务迁移** - xxl-job 删除，64 handler 迁入 RuoYi quartz
 - [ ] **Phase 7: 行为对齐验证** - 单服务端到端可用，与旧系统 zgbas 行为等价
 
@@ -152,27 +152,27 @@ Plans:
 Plans:
 **Wave 0** *(前置接线，无阻塞)*
 
-- [ ] 05-01-PLAN.md — D-P5-02 reportClient 265 java 内联 + D-P5-03 ReportFeignPathConfig + D-P5-07 @MapperScan 放宽 + type-aliases 追加 + pom 移除 report-client jar + W0 fail-fast probe
+- [x] 05-01-PLAN.md — D-P5-02 reportClient 265 java 内联 + D-P5-03 ReportFeignPathConfig + D-P5-07 @MapperScan 放宽 + type-aliases 追加 + pom 移除 report-client jar + W0 fail-fast probe
 
 **Wave 1** *(blocked on Wave 0)*
 
-- [ ] 05-02-PLAN.md — 低风险域 21 Mapper+XML+service 批迁（Apply/Wx/WeChat/Stock/Company/Supplier/Business/NotBill/NotInvoice/Risk）+ 2 util
+- [x] 05-02-PLAN.md — 低风险域 21 Mapper+XML+service 批迁（Apply/Wx/WeChat/Stock/Company/Supplier/Business/NotBill/NotInvoice/Risk）+ 2 util
 
 **Wave 2** *(blocked on Wave 1 — Pitfall 4: Summary/UserRoi 先于 Ctr*)*
 
-- [ ] 05-03-PLAN.md — dependency-critical 域 13 Mapper + 1 mapperless（SummaryRoi）批迁（BaseCost/UserRoi/SummaryRoi/Evaluate/Person/Fund/Invoice/Budget/Profit/Sales/Region/Province）
+- [x] 05-03-PLAN.md — dependency-critical 域 13 Mapper + 1 mapperless（SummaryRoi）批迁（BaseCost/UserRoi/SummaryRoi/Evaluate/Person/Fund/Invoice/Budget/Profit/Sales/Region/Province）
 
 **Wave 3** *(blocked on Wave 2 — RptCtrContractReportServiceImpl 依赖 Wave 2 的 SummaryRoi/UserRoi)*
 
-- [ ] 05-04-PLAN.md — Ctr* 合同台账域 14 Mapper + misc 5 Mapper（Credit/Fact/Pm/Index/Print）= 19 Mapper，53 全量 compile gate 关闭 REPORT-01
+- [x] 05-04-PLAN.md — Ctr* 合同台账域 14 Mapper + misc 5 Mapper（Credit/Fact/Pm/Index/Print）= 19 Mapper，53 全量 compile gate 关闭 REPORT-01
 
 **Wave 4** *(blocked on Wave 3 — api 依赖 service)*
 
-- [ ] 05-05-PLAN.md — 54 report @RestController 落 zgbas-admin（D-P5-01）+ W5 probes（allReportMappersResolve + reportApiPathPrefixWiring_probe）
+- [x] 05-05-PLAN.md — 54 report @RestController 落 zgbas-admin（D-P5-01）+ W5 probes（allReportMappersResolve + reportApiPathPrefixWiring_probe）
 
 **Wave 5** *(blocked on Wave 4)*
 
-- [ ] 05-06-PLAN.md — BFF stub-port 升级（解除 D-P4-02 report 降级，关闭 Phase 3 MyIndexController 缺口）+ W6 验收 proof（sampleReportQuery_proof + HTTP reachability）
+- [x] 05-06-PLAN.md — BFF stub-port 升级（解除 D-P4-02 report 降级，关闭 Phase 3 MyIndexController 缺口）+ W6 验收 proof（sampleReportQuery_proof + HTTP reachability）
 
 ### Phase 6: 定时任务迁移
 
@@ -211,6 +211,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. 基础设施 | 6/6 | Complete   | 2026-07-16 |
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
 | 4. 核心业务迁移 | 6/6 | Complete   | 2026-07-17 |
-| 5. 报表迁移 | 0/6 | Not started | - |
+| 5. 报表迁移 | 6/6 | Complete | 2026-07-18 |
 | 6. 定时任务迁移 | 0/TBD | Not started | - |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
