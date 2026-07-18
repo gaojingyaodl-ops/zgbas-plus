@@ -206,7 +206,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 — checkpoint:human-blocked + checkpoint:human-verify)*
 
-- [ ] 06-05-PLAN.md — sys_job 数据翻译（D-P6-01 用户导出 xxl-job admin xxl_job_info → D-P6-02 Claude 翻译为 sys_job INSERT + D-P6-03 三级分类 NORMAL/PAUSED/废弃 + D-P6-12 concurrent 字段 + Pitfall 6 executeCommand 拆 ~55 行 + checkpoint:human-verify 逐项核对）
+- [x] 06-05-PLAN.md — sys_job 数据翻译（D-P6-01 用户导出 xxl-job admin xxl_job_info → D-P6-02 Claude 翻译为 sys_job INSERT + D-P6-03 三级分类 NORMAL/PAUSED/废弃 + D-P6-12 concurrent 字段 + Pitfall 6 executeCommand 拆 ~55 行 + checkpoint:human-verify 逐项核对）
 
 **Wave 6** *(blocked on Wave 5)*
 
@@ -236,5 +236,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
 | 4. 核心业务迁移 | 6/6 | Complete   | 2026-07-17 |
 | 5. 报表迁移 | 6/6 | Complete | 2026-07-18 |
-| 6. 定时任务迁移 | 4/6 | In Progress|  |
+| 6. 定时任务迁移 | 5/6 | In Progress|  |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
