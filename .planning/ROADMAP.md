@@ -186,7 +186,31 @@ Plans:
   3. 任务记录初始化（cron / bean / method 翻译为 sys_job 数据），支持手动触发与传参
   4. 至少 1 个迁移后的任务可手动触发 + 传参 dry-run 通过；xxl-job 依赖与 executor 配置完全移除
 
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+**Wave 1** *(foundation)*
+
+- [ ] 06-01-PLAN.md — Foundation：auth-quartz 整模块复制 + 17 com.spt.common.* 子集本地化 + QuartzScheduleConfig（uncomment+rename）+ Constants 白名单改 com.spt + 剥 @PreAuthorize + @MapperScan 放宽 + DDL（quartz.sql + sys_job.sql）+ xxl-job-core pom 删除 + CtrContractProfitServiceImpl XxlJobHelper.log 翻译
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 06-02-PLAN.md — basServer/task/ 20 handler 迁 com.spt.quartz.task（D-P6-09 repackage 首次偏离 D-P2-07）+ xxl-job→quartz 翻译（Pattern 3）+ handler 清单为 06-05 D-P6-02 翻译准备
+
+**Wave 3** *(blocked on Wave 1 — 与 06-02 无文件冲突)*
+
+- [ ] 06-03-PLAN.md — basServer/rocketmq/task/ 8 Synchronized*Task handler 迁 com.spt.quartz.task + Synchronized*Task 内部依赖映射表（D-P6-11 MQApi 改造输入）
+
+**Wave 4** *(blocked on Wave 2 + Wave 3 — BasCommandExecutor @Autowired task/ 类)*
+
+- [ ] 06-04-PLAN.md — 3 个 command executor（BasCommandExecutor + ReportCommandExecutor + BasWebCommand）迁 com.spt.quartz.task + D-P6-11 MQApi HTTP 端点保留 + 内部改直调 service iface + 合并编译门（QUARTZ-03 编译维度关闭）
+
+**Wave 5** *(blocked on Wave 4 — checkpoint:human-blocked + checkpoint:human-verify)*
+
+- [ ] 06-05-PLAN.md — sys_job 数据翻译（D-P6-01 用户导出 xxl-job admin xxl_job_info → D-P6-02 Claude 翻译为 sys_job INSERT + D-P6-03 三级分类 NORMAL/PAUSED/废弃 + D-P6-12 concurrent 字段 + Pitfall 6 executeCommand 拆 ~55 行 + checkpoint:human-verify 逐项核对）
+
+**Wave 6** *(blocked on Wave 5)*
+
+- [ ] 06-06-PLAN.md — 扩 ZgbasApplicationTest 加 4 quartz probe/proof（D-P6-06 启动期 Scheduler fail-fast + D-P6-04 抽样 dry-run + D-P6-05 只读真跑 / 写类空跑分级）+ 全 reactor mvn test 绿 + Phase 6 收口
 
 ### Phase 7: 行为对齐验证
 
