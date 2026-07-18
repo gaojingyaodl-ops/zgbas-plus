@@ -27,6 +27,26 @@
             <groupId>com.spt</groupId>
             <artifactId>zgbas-system</artifactId>
         </dependency>
+
+        <!-- Phase 6 (QUARTZ-01): quartz scheduler + Spring integration.
+             Versions are managed by spring-boot-starter-parent:2.5.9 BOM
+             (quartz 2.3.2, spring-context-support 5.3.13). c3p0 excluded to
+             avoid conflict with Druid (the @Primary DataSource). Mirrors
+             spt-auth/auth-quartz/pom.xml layout verbatim. -->
+        <dependency>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.mchange</groupId>
+                    <artifactId>c3p0</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context-support</artifactId>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>
