@@ -44,15 +44,27 @@ spring:
     proxy-target-class: true
 
 mybatis-plus:
-  mapper-locations: classpath:/mybatis/mappers/*Mapper.xml
+  mapper-locations: classpath*:/mybatis/mappers/*Mapper.xml
   # Phase 5 Wave 0 (D-P5-07 part 1): append report entity + vo packages so 53 Rpt*Mapper.xml
-  # resultType / parameterType FQNs resolve. mapper-locations unchanged — 53 report XML drop
+  # resultType / parameterType FQNs resolve. mapper-locations glob unchanged — 53 report XML drop
   # alongside SampleMapper.xml and are picked up by the existing glob.
-  # Pitfall 4 defense: client.entity kept; report.client.{entity,vo} added for report XML FQN refs.
+  # Phase 6 Wave 6 (D-P6-06 fail-fast caught missing-statement defect — Rule 1 auto-fix):
+  # changed prefix `classpath:` → `classpath*:`. Spring's PathMatchingResourcePatternResolver
+  # treats `classpath:` as SINGLE — only the first classpath entry containing mybatis/mappers/
+  # is scanned. For Phase 2-5 all mappers lived in zgbas-system (one classpath entry) so this
+  # happened to work. Phase 6 added zgbas-quartz/src/main/resources/mybatis/mappers/SysJob*Mapper.xml
+  # in a different module/jar — `classpath:` did not reach it, and @PostConstruct
+  # SysJobServiceImpl.init() failed with `BindingException: Invalid bound statement (not found):
+  # com.spt.quartz.mapper.SysJobMapper.selectJobAll`. `classpath*:` scans EVERY classpath entry
+  # (zgbas-system + zgbas-quartz), restoring mapper discovery for Phase 6 RuoYi mappers without
+  # disturbing Phase 2 SampleMapper / Phase 5 Rpt*Mapper.
+  # Also added `com.spt.quartz.domain` so SysJobMapper.xml / SysJobLogMapper.xml type aliases
+  # (`SysJob`, `SysJobLog` short names) resolve — the existing glob was bas-only.
   type-aliases-package: >-
     com.spt.bas.client.entity,
     com.spt.bas.report.client.entity,
-    com.spt.bas.report.client.vo
+    com.spt.bas.report.client.vo,
+    com.spt.quartz.domain
 
 logging:
   level:
