@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: ready
-stopped_at: Phase 05 committed & marked complete; /index render bugs being fixed; ready for Phase 06
-last_updated: "2026-07-18T12:29:07+08:00"
-last_activity: 2026-07-18 -- /index Thymeleaf @shiroUtil SpEL fixed (49682cf: ShiroUtil @Component("shiroUtil") — bean registration lost in web->monolith merge); 2 prior /index fixes ConfigUtil.init (d0a388e); Phase 5 startup-verify in progress
+status: executing
+stopped_at: "Phase 06 context gathered (12 decisions: cron export+translate, sampling dry-run, handler→quartz module, RuoYi UI, behavior-equivalence scope)"
+last_updated: "2026-07-18T06:06:17.758Z"
+last_activity: "2026-07-18 -- /index Thymeleaf @shiroUtil SpEL fixed (49682cf: ShiroUtil @Component("shiroUtil") — bean registration lost in web->monolith merge); 2 prior /index fixes ConfigUtil.init (d0a388e); Phase 5 startup-verify in progress"
 progress:
   total_phases: 7
   completed_phases: 5
@@ -141,6 +141,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-18T02:30:00+08:00
-Stopped at: Phase 05 closeout completed
-Resume file: .planning/phases/05-report-migration/05-CONTEXT.md
+Last session: 2026-07-18T06:06:17.753Z
+Stopped at: Phase 06 context gathered (12 decisions: cron export+translate, sampling dry-run, handler→quartz module, RuoYi UI, behavior-equivalence scope)
+Resume file: .planning/phases/06-quartz-migration/06-CONTEXT.md
