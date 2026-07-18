@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+	<th:block th:include="include :: header('修改定时任务')" />
+	<th:block th:include="include :: bootstrap-select-css" />
+</head>
+<body class="white-bg">
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+		<form class="form-horizontal m" id="form-job-edit" th:object="${job}">
+			<input type="hidden" name="jobId" th:value="${job.jobId}">
+			<div class="form-group">
+				<label class="col-sm-3 control-label">任务名称：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="jobName" th:value="${job.jobName}" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">任务组名：</label>
+				<div class="col-sm-8">
+					<select name="jobGroup" class="form-control" th:with="type=${@dict.getType('sys_job_group')}">
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"
+								th:selected="${dict.dictValue == job.jobGroup}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">调用目标字符串：</label>
+				<div class="col-sm-8">
+					<!-- invoke_target rendered via th:value (Thymeleaf HTML escape) —
+					     threat_model T-06-01-06: unescaped render attribute
+					     (th:u&#0116;ext) is forbidden on this field. -->
+					<input class="form-control" type="text" name="invokeTarget" th:value="${job.invokeTarget}" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">cron执行表达式：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="cronExpression" th:value="${job.cronExpression}" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">执行策略：</label>
+				<div class="col-sm-8">
+					<select name="misfirePolicy" class="form-control" th:with="type=${@dict.getType('sys_job_misfire')}">
+						<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"
+								th:selected="${dict.dictValue == job.misfirePolicy}"></option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">是否并发执行：</label>
+				<div class="col-sm-8">
+					<label class="radio-box"> <input type="radio" name="concurrent" value="0" th:checked="${job.concurrent == '0'}"> 允许 </label>
+					<label class="radio-box"> <input type="radio" name="concurrent" value="1" th:checked="${job.concurrent == '1'}"> 禁止 </label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">状态：</label>
+				<div class="col-sm-8">
+					<label class="radio-box"> <input type="radio" name="status" value="0" th:checked="${job.status == '0'}"> 正常 </label>
+					<label class="radio-box"> <input type="radio" name="status" value="1" th:checked="${job.status == '1'}"> 暂停 </label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">备注：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="remark" th:value="${job.remark}">
+				</div>
+			</div>
+		</form>
+	</div>
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: bootstrap-select-js" />
+	<script th:inline="javascript">
+		var prefix = ctx + "monitor/job";
+
+		$("#form-job-edit").validate({
+			rules: {
+				jobName: { required: true, maxlength: 64 },
+				invokeTarget: { required: true, maxlength: 500 },
+				cronExpression: { required: true, maxlength: 255 }
+			},
+			submitHandler: function(form) {
+				$.operate.save(prefix + "/edit", $('#form-job-edit').serialize());
+			}
+		});
+	</script>
+</body>
+</html>
