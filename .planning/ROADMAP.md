@@ -190,7 +190,7 @@ Plans:
 Plans:
 **Wave 1** *(foundation)*
 
-- [ ] 06-01-PLAN.md — Foundation：auth-quartz 整模块复制 + 17 com.spt.common.* 子集本地化 + QuartzScheduleConfig（uncomment+rename）+ Constants 白名单改 com.spt + 剥 @PreAuthorize + @MapperScan 放宽 + DDL（quartz.sql + sys_job.sql）+ xxl-job-core pom 删除 + CtrContractProfitServiceImpl XxlJobHelper.log 翻译
+- [x] 06-01-PLAN.md — Foundation：auth-quartz 整模块复制 + 17 com.spt.common.* 子集本地化 + QuartzScheduleConfig（uncomment+rename）+ Constants 白名单改 com.spt + 剥 @PreAuthorize + @MapperScan 放宽 + DDL（quartz.sql + sys_job.sql）+ xxl-job-core pom 删除 + CtrContractProfitServiceImpl XxlJobHelper.log 翻译
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -236,5 +236,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. 认证首页 | 4/4 | Complete   | 2026-07-16 |
 | 4. 核心业务迁移 | 6/6 | Complete   | 2026-07-17 |
 | 5. 报表迁移 | 6/6 | Complete | 2026-07-18 |
-| 6. 定时任务迁移 | 0/TBD | Not started | - |
+| 6. 定时任务迁移 | 1/6 | In Progress|  |
 | 7. 行为对齐验证 | 0/TBD | Not started | - |
