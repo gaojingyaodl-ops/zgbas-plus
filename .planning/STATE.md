@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready
-stopped_at: Phase 05 committed & marked complete; ready for Phase 06
-last_updated: "2026-07-18T08:25:11+08:00"
-last_activity: 2026-07-18 -- Phase 05 closeout committed (feat 8fbea05 + docs 2955004); ROADMAP Phase 5 marked complete (6/6); ready for Phase 06
+stopped_at: Phase 05 committed & marked complete; /index NPE fixed; ready for Phase 06
+last_updated: "2026-07-18T11:44:50+08:00"
+last_activity: 2026-07-18 -- /index post-login NPE fixed (d0a388e: ConfigUtil.init() added to ApplicationStartup — auth-sdk cache was never inited, lost in web->monolith migration); ready for Phase 06
 progress:
   total_phases: 7
   completed_phases: 5
@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 Phase: 05 (report-migration) — COMPLETE (committed)
 Plan: 6 of 6
-Status: Phase 05 committed (feat 8fbea05 + docs 2955004) & ROADMAP marked complete; Phase 06 not yet started
-Last activity: 2026-07-18 -- Phase 05 closeout committed (feat 8fbea05 + docs 2955004); ROADMAP Phase 5 marked complete (6/6); ready for Phase 06
+Status: Phase 05 committed (feat 8fbea05 + docs 2955004) & ROADMAP marked complete; /index NPE fixed (d0a388e); Phase 06 not yet started
+Last activity: 2026-07-18 -- /index post-login NPE fixed (d0a388e: ConfigUtil.init() added to ApplicationStartup — auth-sdk cache was never inited, lost in web->monolith migration); ready for Phase 06
 
 Progress: [██████████] 100%
 
@@ -128,6 +128,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260718-blh | Phase 5 housekeeping — mark report migration complete + commit W4-W6 | 2026-07-18 | 8fbea05+2955004 | [260718-blh-phase-5-housekeeping-roadmap-phase-5-com](./quick/260718-blh-phase-5-housekeeping-roadmap-phase-5-com/) |
+| 260718-g93 | Fix /index NPE — add ConfigUtil.init() to ApplicationStartup | 2026-07-18 | d0a388e | [260718-g93-index-npe-applicationstartup-configutil-](./quick/260718-g93-index-npe-applicationstartup-configutil-/) |
 
 ## Deferred Items
 
