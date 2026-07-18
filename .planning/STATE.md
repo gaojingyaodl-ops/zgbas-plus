@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-07-17T08:29:29.103Z"
-last_activity: 2026-07-17 -- Phase 05 planning complete
+status: ready
+stopped_at: Phase 05 committed & marked complete; ready for Phase 06
+last_updated: "2026-07-18T08:25:11+08:00"
+last_activity: 2026-07-18 -- Phase 05 closeout committed (feat 8fbea05 + docs 2955004); ROADMAP Phase 5 marked complete (6/6); ready for Phase 06
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 23
-  completed_plans: 17
-  percent: 57
+  completed_plans: 23
+  percent: 71
 ---
 
 # Project State
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 单进程启动即可跑通全部供应链业务（登录 → 核心业务 → 报表 → 定时任务），行为对齐旧系统 zgbas
-**Current focus:** Phase 5 — 报表迁移
+**Current focus:** Phase 06 — quartz-migration（待承接）
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-07-17 -- Phase 05 planning complete
+Phase: 05 (report-migration) — COMPLETE (committed)
+Plan: 6 of 6
+Status: Phase 05 committed (feat 8fbea05 + docs 2955004) & ROADMAP marked complete; Phase 06 not yet started
+Last activity: 2026-07-18 -- Phase 05 closeout committed (feat 8fbea05 + docs 2955004); ROADMAP Phase 5 marked complete (6/6); ready for Phase 06
 
 Progress: [██████████] 100%
 
@@ -36,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 19
+- Total plans completed: 23
 - Average duration: — min
 - Total execution time: 0 hours
 
@@ -48,6 +48,7 @@ Progress: [██████████] 100%
 | 02 | 6 | - | - |
 | 03 | 4 | - | - |
 | 04 | 6 | - | - |
+| 05 | 6 | - | - |
 
 **Recent Trend:**
 
@@ -105,6 +106,10 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 04]: Phase 4 04-05 Rule 3 wiring: com.spt.pm.dao added to @EnableJpaRepositories (Phase 2 oversight — entity scan had pm.entity but dao missed pm.dao; 14 PM BaseDao); com.spt.tools.http.interceptor.BasicErrorController added to ComponentScan excludeFilters (bean-name conflict with basServer customisation — same precedent as Phase 2 FeignConfig exclusion)
 - [Phase ?]: [Phase 04]: Phase 4 04-05 Phase 6 re-port memory updated: api/MQApi.java joins xxl-job cluster (basServer/task/23 + rocketmq/task/8 + command/BasCommandExecutor + 4 task classes). MQApi is API-layer trigger facade for 8 Synchronized*Task handlers — same Rule 3 defer as BasCommandExecutor 04-04
 - [Phase ?]: Phase 4 04-06 capstone: 267 BFF ported + D-P4-01a path-prefix correction + D-P4-02 zero-stub + WR-02 green; Phase 4 COMPLETE 6/6
+- [Phase 05]: Phase 5 completed: report mybatis + report service + 54 report api 全部迁入单体路径；`ReportFeignPathConfig` 自回环前缀 `/spt-bas-report` 生效，W5/W6 gate 绿灯（`ZgbasApplicationTest` 25/0/0/1，full reactor compile green）
+- [Phase 05]: W5 启动期最小消歧已固化：`RptBaseCostApi` 使用显式 controller bean 名避开 bas/report 同名冲突，`RptApplyBusinessPayApi` 由 `@Resource` 改为按类型注入以避免误命中 bas 侧同名 service bean
+- [Phase 05]: W6 proof 收口：`sampleReportQuery_proof` 默认 `@Disabled` 作为真实 DB 手动验收口，`reportHttpReachability_proof` 自动验证 `/spt-bas-report/rpt/fundReceivableStatistics/findPage` 与 `/spt-bas-report/business/overview/api/findBusinessOverviewList` 非 404；精确扫描确认 `EXACT_REPORT_STUB_COUNT=0`
+- [Phase 05]: closeout hardening 去掉 `RptBaseCostServiceImpl` / `RptUserRoiServiceImpl` / `RptSummaryRoiServiceImpl` 对 `reportRptBaseCostMapper` 的字符串 `@Qualifier` 耦合；`reportApiPathPrefixWiring_probe` 扩展覆盖 `fundReceivableStatistics` / `baseCost` / `businessPay` 三条 report 路径
 
 ### Pending Todos
 
@@ -116,6 +121,13 @@ None yet.
 - spt-tools-jpa 引用最广（1226 处），内联时注意 BaseDao/IdEntity 体系完整性
 - jdbc.properties 含生产库明文密码，重构时需轮换并外置
 - ⚠ Phase 3 启动测试非 hermetic：`application-dev.yml` 的 `${DB_PASSWORD}` / `${SPT_APP_SECRET}` 无默认值，无 test-resource/pom 供给；`mvn test` 需先本地 export（与 Phase 2 的 DB_PASSWORD 前置同契约）。CI/hermetic 化需另立 task（H2 或 test-profile 注入占位值），本期按 Option 4 维持现状
+- purchase 侧延迟契约仍保留 1 个 `required=false` 残留，不在 Phase 05 处理范围内
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260718-blh | Phase 5 housekeeping — mark report migration complete + commit W4-W6 | 2026-07-18 | 8fbea05+2955004 | [260718-blh-phase-5-housekeeping-roadmap-phase-5-com](./quick/260718-blh-phase-5-housekeeping-roadmap-phase-5-com/) |
 
 ## Deferred Items
 
@@ -127,6 +139,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-07-17T07:41:13.711Z
-Stopped at: Phase 5 context gathered
+Last session: 2026-07-18T02:30:00+08:00
+Stopped at: Phase 05 closeout completed
 Resume file: .planning/phases/05-report-migration/05-CONTEXT.md
