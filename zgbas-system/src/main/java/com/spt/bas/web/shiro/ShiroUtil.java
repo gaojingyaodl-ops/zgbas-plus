@@ -9,6 +9,7 @@ import com.spt.bas.client.cache.BsDictUtil;
 import com.spt.bas.client.constant.BasConstants;
 import com.spt.bas.client.entity.BsDictData;
 import com.spt.tools.core.util.SpringContextHolder;
+import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ import java.util.Objects;
  * @author huangjian
  *
  */
+@Component("shiroUtil")
 public class ShiroUtil extends com.spt.tools.shiro.util.ShiroUtil {
 
 
