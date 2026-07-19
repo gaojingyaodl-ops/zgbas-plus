@@ -548,7 +548,8 @@ class ZgbasApplicationTest {
     @Disabled("D-P6-04 sampling + D-P6-05 grading — manually enable to verify manual-trigger UX "
         + "(QUARTZ-04) against the real dev DB. Writes 2 rows to sys_job_log per run (harmless; "
         + "cleanable via RuoYi '清空任务日志'). Branch A is truly read-only (ryTask.ryNoParams just "
-        + "logs); Branch B uses inline Mockito swap so IApplyPayService business writes are short-circuited.")
+        + "logs); Branch B uses inline Mockito swap so IApplyPayService business writes are short-circuited. "
+        + "Verified PASS 2026-07-19 during Phase 6 UAT item 1 — sys_job_log rows written for both branches.")
     @Test
     void sampleQuartzJobDryRun_proof() throws Exception {
         // D-P6-04 sampling: pick representative handlers across read-only真跑 + write-class空跑 grades.

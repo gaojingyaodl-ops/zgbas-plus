@@ -25,7 +25,10 @@ dev DB sptbasdb_pd. Branch A (read-only真跑) triggers `ryTask.ryNoParams` via
 to a Mockito mock, triggers `applyPayTask.autoReceive` via `sysJobService.run(152L)` →
 sys_job_log row written (SUCCESS or FAIL both accepted per D-06-06-02). Restore `@Disabled`
 after (D-06-06-01 keeps it off by default to avoid dev DB pollution on every `mvn test`).
-result: [pending]
+result: PASS (2026-07-19) — orchestrator ran the proof: `Tests run: 1, Failures: 0, Errors: 0`
+in 40.97s. Both branches wrote sys_job_log rows (Branch A status='0' SUCCESS confirmed;
+Branch B status in {0,1} per loose assertion). `@Disabled` restored with a note documenting
+the verification. SC #4 "dry-run 通过" literally satisfied.
 
 ### 2. Browser-verify /monitor/job UI renders (SC #4 manual trigger UX)
 
@@ -50,9 +53,9 @@ result: [pending]
 ## Summary
 
 total: 3
-passed: 0
+passed: 1
 issues: 0
-pending: 3
+pending: 2
 skipped: 0
 blocked: 0
 
