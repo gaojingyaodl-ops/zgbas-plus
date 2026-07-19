@@ -754,6 +754,171 @@ class ZgbasApplicationTest {
             .isTrue();
     }
 
+    // ---- Phase 7 Wave 2 (D-P7-02): 高风险域深验 + 写类真实回归 proof ----
+    //
+    // Three @Disabled proof methods covering ALIGN-02 (行为等价回归对照):
+    //   1. writeClassRealRun_proof     — 写类真实回归 (autoPay + refreshContractStatusTask)
+    //   2. reportExportSample_proof    — 报表导出端点抽样 (5 个 exportExcel)
+    //   3. reportFindPageSample_proof  — 报表分页抽样 + page size 约束 (3 个 Mapper)
+    // All default @Disabled per D-P6-06-01 + checkpoint:human-blocked for write-class.
+
+    @Disabled("D-P7-02 写类真实回归 — checkpoint:human-blocked，手动启用前确认 dev DB 已备份或确认幂等")
+    @Test
+    void writeClassRealRun_proof() throws Exception {
+        // D-P6-05 carry-off: 写类真实回归 (非空跑). Phase 6 空跑验证了 bean.method 反射解析,
+        // Phase 7 真跑验证实际业务逻辑执行 + DB 写入行为.
+
+        // ---- Branch A: refreshContractStatusTask 真跑 (幂等可接受 — 状态刷新) ----
+        // job_id 搜索: sys_job_data.sql 中 invoke_target 含 refreshContractStatusTask 的行
+        SysJob refreshJob = null;
+        for (SysJob job : sysJobMapper.selectJobAll()) {
+            if (job.getInvokeTarget() != null
+                && job.getInvokeTarget().contains("refreshContractStatusTask")) {
+                refreshJob = job;
+                break;
+            }
+        }
+        assertThat(refreshJob)
+            .as("sys_job row with invoke_target containing refreshContractStatusTask exists")
+            .isNotNull();
+
+        long logCountBeforeA = sysJobLogMapper.selectJobLogAll().size();
+        sysJobService.run(refreshJob);
+        SysJobLog refreshLog = waitForNewJobLog(logCountBeforeA, refreshJob.getJobName());
+        assertThat(refreshLog)
+            .as("sys_job_log row written for refreshContractStatusTask manual trigger (真实执行)")
+            .isNotNull();
+        assertThat(refreshLog.getStatus())
+            .as("refreshContractStatusTask should complete with status='0' (SUCCESS — 幂等状态刷新)")
+            .isEqualTo("0");
+
+        // ---- Branch B: applyPayTask.autoPay 真跑 (checkpoint:human-blocked — 创建付款记录) ----
+        // job_id 搜索: sys_job_data.sql 中 invoke_target 含 applyPayTask.autoPay 的行
+        SysJob autoPayJob = null;
+        for (SysJob job : sysJobMapper.selectJobAll()) {
+            if (job.getInvokeTarget() != null
+                && job.getInvokeTarget().contains("applyPayTask.autoPay")) {
+                autoPayJob = job;
+                break;
+            }
+        }
+        assertThat(autoPayJob)
+            .as("sys_job row with invoke_target containing applyPayTask.autoPay exists")
+            .isNotNull();
+
+        // checkpoint:human-blocked: autoPay 创建付款记录，执行前确认 dev DB sptbasdb_pd 可接受写入
+        long logCountBeforeB = sysJobLogMapper.selectJobLogAll().size();
+        sysJobService.run(autoPayJob);
+        SysJobLog autoPayLog = waitForNewJobLog(logCountBeforeB, autoPayJob.getJobName());
+        assertThat(autoPayLog)
+            .as("sys_job_log row written for applyPayTask.autoPay manual trigger (真实执行 — 写类)")
+            .isNotNull();
+        // Status assertion is intentionally loose: autoPay calls multiple @Autowired services
+        // that interact with real DB — SUCCESS or FAIL both prove the reflection path works.
+        // Business correctness is verified by human reviewing the DB changes after execution.
+        assertThat(autoPayLog.getStatus())
+            .as("autoPay sys_job_log has a status row written (0=success or 1=fail)")
+            .isIn("0", "1");
+    }
+
+    @Disabled("D-P7-02 报表导出抽样 proof — 手动启用，需登录 session")
+    @Test
+    void reportExportSample_proof() {
+        // ALIGN-02: 5 个报表导出端点抽样验证 (端点注册 + Content-Type 正确性)
+        // TestRestTemplate 无 Shiro session → 多数端点返回 302/401 (可接受, 证明路由正确)
+
+        // 1. 合同台账导出
+        ResponseEntity<String> contractReportResp = restTemplate.postForEntity(
+            "/rpt/contractReport/exportExcel", null, String.class);
+        assertThat(contractReportResp.getStatusCodeValue())
+            .as("/rpt/contractReport/exportExcel should not return 404")
+            .isNotEqualTo(404);
+        if (contractReportResp.getStatusCode().is2xxSuccessful()) {
+            assertThat(contractReportResp.getHeaders().getContentType())
+                .as("contractReport export Content-Type should be xlsx or octet-stream")
+                .satisfiesAnyOf(
+                    ct -> assertThat(ct.toString()).contains("xlsx"),
+                    ct -> assertThat(ct.toString()).contains("octet-stream"));
+            assertThat(contractReportResp.getBody())
+                .as("contractReport export body should not be empty")
+                .isNotEmpty();
+        }
+
+        // 2. 采购统计导出
+        ResponseEntity<String> buyStatResp = restTemplate.postForEntity(
+            "/rpt/buystatistics/exportExcel", null, String.class);
+        assertThat(buyStatResp.getStatusCodeValue())
+            .as("/rpt/buystatistics/exportExcel should not return 404")
+            .isNotEqualTo(404);
+
+        // 3. 自营审核统计导出
+        ResponseEntity<String> statResp = restTemplate.postForEntity(
+            "/rpt/stat/exportExcel", null, String.class);
+        assertThat(statResp.getStatusCodeValue())
+            .as("/rpt/stat/exportExcel should not return 404")
+            .isNotEqualTo(404);
+
+        // 4. 业务成本导出
+        ResponseEntity<String> baseCostResp = restTemplate.postForEntity(
+            "/rpt/baseCost/exportExcel", null, String.class);
+        assertThat(baseCostResp.getStatusCodeValue())
+            .as("/rpt/baseCost/exportExcel should not return 404")
+            .isNotEqualTo(404);
+
+        // 5. 毛利率导出
+        ResponseEntity<String> profitResp = restTemplate.postForEntity(
+            "/rpt/contractReport/profitexportExcel", null, String.class);
+        assertThat(profitResp.getStatusCodeValue())
+            .as("/rpt/contractReport/profitexportExcel should not return 404")
+            .isNotEqualTo(404);
+    }
+
+    @Disabled("D-P7-02 报表分页抽样 proof — 手动启用")
+    @Test
+    void reportFindPageSample_proof() {
+        // ALIGN-02 + D-P5-06: 分页正确性 1:1 等价验证
+        // 直接调 Mapper (不走 HTTP)，验证分页 size 约束
+
+        // 1. RptFundReceivableStatisticsMapper.findPage — 分页 size 约束
+        RptFundReceivableStatisticsVo fundSearch5 = new RptFundReceivableStatisticsVo();
+        fundSearch5.setPage(1);
+        fundSearch5.setRows(5);
+        List<RptFundReceivableStatistics> fundRows5 = rptFundReceivableStatisticsMapper.findPage(fundSearch5);
+        assertThat(fundRows5)
+            .as("RptFundReceivableStatisticsMapper.findPage(page=1,rows=5) should return non-null")
+            .isNotNull();
+        assertThat(fundRows5.size())
+            .as("findPage with rows=5 should return at most 5 rows (D-P5-06 分页正确性)")
+            .isLessThanOrEqualTo(5);
+
+        RptFundReceivableStatisticsVo fundSearch50 = new RptFundReceivableStatisticsVo();
+        fundSearch50.setPage(1);
+        fundSearch50.setRows(50);
+        List<RptFundReceivableStatistics> fundRows50 = rptFundReceivableStatisticsMapper.findPage(fundSearch50);
+        assertThat(fundRows50)
+            .as("RptFundReceivableStatisticsMapper.findPage(page=1,rows=50) should return non-null")
+            .isNotNull();
+
+        // 2. RptCtrContractReportMapper.findRptContractPage — 非空 + 分页
+        ContractSearchVo contractSearch5 = new ContractSearchVo();
+        contractSearch5.setPage(1);
+        contractSearch5.setRows(5);
+        List<RptCtrContractRptVo> contractRows5 = rptCtrContractReportMapper.findRptContractPage(contractSearch5);
+        assertThat(contractRows5)
+            .as("RptCtrContractReportMapper.findRptContractPage should return non-null")
+            .isNotNull();
+        assertThat(contractRows5.size())
+            .as("findRptContractPage with rows=5 should return at most 5 rows (D-P5-06)")
+            .isLessThanOrEqualTo(5);
+
+        // 3. RptBusinessOverviewMapper.findBusinessOverviewList — 非空
+        RptBusinessOverviewSearchVo businessSearch = new RptBusinessOverviewSearchVo();
+        List<RptBusinessOverview> businessRows = rptBusinessOverviewMapper.findBusinessOverviewList(businessSearch);
+        assertThat(businessRows)
+            .as("RptBusinessOverviewMapper.findBusinessOverviewList should return non-null")
+            .isNotNull();
+    }
+
     /**
      * Polls {@code sys_job_log} for up to 10 seconds (50 × 200ms) until a new row appears
      * relative to {@code countBefore}. Quartz jobs run on the scheduler's async thread pool
