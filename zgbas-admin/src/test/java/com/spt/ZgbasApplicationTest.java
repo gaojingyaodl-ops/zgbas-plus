@@ -627,6 +627,133 @@ class ZgbasApplicationTest {
         }
     }
 
+    // ---- Phase 7 Wave 1 (D-P7-01): Smoke proof + 全链路端到端可达验证 ----
+    //
+    // Two @Disabled proof methods covering ALIGN-01 (端到端可用) and extending
+    // API reachability sampling. Both default @Disabled per D-P6-06-01 discipline
+    // (avoid dev DB pollution; manually enable for verification).
+
+    @Disabled("D-P7-01 smoke 全链路 proof — 手动启用验证 ALIGN-01 端到端可达")
+    @Test
+    void fullChainSmoke_proof() throws Exception {
+        // ALIGN-01: prove the full chain 登录→首页→核心业务→报表→定时任务
+        // is end-to-end reachable after Phase 6 completion.
+
+        // 1. 登录页渲染
+        ResponseEntity<String> loginResp = restTemplate.getForEntity("/login", String.class);
+        assertThat(loginResp.getStatusCode().is2xxSuccessful()
+            || loginResp.getStatusCode().is3xxRedirection())
+            .as("/login should return 2xx or 3xx")
+            .isTrue();
+
+        // 2. 首页可达 (未登录 → 302→/login, 已登录 → 200)
+        ResponseEntity<String> indexResp = restTemplate.getForEntity("/index", String.class);
+        assertThat(indexResp.getStatusCode().is2xxSuccessful()
+            || indexResp.getStatusCode().is3xxRedirection())
+            .as("/index should return 2xx or 3xx")
+            .isTrue();
+
+        // 3. 4 核心 API findPage 端点非 404 (2xx/3xx/401 acceptable)
+        ResponseEntity<String> applyBrandResp = restTemplate.postForEntity(
+            "/apply/brand/findAll", null, String.class);
+        assertThat(applyBrandResp.getStatusCodeValue())
+            .as("POST /apply/brand/findAll should not return 404")
+            .isNotEqualTo(404);
+
+        ResponseEntity<String> ctrContractResp = restTemplate.postForEntity(
+            "/ctr/contract/findPage", null, String.class);
+        assertThat(ctrContractResp.getStatusCodeValue())
+            .as("POST /ctr/contract/findPage should not return 404")
+            .isNotEqualTo(404);
+
+        ResponseEntity<String> stockResp = restTemplate.postForEntity(
+            "/stock/stockContract/findPage", null, String.class);
+        assertThat(stockResp.getStatusCodeValue())
+            .as("POST /stock/stockContract/findPage should not return 404")
+            .isNotEqualTo(404);
+
+        ResponseEntity<String> loadingResp = restTemplate.postForEntity(
+            "/ctr/loading/findPage", null, String.class);
+        assertThat(loadingResp.getStatusCodeValue())
+            .as("POST /ctr/loading/findPage should not return 404")
+            .isNotEqualTo(404);
+
+        // 4. 2 报表 API 端点非 404
+        ResponseEntity<String> fundResp = restTemplate.postForEntity(
+            "/spt-bas-report/rpt/fundReceivableStatistics/findPage", null, String.class);
+        assertThat(fundResp.getStatusCodeValue())
+            .as("POST /spt-bas-report/rpt/fundReceivableStatistics/findPage should not return 404")
+            .isNotEqualTo(404);
+
+        ResponseEntity<String> baseCostResp = restTemplate.postForEntity(
+            "/spt-bas-report/rpt/baseCost/findPage", null, String.class);
+        assertThat(baseCostResp.getStatusCodeValue())
+            .as("POST /spt-bas-report/rpt/baseCost/findPage should not return 404")
+            .isNotEqualTo(404);
+
+        // 5. quartz 调度: all 53 jobs registered
+        int schedulerJobCount = scheduler.getJobKeys(GroupMatcher.anyJobGroup()).size();
+        assertThat(schedulerJobCount)
+            .as("Scheduler should have %d jobs registered (ALIGN-01 quartz chain)", EXPECTED_JOB_COUNT)
+            .isEqualTo(EXPECTED_JOB_COUNT);
+
+        // 6. 手动触发 1 个 job → sys_job_log 新行写入 + status='0'
+        SysJob ryJob = sysJobMapper.selectJobById(1L);
+        assertThat(ryJob).as("sys_job job_id=1 (ryTask.ryNoParams) exists").isNotNull();
+        long logCountBefore = sysJobLogMapper.selectJobLogAll().size();
+        sysJobService.run(ryJob);
+        SysJobLog newLog = waitForNewJobLog(logCountBefore, ryJob.getJobName());
+        assertThat(newLog)
+            .as("sys_job_log row written after manual trigger (ALIGN-01 quartz trigger chain)")
+            .isNotNull();
+        assertThat(newLog.getStatus())
+            .as("ryTask.ryNoParams should complete with status='0' (SUCCESS)")
+            .isEqualTo("0");
+    }
+
+    @Disabled("D-P7-01 扩展 API 可达性抽样 — 手动启用")
+    @Test
+    void coreApiReachabilityExtended_probe() throws Exception {
+        // Extended API reachability sampling beyond the 4 core findPage endpoints.
+        // Covers contract fee, apply pay, report businessPay, and business overview.
+
+        // 1. POST /ctr/contractFee/findPageContractFee
+        ResponseEntity<String> contractFeeResp = restTemplate.postForEntity(
+            "/ctr/contractFee/findPageContractFee", null, String.class);
+        assertThat(contractFeeResp.getStatusCodeValue())
+            .as("POST /ctr/contractFee/findPageContractFee should not return 404")
+            .isNotEqualTo(404);
+
+        // 2. POST /apply/pay/findPage (合同付款查询)
+        ResponseEntity<String> applyPayResp = restTemplate.postForEntity(
+            "/apply/pay/findPage", null, String.class);
+        assertThat(applyPayResp.getStatusCodeValue())
+            .as("POST /apply/pay/findPage should not return 404")
+            .isNotEqualTo(404);
+
+        // 3. POST /spt-bas-report/rpt/businessPay/findPageContract
+        ResponseEntity<String> businessPayResp = restTemplate.postForEntity(
+            "/spt-bas-report/rpt/businessPay/findPageContract", null, String.class);
+        assertThat(businessPayResp.getStatusCodeValue())
+            .as("POST /spt-bas-report/rpt/businessPay/findPageContract should not return 404")
+            .isNotEqualTo(404);
+
+        // 4. POST /spt-bas-report/business/overview/api/findBusinessOverviewList
+        ResponseEntity<String> overviewResp = restTemplate.postForEntity(
+            "/spt-bas-report/business/overview/api/findBusinessOverviewList", null, String.class);
+        assertThat(overviewResp.getStatusCodeValue())
+            .as("POST /spt-bas-report/business/overview/api/findBusinessOverviewList should not return 404")
+            .isNotEqualTo(404);
+
+        // 5. BFF controller bean existence (extended sampling)
+        assertThat(context.containsBean("ctrContractFeeController"))
+            .as("CtrContractFeeController BFF bean should exist")
+            .isTrue();
+        assertThat(context.containsBean("applyPayController"))
+            .as("ApplyPayController BFF bean should exist")
+            .isTrue();
+    }
+
     /**
      * Polls {@code sys_job_log} for up to 10 seconds (50 × 200ms) until a new row appears
      * relative to {@code countBefore}. Quartz jobs run on the scheduler's async thread pool
