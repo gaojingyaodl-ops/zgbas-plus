@@ -509,7 +509,6 @@ function switchSkin() {
 }
 
 function openBuyCenter(isOpen) {
-	console.log("加载采销汇总你想")
 	$.get(_ctx + "/bas/trade/menu", function (result) {
 		if (result && result.length > 0) {
 			const url = result.find(item => item.name === '采销中心')?.url

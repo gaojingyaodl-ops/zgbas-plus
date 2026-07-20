@@ -141,7 +141,7 @@ trade:
   app:
     secret: Um2WV9z7fhTUC0EC0kfqyRG8LZcUPkBh
   login:
-    url: https://trade.tosupply.cn
+    url: https://tradetest.tosupply.cn
 weChatWork:
   webhook:
     url: ${WECHAT_WORK_WEBHOOK_URL:http://127.0.0.1:65535/wechat-work-webhook-disabled}

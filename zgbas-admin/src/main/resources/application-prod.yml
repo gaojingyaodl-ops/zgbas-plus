@@ -96,13 +96,13 @@ fact:
       secretKey: ${FACT_BIS_SECRET_KEY}
 trade:
   app:
-    secret: ${TRADE_APP_SECRET}
+    secret: EJz7bgxEc7F69X0fy2pURM2NXVvkDxgK
   login:
-    url: ${TRADE_LOGIN_URL}
+    url: https://trade.tosupply.cn
 weChatWork:
   webhook:
-    url: ${WECHAT_WORK_WEBHOOK_URL}
-    url2: ${WECHAT_WORK_WEBHOOK_URL2}
+    url: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=812c08d2-e33d-4127-a69d-856b9e85c83e
+    url2: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=6304b872-b289-452c-906c-d52401168be6
 # Phase 4 Wave 3 (Plan 04-05 Rule 3): remaining placeholder keys referenced by ported
 # basServer service impls (照搬 source basServer application.properties /
 # application-prod.properties). Non-secret invariant values (boolean feature flags + the
@@ -112,13 +112,13 @@ weChatWork:
 # no defaults for secrets).
 baidu:
   map:
-    ak: ${BAIDU_MAP_AK}
+    ak: SpfygoSuEluio4sj9QMDxNDhvGfAAG3O
 basTrade:
   server:
-    approveCallBackUrl: ${BASTRADE_APPROVE_CALLBACK_URL}
+    approveCallBackUrl: https://trade.tosupply.cn/admin-api/trd/base/approveCallBack
 cms:
   server:
-    url: ${CMS_SERVER_URL}
+    url: http://www.ex-cp.com
 credit:
   contract:
     switch: true
@@ -129,4 +129,4 @@ share:
   key: shareUrl
 zip:
   file:
-    directory: ${ZIP_FILE_DIRECTORY}
+    directory: /data/filedownload/
