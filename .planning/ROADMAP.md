@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: 核心业务迁移** - 合同/授信/库存/放款 basServer JPA 业务迁入，Controller 迁入 admin (completed 2026-07-17)
 - [x] **Phase 5: 报表迁移** - 53 套 mybatis 报表迁入，查询行为等价 (completed 2026-07-18)
 - [x] **Phase 6: 定时任务迁移** - xxl-job 删除，64 handler 迁入 RuoYi quartz (completed 2026-07-18)
-- [ ] **Phase 7: 行为对齐验证** - 单服务端到端可用，与旧系统 zgbas 行为等价
+- [x] **Phase 7: 行为对齐验证** - 单服务端到端可用，与旧系统 zgbas 行为等价 (completed 2026-07-20)
 
 ## Phase Details
 
@@ -222,7 +222,7 @@ Plans:
   1. 单服务启动后，登录 → 首页 → 核心业务 → 报表 → 定时任务 全链路端到端可用
   2. 关键业务流程与旧系统 zgbas 行为等价（回归对照通过）
 
-**Plans**: TBD
+**Plans**: 4 plans
 
 ## Progress
 
@@ -237,4 +237,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. 核心业务迁移 | 6/6 | Complete   | 2026-07-17 |
 | 5. 报表迁移 | 6/6 | Complete | 2026-07-18 |
 | 6. 定时任务迁移 | 6/6 | Complete   | 2026-07-18 |
-| 7. 行为对齐验证 | 0/TBD | Not started | - |
+| 7. 行为对齐验证 | 4/4 | Complete | 2026-07-20 |
