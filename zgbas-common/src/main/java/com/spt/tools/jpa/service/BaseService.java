@@ -97,7 +97,9 @@ public abstract class BaseService<T extends IdEntity> implements IBaseService<T>
 			}
 			sort = Sort.by(direction, sortField);
 		}
-		PageRequest pageRequest = PageRequest.of(queryVo.getPage() - 1, queryVo.getRows(), sort);
+		PageRequest pageRequest = sort != null
+				? PageRequest.of(queryVo.getPage() - 1, queryVo.getRows(), sort)
+				: PageRequest.of(queryVo.getPage() - 1, queryVo.getRows());
 		Page<T> page = findPage(queryVo.getSearchParams(), pageRequest);
 		// sort属性无法反序列化，下面代码重新组装page对象，去掉sort属性
 		PageRequest pageRequest_new = PageRequest.of(queryVo.getPage() - 1, queryVo.getRows());

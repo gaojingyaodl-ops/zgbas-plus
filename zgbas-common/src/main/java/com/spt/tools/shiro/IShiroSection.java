@@ -25,6 +25,9 @@ public interface IShiroSection {
 		// 内部 server API(BasServer 合并进单体后的自回环目标):旧微服务架构下为独立进程、不受 Web Shiro 管,
 		// 单体内复刻为 anon,避免登录期间 Feign 自回环落到 /**=user 兜底造成循环依赖。
 		section.put("/spt-bas-server/**", "anon");
+		// 内部 report API(ReportServer 合并进单体后的自回环目标):旧微服务架构下为独立进程、不受 Web Shiro 管,
+		// 单体内复刻为 anon,避免 Report Feign 自回环落到 /**=user 兜底造成 302→CommErrorDecoder→500。
+		section.put("/spt-bas-report/**", "anon");
 		section.put("/login", "authc");
 		section.put("/logout", "logout");
 	}
