@@ -521,6 +521,8 @@ function openBuyCenter(isOpen) {
 			}
 		}
 		$("#buyCenter").hide()
+	}).fail(function () {
+		$("#buyCenter").hide()
 	});
 }
 
