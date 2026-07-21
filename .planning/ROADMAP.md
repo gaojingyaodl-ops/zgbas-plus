@@ -16,8 +16,13 @@
 **Plans**: 3 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 01-01-PLAN.md — 修复 /monitor/job/job 400 错误 (QTZ-01)
 - [ ] 01-02-PLAN.md — 修复 add.html + edit.html 表单提交 API 对齐 (QTZ-02, QTZ-03)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 01-03-PLAN.md — 修复 job.html 删除/执行/启停 + 添加 $.operate.put (QTZ-04)
 
 ### Phase 2: 调度日志页面 + Thymeleaf 辅助 Bean
@@ -29,6 +34,7 @@ Plans:
 **Estimated Plans**: 2–3
 
 **关键交付物**：
+
 1. **QTZ-05**: `templates/monitor/jobLog/jobLog.html` — 日志列表页（bootstrap-table，含搜索/删除/清空/导出）
 2. **QTZ-06**: `DictService` Bean（`@dict.getType(...)`）+ `PermissionService` Bean（`@permission.hasPermi(...)`）→ 或在 zgbas-system 中找已有实现
 3. **QTZ-07**: 端到端验证 + 回归测试
