@@ -67,6 +67,16 @@ public class SysJobController extends BaseController {
     }
 
     /**
+     * 显式字面路径处理器，解决 spt-auth 菜单 component 路径 monitor/job/job
+     * 被 Spring MVC 误路由到 @GetMapping("/{jobId}") 导致 400 的问题。
+     * Spring MVC 优先匹配字面 /job 而非路径变量 /{jobId}。
+     */
+    @GetMapping("/job")
+    public String jobView() {
+        return prefix + "/job";
+    }
+
+    /**
      * 新增任务表单页。
      */
     @GetMapping("/add")
