@@ -19,7 +19,7 @@ Plans:
 **Wave 1**
 
 - [ ] 01-01-PLAN.md — 修复 /monitor/job/job 400 错误 (QTZ-01)
-- [ ] 01-02-PLAN.md — 修复 add.html + edit.html 表单提交 API 对齐 (QTZ-02, QTZ-03)
+- [x] 01-02-PLAN.md — 修复 add.html + edit.html 表单提交 API 对齐 (QTZ-02, QTZ-03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 

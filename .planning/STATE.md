@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: Phases
 status: executing
 stopped_at: "Phase 7 context gathered (4 decisions: hybrid verify form, hybrid comparison baseline, tiered coverage, mixed gap handling)"
-last_updated: "2026-07-21T04:51:44.490Z"
+last_updated: "2026-07-21T04:57:15.412Z"
 last_activity: 2026-07-21 -- Phase 01 planning complete
 progress:
   total_phases: 2
   completed_phases: 0
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -30,7 +30,7 @@ Plan: 07-04 (complete)
 Status: Ready to execute
 Last activity: 2026-07-21 -- Phase 01 planning complete
 
-Progress: [██████████] 100%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Progress: [██████████] 100%
 | Phase 04 P05 | 20 | 1 tasks | 236 files |
 | Phase 04 P05 | 20 | 1 tasks | 236 files |
 | Phase 04 P06 | 25 | 3 tasks | 304 files |
+| Phase 01-quartz-frontend-fix P02 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,9 @@ Recent decisions affecting current work:
 - [Phase 05]: W5 启动期最小消歧已固化：`RptBaseCostApi` 使用显式 controller bean 名避开 bas/report 同名冲突，`RptApplyBusinessPayApi` 由 `@Resource` 改为按类型注入以避免误命中 bas 侧同名 service bean
 - [Phase 05]: W6 proof 收口：`sampleReportQuery_proof` 默认 `@Disabled` 作为真实 DB 手动验收口，`reportHttpReachability_proof` 自动验证 `/spt-bas-report/rpt/fundReceivableStatistics/findPage` 与 `/spt-bas-report/business/overview/api/findBusinessOverviewList` 非 404；精确扫描确认 `EXACT_REPORT_STUB_COUNT=0`
 - [Phase 05]: closeout hardening 去掉 `RptBaseCostServiceImpl` / `RptUserRoiServiceImpl` / `RptSummaryRoiServiceImpl` 对 `reportRptBaseCostMapper` 的字符串 `@Qualifier` 耦合；`reportApiPathPrefixWiring_probe` 扩展覆盖 `fundReceivableStatistics` / `baseCost` / `businessPay` 三条 report 路径
+- [Phase ?]: 使用 $.ajax 直调替代 $.operate.save，实现 JSON body + 正确 HTTP method + 正确 URL
+- [Phase ?]: 表单序列化使用 jQuery.serializeArray() 而非 .serialize()，生成 JSON 对象以匹配 @RequestBody
+- [Phase ?]: 成功回调复用 $.operate.successCallback() 保持模态框关闭 + 父窗口表格刷新的标准行为
 
 ### Pending Todos
 
@@ -156,6 +160,6 @@ Items acknowledged and deferred at milestone close on 2026-07-21:
 
 ## Session Continuity
 
-Last session: 2026-07-19T12:56:32.309Z
+Last session: 2026-07-21T04:56:48.507Z
 Stopped at: Phase 7 context gathered (4 decisions: hybrid verify form, hybrid comparison baseline, tiered coverage, mixed gap handling)
-Resume file: .planning/phases/07-alignment-verification/07-CONTEXT.md
+Resume file: None
