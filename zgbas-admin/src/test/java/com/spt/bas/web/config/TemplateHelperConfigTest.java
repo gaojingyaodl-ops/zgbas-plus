@@ -4,6 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import com.spt.bas.web.config.TemplateHelperConfig.DictTemplateHelper;
+import com.spt.bas.web.config.TemplateHelperConfig.PermissionTemplateHelper;
 
 /**
  * Unit tests for the guard-clause behavior of {@link DictTemplateHelper} and
