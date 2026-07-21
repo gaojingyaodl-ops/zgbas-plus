@@ -31,12 +31,25 @@ Plans:
 
 **Depends on**: Phase 1
 **Requirements**: QTZ-05, QTZ-06, QTZ-07, QTZ-08
-**Estimated Plans**: 2–3
+**Plans**: 3 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 02-01-PLAN.md — TemplateHelperConfig（@dict/@permission/ShiroDialect bean）+ thymeleaf-extras-shiro 依赖 (QTZ-06, QTZ-08)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 02-02-PLAN.md — jobLog.html 调度日志列表页 + SysJobLogController 路径变量 bug 修复 (QTZ-05)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 02-03-PLAN.md — 端到端验证：启动测试 + 浏览器验收 /monitor/jobLog (QTZ-07)
 
 **关键交付物**：
 
 1. **QTZ-05**: `templates/monitor/jobLog/jobLog.html` — 日志列表页（bootstrap-table，含搜索/删除/清空/导出）
-2. **QTZ-06**: `DictService` Bean（`@dict.getType(...)`）+ `PermissionService` Bean（`@permission.hasPermi(...)`）→ 或在 zgbas-system 中找已有实现
+2. **QTZ-06**: `@dict` Bean（`@dict.getType(...)` 委派 auth-sdk DictUtil）+ `@permission` Bean（`@permission.hasPermi(...)` 委派 ShiroUtil）
 3. **QTZ-07**: 端到端验证 + 回归测试
 4. **QTZ-08**: `thymeleaf-extras-shiro` 依赖 + `ShiroDialect` Bean（`shiro:hasPermission` 标签生效）
 
@@ -47,8 +60,10 @@ Plans:
 | 1. 前端接口对齐 + 400 修复 | 01-01: 400 修复 | Planned |
 | 1. 前端接口对齐 + 400 修复 | 01-02: add/edit 表单修复 | Planned |
 | 1. 前端接口对齐 + 400 修复 | 01-03: job 操作修复 + $.operate.put | Planned |
-| 2. 调度日志页面 + 辅助 Bean | — | Planned |
+| 2. 调度日志页面 + 辅助 Bean | 02-01: bean + shiro dialect | Planned |
+| 2. 调度日志页面 + 辅助 Bean | 02-02: jobLog.html + controller fix | Planned |
+| 2. 调度日志页面 + 辅助 Bean | 02-03: E2E 验证 | Planned |
 
 ---
 *Created: 2026-07-21*
-*Updated: 2026-07-21 — Phase 1 plans created (3 plans)*
+*Updated: 2026-07-21 — Phase 2 plans created (3 plans)*
