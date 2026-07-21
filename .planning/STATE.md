@@ -140,6 +140,20 @@ Items acknowledged and carried forward from previous milestone close:
 |----------|------|--------|-------------|
 | v2 | basWx 微信采购小程序迁入（WX-01, WX-02） | Deferred to v2 | Project init |
 
+Items acknowledged and deferred at milestone close on 2026-07-21:
+
+| Category | Item | Status |
+|----------|------|--------|
+| debug | login-feign-selfloop-shiro | investigating |
+| quick_task | 260718-blh-phase-5-housekeeping-roadmap-phase-5-com | missing |
+| quick_task | 260718-g93-index-npe-applicationstartup-configutil- | missing |
+| quick_task | 260718-hal-index-thymeleaf-npe-shiroutil-bean-shiro | missing |
+| todo | phase4-resolve-entity-schema-drift (medium) | pending |
+| todo | rotate-leaked-prod-credentials (high) | pending |
+| uat_gap | Phase 06: 06-HUMAN-UAT.md — 2 pending scenarios | partial |
+| verification_gap | Phase 04: 04-VERIFICATION.md | human_needed |
+| verification_gap | Phase 06: 06-VERIFICATION.md | human_needed |
+
 ## Session Continuity
 
 Last session: 2026-07-19T12:56:32.309Z
