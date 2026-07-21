@@ -1063,6 +1063,25 @@ function lightenToColor(hex, percent) {
             post: function(url, data, callback) {
                 $.operate.submit(url, "post", "json", data, callback);
             },
+            // put请求传输（JSON body + contentType）
+            put: function(url, data, callback) {
+                $.ajax({
+                    url: url,
+                    type: "put",
+                    dataType: "json",
+                    contentType: "application/json;charset=utf-8",
+                    data: JSON.stringify(data),
+                    beforeSend: function () {
+                        $.modal.loading("正在处理中，请稍候...");
+                    },
+                    success: function(result) {
+                        if (typeof callback == "function") {
+                            callback(result);
+                        }
+                        $.operate.ajaxSuccess(result);
+                    }
+                });
+            },
             // get请求传输
             get: function(url, callback) {
                 $.operate.submit(url, "get", "json", "", callback);
