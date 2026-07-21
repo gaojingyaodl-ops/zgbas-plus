@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+	<th:block th:include="include :: header('调度日志列表')" />
+	<th:block th:include="include :: bootstrap-select-css" />
+</head>
+<body class="gray-bg">
+	<div class="container-div">
+		<div class="row">
+			<div class="col-sm-12 search-collapse">
+				<form id="jobLog-form">
+					<div class="select-list">
+						<ul>
+							<li>
+								<label>任务名称： </label><input type="text" name="jobName"/>
+							</li>
+							<li>
+								<label>任务组名： </label><select name="jobGroup" th:with="type=${@dict.getType('sys_job_group')}">
+									<option value="">所有</option>
+									<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+								</select>
+							</li>
+							<li>
+								<label>执行状态：</label><select name="status" th:with="type=${@dict.getType('sys_common_status')}">
+									<option value="">所有</option>
+									<option th:each="dict : ${type}" th:text="${dict.dictLabel}" th:value="${dict.dictValue}"></option>
+								</select>
+							</li>
+							<li class="select-time">
+								<label>执行时间： </label>
+								<input type="text" class="time-input" id="startTime" placeholder="开始时间" name="params[beginTime]"/>
+								<span>-</span>
+								<input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endTime]"/>
+							</li>
+							<li>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="searchPre()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="resetPre()"><i class="fa fa-refresh"></i>&nbsp;清空</a>
+							</li>
+						</ul>
+					</div>
+				</form>
+			</div>
+
+			<div class="btn-group-sm" id="toolbar" role="group">
+				<a class="btn btn-danger multiple disabled" onclick="removeAllJobLogs()" shiro:hasPermission="monitor:job:remove">
+		            <i class="fa fa-remove"></i> 删除
+		        </a>
+		        <a class="btn btn-danger" onclick="cleanJobLogs()" shiro:hasPermission="monitor:job:remove">
+	                <i class="fa fa-trash"></i> 清空
+	            </a>
+	            <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="monitor:job:export">
+		            <i class="fa fa-download"></i> 导出
+		        </a>
+	        </div>
+
+			<div class="col-sm-12 select-table table-striped">
+				<table id="bootstrap-table"></table>
+			</div>
+		</div>
+	</div>
+
+	<th:block th:include="include :: footer" />
+	<th:block th:include="include :: bootstrap-select-js" />
+	<script th:inline="javascript">
+		var datas = [[${@dict.getType('sys_job_group')}]];
+		var prefix = ctx + "monitor/jobLog";
+
+		$(function() {
+		    var options = {
+		        url: prefix + "/list",
+		        cleanUrl: prefix + "/clean",
+		        removeUrl: prefix,
+		        exportUrl: prefix + "/export",
+		        queryParams: queryParams,
+		        sortName: "createTime",
+		        sortOrder: "desc",
+		        modalName: "调度日志",
+		        escape: true,
+		        showPageGo: true,
+		        rememberSelected: true,
+		        columns: [{
+		            field: 'state',
+		            checkbox: true
+		        },
+		        {
+		            field: 'jobLogId',
+		            title: '日志编号'
+		        },
+		        {
+		            field: 'jobName',
+		            title: '任务名称'
+		        },
+		        {
+		            field: 'jobGroup',
+		            title: '任务组名',
+		            align: 'center',
+		            formatter: function(value, row, index) {
+		                return $.table.selectDictLabel(datas, value);
+		            }
+		        },
+		        {
+		            field: 'invokeTarget',
+		            title: '调用目标字符串'
+		        },
+		        {
+		            field: 'jobMessage',
+		            title: '日志信息'
+		        },
+		        {
+		            field: 'status',
+		            title: '执行状态',
+		            align: 'center',
+		            formatter: function(value, row, index) {
+		                if (value == '0') {
+		                    return '<span class="badge badge-primary">成功</span>';
+		                } else if (value == '1') {
+		                    return '<span class="badge badge-danger">失败</span>';
+		                }
+		            }
+		        },
+		        {
+		            field: 'createTime',
+		            title: '执行时间',
+		            sortable: true
+		        }]
+		    };
+		    $.table.init(options);
+		});
+
+		function queryParams(params) {
+		    var search = $.table.queryParams(params);
+		    return search;
+		}
+
+		function searchPre() {
+		    $.table.search('jobLog-form', 'bootstrap-table');
+		}
+
+		function resetPre() {
+		    $("#jobLog-form")[0].reset();
+		    $.table.search('jobLog-form', 'bootstrap-table');
+		}
+
+		// 单条删除：DELETE /monitor/jobLog/{jobLogId}
+		function removeJobLog(jobLogId) {
+		    $.modal.confirm("确定删除该条调度日志吗？", function() {
+		        $.ajax({
+		            url: prefix + "/" + jobLogId,
+		            type: "delete",
+		            dataType: "json",
+		            beforeSend: function () {
+		                $.modal.loading("正在处理中，请稍候...");
+		            },
+		            success: function(result) {
+		                if (result.code == 0) {
+		                    $.modal.msgSuccess(result.msg);
+		                    $.table.refresh();
+		                } else {
+		                    $.modal.alertError(result.msg);
+		                }
+		                $.modal.closeLoading();
+		            }
+		        });
+		    });
+		}
+
+		// 批量删除：DELETE /monitor/jobLog/{id1,id2,...}
+		function removeAllJobLogs() {
+		    $.table.set();
+		    var rows = $.table.selectFirstColumns();
+		    if (rows.length == 0) {
+		        $.modal.alertWarning("请至少选择一条记录");
+		        return;
+		    }
+		    $.modal.confirm("确定删除选中的" + rows.length + "条调度日志吗？", function() {
+		        $.ajax({
+		            url: prefix + "/" + rows.join(","),
+		            type: "delete",
+		            dataType: "json",
+		            beforeSend: function () {
+		                $.modal.loading("正在处理中，请稍候...");
+		            },
+		            success: function(result) {
+		                if (result.code == 0) {
+		                    $.modal.msgSuccess(result.msg);
+		                    $.table.refresh();
+		                } else {
+		                    $.modal.alertError(result.msg);
+		                }
+		                $.modal.closeLoading();
+		            }
+		        });
+		    });
+		}
+
+		// 清空：DELETE /monitor/jobLog/clean
+		function cleanJobLogs() {
+		    $.table.set();
+		    $.modal.confirm("确定清空所有调度日志吗？此操作不可恢复！", function() {
+		        $.ajax({
+		            url: prefix + "/clean",
+		            type: "delete",
+		            dataType: "json",
+		            beforeSend: function () {
+		                $.modal.loading("正在处理中，请稍候...");
+		            },
+		            success: function(result) {
+		                if (result.code == 0) {
+		                    $.modal.msgSuccess(result.msg);
+		                    $.table.refresh();
+		                } else {
+		                    $.modal.alertError(result.msg);
+		                }
+		                $.modal.closeLoading();
+		            }
+		        });
+		    });
+		}
+	</script>
+</body>
+</html>
