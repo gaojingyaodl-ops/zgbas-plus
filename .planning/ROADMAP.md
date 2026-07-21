@@ -18,12 +18,12 @@
 Plans:
 **Wave 1**
 
-- [ ] 01-01-PLAN.md — 修复 /monitor/job/job 400 错误 (QTZ-01)
+- [x] 01-01-PLAN.md — 修复 /monitor/job/job 400 错误 (QTZ-01)
 - [x] 01-02-PLAN.md — 修复 add.html + edit.html 表单提交 API 对齐 (QTZ-02, QTZ-03)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-03-PLAN.md — 修复 job.html 删除/执行/启停 + 添加 $.operate.put (QTZ-04)
+- [x] 01-03-PLAN.md — 修复 job.html 删除/执行/启停 + 添加 $.operate.put (QTZ-04)
 
 ### Phase 2: 调度日志页面 + Thymeleaf 辅助 Bean
 
