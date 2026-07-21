@@ -81,7 +81,16 @@
 				cronExpression: { required: true, maxlength: 255 }
 			},
 			submitHandler: function(form) {
-				$.operate.save(prefix + "/edit", $('#form-job-edit').serialize());
+				var data = {};
+				$(form).serializeArray().forEach(function(item) { data[item.name] = item.value; });
+				$.ajax({
+					url: prefix,
+					type: "put",
+					contentType: "application/json;charset=utf-8",
+					data: JSON.stringify(data),
+					beforeSend: function() { $.modal.loading("正在处理中，请稍候..."); },
+					success: function(result) { $.operate.successCallback(result); }
+				});
 			}
 		});
 	</script>
