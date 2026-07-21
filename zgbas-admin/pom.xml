@@ -40,6 +40,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
+        <!-- QTZ-08: Thymeleaf dialect for shiro:hasPermission attributes (version 2.1.0,
+             matches old zgbas 4.8.3; admin-only, not in parent dependencyManagement) -->
+        <dependency>
+            <groupId>com.github.theborakompanioni</groupId>
+            <artifactId>thymeleaf-extras-shiro</artifactId>
+            <version>2.1.0</version>
+        </dependency>
         <!-- EXT-03: cfca sign FeignClient contracts + SignClientConfig (jar from private repo).
              openfeign starter arrives transitively via common (spt-tools-http) — not re-declared. -->
         <dependency>
