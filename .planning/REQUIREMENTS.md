@@ -1,83 +1,105 @@
 ---
 gsd_version: 2.0
-milestone: v1.1
-milestone_name: quartz功能完善
-created: "2026-07-21T12:00:00.000Z"
-status: draft
+milestone: v1.2
+milestone_name: basWx 迁入
+created: "2026-07-22T00:00:00.000Z"
 ---
 
-# REQUIREMENTS: quartz 功能完善
+# Milestone v1.2 — basWx 迁入 Requirements
+
+> Created: 2026-07-22
+> Status: Active
 
 ## Goal
 
-完善 quartz 定时任务模块的前端管理页面，修复 400 错误，提供完整的定时任务可视化管理能力（CRUD + 日志查看）。
+将 PurchaseWxServer 微信采购小程序完整迁入单体，实现全业务单进程覆盖（含采购小程序 BFF）。
 
-## Background
+## Context
 
-Phase 6 完成了 quartz 后端迁移（SysJobController → SysJobLogController → Service → Mapper → Quartz 调度器），但前端存在多个 gap：
+**源码位置：** `/Users/alan/WorkSpace/IDEA/zgbas/basWx/`，分支 `feat-系统重构v5.0`
 
-1. **菜单点击 400 错误** — 外部 spt-auth sys_menu 的 component 路径 `monitor/job/job` 被 Spring 误路由到 `@GetMapping("/{jobId}")`，类型转换失败
-2. **前端 JS API 不匹配** — Thymeleaf 模板中的 `$.operate.save/add/edit` 调用路径/方法与 Controller 实际路由不一致
-3. **ry-ui.js 缺少 PUT 方法** — `changeStatus`、`run` 端点用 `@PutMapping`，但 `$.operate.put` 不存在
-4. **调度日志页面缺失** — SysJobLogController 的 REST API 就绪，但无前端页面
-5. **Thymeleaf 辅助 Bean 缺失** — 模板引用了 `@dict.getType()` 和 `@permission.hasPermi()`，但没有对应的 Spring Bean
-6. **Shiro Thymeleaf 方言缺失** — 模板使用了 `xmlns:shiro` 和 `shiro:hasPermission`，但没有 `thymeleaf-extras-shiro` 依赖
+**规模（来自探查）：**
+- 2 子模块：`purchase-server`（178 Java files）+ `purchase-client`（31 Java files）= 209 Java files
+- 11 JPA 实体（6 in client, 5 in server）+ 7 借用 bas 实体（已在 zgbas-plus）
+- 18 Dao 接口
+- 3 Feign 接口（purchase-client remote）
+- ~20 service impl
+- 11 controller + 4 API 类
 
-## Requirements
+**关键迁移风险：**
+- 🔴 JWT 认证体系（非 Shiro），需与主单体 Shiro session 并存
+- 🔴 Redis 依赖（当前单体无 Redis）
+- 🟡 新 SDK：`weixin-java-miniapp:3.8.0`、CFCA 电签（cfca.etl）
+- 🟡 企业微信（EweChat）独立配置
+- 🟡 Phase 4 已扫 com.spt.bas.purchase.wx.client.remote（D-P4-01a），WX Feign 已自回环 localhost:8080 降级 → v1.2 补实现消除 404
 
-### Must Have
+---
 
-| ID | Requirement | Rationale |
-|----|-------------|-----------|
-| QTZ-01 | 修复 `/monitor/job/job` 400 错误 | 菜单入口不可用，阻塞所有操作 |
-| QTZ-02 | 修复 add.html 表单提交（路径+方法对齐 Controller） | 新增任务功能不可用 |
-| QTZ-03 | 修复 edit.html 表单提交（路径+方法+请求体格式对齐 Controller） | 编辑任务功能不可用 |
-| QTZ-04 | 修复 job.html 状态切换/删除/执行操作（JS API 对齐 Controller） | 启停/删除/手动执行不可用 |
-| QTZ-05 | 创建调度日志前端页面 `templates/monitor/jobLog/jobLog.html` | 日志查询、删除、清空、导出功能缺失 |
-| QTZ-06 | 提供 Thymeleaf `@dict` 和 `@permission` 辅助 Bean | 模板渲染依赖的字典查询和权限检查抛 NPE |
-| QTZ-07 | 验证完整 CRUD + 日志流程端到端可用 | 确保修复有效，无回归 |
+## v1 Requirements
 
-### Should Have
+### WX-DATA — 实体 & Dao 层
 
-| ID | Requirement | Rationale |
-|----|-------------|-----------|
-| QTZ-08 | 添加 `thymeleaf-extras-shiro` 依赖并配置 ShiroDialect | 让 `shiro:hasPermission` 属性正确控制按钮显隐 |
-| QTZ-09 | 外部 spt-auth sys_menu UPDATE（component path 需与 Thymeleaf view name 对齐） | 从侧边栏菜单点击能正确导航到任务列表页面 |
+- [ ] **WX-DATA-01**: 迁入 purchase-client 6 JPA 实体（BuyEnquiry / BuyMessage / BuyQuote / CompanyUser / SaveInfo / UserDetail）到 zgbas-system
+- [ ] **WX-DATA-02**: 迁入 purchase-server 5 JPA 实体（WxAccessToken / WxSession / WxSmsCheckCode / WxUserInfo / WxUserTextRead）到 zgbas-system
+- [ ] **WX-DATA-03**: 迁入 18 Dao 接口到 zgbas-system（含 7 个引用已有 bas 实体的 Dao，已有实体无需重复迁）
 
-### Nice to Have
+### WX-CLIENT — Feign 契约内联
 
-| ID | Requirement | Rationale |
-|----|-------------|-----------|
-| QTZ-10 | 讨论 Controller 是否移入 zgbas-admin 模块 | 用户提出的架构问题 |
-| QTZ-11 | sys_job_data.sql 88 条数据中的 38 条 "排除"数据 review | Phase 6 遗留的未迁移 handler gap |
+- [ ] **WX-CLIENT-01**: 3 Feign 接口（ISaveTempClient / IWxUserClient / IWxUserDetailClient）内联进 zgbas-system，消除 purchase-client 2.0.1-SNAPSHOT 私服 jar 依赖
+- [ ] **WX-CLIENT-02**: PurchaseWxClientConfig 内联，spt.bas.purchaseWx.url 配置为 localhost:8080 自回环
 
-## Out of Scope
+### WX-SERVICE — 业务 Service 层
 
-- basWx 微信采购小程序迁入（v1.2）
-- Quartz 集群配置优化
-- 新增业务 Task 开发
-- `thymeleaf-extras-shiro` 之外的 Shiro 方言自定义扩展
+- [ ] **WX-SERVICE-01**: ~20 service impl 全量迁入 zgbas-system（适配 spt-tools 内联后的 BaseService）
+- [ ] **WX-SERVICE-02**: weixin-java-miniapp:3.8.0 SDK 引入 pom + WxMiniAppConfig（@ConfigurationProperties）+ WxConfiguration（注册 WxMaService bean）
+- [ ] **WX-SERVICE-03**: Redis 引入（spring-boot-starter-data-redis）+ JWT 认证体系（JwtConfig + JwtAuthenticationFilter）与 Shiro 并存
 
-## Controller 位置分析
+### WX-BFF — Controller & API 层
 
-用户问：controller 是否可以放到 admin 模块中？
+- [ ] **WX-BFF-01**: 11 Controller 类迁入 zgbas-admin（/wx/* + /ewechat/* + /axq/* 端点）
+- [ ] **WX-BFF-02**: 4 API 类迁入 zgbas-admin（SaveTempApi / WxOpenApi / WxUserApi / WxUserDetailApi）
+- [ ] **WX-BFF-03**: 辅助组件迁入：payload 21 类、VO 19 类、枚举、util 20 类、AOP（ServiceAop）、缓存（BsDictUtil / RedisCache）、企业微信 EweChatApi
 
-**结论：不建议移动。** 原因：
-1. Controller 依赖 `ISysJobService` / `ISysJobLogService` → Service → Mapper → Domain，全链路在 quartz 模块内，保持模块内聚
-2. `@ComponentScan("com.spt")` 已自动发现 quartz controller（无需额外配置）
-3. 其他 monitor 页面（cache / online / operlog / server / logininfor）的 Controller 也不在 admin 模块
-4. 移动 controller 需要将它依赖的所有 quartz 类型声明为 admin 的编译期依赖（不增加价值）
-5. RuoYi 参考实现也保持 quartz controller 在 quartz 模块内
+### WX-ALIGN — 对齐验证
 
-**如果仍要移动**，需要：
-- `zgbas-admin/pom.xml` 添加 `zgbas-quartz` 依赖（已有）
-- 将 `SysJobController` + `SysJobLogController` 移到 `zgbas-admin/src/main/java/com/spt/bas/web/controller/monitor/`
-- 无需修改 ComponentScan（`com.spt` 包含 `com.spt.bas.web`）
+- [ ] **WX-ALIGN-01**: `mvn compile` 全模块无错（JDK 1.8 + Spring Boot 2.5.9，JAVA_HOME=Corretto 1.8）
+- [ ] **WX-ALIGN-02**: Spring context 含 WX beans 正常启动（ZgbasApplicationTest GREEN，包含 WxMaService / Redis / JWT beans）
+- [ ] **WX-ALIGN-03**: 关键 WX 端点可达（/wx/user/login 等非 404，自回环 WX-CLIENT-02 proof 绿）
 
-## Verification
+---
 
-- QTZ-01: 浏览器访问 `/monitor/job` 返回 200 + 任务列表页面（非 400）
-- QTZ-02/03: 新增/编辑任务表单提交成功，数据库 SQL 验证记录写入
-- QTZ-04: 启停/删除/立即执行在页面操作成功
-- QTZ-05: 浏览器访问 `/monitor/jobLog` 返回调度日志列表页面
-- QTZ-06: 页面渲染不出错（无 NPE），字典下拉框有数据
+## Future Requirements
+
+- JWT 替换为统一认证（长期方向，JWT/Shiro 并存是本次临时方案）
+- CFCA 电签服务单体化（现保持 HTTP 调用外部）
+- 企业微信通知推送配置化（现 hardcode corpid/corpsecret）
+- 微信小程序推送模板 ID 配置化
+
+## Out of Scope (v1.2)
+
+- **合并 spt-auth** — 认证保持外部 HTTP（决策 #7 不变）
+- **schema drift 修复（ddl-auto validate）** — Phase 4 遗留，留 v1.3
+- **quartz gap-closure（28 handler 路由）** — v1.1 遗留，留 v1.3
+- **basWxServer 前端 Web 管理页** — PurchaseWxServer 是纯 API 服务（无 Thymeleaf 管理页），不适用
+- **Spring Boot 3 / JDK 17 升级** — 技术栈锁定，本期不做
+
+---
+
+## Traceability
+
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| WX-DATA-01 | TBD | Pending |
+| WX-DATA-02 | TBD | Pending |
+| WX-DATA-03 | TBD | Pending |
+| WX-CLIENT-01 | TBD | Pending |
+| WX-CLIENT-02 | TBD | Pending |
+| WX-SERVICE-01 | TBD | Pending |
+| WX-SERVICE-02 | TBD | Pending |
+| WX-SERVICE-03 | TBD | Pending |
+| WX-BFF-01 | TBD | Pending |
+| WX-BFF-02 | TBD | Pending |
+| WX-BFF-03 | TBD | Pending |
+| WX-ALIGN-01 | TBD | Pending |
+| WX-ALIGN-02 | TBD | Pending |
+| WX-ALIGN-03 | TBD | Pending |
