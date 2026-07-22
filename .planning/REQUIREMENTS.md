@@ -89,17 +89,17 @@ created: "2026-07-22T00:00:00.000Z"
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| WX-DATA-01 | TBD | Pending |
-| WX-DATA-02 | TBD | Pending |
-| WX-DATA-03 | TBD | Pending |
-| WX-CLIENT-01 | TBD | Pending |
-| WX-CLIENT-02 | TBD | Pending |
-| WX-SERVICE-01 | TBD | Pending |
-| WX-SERVICE-02 | TBD | Pending |
-| WX-SERVICE-03 | TBD | Pending |
-| WX-BFF-01 | TBD | Pending |
-| WX-BFF-02 | TBD | Pending |
-| WX-BFF-03 | TBD | Pending |
-| WX-ALIGN-01 | TBD | Pending |
-| WX-ALIGN-02 | TBD | Pending |
-| WX-ALIGN-03 | TBD | Pending |
+| WX-DATA-01 | Phase 3 | Pending |
+| WX-DATA-02 | Phase 3 | Pending |
+| WX-DATA-03 | Phase 3 | Pending |
+| WX-CLIENT-01 | Phase 3 | Pending |
+| WX-CLIENT-02 | Phase 3 | Pending |
+| WX-SERVICE-01 | Phase 5 | Pending |
+| WX-SERVICE-02 | Phase 4 | Pending |
+| WX-SERVICE-03 | Phase 4 | Pending |
+| WX-BFF-01 | Phase 5 | Pending |
+| WX-BFF-02 | Phase 5 | Pending |
+| WX-BFF-03 | Phase 5 | Pending |
+| WX-ALIGN-01 | Phase 6 | Pending |
+| WX-ALIGN-02 | Phase 6 | Pending |
+| WX-ALIGN-03 | Phase 6 | Pending |
