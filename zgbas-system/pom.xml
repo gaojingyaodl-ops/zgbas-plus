@@ -157,6 +157,19 @@
             <artifactId>cglib</artifactId>
             <version>3.1</version>
         </dependency>
+
+        <!-- Phase 4 D-03: Redis starter, version managed by Spring Boot BOM -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- Phase 4 D-11: WeChat miniapp SDK, explicit version 3.8.0 -->
+        <dependency>
+            <groupId>com.github.binarywang</groupId>
+            <artifactId>weixin-java-miniapp</artifactId>
+            <version>3.8.0</version>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>
