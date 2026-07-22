@@ -85,9 +85,9 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 **Plans**: 5 plans
 
 - [x] 04-01-PLAN.md — pom 依赖声明 + application-dev.yml 配置
-- [ ] 04-02-PLAN.md — Redis 配置类迁入
-- [ ] 04-03-PLAN.md — WxMaService 配置类迁入 + common stubs
-- [ ] 04-04-PLAN.md — JWT 认证体系迁入
+- [x] 04-02-PLAN.md — Redis 配置类迁入
+- [x] 04-03-PLAN.md — WxMaService 配置类迁入 + common stubs
+- [x] 04-04-PLAN.md — JWT 认证体系迁入
 - [ ] 04-05-PLAN.md — 全量编译验证 + bean 注册验证
 
 ---

@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: "Phase 4 executing — 04-03 COMPLETE, 04-04 next"
-stopped_at: "04-03 COMPLETE: WxMiniAppConfig + WxConfiguration 迁入 + common stubs (BaseException/Status/ApiResult) 创建，zgbas-system compile 零 ERROR"
-last_updated: "2026-07-22T08:30:00Z"
-last_activity: "2026-07-22 — 04-03 COMPLETE: WxMaService static getMaService() 模式就位，common stubs 三文件创建，zgbas-system BUILD SUCCESS"
+status: "Phase 4 executing — 04-04 COMPLETE, next plan: done (v1.2 Phase 4 complete)"
+stopped_at: "04-04 COMPLETE: JWT体系迁入 (JwtConfig/JwtUtil/JwtAuthenticationFilter/WxSecurityConfig + 6 stubs)，zgbas-system compile 零 ERROR"
+last_updated: "2026-07-22T08:40:00Z"
+last_activity: "2026-07-22 — 04-04 COMPLETE: JWT认证体系全量迁入，FilterRegistrationBean /wx/* 路径限定，BUILD SUCCESS"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 8
-  completed_plans: 3
-  percent: 38
+  completed_plans: 4
+  percent: 0
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: Phase 4 (executing)
-Plan: 04-03 COMPLETE → 04-04 next
-Status: Phase 4 executing — 04-03 WxMaService 配置类迁入完成，Wave 2b（JWT）开始
-Last activity: 2026-07-22 — 04-03 COMPLETE: WxMiniAppConfig + WxConfiguration + common stubs 迁入 zgbas-system，zgbas-system BUILD SUCCESS 零 ERROR
+Plan: 04-04 COMPLETE
+Status: Phase 4 plan 04-04 done — JWT认证体系迁入完成，zgbas-system BUILD SUCCESS
+Last activity: 2026-07-22 — 04-04 COMPLETE: JwtConfig + JwtUtil + JwtAuthenticationFilter(改造) + WxSecurityConfig(FilterRegistrationBean /wx/* /ewechat/* /axq/*) + 6 stubs，编译零 ERROR
 
-Progress: [██████████] 100%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
@@ -70,7 +70,7 @@ Progress: [██████████] 100%
 | Phase 04 P06 | 25 | 3 tasks | 304 files |
 | Phase 01-quartz-frontend-fix P02 | 2 | 2 tasks | 2 files |
 | Phase 01-quartz-frontend-fix P03 | 352 | 2 tasks | 2 files |
-| v1.2 Phase 04-sdk P01 | 8min | 2 tasks | 2 files |
+| v1.2 Phase 04-sdk P04 | 15min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -120,7 +120,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 04-01 SDK pom + yml 配置前置完成
 - [Phase 4]: D-04-02-01 fastjson2:2.0.4 显式声明于 zgbas-system/pom.xml — 源 purchase-server 显式依赖 fastjson2 2.x，项目已有 fastjson 1.x 但 groupId/package 不同，无传递覆盖可能
 - [Phase 4]: D-04-03-01 WxConfiguration static field 赋值修正 — 构造器内 `this.properties = properties` 改为 `WxConfiguration.properties = properties`，消除静态字段赋值歧义（Rule 1 auto-fix）
-- [Phase 4]: D-04-03-02 ApiResult swagger 注解注释掉 — 项目无 springfox/knife4j 依赖，照搬时 import/注解行 comment-out，Phase 5 overlay 恢复
+- [Phase 4]: D-04-04-01 JwtAuthenticationFilter 去 @Component + FilterRegistrationBean 注册 /wx/* /ewechat/* /axq/*（WxSecurityConfig），D-06/D-07 落地，checkIgnores() return false
+- [Phase 4]: D-04-04-02 TokenUtil.createToken 5-arg overload 新增 (id,subject,claims,secretKey,ttlMillis) — JwtUtil.createJWT 依赖此签名，feat-系统重构v5.0 未合回 spt-tools-http（与 2026-07-17 的 2-arg Map 同修复模式）
+- [Phase 4]: D-04-04-03 JwtUtil.parseJWT 内层 try-catch 将 TokenUtil.parseJWT checked Exception 转为 SecurityException（UnsupportedEncodingException 由 "utf-8" 触发，实际永不发生）
 
 ### Pending Todos
 
@@ -166,6 +168,6 @@ Items acknowledged and deferred at milestone close on 2026-07-21:
 
 ## Session Continuity
 
-Last session: 2026-07-22T08:15:39Z
-Stopped at: 04-02 COMPLETE: Redis 配置类迁入
+Last session: 2026-07-22T08:40:00Z
+Stopped at: 04-04 COMPLETE: JWT体系迁入，zgbas-system compile 零 ERROR
 Resume file: None
