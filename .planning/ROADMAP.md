@@ -82,7 +82,13 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 3. JwtAuthenticationFilter 注册为 Spring Filter bean 后，/wx/** 路径请求绕过 Shiro AuthenticationFilter（过滤链不抛 UnauthorizedException），已有 Shiro session 登录路径（/login、/index）行为不变
 4. Spring context 干启动（通过 ApplicationContextRunner 或 @SpringBootTest）时，Redis bean + WxMaService bean + JwtConfig bean 均可通过 getBean 取到，无 BeanCreationException
 
-**Plans**: TBD
+**Plans**: 5 plans
+
+- [ ] 04-01-PLAN.md — pom 依赖声明 + application-dev.yml 配置
+- [ ] 04-02-PLAN.md — Redis 配置类迁入
+- [ ] 04-03-PLAN.md — WxMaService 配置类迁入 + common stubs
+- [ ] 04-04-PLAN.md — JWT 认证体系迁入
+- [ ] 04-05-PLAN.md — 全量编译验证 + bean 注册验证
 
 ---
 
