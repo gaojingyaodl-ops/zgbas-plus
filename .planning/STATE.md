@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: "Phase 4 executing — 04-02 COMPLETE, 04-03 next"
-stopped_at: "04-02 COMPLETE: Redis 配置类迁入 — FastJson2JsonRedisSerializer + RedisConfig + fastjson2:2.0.4 dep"
-last_updated: "2026-07-22T08:15:39Z"
-last_activity: "2026-07-22 — 04-02 COMPLETE: FastJson2JsonRedisSerializer + RedisConfig 迁入 zgbas-system，fastjson2:2.0.4 dep 修复，compile 零 ERROR"
+status: "Phase 4 executing — 04-03 COMPLETE, 04-04 next"
+stopped_at: "04-03 COMPLETE: WxMiniAppConfig + WxConfiguration 迁入 + common stubs (BaseException/Status/ApiResult) 创建，zgbas-system compile 零 ERROR"
+last_updated: "2026-07-22T08:30:00Z"
+last_activity: "2026-07-22 — 04-03 COMPLETE: WxMaService static getMaService() 模式就位，common stubs 三文件创建，zgbas-system BUILD SUCCESS"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 8
-  completed_plans: 2
-  percent: 25
+  completed_plans: 3
+  percent: 38
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: Phase 4 (executing)
-Plan: 04-02 COMPLETE → 04-03 next
-Status: Phase 4 executing — 04-02 Redis 配置类迁入完成，Wave 3（WxMaService）开始
-Last activity: 2026-07-22 — 04-02 COMPLETE: FastJson2JsonRedisSerializer + RedisConfig 迁入 zgbas-system，fastjson2:2.0.4 dep 修复，compile 零 ERROR
+Plan: 04-03 COMPLETE → 04-04 next
+Status: Phase 4 executing — 04-03 WxMaService 配置类迁入完成，Wave 2b（JWT）开始
+Last activity: 2026-07-22 — 04-03 COMPLETE: WxMiniAppConfig + WxConfiguration + common stubs 迁入 zgbas-system，zgbas-system BUILD SUCCESS 零 ERROR
 
 Progress: [██████████] 100%
 
@@ -119,6 +119,8 @@ Recent decisions affecting current work:
 - [Phase ?]: 成功回调复用 $.operate.successCallback() 保持模态框关闭 + 父窗口表格刷新的标准行为
 - [Phase ?]: Phase 04-01 SDK pom + yml 配置前置完成
 - [Phase 4]: D-04-02-01 fastjson2:2.0.4 显式声明于 zgbas-system/pom.xml — 源 purchase-server 显式依赖 fastjson2 2.x，项目已有 fastjson 1.x 但 groupId/package 不同，无传递覆盖可能
+- [Phase 4]: D-04-03-01 WxConfiguration static field 赋值修正 — 构造器内 `this.properties = properties` 改为 `WxConfiguration.properties = properties`，消除静态字段赋值歧义（Rule 1 auto-fix）
+- [Phase 4]: D-04-03-02 ApiResult swagger 注解注释掉 — 项目无 springfox/knife4j 依赖，照搬时 import/注解行 comment-out，Phase 5 overlay 恢复
 
 ### Pending Todos
 
