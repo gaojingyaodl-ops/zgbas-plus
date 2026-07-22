@@ -41,7 +41,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 
 ### Phases (Summary)
 
-- [ ] **Phase 3: 数据层与 Feign 契约** — 11 WX JPA 实体 + 18 Dao + 3 Feign 契约就位 zgbas-system，消除私服 jar 依赖
+- [x] **Phase 3: 数据层与 Feign 契约** — 11 WX JPA 实体 + 18 Dao + 3 Feign 契约就位 zgbas-system，消除私服 jar 依赖 — completed 2026-07-22
 - [ ] **Phase 4: 基础设施 & SDK 接入** — Redis + weixin-java-miniapp SDK + JWT/Shiro 并存机制就绪
 - [ ] **Phase 5: Service & BFF 全量迁入** — ~20 service + 11 controller + 4 API + 辅助组件全量落地
 - [ ] **Phase 6: 对齐验证** — 编译零错 + 启动 GREEN + WX 端点非 404 三层验证通过
@@ -129,7 +129,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 | 1–7 各阶段 | v1.0 | 37/37 | ✅ Complete | 2026-07-20 |
 | Phase 1: 前端接口对齐 | v1.1 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 2: 调度日志 + 辅助 Bean | v1.1 | 3/3 | ✅ Complete | 2026-07-22 |
-| Phase 3: 数据层与 Feign 契约 | v1.2 | 0/TBD | Not started | - |
+| Phase 3: 数据层与 Feign 契约 | v1.2 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 4: 基础设施 & SDK 接入 | v1.2 | 0/TBD | Not started | - |
 | Phase 5: Service & BFF 全量迁入 | v1.2 | 0/TBD | Not started | - |
 | Phase 6: 对齐验证 | v1.2 | 0/TBD | Not started | - |
