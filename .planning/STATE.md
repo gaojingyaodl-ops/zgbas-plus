@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: "Phase 4 planned (5 plans, 4 waves), ready for /gsd:execute-phase 4"
-stopped_at: Phase 4 context gathered
-last_updated: "2026-07-22T08:08:50.392Z"
-last_activity: "2026-07-22 — Phase 3 complete (3/3 plans: 11 entities + 18 Dao + 3 Feign contracts + pom cleanup)"
+status: "Phase 4 executing — 04-02 COMPLETE, 04-03 next"
+stopped_at: "04-02 COMPLETE: Redis 配置类迁入 — FastJson2JsonRedisSerializer + RedisConfig + fastjson2:2.0.4 dep"
+last_updated: "2026-07-22T08:15:39Z"
+last_activity: "2026-07-22 — 04-02 COMPLETE: FastJson2JsonRedisSerializer + RedisConfig 迁入 zgbas-system，fastjson2:2.0.4 dep 修复，compile 零 ERROR"
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 8
-  completed_plans: 1
-  percent: 0
+  completed_plans: 2
+  percent: 25
 ---
 
 # Project State
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: Phase 4 (executing)
-Plan: 04-01 COMPLETE → 04-02 next
-Status: Phase 4 executing — 04-01 pom+yml 配置前置完成，Wave 2 Java 类迁移开始
-Last activity: 2026-07-22 — 04-01 COMPLETE: Redis starter + weixin-java-miniapp:3.8.0 pom 声明 + wx.miniapp + jwt.config yml 配置就位
+Plan: 04-02 COMPLETE → 04-03 next
+Status: Phase 4 executing — 04-02 Redis 配置类迁入完成，Wave 3（WxMaService）开始
+Last activity: 2026-07-22 — 04-02 COMPLETE: FastJson2JsonRedisSerializer + RedisConfig 迁入 zgbas-system，fastjson2:2.0.4 dep 修复，compile 零 ERROR
 
 Progress: [██████████] 100%
 
@@ -118,6 +118,7 @@ Recent decisions affecting current work:
 - [Phase ?]: 表单序列化使用 jQuery.serializeArray() 而非 .serialize()，生成 JSON 对象以匹配 @RequestBody
 - [Phase ?]: 成功回调复用 $.operate.successCallback() 保持模态框关闭 + 父窗口表格刷新的标准行为
 - [Phase ?]: Phase 04-01 SDK pom + yml 配置前置完成
+- [Phase 4]: D-04-02-01 fastjson2:2.0.4 显式声明于 zgbas-system/pom.xml — 源 purchase-server 显式依赖 fastjson2 2.x，项目已有 fastjson 1.x 但 groupId/package 不同，无传递覆盖可能
 
 ### Pending Todos
 
@@ -163,6 +164,6 @@ Items acknowledged and deferred at milestone close on 2026-07-21:
 
 ## Session Continuity
 
-Last session: 2026-07-22T08:08:35.586Z
-Stopped at: Phase 4 context gathered
+Last session: 2026-07-22T08:15:39Z
+Stopped at: 04-02 COMPLETE: Redis 配置类迁入
 Resume file: None
