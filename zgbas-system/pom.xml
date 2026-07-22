@@ -129,11 +129,10 @@
             <artifactId>pdfbox</artifactId>
             <version>2.0.29</version>
         </dependency>
-        <dependency>
-            <groupId>com.spt.bas</groupId>
-            <artifactId>purchase-client</artifactId>
-            <version>2.0.1-SNAPSHOT</version>
-        </dependency>
+        <!-- purchase-client 2.0.1-SNAPSHOT removed in Phase 3 (Plan 03-03):
+             client types (entity/config/constant/remote/vo) inlined verbatim into
+             zgbas-system/src/main/java/com/spt/bas/purchase/wx/client/, eliminating
+             the types-only private-repo jar dep (D-P3, 对齐 Phase 5 inline pattern). -->
 
         <!-- Phase 5 Wave 0 (Plan 05-01 Rule 3 cascade): easyexcel 3.1.0 verbatim from source
              basReport/reportClient/pom.xml. Required by 3 ported reportClient files
