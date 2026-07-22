@@ -132,7 +132,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
                 "com.spt.bas.purchase.wx.client.entity",   // Phase 3: WX purchase-client entities
                 "com.spt.bas.purchase.wx.server.entity"    // Phase 3: WX purchase-server entities
             })
-@EnableJpaRepositories(basePackages = {"com.spt.bas.server.dao", "com.spt.pm.dao"})
+@EnableJpaRepositories(basePackages = {
+    "com.spt.bas.server.dao",
+    "com.spt.pm.dao",
+    "com.spt.bas.purchase.wx.server.dao"   // Phase 3: WX Dao 接口（11个WX专属）
+})
 public class ZgbasApplication {
 
     public static void main(String[] args) {
