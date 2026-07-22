@@ -84,7 +84,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 
 **Plans**: 5 plans
 
-- [ ] 04-01-PLAN.md — pom 依赖声明 + application-dev.yml 配置
+- [x] 04-01-PLAN.md — pom 依赖声明 + application-dev.yml 配置
 - [ ] 04-02-PLAN.md — Redis 配置类迁入
 - [ ] 04-03-PLAN.md — WxMaService 配置类迁入 + common stubs
 - [ ] 04-04-PLAN.md — JWT 认证体系迁入
@@ -136,7 +136,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 | Phase 1: 前端接口对齐 | v1.1 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 2: 调度日志 + 辅助 Bean | v1.1 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 3: 数据层与 Feign 契约 | v1.2 | 3/3 | ✅ Complete | 2026-07-22 |
-| Phase 4: 基础设施 & SDK 接入 | v1.2 | 0/TBD | Not started | - |
+| Phase 4: 基础设施 & SDK 接入 | v1.2 | 1/5 | 🚧 Executing | - |
 | Phase 5: Service & BFF 全量迁入 | v1.2 | 0/TBD | Not started | - |
 | Phase 6: 对齐验证 | v1.2 | 0/TBD | Not started | - |
 

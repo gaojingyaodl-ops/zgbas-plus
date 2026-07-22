@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: planning
-stopped_at: Phase 4 planned
-last_updated: "2026-07-22T08:00:00.000Z"
-last_activity: "2026-07-22 — Phase 4 plans ready (5 plans, 4 waves: pom+yml / Redis / WxSDK / JWT+Filter / verify)"
+status: "Phase 4 planned (5 plans, 4 waves), ready for /gsd:execute-phase 4"
+stopped_at: Phase 4 context gathered
+last_updated: "2026-07-22T08:08:50.392Z"
+last_activity: "2026-07-22 — Phase 3 complete (3/3 plans: 11 entities + 18 Dao + 3 Feign contracts + pom cleanup)"
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 5
-  completed_plans: 0
+  total_plans: 8
+  completed_plans: 1
   percent: 0
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 ## Current Position
 
-Phase: Phase 4 (ready to execute)
-Plan: 04-01 through 04-05
-Status: Phase 4 planned (5 plans, 4 waves), ready for /gsd:execute-phase 4
-Last activity: 2026-07-22 — Phase 3 complete (3/3 plans: 11 entities + 18 Dao + 3 Feign contracts + pom cleanup)
+Phase: Phase 4 (executing)
+Plan: 04-01 COMPLETE → 04-02 next
+Status: Phase 4 executing — 04-01 pom+yml 配置前置完成，Wave 2 Java 类迁移开始
+Last activity: 2026-07-22 — 04-01 COMPLETE: Redis starter + weixin-java-miniapp:3.8.0 pom 声明 + wx.miniapp + jwt.config yml 配置就位
 
 Progress: [██████████] 100%
 
@@ -70,6 +70,7 @@ Progress: [██████████] 100%
 | Phase 04 P06 | 25 | 3 tasks | 304 files |
 | Phase 01-quartz-frontend-fix P02 | 2 | 2 tasks | 2 files |
 | Phase 01-quartz-frontend-fix P03 | 352 | 2 tasks | 2 files |
+| v1.2 Phase 04-sdk P01 | 8min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -116,6 +117,7 @@ Recent decisions affecting current work:
 - [Phase ?]: 使用 $.ajax 直调替代 $.operate.save，实现 JSON body + 正确 HTTP method + 正确 URL
 - [Phase ?]: 表单序列化使用 jQuery.serializeArray() 而非 .serialize()，生成 JSON 对象以匹配 @RequestBody
 - [Phase ?]: 成功回调复用 $.operate.successCallback() 保持模态框关闭 + 父窗口表格刷新的标准行为
+- [Phase ?]: Phase 04-01 SDK pom + yml 配置前置完成
 
 ### Pending Todos
 
@@ -161,6 +163,6 @@ Items acknowledged and deferred at milestone close on 2026-07-21:
 
 ## Session Continuity
 
-Last session: 2026-07-22T07:34:30.802Z
+Last session: 2026-07-22T08:08:35.586Z
 Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-sdk/04-CONTEXT.md
+Resume file: None
