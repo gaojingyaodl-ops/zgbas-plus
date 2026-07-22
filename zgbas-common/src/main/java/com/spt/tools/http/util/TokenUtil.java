@@ -41,6 +41,28 @@ public class TokenUtil {
 		return createToken(SUBJECT_PP, map, bytes);
 	}
 
+	// Phase 4 Rule 1 (bug fix, 2026-07-22): 5-arg overload (id, subject, claims, secretKey, ttlMillis)
+	// missing from spt-tools master. JwtUtil.createJWT calls
+	//   TokenUtil.createToken(id.toString(), loginName, null, jwtConfig.getKey(), ttl.intValue())
+	// with this exact signature. Source basWx/JwtUtil was relying on a version that was never
+	// merged back to spt-tools-http. Implementation: sets JWT id/subject/expiry/HS512 signing,
+	// optionally merges caller-supplied claims map. No `throws` — StandardCharsets.UTF_8 never fails.
+	public static String createToken(String id, String subject, Map<String, Object> claims, String secretKey, int ttlMillis) {
+		byte[] bytes = Base64.encodeBase64(secretKey.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		JwtBuilder builder = Jwts.builder()
+				.setId(id)
+				.setSubject(subject)
+				.setIssuedAt(new Date())
+				.setExpiration(new Date(System.currentTimeMillis() + ttlMillis))
+				.signWith(SignatureAlgorithm.HS512, bytes);
+		if (claims != null) {
+			for (String key : claims.keySet()) {
+				builder.claim(key, claims.get(key));
+			}
+		}
+		return builder.compact();
+	}
+
 	public static String createToken(String subject, Map<String, Object> map, byte[] secretKey) {
 		String userToken = null;
 		JwtBuilder builder = Jwts.builder().setSubject(subject)
