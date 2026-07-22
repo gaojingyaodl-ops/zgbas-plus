@@ -126,7 +126,12 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     // Phase 5 ports ReportServer. ReportClientConfig bean is component-scanned (URL lazy-resolved).
 })
 @EntityScan(basePackageClasses = IdEntity.class,
-            basePackages = {"com.spt.bas.client.entity", "com.spt.pm.entity"})
+            basePackages = {
+                "com.spt.bas.client.entity",
+                "com.spt.pm.entity",
+                "com.spt.bas.purchase.wx.client.entity",   // Phase 3: WX purchase-client entities
+                "com.spt.bas.purchase.wx.server.entity"    // Phase 3: WX purchase-server entities
+            })
 @EnableJpaRepositories(basePackages = {"com.spt.bas.server.dao", "com.spt.pm.dao"})
 public class ZgbasApplication {
 
