@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: quartz 功能完善
-status: complete
-stopped_at: v1.1 shipped — all 6 plans done, human UAT passed
+milestone: v1.2
+milestone_name: basWx 迁入
+status: planning
+stopped_at: ""
 last_updated: "2026-07-22T00:00:00.000Z"
-last_activity: 2026-07-22 -- v1.1 quartz complete, commit 398f889
+last_activity: 2026-07-22 -- Milestone v1.2 started
 progress:
-  total_phases: 2
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 ## Current Position
 
-Phase: 01-quartz-frontend-fix
-Plan: 01-03 (complete)
-Status: Ready to execute
-Last activity: 2026-07-21 -- Phase 02 planning complete
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-07-22 — Milestone v1.2 started
 
 Progress: [██████████] 100%
 
