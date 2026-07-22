@@ -36,6 +36,13 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import cn.binarywang.wx.miniapp.api.WxMaService;
+import com.spt.bas.purchase.wx.server.config.JwtConfig;
+import com.spt.bas.purchase.wx.server.config.JwtAuthenticationFilter;
+import com.spt.bas.purchase.wx.server.config.WxConfiguration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.data.redis.core.RedisTemplate;
+
 import javax.sql.DataSource;
 import java.util.List;
 
@@ -917,6 +924,50 @@ class ZgbasApplicationTest {
         assertThat(businessRows)
             .as("RptBusinessOverviewMapper.findBusinessOverviewList should return non-null")
             .isNotNull();
+    }
+
+    // ---- Phase 4 Wave 4 (04-05): bean 注册验证 — SC-1/SC-2/SC-3/SC-4 ----
+    //
+    // 验证 Phase 4 四条成功标准在 Spring context 启动后均可通过 getBean 确认。
+    // 编译通过 ≠ bean 可注入，此方法为启动级别验证。
+
+    @Test
+    void wxInfrastructureBeans_phase4_probe() {
+        // SC-1 / SC-4: RedisTemplate bean registered (spring-boot-starter-data-redis + RedisConfig).
+        // Use bean name "redisTemplate" (RedisConfig @Bean method name) to disambiguate from
+        // "stringRedisTemplate" which Spring Boot auto-configuration also registers.
+        @SuppressWarnings("unchecked")
+        RedisTemplate<Object, Object> redisTemplate =
+            context.getBean("redisTemplate", RedisTemplate.class);
+        assertThat(redisTemplate)
+            .as("Phase 4 SC-1: RedisTemplate bean should be registered")
+            .isNotNull();
+
+        // SC-4: JwtConfig bean registered (@ConfigurationProperties prefix="jwt.config")
+        JwtConfig jwtConfig = context.getBean(JwtConfig.class);
+        assertThat(jwtConfig)
+            .as("Phase 4 SC-4: JwtConfig bean should be registered")
+            .isNotNull();
+        assertThat(jwtConfig.getKey())
+            .as("Phase 4 SC-4: JwtConfig.key should be sgcoding (application-dev.yml)")
+            .isEqualTo("sgcoding");
+
+        // SC-2 / SC-4: WxMaService available via WxConfiguration.getMaService()
+        // @PostConstruct init() runs during Spring context startup, populating the static Map.
+        WxMaService wxMaService = WxConfiguration.getMaService();
+        assertThat(wxMaService)
+            .as("Phase 4 SC-2: WxMaService from WxConfiguration.getMaService() should be non-null")
+            .isNotNull();
+
+        // SC-3: JwtAuthenticationFilter registered to /wx/* via FilterRegistrationBean.
+        // Use bean name "jwtFilterRegistration" (WxSecurityConfig method name) to disambiguate
+        // from any other FilterRegistrationBean instances (e.g., Shiro).
+        @SuppressWarnings("unchecked")
+        FilterRegistrationBean<JwtAuthenticationFilter> filterBean =
+            context.getBean("jwtFilterRegistration", FilterRegistrationBean.class);
+        assertThat(filterBean.getUrlPatterns())
+            .as("Phase 4 SC-3: JwtFilter urlPatterns should include /wx/*")
+            .contains("/wx/*");
     }
 
     /**
