@@ -170,6 +170,17 @@
             <artifactId>weixin-java-miniapp</artifactId>
             <version>3.8.0</version>
         </dependency>
+
+        <!-- Phase 4 Plan 04-02 Rule 3: fastjson2 2.0.4 verbatim from source
+             purchase-server/pom.xml. Required by FastJson2JsonRedisSerializer which
+             uses com.alibaba.fastjson2.{JSON,JSONReader,JSONWriter}. The project has
+             fastjson 1.x in common, but fastjson2 is a separate artifact with different
+             groupId (com.alibaba.fastjson2) and package namespace. -->
+        <dependency>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+            <version>2.0.4</version>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>
