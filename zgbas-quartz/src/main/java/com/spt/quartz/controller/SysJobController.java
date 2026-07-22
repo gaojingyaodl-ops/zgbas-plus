@@ -1,5 +1,6 @@
 package com.spt.quartz.controller;
 
+import cn.hutool.core.convert.Convert;
 import com.spt.common.annotation.Log;
 import com.spt.common.constant.Constants;
 import com.spt.common.core.controller.BaseController;
@@ -25,29 +26,6 @@ import java.util.List;
 
 /**
  * 调度任务信息操作处理
- *
- * <p>Phase 6 (QUARTZ-01 + QUARTZ-04 + D-P6-10) — ported from
- * {@code spt-auth/auth-quartz/src/main/java/com/spt/quartz/controller/SysJobController.java}
- * with three adaptations:
- * <ol>
- *   <li>Pitfall 4 / W5 compensation — every {@code @PreAuthorize("@ss.hasPermi(...)")}
- *       annotation is removed (spring-security is not on the monolith classpath;
- *       auth is handled by the Phase 3 Shiro chain). To preserve method-level
- *       permission granularity (ASVS L1 V4.1.1), Shiro
- *       {@link RequiresPermissions} annotations are added on every write method
- *       with the same {@code monitor:job:*} permission strings
- *       (threat_model T-06-01-02 disposition accept -> mitigated).</li>
- *   <li>D-P6-10 — view-returning {@code @GetMapping} handlers ({@link #view()},
- *       {@link #add()}, {@link #edit(Long, ModelMap)}) are added so the
- *       Thymeleaf pages at {@code templates/monitor/job/} are reachable via
- *       direct URL /monitor/job (and via the external spt-auth sys_menu entry,
- *       see Task 5 checkpoint:human-blocked).</li>
- *   <li>The class is switched from {@code @RestController} to {@code @Controller}
- *       so Thymeleaf view names resolve; AJAX endpoints opt back into JSON via
- *       {@code @ResponseBody}.</li>
- * </ol>
- *
- * @author ruoyi
  */
 @Controller
 @RequestMapping("/monitor/job")
@@ -58,35 +36,25 @@ public class SysJobController extends BaseController {
     @Autowired
     private ISysJobService jobService;
 
-    /**
-     * 列表页入口（D-P6-10 可视化运维台）。
-     */
     @GetMapping()
     public String view() {
         return prefix + "/job";
     }
 
     /**
-     * 显式字面路径处理器，解决 spt-auth 菜单 component 路径 monitor/job/job
-     * 被 Spring MVC 误路由到 @GetMapping("/{jobId}") 导致 400 的问题。
-     * Spring MVC 优先匹配字面 /job 而非路径变量 /{jobId}。
+     * 解决 spt-auth 菜单 component 路径 monitor/job/job 被 Spring MVC
+     * 误路由到 @GetMapping("/{jobId}") 导致 400 的问题。
      */
     @GetMapping("/job")
     public String jobView() {
         return prefix + "/job";
     }
 
-    /**
-     * 新增任务表单页。
-     */
     @GetMapping("/add")
     public String add() {
         return prefix + "/add";
     }
 
-    /**
-     * 修改任务表单页（预填 sys_job 记录）。
-     */
     @RequiresPermissions("monitor:job:edit")
     @GetMapping("/edit/{jobId}")
     public String edit(@PathVariable("jobId") Long jobId, ModelMap mmap) {
@@ -193,7 +161,7 @@ public class SysJobController extends BaseController {
     }
 
     /**
-     * 定时任务立即执行一次（D-P6-10 手动触发 UX）。
+     * 定时任务立即执行一次
      */
     @RequiresPermissions("monitor:job:run")
     @Log(title = "定时任务", businessType = BusinessType.UPDATE)
@@ -205,14 +173,14 @@ public class SysJobController extends BaseController {
     }
 
     /**
-     * 删除定时任务
+     * 删除定时任务（ids 为逗号分隔）
      */
     @RequiresPermissions("monitor:job:remove")
     @Log(title = "定时任务", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{jobIds}")
+    @PostMapping("/remove")
     @ResponseBody
-    public AjaxResult remove(@PathVariable Long[] jobIds) throws SchedulerException, TaskException {
-        jobService.deleteJobByIds(jobIds);
+    public AjaxResult remove(String ids) throws SchedulerException, TaskException {
+        jobService.deleteJobByIds(Convert.toLongArray(ids));
         return AjaxResult.success();
     }
 }

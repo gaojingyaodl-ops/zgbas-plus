@@ -33,8 +33,8 @@
 								<input type="text" class="time-input" id="endTime" placeholder="结束时间" name="params[endTime]"/>
 							</li>
 							<li>
-								<a class="btn btn-primary btn-rounded btn-sm" onclick="searchPre()"><i class="fa fa-search"></i>&nbsp;搜索</a>
-								<a class="btn btn-warning btn-rounded btn-sm" onclick="resetPre()"><i class="fa fa-refresh"></i>&nbsp;清空</a>
+								<a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search('jobLog-form', 'bootstrap-table')"><i class="fa fa-search"></i>&nbsp;搜索</a>
+								<a class="btn btn-warning btn-rounded btn-sm" onclick="$.form.reset()"><i class="fa fa-refresh"></i>&nbsp;重置</a>
 							</li>
 						</ul>
 					</div>
@@ -42,16 +42,16 @@
 			</div>
 
 			<div class="btn-group-sm" id="toolbar" role="group">
-				<a class="btn btn-danger multiple disabled" onclick="removeAllJobLogs()" shiro:hasPermission="monitor:job:remove">
-		            <i class="fa fa-remove"></i> 删除
-		        </a>
-		        <a class="btn btn-danger" onclick="cleanJobLogs()" shiro:hasPermission="monitor:job:remove">
-	                <i class="fa fa-trash"></i> 清空
-	            </a>
-	            <a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="monitor:job:export">
-		            <i class="fa fa-download"></i> 导出
-		        </a>
-	        </div>
+				<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="monitor:job:remove">
+					<i class="fa fa-remove"></i> 删除
+				</a>
+				<a class="btn btn-danger" onclick="$.table.clean()" shiro:hasPermission="monitor:job:remove">
+					<i class="fa fa-trash"></i> 清空
+				</a>
+				<a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="monitor:job:export">
+					<i class="fa fa-download"></i> 导出
+				</a>
+			</div>
 
 			<div class="col-sm-12 select-table table-striped">
 				<table id="bootstrap-table"></table>
@@ -69,7 +69,7 @@
 		    var options = {
 		        url: prefix + "/list",
 		        cleanUrl: prefix + "/clean",
-		        removeUrl: prefix,
+		        removeUrl: prefix + "/remove",
 		        exportUrl: prefix + "/export",
 		        queryParams: queryParams,
 		        sortName: "createTime",
@@ -130,91 +130,6 @@
 		function queryParams(params) {
 		    var search = $.table.queryParams(params);
 		    return search;
-		}
-
-		function searchPre() {
-		    $.table.search('jobLog-form', 'bootstrap-table');
-		}
-
-		function resetPre() {
-		    $("#jobLog-form")[0].reset();
-		    $.table.search('jobLog-form', 'bootstrap-table');
-		}
-
-		// 单条删除：DELETE /monitor/jobLog/{jobLogId}
-		function removeJobLog(jobLogId) {
-		    $.modal.confirm("确定删除该条调度日志吗？", function() {
-		        $.ajax({
-		            url: prefix + "/" + jobLogId,
-		            type: "delete",
-		            dataType: "json",
-		            beforeSend: function () {
-		                $.modal.loading("正在处理中，请稍候...");
-		            },
-		            success: function(result) {
-		                if (result.code == 0) {
-		                    $.modal.msgSuccess(result.msg);
-		                    $.table.refresh();
-		                } else {
-		                    $.modal.alertError(result.msg);
-		                }
-		                $.modal.closeLoading();
-		            }
-		        });
-		    });
-		}
-
-		// 批量删除：DELETE /monitor/jobLog/{id1,id2,...}
-		function removeAllJobLogs() {
-		    $.table.set();
-		    var rows = $.table.selectFirstColumns();
-		    if (rows.length == 0) {
-		        $.modal.alertWarning("请至少选择一条记录");
-		        return;
-		    }
-		    $.modal.confirm("确定删除选中的" + rows.length + "条调度日志吗？", function() {
-		        $.ajax({
-		            url: prefix + "/" + rows.join(","),
-		            type: "delete",
-		            dataType: "json",
-		            beforeSend: function () {
-		                $.modal.loading("正在处理中，请稍候...");
-		            },
-		            success: function(result) {
-		                if (result.code == 0) {
-		                    $.modal.msgSuccess(result.msg);
-		                    $.table.refresh();
-		                } else {
-		                    $.modal.alertError(result.msg);
-		                }
-		                $.modal.closeLoading();
-		            }
-		        });
-		    });
-		}
-
-		// 清空：DELETE /monitor/jobLog/clean
-		function cleanJobLogs() {
-		    $.table.set();
-		    $.modal.confirm("确定清空所有调度日志吗？此操作不可恢复！", function() {
-		        $.ajax({
-		            url: prefix + "/clean",
-		            type: "delete",
-		            dataType: "json",
-		            beforeSend: function () {
-		                $.modal.loading("正在处理中，请稍候...");
-		            },
-		            success: function(result) {
-		                if (result.code == 0) {
-		                    $.modal.msgSuccess(result.msg);
-		                    $.table.refresh();
-		                } else {
-		                    $.modal.alertError(result.msg);
-		                }
-		                $.modal.closeLoading();
-		            }
-		        });
-		    });
 		}
 	</script>
 </body>
