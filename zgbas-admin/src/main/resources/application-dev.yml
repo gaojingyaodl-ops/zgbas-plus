@@ -146,3 +146,20 @@ weChatWork:
   webhook:
     url: ${WECHAT_WORK_WEBHOOK_URL:http://127.0.0.1:65535/wechat-work-webhook-disabled}
     url2: ${WECHAT_WORK_WEBHOOK_URL2:http://127.0.0.1:65535/wechat-work-webhook-disabled-2}
+
+# Phase 4 D-10: WeChat miniapp SDK config（WxMiniAppConfig @ConfigurationProperties）
+wx:
+  miniapp:
+    configs:
+      - appid: wxdfdcede72b54ff25
+        secret: 1a4310766e9f32b90ca55c0af688c17e
+        token: "123"
+        aesKey: "123"
+        msgDataFormat: JSON
+
+# Phase 4: JWT config（JwtConfig @ConfigurationProperties prefix=jwt.config）
+jwt:
+  config:
+    key: sgcoding
+    ttl: 600000
+    remember: 604800000
