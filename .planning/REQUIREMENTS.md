@@ -51,8 +51,8 @@ created: "2026-07-22T00:00:00.000Z"
 ### WX-SERVICE — 业务 Service 层
 
 - [ ] **WX-SERVICE-01**: ~20 service impl 全量迁入 zgbas-system（适配 spt-tools 内联后的 BaseService）
-- [ ] **WX-SERVICE-02**: weixin-java-miniapp:3.8.0 SDK 引入 pom + WxMiniAppConfig（@ConfigurationProperties）+ WxConfiguration（注册 WxMaService bean）
-- [ ] **WX-SERVICE-03**: Redis 引入（spring-boot-starter-data-redis）+ JWT 认证体系（JwtConfig + JwtAuthenticationFilter）与 Shiro 并存
+- [x] **WX-SERVICE-02**: weixin-java-miniapp:3.8.0 SDK 引入 pom + WxMiniAppConfig（@ConfigurationProperties）+ WxConfiguration（注册 WxMaService bean）
+- [x] **WX-SERVICE-03**: Redis 引入（spring-boot-starter-data-redis）+ JWT 认证体系（JwtConfig + JwtAuthenticationFilter）与 Shiro 并存
 
 ### WX-BFF — Controller & API 层
 
@@ -95,8 +95,8 @@ created: "2026-07-22T00:00:00.000Z"
 | WX-CLIENT-01 | Phase 3 | Pending |
 | WX-CLIENT-02 | Phase 3 | Pending |
 | WX-SERVICE-01 | Phase 5 | Pending |
-| WX-SERVICE-02 | Phase 4 | Pending |
-| WX-SERVICE-03 | Phase 4 | Pending |
+| WX-SERVICE-02 | Phase 4 | Complete |
+| WX-SERVICE-03 | Phase 4 | Complete |
 | WX-BFF-01 | Phase 5 | Pending |
 | WX-BFF-02 | Phase 5 | Pending |
 | WX-BFF-03 | Phase 5 | Pending |

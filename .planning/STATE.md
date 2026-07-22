@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: "Phase 4 executing — 04-04 COMPLETE, next plan: done (v1.2 Phase 4 complete)"
-stopped_at: "04-04 COMPLETE: JWT体系迁入 (JwtConfig/JwtUtil/JwtAuthenticationFilter/WxSecurityConfig + 6 stubs)，zgbas-system compile 零 ERROR"
-last_updated: "2026-07-22T08:40:00Z"
-last_activity: "2026-07-22 — 04-04 COMPLETE: JWT认证体系全量迁入，FilterRegistrationBean /wx/* 路径限定，BUILD SUCCESS"
+status: completed
+stopped_at: "04-04 COMPLETE: JWT体系迁入，zgbas-system compile 零 ERROR"
+last_updated: "2026-07-22T08:46:24.478Z"
+last_activity: "2026-07-22 — 04-04 COMPLETE: JwtConfig + JwtUtil + JwtAuthenticationFilter(改造) + WxSecurityConfig(FilterRegistrationBean /wx/* /ewechat/* /axq/*) + 6 stubs，编译零 ERROR"
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 8
-  completed_plans: 4
-  percent: 0
+  completed_plans: 5
+  percent: 25
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: 04-04 COMPLETE
 Status: Phase 4 plan 04-04 done — JWT认证体系迁入完成，zgbas-system BUILD SUCCESS
 Last activity: 2026-07-22 — 04-04 COMPLETE: JwtConfig + JwtUtil + JwtAuthenticationFilter(改造) + WxSecurityConfig(FilterRegistrationBean /wx/* /ewechat/* /axq/*) + 6 stubs，编译零 ERROR
 
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 63%
 
 ## Performance Metrics
 
@@ -168,6 +168,6 @@ Items acknowledged and deferred at milestone close on 2026-07-21:
 
 ## Session Continuity
 
-Last session: 2026-07-22T08:40:00Z
+Last session: 2026-07-22T08:46:18.888Z
 Stopped at: 04-04 COMPLETE: JWT体系迁入，zgbas-system compile 零 ERROR
 Resume file: None

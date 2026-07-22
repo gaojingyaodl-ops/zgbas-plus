@@ -42,7 +42,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 ### Phases (Summary)
 
 - [x] **Phase 3: 数据层与 Feign 契约** — 11 WX JPA 实体 + 18 Dao + 3 Feign 契约就位 zgbas-system，消除私服 jar 依赖 — completed 2026-07-22
-- [ ] **Phase 4: 基础设施 & SDK 接入** — Redis + weixin-java-miniapp SDK + JWT/Shiro 并存机制就绪
+- [x] **Phase 4: 基础设施 & SDK 接入** — Redis + weixin-java-miniapp SDK + JWT/Shiro 并存机制就绪 (completed 2026-07-22)
 - [ ] **Phase 5: Service & BFF 全量迁入** — ~20 service + 11 controller + 4 API + 辅助组件全量落地
 - [ ] **Phase 6: 对齐验证** — 编译零错 + 启动 GREEN + WX 端点非 404 三层验证通过
 
@@ -88,7 +88,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 - [x] 04-02-PLAN.md — Redis 配置类迁入
 - [x] 04-03-PLAN.md — WxMaService 配置类迁入 + common stubs
 - [x] 04-04-PLAN.md — JWT 认证体系迁入
-- [ ] 04-05-PLAN.md — 全量编译验证 + bean 注册验证
+- [x] 04-05-PLAN.md — 全量编译验证 + bean 注册验证
 
 ---
 
