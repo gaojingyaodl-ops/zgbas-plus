@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
 status: planning
-stopped_at: Phase 4 context gathered
-last_updated: "2026-07-22T07:34:30.807Z"
-last_activity: "2026-07-22 — Phase 3 complete (3/3 plans: 11 entities + 18 Dao + 3 Feign contracts + pom cleanup)"
+stopped_at: Phase 4 planned
+last_updated: "2026-07-22T08:00:00.000Z"
+last_activity: "2026-07-22 — Phase 4 plans ready (5 plans, 4 waves: pom+yml / Redis / WxSDK / JWT+Filter / verify)"
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 3
+  total_plans: 5
   completed_plans: 0
   percent: 0
 ---
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 
 ## Current Position
 
-Phase: Phase 4 (next)
-Plan: 04-xx (TBD, plans not yet written)
-Status: Phase 3 complete, Phase 4 pending planning
+Phase: Phase 4 (ready to execute)
+Plan: 04-01 through 04-05
+Status: Phase 4 planned (5 plans, 4 waves), ready for /gsd:execute-phase 4
 Last activity: 2026-07-22 — Phase 3 complete (3/3 plans: 11 entities + 18 Dao + 3 Feign contracts + pom cleanup)
 
 Progress: [██████████] 100%
