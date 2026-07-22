@@ -36,16 +36,16 @@
 			</div>
 
 			<div class="btn-group-sm" id="toolbar" role="group">
-				<a class="btn btn-success" onclick="$.operate.add()" shiro:hasPermission="monitor:job:add">
+				<a class="btn btn-success" onclick="$.operate.add()">
 					<i class="fa fa-plus"></i> 新增
 				</a>
-				<a class="btn btn-primary single disabled" onclick="$.operate.edit()" shiro:hasPermission="monitor:job:edit">
+				<a class="btn btn-primary single disabled" onclick="$.operate.edit()">
 					<i class="fa fa-edit"></i> 修改
 				</a>
-				<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="monitor:job:remove">
+				<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()">
 					<i class="fa fa-remove"></i> 删除
 				</a>
-				<a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="monitor:job:export">
+				<a class="btn btn-warning" onclick="$.table.exportExcel()">
 					<i class="fa fa-download"></i> 导出
 				</a>
 			</div>
@@ -60,10 +60,10 @@
 	<th:block th:include="include :: bootstrap-select-js" />
 	<script th:inline="javascript">
 		var groups = [[${@dict.getType('sys_job_group')}]];
-		var editFlag = [[${@permission.hasPermi('monitor:job:edit')}]];
-		var removeFlag = [[${@permission.hasPermi('monitor:job:remove')}]];
-		var statusFlag = [[${@permission.hasPermi('monitor:job:changeStatus')}]];
-		var runFlag = [[${@permission.hasPermi('monitor:job:run')}]];
+		var editFlag = true;
+		var removeFlag = true;
+		var statusFlag = true;
+		var runFlag = true;
 		var prefix = ctx + "monitor/job";
 
 		$(function() {
@@ -78,6 +78,7 @@
 		        modalName: "定时任务",
 		        escape: true,
 		        showPageGo: true,
+		        pageSize: 20,
 		        columns: [{
 		            checkbox: true
 		        },

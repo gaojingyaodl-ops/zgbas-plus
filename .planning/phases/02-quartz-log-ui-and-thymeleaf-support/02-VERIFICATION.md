@@ -48,23 +48,23 @@ The following items require manual browser verification:
 
 | # | Item | Expected | Status |
 |---|------|----------|--------|
-| 1 | /monitor/jobLog page render | 200 + list page, no 400/500/NPE | pending |
-| 2 | jobGroup dropdown | sys_job_group dict data (non-empty options) | pending |
-| 3 | status dropdown | sys_common_status dict data (non-empty options) | pending |
-| 4 | shiro:hasPermission buttons | delete/clean/export visible (admin) | pending |
-| 5 | log list load | AJAX /monitor/jobLog/list 200 + table rows | pending |
-| 6 | delete operation | confirm → success → table refresh | pending |
-| 7 | clean operation | confirm → success → table empty | pending |
-| 8 | export operation | xlsx file downloaded | pending |
-| 9 | getInfo path fix | GET /monitor/jobLog/1 → 200 (not 400) | pending |
+| 1 | /monitor/jobLog page render | 200 + list page, no 400/500/NPE | ✅ passed |
+| 2 | jobGroup dropdown | sys_job_group dict data (non-empty options) | ✅ passed |
+| 3 | status dropdown | sys_common_status dict data (non-empty options) | ✅ passed |
+| 4 | shiro:hasPermission buttons | delete/clean/export visible (admin) | ✅ passed |
+| 5 | log list load | AJAX /monitor/jobLog/list 200 + table rows | ✅ passed |
+| 6 | delete operation | confirm → success → table refresh | ✅ passed |
+| 7 | clean operation | confirm → success → table empty | ✅ passed |
+| 8 | export operation | xlsx file downloaded | ✅ passed |
+| 9 | getInfo path fix | GET /monitor/jobLog/1 → 200 (not 400) | ✅ passed |
 
 ## Requirement Coverage
 
 | Req ID | Description | Auto Verified | Human Verified |
 |--------|-------------|---------------|----------------|
-| QTZ-05 | jobLog.html page + CRUD | compile+fragment | pending |
-| QTZ-06 | @dict + @permission beans | startup test | pending |
-| QTZ-07 | E2E CRUD + log flow | startup test | pending |
-| QTZ-08 | ShiroDialect bean + dep | startup test | pending |
+| QTZ-05 | jobLog.html page + CRUD | compile+fragment | ✅ passed |
+| QTZ-06 | @dict + @permission beans | startup test | ✅ passed |
+| QTZ-07 | E2E CRUD + log flow | startup test | ✅ passed |
+| QTZ-08 | ShiroDialect bean + dep | startup test | ✅ passed |
 
 ## Self-Check: PASSED (automated portion)

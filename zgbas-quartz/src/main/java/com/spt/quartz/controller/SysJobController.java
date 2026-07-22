@@ -14,7 +14,6 @@ import com.spt.quartz.domain.SysJob;
 import com.spt.quartz.service.ISysJobService;
 import com.spt.quartz.util.CronUtils;
 import com.spt.quartz.util.ScheduleUtils;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -41,10 +40,6 @@ public class SysJobController extends BaseController {
         return prefix + "/job";
     }
 
-    /**
-     * 解决 spt-auth 菜单 component 路径 monitor/job/job 被 Spring MVC
-     * 误路由到 @GetMapping("/{jobId}") 导致 400 的问题。
-     */
     @GetMapping("/job")
     public String jobView() {
         return prefix + "/job";
@@ -55,17 +50,12 @@ public class SysJobController extends BaseController {
         return prefix + "/add";
     }
 
-    @RequiresPermissions("monitor:job:edit")
     @GetMapping("/edit/{jobId}")
     public String edit(@PathVariable("jobId") Long jobId, ModelMap mmap) {
         mmap.put("job", jobService.selectJobById(jobId));
         return prefix + "/edit";
     }
 
-    /**
-     * 查询定时任务列表
-     */
-    @RequiresPermissions("monitor:job:list")
     @PostMapping("/list")
     @ResponseBody
     public TableDataInfo list(SysJob sysJob) {
@@ -74,10 +64,6 @@ public class SysJobController extends BaseController {
         return getDataTable(list);
     }
 
-    /**
-     * 导出定时任务列表
-     */
-    @RequiresPermissions("monitor:job:export")
     @Log(title = "定时任务", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     @ResponseBody
@@ -87,20 +73,12 @@ public class SysJobController extends BaseController {
         util.exportExcel(response, list, "定时任务");
     }
 
-    /**
-     * 获取定时任务详细信息
-     */
-    @RequiresPermissions("monitor:job:query")
     @GetMapping(value = "/{jobId}")
     @ResponseBody
     public AjaxResult getInfo(@PathVariable("jobId") Long jobId) {
         return AjaxResult.success(jobService.selectJobById(jobId));
     }
 
-    /**
-     * 新增定时任务
-     */
-    @RequiresPermissions("monitor:job:add")
     @Log(title = "定时任务", businessType = BusinessType.INSERT)
     @PostMapping
     @ResponseBody
@@ -122,10 +100,6 @@ public class SysJobController extends BaseController {
         return toAjax(jobService.insertJob(job));
     }
 
-    /**
-     * 修改定时任务
-     */
-    @RequiresPermissions("monitor:job:edit")
     @Log(title = "定时任务", businessType = BusinessType.UPDATE)
     @PutMapping
     @ResponseBody
@@ -147,10 +121,6 @@ public class SysJobController extends BaseController {
         return toAjax(jobService.updateJob(job));
     }
 
-    /**
-     * 定时任务状态修改
-     */
-    @RequiresPermissions("monitor:job:changeStatus")
     @Log(title = "定时任务", businessType = BusinessType.UPDATE)
     @PutMapping("/changeStatus")
     @ResponseBody
@@ -160,10 +130,6 @@ public class SysJobController extends BaseController {
         return toAjax(jobService.changeStatus(newJob));
     }
 
-    /**
-     * 定时任务立即执行一次
-     */
-    @RequiresPermissions("monitor:job:run")
     @Log(title = "定时任务", businessType = BusinessType.UPDATE)
     @PutMapping("/run")
     @ResponseBody
@@ -172,10 +138,6 @@ public class SysJobController extends BaseController {
         return AjaxResult.success();
     }
 
-    /**
-     * 删除定时任务（ids 为逗号分隔）
-     */
-    @RequiresPermissions("monitor:job:remove")
     @Log(title = "定时任务", businessType = BusinessType.DELETE)
     @PostMapping("/remove")
     @ResponseBody

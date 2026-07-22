@@ -237,6 +237,19 @@
                 <artifactId>spt-sign-client</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
+            <!-- pagehelper 5.1.11 需要 jsqlparser 2.0；mybatis-plus 3.1.2 自带 jsqlparser 1.2。
+                 统一升到 2.0：GroupByElement 在 2.0 存在，mybatis-plus 3.1.2 对 jsqlparser
+                 只做简单 AST 解析，与 2.0 二进制兼容。 -->
+            <dependency>
+                <groupId>com.github.pagehelper</groupId>
+                <artifactId>pagehelper</artifactId>
+                <version>5.1.11</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.jsqlparser</groupId>
+                <artifactId>jsqlparser</artifactId>
+                <version>2.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

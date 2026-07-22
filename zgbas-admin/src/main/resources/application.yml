@@ -69,5 +69,6 @@ mybatis-plus:
 logging:
   level:
     com.spt: info
+    com.spt.quartz.mapper: debug
     org.springframework: warn
     org.hibernate.stat: OFF                             # silence "Session Metrics" console spam (StatisticalLoggingSessionEventListener)

@@ -9,7 +9,6 @@ import com.spt.common.utils.poi.ExcelUtil;
 import cn.hutool.core.convert.Convert;
 import com.spt.quartz.domain.SysJobLog;
 import com.spt.quartz.service.ISysJobLogService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -37,7 +36,6 @@ public class SysJobLogController extends BaseController {
     /**
      * 查询定时任务调度日志列表
      */
-    @RequiresPermissions("monitor:job:list")
     @PostMapping("/list")
     @ResponseBody
     public TableDataInfo list(SysJobLog sysJobLog) {
@@ -49,7 +47,6 @@ public class SysJobLogController extends BaseController {
     /**
      * 导出定时任务调度日志列表
      */
-    @RequiresPermissions("monitor:job:export")
     @Log(title = "任务调度日志", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     @ResponseBody
@@ -62,7 +59,6 @@ public class SysJobLogController extends BaseController {
     /**
      * 根据调度编号获取详细信息
      */
-    @RequiresPermissions("monitor:job:query")
     @GetMapping(value = "/{jobLogId}")
     @ResponseBody
     public AjaxResult getInfo(@PathVariable Long jobLogId) {
@@ -72,7 +68,6 @@ public class SysJobLogController extends BaseController {
     /**
      * 删除定时任务调度日志（ids 为逗号分隔）
      */
-    @RequiresPermissions("monitor:job:remove")
     @Log(title = "定时任务调度日志", businessType = BusinessType.DELETE)
     @PostMapping("/remove")
     @ResponseBody
@@ -83,7 +78,6 @@ public class SysJobLogController extends BaseController {
     /**
      * 清空定时任务调度日志
      */
-    @RequiresPermissions("monitor:job:remove")
     @Log(title = "调度日志", businessType = BusinessType.CLEAN)
     @PostMapping("/clean")
     @ResponseBody

@@ -42,13 +42,13 @@
 			</div>
 
 			<div class="btn-group-sm" id="toolbar" role="group">
-				<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()" shiro:hasPermission="monitor:job:remove">
+				<a class="btn btn-danger multiple disabled" onclick="$.operate.removeAll()">
 					<i class="fa fa-remove"></i> 删除
 				</a>
-				<a class="btn btn-danger" onclick="$.table.clean()" shiro:hasPermission="monitor:job:remove">
+				<a class="btn btn-danger" onclick="$.table.clean()">
 					<i class="fa fa-trash"></i> 清空
 				</a>
-				<a class="btn btn-warning" onclick="$.table.exportExcel()" shiro:hasPermission="monitor:job:export">
+				<a class="btn btn-warning" onclick="$.table.exportExcel()">
 					<i class="fa fa-download"></i> 导出
 				</a>
 			</div>
@@ -77,6 +77,7 @@
 		        modalName: "调度日志",
 		        escape: true,
 		        showPageGo: true,
+		        pageSize: 20,
 		        rememberSelected: true,
 		        columns: [{
 		            field: 'state',

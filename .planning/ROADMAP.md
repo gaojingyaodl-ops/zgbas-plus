@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 单体化重构交付** — Phases 1–7 (shipped 2026-07-20)
-- 📋 **v1.1 quartz 功能完善** — Phases 1–2 (draft)
+- ✅ **v1.1 quartz 功能完善** — Phases 1–2 (shipped 2026-07-22)
 
 ## v1.1 Phases
 
@@ -36,15 +36,15 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — TemplateHelperConfig（@dict/@permission/ShiroDialect bean）+ thymeleaf-extras-shiro 依赖 (QTZ-06, QTZ-08)
+- [x] 02-01-PLAN.md — TemplateHelperConfig（@dict/@permission/ShiroDialect bean）+ thymeleaf-extras-shiro 依赖 (QTZ-06, QTZ-08)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-02-PLAN.md — jobLog.html 调度日志列表页 + SysJobLogController 路径变量 bug 修复 (QTZ-05)
+- [x] 02-02-PLAN.md — jobLog.html 调度日志列表页 + SysJobLogController 路径变量 bug 修复 (QTZ-05)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 02-03-PLAN.md — 端到端验证：启动测试 + 浏览器验收 /monitor/jobLog (QTZ-07)
+- [x] 02-03-PLAN.md — 端到端验证：启动测试 + 浏览器验收 /monitor/jobLog (QTZ-07)
 
 **关键交付物**：
 
@@ -57,12 +57,12 @@ Plans:
 
 | Phase | Plan | Status |
 |-------|------|--------|
-| 1. 前端接口对齐 + 400 修复 | 01-01: 400 修复 | Planned |
-| 1. 前端接口对齐 + 400 修复 | 01-02: add/edit 表单修复 | Planned |
-| 1. 前端接口对齐 + 400 修复 | 01-03: job 操作修复 + $.operate.put | Planned |
-| 2. 调度日志页面 + 辅助 Bean | 02-01: bean + shiro dialect | Planned |
-| 2. 调度日志页面 + 辅助 Bean | 02-02: jobLog.html + controller fix | Planned |
-| 2. 调度日志页面 + 辅助 Bean | 02-03: E2E 验证 | Planned |
+| 1. 前端接口对齐 + 400 修复 | 01-01: 400 修复 | ✅ Done |
+| 1. 前端接口对齐 + 400 修复 | 01-02: add/edit 表单修复 | ✅ Done |
+| 1. 前端接口对齐 + 400 修复 | 01-03: job 操作修复 + $.operate.put | ✅ Done |
+| 2. 调度日志页面 + 辅助 Bean | 02-01: bean + shiro dialect | ✅ Done |
+| 2. 调度日志页面 + 辅助 Bean | 02-02: jobLog.html + controller fix | ✅ Done |
+| 2. 调度日志页面 + 辅助 Bean | 02-03: E2E 验证 | ✅ Done |
 
 ---
 *Created: 2026-07-21*

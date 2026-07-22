@@ -7,6 +7,7 @@ package com.spt.common.constant;
  * @author ruoyi
  */
 public class HttpStatus {
-    public static final int SUCCESS = 200;
+    /** ry-ui.js web_status.SUCCESS = 0，必须与前端约定一致。 */
+    public static final int SUCCESS = 0;
     public static final int ERROR = 500;
 }
