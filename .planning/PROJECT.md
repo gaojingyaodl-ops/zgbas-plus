@@ -156,4 +156,9 @@ This document evolves at phase transitions and milestone boundaries.
   - **延后债务（已记入 todos + 02-LEARNINGS）：** ddl-auto=none（D-P2-02 validate 暴露 239 实体 schema drift，259 表修复留 Phase 4）、WR-02 接口契约 HTTP proof（留 Phase 4）、CR-01 轮换已泄漏的生产库密码（outward-facing）。
   - **下一阶段：Phase 3（认证首页）** — Shiro session+cookie 认证、动态菜单首页、`ToolsShiroConfig` 重新启用 + Realm 接线。
 
-*Last updated: 2026-07-22 — v1.2 basWx 迁入 milestone started*
+- **Phase 5（承托层迁入，v1.2）— COMPLETE 2026-07-24。** 6/6 plans，SC#3 编译门 `mvn compile -pl zgbas-system` BUILD SUCCESS / 0 `[ERROR]`。承托层(payload 22 / vo 18 / enums 1 / common 8 / util 16 / exception 3 / aop / config 5 / cache 2 / OCR wrapper 2)全量落 `zgbas-system` 的 `com.spt.bas.purchase.wx.server` 包飞地；4 个 P4 stub(UserInfoVo/ApiResult/BaseException/SecurityException/ResponseUtil/UserContext)以源实测替换(D-P5-14)；横切 bean 安全落位(GlobalExceptionHandler 限域 sole `@ControllerAdvice`、CORS 并入单体 WebAppConfig 无重复 multipart、ServiceAop 显式 `@Bean` + pointcut 自限 WX、FrameworkConfig 剥减为 WxCarrierConfig)；启动接线 ApplicationStartup 并入 WX `BsDictUtil.init`(Phase 3 登录缺口同源修复)+ RequestListener ThreadLocal 清理；D-15a/b 五类承托 inventory 交付(SC#4)。WX 外部集成密钥(ewechat/aliyun.ocr/jinxin)明文落 dev yml(D-P5-05)。
+  - **延后:** EweChatApi/JinXinApi → Phase 6(承托依赖 EweChatConfig/RedisCache/JinXinConfig 已就位)；IBsDictService 接口已迁(impl → Phase 6)；PurchaseCommand → Phase 6。
+  - **🔴 延后债务:** rotate-leaked-prod-credentials 新增 EweChat corpsecret / Aliyun OCR appcode / JinXin RSA 私钥+keystore 密码 三组明文(D-P5-05，待轮换；JinXin RSA 私钥最敏感)。SC#2 与 D-P5-05 冲突由用户锁定明文策略覆盖。
+  - **下一阶段：Phase 6（Service 层迁入）** — ~20 service impl + iface + BaseService 适配 → system。
+
+*Last updated: 2026-07-24 — v1.2 Phase 5 (承托层迁入) complete*
