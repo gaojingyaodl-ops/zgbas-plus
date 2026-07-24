@@ -45,10 +45,12 @@ spt:
     report:
       url: http://localhost:8080
   # Phase 4 Wave 3 (Plan 04-05 Rule 3): basWx purchase contracts (IWxUserDetailClient /
-  # ISaveTempClient) referenced by 16 ported basServer service impls. basWx itself is
-  # v2-deferred (PROJECT.md #14); proxies self-loop to localhost:8080 where no @RestController
-  # handles them → runtime calls 404 (D-P4-02 lazy-degradation). Startup is unaffected
+  # ISaveTempClient) referenced by 16 ported basServer service impls. Phase 7 ported the basWx
+  # BFF controllers to zgbas-admin (/wx/* /ewechat/* /axq/* + /purchase/* api); the WX Feign
+  # self-loop now reaches real handlers (non-404), superseding the earlier D-P4-02
+  # lazy-degradation note (which held while basWx was v2-deferred). Startup is unaffected
   # (PurchaseWxClientConfig bean is component-scanned; URL resolved lazily on first call).
+  # URL value unchanged.
   bas.purchaseWx:
     url: http://localhost:8080
 auth:

@@ -970,6 +970,93 @@ class ZgbasApplicationTest {
             .contains("/wx/*");
     }
 
+    // ---- Phase 8 (D-P8-03): WX three-family + purchase api reachability fail-fast proof ----
+    // Mirrors reportHttpReachability_proof. Verifies the 11 WX BFF controllers + 4 WX api
+    // controllers (Phase 7 ports) resolve over HTTP — four representative endpoints covering all
+    // three WX filter families (/wx/*, /ewechat/*, /axq/* guarded by JwtAuthenticationFilter
+    // order=1) plus the /purchase/* api family, across 4 distinct controller/api classes.
+    // Judgment = HTTP != 404: a registered handler returns 401 (WX JwtFilter unauthenticated
+    // envelope), 2xx/3xx, 400, or 500 — all prove the handler was hit. 404 would mean the route
+    // is missing (a Phase 7 port regression). Non-404 = pass. (D-P8-03)
+    @Test
+    void wxEndpointsReachable_proof() {
+        // /wx/* family — WxUserController @RequestMapping("/wx/user") + @PostMapping("/login")
+        ResponseEntity<String> wxLoginResponse = restTemplate.postForEntity(
+            "/wx/user/login", null, String.class);
+        assertThat(wxLoginResponse.getStatusCodeValue())
+            .as("/wx/user/login should not return 404 (WxUserController handler hit)")
+            .isNotEqualTo(404);
+
+        // /ewechat/* family — BuyEnquiryController @RequestMapping("/ewechat/buyEnquiry")
+        // + @PostMapping("/getProductTree")
+        ResponseEntity<String> productTreeResponse = restTemplate.postForEntity(
+            "/ewechat/buyEnquiry/getProductTree", null, String.class);
+        assertThat(productTreeResponse.getStatusCodeValue())
+            .as("/ewechat/buyEnquiry/getProductTree should not return 404 (BuyEnquiryController handler hit)")
+            .isNotEqualTo(404);
+
+        // /axq family — OtherController @RequestMapping("/axq") + @PostMapping("/doSuccessContract")
+        ResponseEntity<String> successContractResponse = restTemplate.postForEntity(
+            "/axq/doSuccessContract", null, String.class);
+        assertThat(successContractResponse.getStatusCodeValue())
+            .as("/axq/doSuccessContract should not return 404 (OtherController handler hit)")
+            .isNotEqualTo(404);
+
+        // /purchase/* api family — WxUserApi @RequestMapping("purchase/user")
+        // + @RequestMapping("saveApplyOnLineData")
+        ResponseEntity<String> saveApplyOnLineDataResponse = restTemplate.postForEntity(
+            "/purchase/user/saveApplyOnLineData", null, String.class);
+        assertThat(saveApplyOnLineDataResponse.getStatusCodeValue())
+            .as("/purchase/user/saveApplyOnLineData should not return 404 (WxUserApi handler hit)")
+            .isNotEqualTo(404);
+    }
+
+    // ---- Phase 8 (D-P8-04): WX (purchase) Feign self-loopback fail-fast probe ----
+    // Mirrors reportFeignSelfLoopbackWiring_probe (three-assertion shape: config bean → I*Client
+    // proxy → url self-loop). Phase 7 ported the WX BFF controllers, so the WX self-loop now
+    // reaches real handlers (non-404) instead of D-P4-02 lazy-degradation. This probe proves the
+    // wiring that makes that hop work resolves at context startup. If purchaseWxServerConfig is
+    // missing, or the SpEL "#{purchaseWxServerConfig.url}" in PurchaseWxConstant.SERVER_URL fails
+    // to resolve at Feign proxy creation, this throws NoSuchBeanDefinitionException /
+    // SpelEvaluationException — fail-fast. (D-P8-04)
+    @Test
+    void wxPurchaseFeignSelfLoopbackWiring_probe() {
+        // (1) purchaseWxServerConfig bean resolves — proves PurchaseWxClientConfig (@Configuration,
+        // @DependsOn("propertiesUtil")) is component-scanned by com.spt and its
+        // @Bean("purchaseWxServerConfig") LocalServerConfig registered. (WX has no independent
+        // PathConfig — bare paths, no prefix, per D-P7-01 resolved.)
+        assertThat(context.getBean(
+            "purchaseWxServerConfig", com.spt.tools.core.bean.LocalServerConfig.class))
+            .as("purchaseWxServerConfig bean resolved (PurchaseWxClientConfig @Bean)")
+            .isNotNull();
+
+        // (2) IWxUserDetailClient + ISaveTempClient Feign proxies resolve — proves:
+        //   - @EnableFeignClients (ZgbasApplication.java basePackages) includes
+        //     com.spt.bas.purchase.wx.client.remote;
+        //   - the purchaseWxServerConfig LocalServerConfig bean registered;
+        //   - the SpEL "#{purchaseWxServerConfig.url}" in PurchaseWxConstant.SERVER_URL resolved;
+        //   - both @FeignClient metadata (name/path/url/configuration) are valid.
+        // These two clients are the most-referenced WX contracts (~15 / ~5 ported service impls).
+        assertThat(context.getBean(
+            com.spt.bas.purchase.wx.client.remote.IWxUserDetailClient.class))
+            .as("IWxUserDetailClient Feign proxy resolved (@EnableFeignClients WX package + SpEL #{purchaseWxServerConfig.url})")
+            .isNotNull();
+        assertThat(context.getBean(
+            com.spt.bas.purchase.wx.client.remote.ISaveTempClient.class))
+            .as("ISaveTempClient Feign proxy resolved")
+            .isNotNull();
+
+        // (3) purchaseWxServerConfig URL resolves to localhost:8080 self-loopback — proves
+        // application-dev.yml key spt.bas.purchaseWx.url: http://localhost:8080 was read by
+        // PurchaseWxClientConfig (setUrlKey) and propagated to LocalServerConfig.getUrl(). With
+        // Phase 7's WX controllers now live, the self-loop reaches real handlers (non-404).
+        com.spt.tools.core.bean.LocalServerConfig purchaseWxServerConfig = context.getBean(
+            "purchaseWxServerConfig", com.spt.tools.core.bean.LocalServerConfig.class);
+        assertThat(purchaseWxServerConfig.getUrl())
+            .as("spt.bas.purchaseWx.url resolves to localhost:8080 self-loopback")
+            .contains("localhost:8080");
+    }
+
     /**
      * Polls {@code sys_job_log} for up to 10 seconds (50 × 200ms) until a new row appears
      * relative to {@code countBefore}. Quartz jobs run on the scheduler's async thread pool

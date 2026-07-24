@@ -129,9 +129,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "com.spt.bas.client.remote",         // Phase 4 D-P4-01 — bas 契约自回环
     "com.spt.bas.purchase.wx.client.remote",  // Phase 4 Wave 3 (Plan 04-05 Rule 3): basWx contracts
     // referenced by 16 ported basServer service impls (IWxUserDetailClient + ISaveTempClient).
-    // basWx itself is v2-deferred (PROJECT.md #14); proxies self-loop to localhost:8080 but no
-    // @RestController impl exists → runtime calls 404 (D-P4-02 lazy-degradation for v2 contracts).
-    // Startup succeeds because Feign proxies are lazy (URL resolved on call, not on registration).
+    // Phase 7 ported the WX BFF controllers (/wx/* /ewechat/* /axq/* + /purchase/* api) into
+    // zgbas-admin; the Feign self-loop now reaches real handlers (non-404), superseding the
+    // earlier D-P4-02 lazy-degradation note (which held while basWx was v2-deferred). The
+    // purchaseWxServerConfig bean + SpEL #{purchaseWxServerConfig.url} resolve at proxy creation;
+    // startup succeeds because Feign proxies are lazy (URL resolved on call, not on registration).
     "com.spt.bas.report.client.remote"   // Phase 4 Wave 3 (Plan 04-05 Rule 3): report contracts
     // referenced by 9 ported basServer service impls (IRptCompanyClient + others). Report
     // migration is Phase 5 (REPORT-01/02); report-client jar (04-04 types-only dep) provides
