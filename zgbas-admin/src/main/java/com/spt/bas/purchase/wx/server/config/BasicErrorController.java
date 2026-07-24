@@ -23,7 +23,6 @@ import org.springframework.web.util.NestedServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -106,7 +105,7 @@ public class BasicErrorController implements ErrorController {
 		err.setStatus(status.value());
 		err.setPath(String.valueOf(body.get("path")));
 		err.setError(String.valueOf(body.get("error")));
-		err.setTimestamp(new Date());
+		err.setTimestamp(LocalDateTime.now());
 		respVo.setData(err);
 		respVo.setMessage(err.getMessage());
 		respVo.setCode(err.getErrorId() + "");

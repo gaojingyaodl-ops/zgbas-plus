@@ -77,6 +77,21 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Phase 7 (Plan 07-06 compile gate, D-P2-08 verbatim from source basWx/purchase-server/pom.xml):
+             WX BFF controllers/api annotate with io.swagger.annotations.{Api,ApiOperation} (swagger-annotations)
+             + io.swagger.annotations.{ApiOperationSupport,ApiSort} (swagger-bootstrap-ui, xiaoymin knife4j
+             predecessor — extends the io.swagger.annotations package). Annotations-only: no SwaggerConfig /
+             @EnableSwagger bean is migrated in P7, so springfox runtime is NOT pulled. -->
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.6.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>swagger-bootstrap-ui</artifactId>
+            <version>1.9.6</version>
+        </dependency>
     </dependencies>
 
     <build>
