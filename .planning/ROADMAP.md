@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 单体化重构交付** — Phases 1–7 (shipped 2026-07-20)
 - ✅ **v1.1 quartz 功能完善** — Phases 1–2 (shipped 2026-07-22)
-- 🚧 **v1.2 basWx 迁入** — Phases 3–6 (active)
+- 🚧 **v1.2 basWx 迁入** — Phases 3–8 (active, forward work replanned 2026-07-23)
 
 ---
 
@@ -39,90 +39,128 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 
 ## v1.2 basWx 迁入 — Active Phases
 
-### Phases (Summary)
+> **Replanned 2026-07-23.** 方案 = 完成 verbatim 嵌入(双轨认证不动 / 保留 Feign 自回环 / 保留 `purchase.wx.*` 包飞地 / 迁入剩余 ~150 类 / 解 `/wx/contract` 路由冲突)。北极星:单进程跑全功能 + 行为等价。
+>
+> **探查结论(驱动本路线图):**
+> - 认证双轨是必然 —— 主单体 Shiro 已 `/wx/**=anon`(`IShiroSection.java:20`),basWx 用 `JwtAuthenticationFilter`(order=1,限定 `/wx/* /ewechat/* /axq/*`)接管;两套身份模型(Shiro+SysUser vs JWT+手机号小程序用户) genuinely 分离,并入 Shiro 非本里程碑目标。
+> - basWx 深度耦合主 bas 域 —— 11/20 service 经 Feign 自回环(`IBsCompanyClient`/`IPmProcessClient`/`IPmApproveClient`)调主域;保留自回环(直注重构风险高、无行为收益)。
+> - 🔴 **已确认路由冲突** `/wx/contract`:报表 `RptCtrContractApi` 与 basWx `ContractController` 同基路径,Phase 7 必须消歧。
+> - 外部集成(CFCA 电签/金信 JinXin/企业微信 EweChat/OCR)维持 HTTP 边界,只迁本地 wrapper。
 
-- [x] **Phase 3: 数据层与 Feign 契约** — 11 WX JPA 实体 + 18 Dao + 3 Feign 契约就位 zgbas-system，消除私服 jar 依赖 — completed 2026-07-22
-- [x] **Phase 4: 基础设施 & SDK 接入** — Redis + weixin-java-miniapp SDK + JWT/Shiro 并存机制就绪 (completed 2026-07-22)
-- [ ] **Phase 5: Service & BFF 全量迁入** — ~20 service + 11 controller + 4 API + 辅助组件全量落地
-- [ ] **Phase 6: 对齐验证** — 编译零错 + 启动 GREEN + WX 端点非 404 三层验证通过
+### 已完成基础(Foundation — 已提交验证,51 文件)
+
+| 旧 Phase | 内容 | 状态 |
+|---|---|---|
+| Phase 3 | 11 JPA 实体 + 18 Dao + 3 Feign 契约 + PurchaseWxClientConfig | ✅ done 2026-07-22 |
+| Phase 4 | Redis + WxMaService + JWT/Shiro 并存 wiring(7 config + 3 util + 3 common + 1 vo) | ✅ done 2026-07-22 |
+
+### Forward Phases(2026-07-23 重规划)
+
+- [ ] **Phase 5: 承托层迁入** — payload/VO/util/common/config/cache/AOP/ewechat 全量落 zgbas-system,为 service 与 BFF 提供稳定编译底座
+- [ ] **Phase 6: Service 层迁入** — ~20 service impl + interface,适配内联后 BaseService 签名
+- [ ] **Phase 7: BFF edge 迁入** — 路由 inventory + `/wx/contract` 冲突消歧 + 11 controller + 4 API + BasicErrorController 落 zgbas-admin
+- [ ] **Phase 8: 对齐验证** — compile 零错 + 启动 GREEN + `/wx/*` 非 404 + WX Feign 自回环 proof
 
 ---
 
 ## Phase Details
 
-### Phase 3: 数据层与 Feign 契约
+### Phase 3: 数据层与 Feign 契约 ✅
 
-**Goal**: 11 WX JPA 实体、18 Dao 接口、3 Feign 契约全量就位于 zgbas-system，消除对 purchase-client 2.0.1-SNAPSHOT 私服 jar 的依赖，为后续 service 层提供完整编译基础。
+**Goal**: 11 WX JPA 实体、18 Dao 接口、3 Feign 契约全量就位于 zgbas-system,消除对 purchase-client 2.0.1-SNAPSHOT 私服 jar 的依赖。
 
-**Depends on**: v1.1 Phase 2（spt-tools 内联完成，BaseDao 可用，JPA 基础设施已稳定）
+**Status**: ✅ Complete 2026-07-22 (3/3 plans)
 
-**Requirements**: WX-DATA-01, WX-DATA-02, WX-DATA-03, WX-CLIENT-01, WX-CLIENT-02
+---
+
+### Phase 4: 基础设施 & SDK 接入 ✅
+
+**Goal**: Redis 依赖注入单体、weixin-java-miniapp SDK 引入、JWT 与 Shiro 并存机制就绪,WxMaService bean 可注册。
+
+**Status**: ✅ Complete 2026-07-22 (5/5 plans, capstone probe SC-1~4 PASS)
+
+---
+
+### Phase 5: 承托层迁入
+
+**Goal**: basWx 全部承托类(payload/VO/util/common/config/cache/AOP/ewechat/enums/GlobalExceptionHandler)按模块边界落 zgbas-system,消除"边搬边猜",为 Phase 6 service 与 Phase 7 BFF 提供稳定、无孤立 import 的编译底座。
+
+**Depends on**: Phase 4(复用已落地 Redis/JWT/WxMaService wiring,D-18/D-19)
+
+**Requirements**: WX-BFF-03
 
 **Success Criteria** (what must be TRUE):
-1. zgbas-system 可独立 `mvn compile`，purchase-client 6 实体（BuyEnquiry/BuyMessage/BuyQuote/CompanyUser/SaveInfo/UserDetail）和 purchase-server 5 实体（WxAccessToken/WxSession/WxSmsCheckCode/WxUserInfo/WxUserTextRead）均带 javax.persistence 注解，无编译 ERROR
-2. 18 个 Dao 接口继承内联后的 BaseDao，其中 7 个复用已有 bas 实体的 Dao 无实体重复声明，`mvn compile` 通过
-3. ISaveTempClient/IWxUserClient/IWxUserDetailClient 3 个 Feign 接口在 zgbas-system 包路径下就位，pom.xml 中无 purchase-client 2.0.1-SNAPSHOT jar 声明
-4. PurchaseWxClientConfig 内联完成，application.yml 含 `spt.bas.purchaseWx.url=http://localhost:8080` 配置项，@ConfigurationProperties 绑定无报错
+1. payload(22)+ server VO(~17)+ util(~16)+ common(~5)+ config(~11,含 JinXinConfig/EweChatConfig/FrameworkConfig)+ cache(RedisCache)+ aop(ServiceAop)+ ewechat(EweChatApi)+ enums + GlobalExceptionHandler 全量迁入 zgbas-system,逐类可独立解析,无孤立 import
+2. 外部集成 wrapper(JinXinApi/EweChatApi/OCR utils)迁本地 wrapper,远端服务维持 HTTP 边界(D-16/D-17);corpid/corpsecret 等占位不外泄
+3. `JAVA_HOME=Corretto-1.8 mvn compile -pl zgbas-system` 零 `[ERROR]`,承托层独立编译通过
+4. 承托类 inventory checklist 完成(D-15a/D-15b):return envelope / exception advice / user-context / auth helper / serialization-upload-wrapper 五类逐项 `source → consumer → must-port?` 盘点
+
+**Plans**: 6 plans across 5 waves (planned 2026-07-24)
+- Wave 1: 05-01 (payload/vo/enums/common + stub replace) ∥ 05-02 (util + stub replace)
+- Wave 2: 05-03 (横切 bean 收口 灰区A: WebAppConfig CORS / GlobalExceptionHandler basePackages / ServiceAop / WxCarrierConfig + config POJOs + exception)
+- Wave 3: 05-04 (cache + OcrUtils/OcrHelper wrapper + dev-yml 明文密钥 灰区B + rotate-todo)
+- Wave 4: 05-05 (ApplicationStartup 追加 WX BsDictUtil.init + RequestListener + D-15a/b inventory 灰区C)
+- Wave 5: 05-06 (编译门 mvn compile -pl zgbas-system 零 [ERROR])
+
+**Research-driven scope adjustments (2026-07-24 RESEARCH, see 05-RESEARCH.md):**
+- ⚠️ SC#1 `ewechat(EweChatApi)` 移至 **Phase 6**(D-P5-18):EweChatApi `@Autowired IBuyMessageService`(P6 service),Phase 5 编译不可解。Phase 5 迁其全部承托依赖(EweChatConfig/RedisCache/TemplateCardMessage),为 P6 EweChatApi 铺路。
+- JinXinApi → Phase 6(D-P5-08 修正):唯一调用方 UserInfoService(P6)+ CFCA dep;JinXinConfig POJO 仍 Phase 5。
+- PurchaseCommand → Phase 6(D-P5-13 修正):依赖 P6 service + xxl-job scrub。
+- ScheduleConfig / SwaggerConfig 跳过(D-P5-16/17):单体已有同构 / springfox 不在 classpath。
+- FrameworkConfig 剥减为 WxCarrierConfig(仅 eweChatConfig @Bean,D-P5-15)。
+- ⚠️ SC#2 "corpid/corpsecret 占位不外泄" 与 D-P5-05 明文策略冲突 —— 用户锁定 D-P5-05(覆盖),rotate-credentials todo 登记 EweChat/Aliyun OCR/JinXin 三组。
+
+---
+
+### Phase 6: Service 层迁入
+
+**Goal**: ~20 个 basWx service impl + interface 全量迁入 zgbas-system,适配内联后 BaseService/IBaseService 签名,保留对主 bas 域的 Feign 自回环调用(不崩为直注),为 Phase 7 BFF 提供完整业务实现层。
+
+**Depends on**: Phase 5(承托类就位)
+
+**Requirements**: WX-SERVICE-01
+
+**Success Criteria** (what must be TRUE):
+1. 20 service impl(Apply/BuyEnquiry/BuyMessage/BuyQuote/Contract/SuccessContract/User/UserInfo/UserDetail/WxSession/WxSmsCheckCode/WxUserInfo/WxUserTextRead/BsDict/BsCompany/CompanyIndustry/Feedback/TempSave/JinXinApi/WxAccessToken)+ 对应 interface 全量迁入 zgbas-system
+2. BaseService/IBaseService 适配以单体当前内联实现为准,仅最小签名收口,不改业务语义(D-12);无 spt-tools 残余 import
+3. 对主 bas 域调用保留 Feign 自回环(`IBsCompanyClient`/`IPmProcessClient`/`IPmApproveClient` 等 localhost:8080),不重构为直接注入(方案1 决策)
+4. `JAVA_HOME=Corretto-1.8 mvn compile -pl zgbas-system` 零 `[ERROR]`
 
 **Plans**: TBD
 
 ---
 
-### Phase 4: 基础设施 & SDK 接入
+### Phase 7: BFF edge 迁入
 
-**Goal**: Redis 依赖注入单体、weixin-java-miniapp SDK 引入、JWT 与 Shiro 并存机制就绪，WxMaService bean 可在 Spring context 中注册，为 WX service 层提供全部运行时依赖。
+**Goal**: 11 controller(`/wx/* + /ewechat/* + /axq/*`)+ 4 API(SaveTempApi/WxOpenApi/WxUserApi/WxUserDetailApi)+ BasicErrorController 迁入 zgbas-admin,先做路由 inventory 与 `/wx/contract` 冲突消歧,再把三族路由真正接到单体 admin 层。
 
-**Depends on**: Phase 3
+**Depends on**: Phase 6(service 层就位)
 
-**Requirements**: WX-SERVICE-02, WX-SERVICE-03
-
-**Success Criteria** (what must be TRUE):
-1. `spring-boot-starter-data-redis` 引入 pom 后 `mvn compile` 零 Redis 相关 ERROR，RedisTemplate bean 在 ApplicationContext 中可注入
-2. WxMiniAppConfig（@ConfigurationProperties，绑定 wx.miniapp.*）和 WxConfiguration 就位，WxMaService bean 可在 Spring context 注册，无 NoSuchBeanDefinitionException
-3. JwtAuthenticationFilter 注册为 Spring Filter bean 后，/wx/** 路径请求绕过 Shiro AuthenticationFilter（过滤链不抛 UnauthorizedException），已有 Shiro session 登录路径（/login、/index）行为不变
-4. Spring context 干启动（通过 ApplicationContextRunner 或 @SpringBootTest）时，Redis bean + WxMaService bean + JwtConfig bean 均可通过 getBean 取到，无 BeanCreationException
-
-**Plans**: 5 plans
-
-- [x] 04-01-PLAN.md — pom 依赖声明 + application-dev.yml 配置
-- [x] 04-02-PLAN.md — Redis 配置类迁入
-- [x] 04-03-PLAN.md — WxMaService 配置类迁入 + common stubs
-- [x] 04-04-PLAN.md — JWT 认证体系迁入
-- [x] 04-05-PLAN.md — 全量编译验证 + bean 注册验证
-
----
-
-### Phase 5: Service & BFF 全量迁入
-
-**Goal**: 全部采购小程序业务 service 层和 BFF 控制器迁入单体，辅助组件全量落地，单体覆盖 WX 所有业务路径（/wx/* + /ewechat/* + /axq/*）。
-
-**Depends on**: Phase 4
-
-**Requirements**: WX-SERVICE-01, WX-BFF-01, WX-BFF-02, WX-BFF-03
+**Requirements**: WX-BFF-01, WX-BFF-02
 
 **Success Criteria** (what must be TRUE):
-1. ~20 个 service impl 迁入 zgbas-system，适配内联后 BaseService 签名（无 spt-tools 残余 import），`mvn compile -pl zgbas-system` 无 ERROR
-2. 11 个 controller（/wx/* + /ewechat/* + /axq/*）和 4 个 API 类（SaveTempApi/WxOpenApi/WxUserApi/WxUserDetailApi）迁入 zgbas-admin，Spring MVC 扫描到对应 RequestMapping，无重复端点冲突
-3. 辅助组件全量迁入（21 payload + 19 VO + 20 util + ServiceAop + BsDictUtil/RedisCache + EweChatApi），无孤立 import 缺失，每个类可独立解析
-4. 全模块 `JAVA_HOME=Corretto-1.8 mvn compile` 输出零 `[ERROR]` 行（WX 层全量迁入后首次全量编译通过）
+1. 三族路由 inventory 完成(D-03a/D-03a1):`/wx/*`、`/ewechat/*`、`/axq/*` 全端点按 `HTTP method + final path` 归一化成表
+2. 🔴 `/wx/contract` 冲突消歧落地:报表 `RptCtrContractApi` vs basWx `ContractController` 同基路径,Spring 启动无 ambiguous mapping,两端点均按预期 handler 命中(冲突矩阵产出 owner phase + minimal disambiguation action,D-03b/D-02)
+3. 11 controller + 4 API + BasicErrorController 迁入 zgbas-admin,Spring MVC 扫描到全部 RequestMapping,无重复端点冲突
+4. 路径 1:1 保持源码(D-01),仅对确认冲突点做最小消歧,不做整批路由重写
 
 **Plans**: TBD
 
 ---
 
-### Phase 6: 对齐验证
+### Phase 8: 对齐验证
 
-**Goal**: 编译 + 启动 + WX 端点可达三层验证全绿，basWx 正式成为单体的有机组成，v1.2 milestone 验收通过。
+**Goal**: 编译 + 启动 + WX 端点可达 + WX Feign 自回环四层验证全绿,basWx 正式成为单体的有机组成,v1.2 milestone 验收通过。
 
-**Depends on**: Phase 5
+**Depends on**: Phase 7
 
 **Requirements**: WX-ALIGN-01, WX-ALIGN-02, WX-ALIGN-03
 
 **Success Criteria** (what must be TRUE):
-1. `JAVA_HOME=/path/Corretto-1.8 mvn compile` 全模块（admin/common/framework/quartz/system）输出无任何 `[ERROR]` 行（WX-ALIGN-01 编译基线）
-2. ZgbasApplicationTest 启动测试 GREEN——ApplicationContext 加载含 WxMaService / RedisTemplate / JwtAuthenticationFilter bean，日志无 `FAILED`，测试报告 0 failures / 0 errors
-3. 应用启动后，HTTP GET /wx/user/login 返回非 404 状态码（路由命中，业务逻辑报错可接受，但 Spring DispatcherServlet 必须找到 handler）
-4. WX Feign 自回环 proof（WX-CLIENT-02）：通过 PurchaseWxClientConfig 自回环 localhost:8080 发出 WX Feign 调用，响应 HTTP status 非 404（确认 WX controller 已接线，D-P4-01a 扫描范围已覆盖 WX client remote 包）
+1. `JAVA_HOME=Corretto-1.8 mvn compile` 全模块(admin/common/framework/quartz/system)无任何 `[ERROR]` 行(WX-ALIGN-01)
+2. ZgbasApplicationTest 启动 GREEN —— ApplicationContext 含 WxMaService/RedisTemplate/JwtAuthenticationFilter bean,日志无 FAILED,0 failures/0 errors(WX-ALIGN-02)
+3. HTTP GET/POST `/wx/user/login` 等关键 WX 端点返回非 404(DispatcherServlet 找到 handler,业务报错可接受)(WX-ALIGN-03)
+4. WX Feign 自回环 proof:经 PurchaseWxClientConfig 自回环 localhost:8080 发出 WX Feign 调用,响应非 404(确认 WX controller 已接线)
 
 **Plans**: TBD
 
@@ -136,34 +174,36 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 | Phase 1: 前端接口对齐 | v1.1 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 2: 调度日志 + 辅助 Bean | v1.1 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 3: 数据层与 Feign 契约 | v1.2 | 3/3 | ✅ Complete | 2026-07-22 |
-| Phase 4: 基础设施 & SDK 接入 | v1.2 | 1/5 | 🚧 Executing | - |
-| Phase 5: Service & BFF 全量迁入 | v1.2 | 0/TBD | Not started | - |
-| Phase 6: 对齐验证 | v1.2 | 0/TBD | Not started | - |
+| Phase 4: 基础设施 & SDK 接入 | v1.2 | 5/5 | ✅ Complete | 2026-07-22 |
+| Phase 5: 承托层迁入 | v1.2 | 0/6 | Planned | 2026-07-24 |
+| Phase 6: Service 层迁入 | v1.2 | 0/TBD | Not started | - |
+| Phase 7: BFF edge 迁入 | v1.2 | 0/TBD | Not started | - |
+| Phase 8: 对齐验证 | v1.2 | 0/TBD | Not started | - |
 
 ---
 
 ## Requirement Coverage (v1.2)
 
-| REQ-ID | Description | Phase |
-|--------|-------------|-------|
-| WX-DATA-01 | 6 JPA 实体 purchase-client → zgbas-system | Phase 3 |
-| WX-DATA-02 | 5 JPA 实体 purchase-server → zgbas-system | Phase 3 |
-| WX-DATA-03 | 18 Dao 接口 → zgbas-system | Phase 3 |
-| WX-CLIENT-01 | 3 Feign 接口内联（ISaveTempClient/IWxUserClient/IWxUserDetailClient） | Phase 3 |
-| WX-CLIENT-02 | PurchaseWxClientConfig 内联，自回环 localhost:8080 | Phase 3 |
-| WX-SERVICE-01 | ~20 service impl → zgbas-system | Phase 5 |
-| WX-SERVICE-02 | weixin-java-miniapp SDK + WxMiniAppConfig + WxMaService bean | Phase 4 |
-| WX-SERVICE-03 | Redis + JWT 认证体系与 Shiro 并存 | Phase 4 |
-| WX-BFF-01 | 11 Controller → zgbas-admin (/wx/* /ewechat/* /axq/*) | Phase 5 |
-| WX-BFF-02 | 4 API 类 → zgbas-admin | Phase 5 |
-| WX-BFF-03 | 辅助组件（payload/VO/util/AOP/cache/EweChatApi）全量迁入 | Phase 5 |
-| WX-ALIGN-01 | mvn compile 全模块零错 | Phase 6 |
-| WX-ALIGN-02 | ZgbasApplicationTest GREEN（含 WX beans） | Phase 6 |
-| WX-ALIGN-03 | 关键 WX 端点非 404（路由命中） | Phase 6 |
+| REQ-ID | Description | Phase | Status |
+|--------|-------------|-------|--------|
+| WX-DATA-01 | 6 JPA 实体 purchase-client → zgbas-system | Phase 3 | ✅ Complete |
+| WX-DATA-02 | 5 JPA 实体 purchase-server → zgbas-system | Phase 3 | ✅ Complete |
+| WX-DATA-03 | 18 Dao 接口 → zgbas-system | Phase 3 | ✅ Complete |
+| WX-CLIENT-01 | 3 Feign 接口内联(ISaveTempClient/IWxUserClient/IWxUserDetailClient) | Phase 3 | ✅ Complete |
+| WX-CLIENT-02 | PurchaseWxClientConfig 内联,自回环 localhost:8080 | Phase 3 | ✅ Complete |
+| WX-SERVICE-01 | ~20 service impl → zgbas-system | Phase 6 | Pending |
+| WX-SERVICE-02 | weixin-java-miniapp SDK + WxMiniAppConfig + WxMaService bean | Phase 4 | ✅ Complete |
+| WX-SERVICE-03 | Redis + JWT 认证体系与 Shiro 并存 | Phase 4 | ✅ Complete |
+| WX-BFF-01 | 11 Controller → zgbas-admin (/wx/* /ewechat/* /axq/*) | Phase 7 | Pending |
+| WX-BFF-02 | 4 API 类 → zgbas-admin | Phase 7 | Pending |
+| WX-BFF-03 | 辅助组件(payload/VO/util/AOP/cache/EweChatApi)全量迁入 | Phase 5 | Pending |
+| WX-ALIGN-01 | mvn compile 全模块零错 | Phase 8 | Pending |
+| WX-ALIGN-02 | ZgbasApplicationTest GREEN(含 WX beans) | Phase 8 | Pending |
+| WX-ALIGN-03 | 关键 WX 端点非 404(路由命中) | Phase 8 | Pending |
 
-**Coverage: 14/14 ✓**
+**Coverage: 14/14 ✓** (6 complete, 8 pending)
 
 ---
 
 *Created: 2026-07-16*
-*Updated: 2026-07-22 — v1.2 basWx 迁入 roadmap added (Phases 3–6)*
+*Updated: 2026-07-23 — v1.2 basWx 迁入 forward phases replanned (3/4 done → 5 承托/6 service/7 BFF/8 验证); `/wx/contract` 冲突锁定为 Phase 7 必解项*
