@@ -57,7 +57,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 ### Forward Phases(2026-07-23 重规划)
 
 - [x] **Phase 5: 承托层迁入** — payload/VO/util/common/config/cache/AOP/ewechat 全量落 zgbas-system,为 service 与 BFF 提供稳定编译底座 (completed 2026-07-24)
-- [ ] **Phase 6: Service 层迁入** — ~20 service impl + interface,适配内联后 BaseService 签名
+- [x] **Phase 6: Service 层迁入** — 19 service impl + 18 interface + EweChatApi + PurchaseCommand(@XxlJob scrubbed) 落 zgbas-system,BaseService 签名未动,Feign 自回环保留 (completed 2026-07-24)
 - [ ] **Phase 7: BFF edge 迁入** — 路由 inventory + `/wx/contract` 冲突消歧 + 11 controller + 4 API + BasicErrorController 落 zgbas-admin
 - [ ] **Phase 8: 对齐验证** — compile 零错 + 启动 GREEN + `/wx/*` 非 404 + WX Feign 自回环 proof
 
@@ -187,8 +187,8 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 | Phase 2: 调度日志 + 辅助 Bean | v1.1 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 3: 数据层与 Feign 契约 | v1.2 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 4: 基础设施 & SDK 接入 | v1.2 | 5/5 | ✅ Complete | 2026-07-22 |
-| Phase 5: 承托层迁入 | v1.2 | 0/6 | Planned | 2026-07-24 |
-| Phase 6: Service 层迁入 | v1.2 | 0/6 | Planned | 2026-07-24 |
+| Phase 5: 承托层迁入 | v1.2 | 6/6 | ✅ Complete | 2026-07-24 |
+| Phase 6: Service 层迁入 | v1.2 | 6/6 | ✅ Complete | 2026-07-24 |
 | Phase 7: BFF edge 迁入 | v1.2 | 0/TBD | Not started | - |
 | Phase 8: 对齐验证 | v1.2 | 0/TBD | Not started | - |
 
@@ -203,7 +203,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 | WX-DATA-03 | 18 Dao 接口 → zgbas-system | Phase 3 | ✅ Complete |
 | WX-CLIENT-01 | 3 Feign 接口内联(ISaveTempClient/IWxUserClient/IWxUserDetailClient) | Phase 3 | ✅ Complete |
 | WX-CLIENT-02 | PurchaseWxClientConfig 内联,自回环 localhost:8080 | Phase 3 | ✅ Complete |
-| WX-SERVICE-01 | ~20 service impl → zgbas-system | Phase 6 | Pending |
+| WX-SERVICE-01 | ~20 service impl → zgbas-system | Phase 6 | ✅ Complete |
 | WX-SERVICE-02 | weixin-java-miniapp SDK + WxMiniAppConfig + WxMaService bean | Phase 4 | ✅ Complete |
 | WX-SERVICE-03 | Redis + JWT 认证体系与 Shiro 并存 | Phase 4 | ✅ Complete |
 | WX-BFF-01 | 11 Controller → zgbas-admin (/wx/* /ewechat/* /axq/*) | Phase 7 | Pending |

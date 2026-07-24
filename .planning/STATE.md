@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
 status: executing
-stopped_at: Phase 6 context gathered — 4 gray areas decided
-last_updated: "2026-07-24T02:46:38.533Z"
-last_activity: 2026-07-24 -- Phase 6 planning complete
+stopped_at: Phase 6 complete — compile gate green (SC#4 PASSED), advancing to Phase 7
+last_updated: "2026-07-24T03:29:48.000Z"
+last_activity: 2026-07-24 -- Phase 6 executed (6/6 plans, zgbas-system compile 0 ERROR)
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 20
-  completed_plans: 14
-  percent: 50
+  completed_plans: 20
+  percent: 67
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 单进程启动即可跑通全部供应链业务(登录 → 核心业务 → 报表 → 定时任务 → 微信采购小程序),行为对齐旧系统 zgbas
-**Current focus:** Phase 6 — service 层迁入
+**Current focus:** Phase 7 — BFF edge 迁入
 
 ## Current Position
 
-Phase: 6
+Phase: 7
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-07-24 -- Phase 6 planning complete
+Status: Ready to plan
+Last activity: 2026-07-24 -- Phase 6 executed (6/6 plans, compile gate PASSED)
 
-Progress: [██████████] 100%
+Progress: [████████░░] 67% (4/6 phases: P3/P4/P5/P6 done)
 
 ## v1.2 嵌入方案(2026-07-23 锁定)
 
@@ -42,8 +42,8 @@ Progress: [██████████] 100%
 |---|---|---|
 | 3 数据层与 Feign 契约 | 11 实体/18 Dao/3 Feign/PurchaseWxClientConfig | ✅ done 2026-07-22 |
 | 4 基础设施 & SDK | Redis/WxMaService/JWT/Shiro wiring(51 文件基础) | ✅ done 2026-07-22 |
-| 5 承托层迁入 | payload/VO/util/common/config/cache/AOP/ewechat → system | ○ 待规划 |
-| 6 Service 层迁入 | ~20 service impl + iface + BaseService 适配 → system | ○ 待规划 |
+| 5 承托层迁入 | payload/VO/util/common/config/cache/AOP/ewechat → system | ✅ done 2026-07-24 |
+| 6 Service 层迁入 | 19 impl + 18 iface + EweChatApi + PurchaseCommand(scrubbed) → system | ✅ done 2026-07-24 |
 | 7 BFF edge 迁入 | 路由 inventory + /wx/contract 消歧 + 11 controller + 4 API → admin | ○ 待规划 |
 | 8 对齐验证 | compile 零错 + 启动 GREEN + /wx 非404 + 自回环 proof | ○ 待规划 |
 
@@ -97,7 +97,7 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-07-24T02:21:28.224Z
-Stopped at: Phase 6 context gathered — 4 gray areas decided
-Resume file: .planning/phases/06-service/06-CONTEXT.md
-Next action: `/gsd-discuss-phase 5` 或 `/gsd-plan-phase 5`(承托层迁入)
+Last session: 2026-07-24T03:29:48.000Z
+Stopped at: Phase 6 complete — compile gate green, advancing to Phase 7
+Resume file: .planning/phases/06-service/06-VERIFICATION.md
+Next action: `/gsd-discuss-phase 7` 或 `/gsd-plan-phase 7`(BFF edge 迁入 — 路由 inventory + /wx/contract 冲突消歧 + 11 controller + 4 API → zgbas-admin)
