@@ -23,7 +23,12 @@ import java.util.regex.Pattern;
  * @Author: shengong
  * @Date: Created in 2020-09-16 09:01
  */
-@Component
+// Phase 8 (D-P8-01 minimal fix, behavior-equivalent): explicit bean name disambiguates this from
+// com.spt.bas.server.util.SMSUtils (both @Component, simple name SMSUtils → default bean name
+// "SMSUtils" collides → ConflictingBeanDefinitionException). Injected by type (WX UserService
+// imports this package) — name change is safe. Source isolated via separate apps; monolith's
+// broad com.spt scan requires explicit name. Mirrors FileController precedent. No semantic change.
+@Component("wxSMSUtils")
 public class SMSUtils {
     //校验手机是否合规 2020年最全的国内手机号格式
     private static final String REGEX_MOBILE = "((\\+86|0086)?\\s*)((134[0-8]\\d{7})|(((13([0-3]|[5-9]))|(14[5-9])|15([0-3]|[5-9])|(16(2|[5-7]))|17([0-3]|[5-8])|18[0-9]|19(1|[8-9]))\\d{8})|(14(0|1|4)0\\d{7})|(1740([0-5]|[6-9]|[10-12])\\d{7}))";

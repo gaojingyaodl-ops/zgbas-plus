@@ -18,7 +18,12 @@ import java.util.Objects;
  * @version: 1.0
  * @description:
  */
-@Component
+// Phase 8 (D-P8-01 minimal fix, behavior-equivalent): explicit bean name disambiguates this from
+// com.spt.bas.server.util.DeptUtils (both @Component, simple name DeptUtils → default bean name
+// "deptUtils" collides → ConflictingBeanDefinitionException). Source isolated via separate apps;
+// monolith's broad com.spt scan requires explicit name. Mirrors FileController precedent.
+// No semantic change.
+@Component("wxDeptUtils")
 public class DeptUtils {
     protected Logger logger = LoggerFactory.getLogger(this.getClass());
     @Autowired

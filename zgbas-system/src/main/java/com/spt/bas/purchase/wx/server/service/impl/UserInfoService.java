@@ -150,7 +150,9 @@ public class UserInfoService implements IUserInfoService {
     private ISuccessContractService successContractService;
     @Autowired
     private IBsCompanyDcsxClient bsCompanyDcsxClient;
-    @Resource
+    // Phase 8: WX DeptUtils bean renamed to wxDeptUtils (D-P8-01 disambiguation vs basServer DeptUtils),
+    // so this name-based @Resource must point at the renamed bean. Field type is the WX DeptUtils.
+    @Resource(name = "wxDeptUtils")
     private DeptUtils deptUtils;
     @Resource
     private BsDictDataDao bsDictDataDao;

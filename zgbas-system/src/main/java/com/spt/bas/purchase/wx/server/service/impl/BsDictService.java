@@ -25,7 +25,15 @@ import java.util.List;
  * @author huangjian
  *
  */
-@Component
+// Phase 8 (D-P8-01 minimal fix, behavior-equivalent): explicit bean name disambiguates this from
+// com.spt.bas.server.service.impl.BsDictService. Both are @Component with simple name BsDictService
+// → Spring would derive the same default bean name "bsDictService" → ConflictingBeanDefinitionException.
+// They implement DIFFERENT interfaces (com.spt.bas.purchase.wx.server.service.IBsDictService vs
+// com.spt.bas.server.service.IBsDictService), so type-injection stays unambiguous; only the bean
+// NAME collides. Source avoided it via module-isolated scans (basWx vs basServer separate apps);
+// the monolith's broad com.spt scan requires an explicit name. Mirrors the FileController /
+// RptBaseCostApi precedent. No business-semantic change.
+@Component("wxBsDictService")
 // 默认将类中的所有public函数纳入事务管理.
 @Transactional(readOnly = true)
 public class BsDictService extends BaseService<BsDictType> implements IBsDictService {

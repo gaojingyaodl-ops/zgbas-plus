@@ -23,7 +23,15 @@ import javax.servlet.http.HttpServletRequest;
  * @Author: shengong
  * @Date: Created in 2020-09-22 13:39
  */
-@RestController
+// Phase 8 (D-P8-01 minimal fix, behavior-equivalent): explicit bean name disambiguates this from
+// com.spt.bas.web.controller.FileController (@Controller, /file/*). Both classes share the simple
+// name FileController → Spring would derive the same default bean name "fileController" →
+// ConflictingBeanDefinitionException on context load. The source avoided it via module-isolated
+// scans (basWx app scanned only its package); the monolith's broad com.spt scan requires an
+// explicit name. Route spaces are disjoint (/wx/file/* here vs /file/* in the web controller),
+// so both stay active as distinct beans — mirrors the P5 precedent for RptBaseCostApi
+// (@RestController("reportRptBaseCostApi")). No business-semantic change.
+@RestController("wxFileController")
 @RequestMapping(value = "/wx/file")
 @Api(tags = "上传接口")
 @ApiSort(value = 4)
