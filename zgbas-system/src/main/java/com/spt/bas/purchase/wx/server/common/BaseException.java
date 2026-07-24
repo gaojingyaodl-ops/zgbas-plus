@@ -1,7 +1,5 @@
 package com.spt.bas.purchase.wx.server.common;
 
-// Phase 4 stub — Phase 5 will overlay with complete source version
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

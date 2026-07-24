@@ -1,7 +1,5 @@
 package com.spt.bas.purchase.wx.server.common;
 
-// Phase 4 stub — Phase 5 will overlay with complete source version
-
 //import io.swagger.annotations.ApiModel;
 //import io.swagger.annotations.ApiModelProperty;
 
