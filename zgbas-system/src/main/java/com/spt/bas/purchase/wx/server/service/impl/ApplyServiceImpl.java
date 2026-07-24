@@ -15,7 +15,7 @@ import com.spt.bas.purchase.wx.client.entity.UserDetail;
 import com.spt.bas.purchase.wx.client.entity.WebApplicationMsg;
 import com.spt.bas.purchase.wx.server.common.BaseException;
 import com.spt.bas.purchase.wx.server.common.Status;
-import com.spt.bas.purchase.wx.server.dao.BsCompanyDao;
+import com.spt.bas.server.dao.BsCompanyDao;  // Phase 8: repointed from WX dup (DAO reconciliation)
 import com.spt.bas.purchase.wx.server.dao.UserDetailDao;
 import com.spt.bas.purchase.wx.server.service.IApplyService;
 import com.spt.bas.purchase.wx.server.util.UserHelper;

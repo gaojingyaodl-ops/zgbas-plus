@@ -25,6 +25,9 @@ import com.spt.bas.purchase.wx.client.vo.*;
 import com.spt.bas.purchase.wx.server.cache.BsDictUtil;
 import com.spt.bas.purchase.wx.server.common.*;
 import com.spt.bas.purchase.wx.server.dao.*;
+import com.spt.bas.server.dao.BsCompanyDao;   // Phase 8: repointed from WX dup (DAO reconciliation)
+import com.spt.bas.server.dao.FeedbackDao;    // Phase 8: repointed from WX dup (DAO reconciliation)
+import com.spt.bas.server.dao.BsDictDataDao;  // Phase 8: repointed from WX dup (DAO reconciliation)
 import com.spt.bas.purchase.wx.server.payload.UploadBase64Request;
 import com.spt.bas.purchase.wx.server.payload.*;
 import com.spt.bas.purchase.wx.server.service.*;

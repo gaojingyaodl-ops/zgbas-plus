@@ -176,4 +176,16 @@ public interface BsCompanyDao extends BaseDao<BsCompany> {
 	@Modifying
 	@Query("update BsCompany c set c.totalCreditAmount = c.piccCreditAmount where c.totalCreditAmount >= 0 or c.piccCreditAmount >= 0")
 	void recoverCompanyCreditAmount();
+
+	// ---- Phase 8 (D-P8-01 DAO reconciliation): 4 finder methods ported from the now-deleted
+	// com.spt.bas.purchase.wx.server.dao.BsCompanyDao (basWx verbatim duplicate, same entity
+	// BsCompany). Source basWx isolated the duplicate via a separate app; the monolith allows only
+	// one JPA repository per domain type, so the WX services (UserService / UserInfoService /
+	// ApplyServiceImpl) now reuse this basServer Dao. These are query-derivation methods (findBy...)
+	// auto-implemented from BsCompany fields (contactPhone / enableFlg / id / companyName).
+	// Behavior-equivalent (verbatim method signatures + same entity). ----
+	BsCompany findByContactPhoneAndEnableFlgTrue(String phone);
+	BsCompany findByIdAndEnableFlgTrue(Long id);
+	BsCompany findByCompanyNameLikeAndEnableFlgTrue(String companyName);
+	BsCompany findBsCompanyByCompanyNameAndEnableFlgTrue(String companyName);
 }

@@ -17,7 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
  * @Author: shengong
  * @Date: Created in 2020-09-16 17:34
  */
-@Component
+// Phase 8 (D-P8-01 minimal fix, behavior-equivalent): explicit bean name disambiguates this WX
+// service's default name "bsCompanyService" from 35 basServer @Resource sites that inject a field
+// named bsCompanyService expecting com.spt.bas.server.service.IBsCompanyService (impl there is
+// BsCompanyServiceImpl). Source isolated via separate apps; the monolith's broad com.spt scan lets
+// this WX bean shadow the basServer field-name injection. This WX service has NO name-based WX
+// caller (injected by WX IBsCompanyService type), so renaming is safe — mirrors FileController /
+// BsDictService precedent. No business-semantic change.
+@Component("wxBsCompanyService")
 @Transactional(readOnly = true)
 public class BsCompanyService extends BaseService<BsCompany> implements IBsCompanyService {
 

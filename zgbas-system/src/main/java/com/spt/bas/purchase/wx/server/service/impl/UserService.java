@@ -19,6 +19,7 @@ import com.spt.bas.purchase.wx.server.common.InfoStep;
 import com.spt.bas.purchase.wx.server.common.Status;
 import com.spt.bas.purchase.wx.server.config.WxConfiguration;
 import com.spt.bas.purchase.wx.server.dao.*;
+import com.spt.bas.server.dao.BsCompanyDao;  // Phase 8: repointed from WX dup (DAO reconciliation; single-type import wins over wildcard)
 import com.spt.bas.purchase.wx.server.entity.WxSession;
 import com.spt.bas.purchase.wx.server.entity.WxSmsCheckCode;
 import com.spt.bas.purchase.wx.server.exception.UserNameOrPasswordException;

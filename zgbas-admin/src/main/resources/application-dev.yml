@@ -158,6 +158,14 @@ wx:
         token: "123"
         aesKey: "123"
         msgDataFormat: JSON
+    # Phase 8: WX subscribe-message template IDs — verbatim from source basWx
+    # application.properties:91-93. Used by BuyMessageServiceImpl @Value placeholders
+    # (template_quote/deal/system); only consumed at WX message-send runtime, not startup.
+    # Adding resolves the placeholder so the bean creates (SC#2). Behavior-equivalent (source values).
+    msg:
+      template_quote: KQWsuUsW6XqRN0WYoluWdnuBns-2dRoJBpDOQF9LTXk
+      template_deal: KQWsuUsW6XqRN0WYoluWdnuBns-2dRoJBpDOQF9LTXk
+      template_system: KQWsuUsW6XqRN0WYoluWdnuBns-2dRoJBpDOQF9LTXk
 
 # Phase 4: JWT config（JwtConfig @ConfigurationProperties prefix=jwt.config）
 jwt:
