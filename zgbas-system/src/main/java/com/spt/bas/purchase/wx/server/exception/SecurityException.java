@@ -1,8 +1,8 @@
-// Phase 4 stub — Phase 5 will overlay with complete source version
 package com.spt.bas.purchase.wx.server.exception;
 
 import com.spt.bas.purchase.wx.server.common.BaseException;
 import com.spt.bas.purchase.wx.server.common.Status;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
