@@ -53,6 +53,13 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
 		BsCompanyIndustryUtil.init();
 		FactoryCache.init();
 		WarehouseCache.init();
+		// Phase 5 Plan 05-05 (D-P5-09): init the WX dict cache — same-root fix for the
+		// Phase-3 /wx/* login gap (memory authsdk-static-cache-init-gap: WX /wx/* dict
+		// cache was never initialized). Fully-qualified to disambiguate from the monolith
+		// com.spt.bas.server.cache.BsDictUtil above; the WX ApplicationStartup is NOT
+		// migrated wholesale (would add a 2nd ApplicationReadyEvent listener and double-run
+		// DictUtil/executor). DictUtil.init(appCode) and new Thread(executor) stay single.
+		com.spt.bas.purchase.wx.server.cache.BsDictUtil.init();
 		new Thread(executor).start();
 		logger.info("---Application已启动---");
 	}
