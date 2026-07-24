@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: ready_to_plan
-stopped_at: Phase 05 complete (6/6) — ready to discuss Phase 6
-last_updated: 2026-07-24T02:02:56.026Z
+status: planning
+stopped_at: Phase 6 context gathered — 4 gray areas decided
+last_updated: "2026-07-24T02:21:28.229Z"
 last_activity: 2026-07-24
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 14
-  completed_plans: 20
+  completed_plans: 14
   percent: 50
 ---
 
@@ -97,7 +97,7 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-07-23T09:13:49.343Z
-Stopped at: Phase 5 context gathered — 3 gray areas decided (横切bean逐项收口 / 新密钥明文dev yml / 启动并入单体防双跑)
-Resume file: .planning/phases/05-carrier-layer/05-CONTEXT.md
+Last session: 2026-07-24T02:21:28.224Z
+Stopped at: Phase 6 context gathered — 4 gray areas decided
+Resume file: .planning/phases/06-service/06-CONTEXT.md
 Next action: `/gsd-discuss-phase 5` 或 `/gsd-plan-phase 5`(承托层迁入)
