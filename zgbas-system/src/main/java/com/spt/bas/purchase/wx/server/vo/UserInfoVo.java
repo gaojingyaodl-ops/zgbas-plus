@@ -1,4 +1,3 @@
-// Phase 4 stub — Phase 5 will overlay with complete source version
 package com.spt.bas.purchase.wx.server.vo;
 
 //import io.swagger.annotations.ApiModel;
@@ -60,6 +59,7 @@ public class UserInfoVo {
     //@ApiModelProperty(value = "公司ID", dataType = "String", required = false)
     private Long companyId;
 
+
     private Long sessionId;
 
     private String openId;
@@ -68,4 +68,5 @@ public class UserInfoVo {
      * 是否阅读过权益知情书，1：已阅读，0：未阅读
      */
     private Integer informedConsentFlag;
+
 }
