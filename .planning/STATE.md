@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: executing
-stopped_at: "Phase 7 planned (6 plans: 07-01..07-06, 3 waves)"
-last_updated: "2026-07-24T04:23:49.576Z"
+status: ready_to_plan
+stopped_at: Phase 07 complete (6/6) — ready to discuss Phase 8
+last_updated: 2026-07-24T04:42:16.109Z
 last_activity: 2026-07-24 -- Phase 07 execution started
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 26
-  completed_plans: 20
+  completed_plans: 32
   percent: 67
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 单进程启动即可跑通全部供应链业务(登录 → 核心业务 → 报表 → 定时任务 → 微信采购小程序),行为对齐旧系统 zgbas
-**Current focus:** Phase 07 — bff-edge
+**Current focus:** Phase 8 — 对齐验证
 
 ## Current Position
 
-Phase: 07 (bff-edge) — EXECUTING
-Plan: 1 of 6
-Status: Executing Phase 07
-Last activity: 2026-07-24 -- Phase 07 execution started
+Phase: 8
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-07-24
 
 Progress: [█████████░] 77% (4/6 phases done; P7 planned 6/6 plans)
 
