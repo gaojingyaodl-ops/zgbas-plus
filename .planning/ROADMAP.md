@@ -58,7 +58,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 
 - [x] **Phase 5: 承托层迁入** — payload/VO/util/common/config/cache/AOP/ewechat 全量落 zgbas-system,为 service 与 BFF 提供稳定编译底座 (completed 2026-07-24)
 - [x] **Phase 6: Service 层迁入** — 19 service impl + 18 interface + EweChatApi + PurchaseCommand(@XxlJob scrubbed) 落 zgbas-system,BaseService 签名未动,Feign 自回环保留 (completed 2026-07-24)
-- [ ] **Phase 7: BFF edge 迁入** — 路由 inventory + `/wx/contract` 冲突消歧 + 11 controller + 4 API + BasicErrorController 落 zgbas-admin
+- [x] **Phase 7: BFF edge 迁入** — 路由 inventory + `/wx/contract` 冲突消歧 + 11 controller + 4 API + BasicErrorController 落 zgbas-admin (completed 2026-07-24)
 - [ ] **Phase 8: 对齐验证** — compile 零错 + 启动 GREEN + `/wx/*` 非 404 + WX Feign 自回环 proof
 
 ---
