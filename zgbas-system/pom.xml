@@ -181,6 +181,15 @@
             <artifactId>fastjson2</artifactId>
             <version>2.0.4</version>
         </dependency>
+
+        <!-- Phase 5 Plan 05-02 Rule 2: html2image required by carrier util
+             ConvertUtils.html2Img(), which is called by UserInfoService (Phase 6).
+             Same artifact/version already declared in zgbas-admin/pom.xml (D-P2-08). -->
+        <dependency>
+            <groupId>gui.ava</groupId>
+            <artifactId>html2image</artifactId>
+            <version>0.9</version>
+        </dependency>
     </dependencies>
     <!-- Library jar: plain jar only, not a boot module, no fat-jar packaging. -->
 </project>

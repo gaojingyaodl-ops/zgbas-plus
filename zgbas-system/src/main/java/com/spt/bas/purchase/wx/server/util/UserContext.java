@@ -1,6 +1,6 @@
-// Phase 4 stub — Phase 5 will overlay with complete source version
 package com.spt.bas.purchase.wx.server.util;
 
+import com.spt.bas.purchase.wx.server.vo.CompanyVo;
 import com.spt.bas.purchase.wx.server.vo.UserInfoVo;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +20,8 @@ public class UserContext {
      * 设置用户信息
      * @param user
      */
-    public static void setUser(UserInfoVo user) {
+    public static void setUser(UserInfoVo user){
+//        log.info("当前线程 --- [{}] --- 设置用户 {} ", Thread.currentThread().getName(), user);
         threadLocal.set(user);
     }
 
@@ -29,7 +30,8 @@ public class UserContext {
      * @return
      */
     public static UserInfoVo getUser() {
-        UserInfoVo user = threadLocal.get();
+                UserInfoVo user = threadLocal.get();
+//        log.info("当前线程 --- [{}] --- 获取用户 {} ", Thread.currentThread().getName(), user);
         return user;
     }
 
@@ -39,4 +41,5 @@ public class UserContext {
     public static void removeUser() {
         threadLocal.remove();
     }
+
 }

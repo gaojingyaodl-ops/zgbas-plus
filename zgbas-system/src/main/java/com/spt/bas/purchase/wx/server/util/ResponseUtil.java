@@ -1,4 +1,3 @@
-// Phase 4 stub — Phase 5 will overlay with complete source version
 package com.spt.bas.purchase.wx.server.util;
 
 import cn.hutool.json.JSONObject;
