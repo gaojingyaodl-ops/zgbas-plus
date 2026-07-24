@@ -158,6 +158,24 @@
             <version>3.1</version>
         </dependency>
 
+        <!-- Phase 6 (06-06 compile gate cascade): CFCA 金信 face-recognition runtime.
+             Source basWx/purchase-server/pom.xml declares these for JinXinApi (金信 HTTP
+             wrapper, migrated 06-02) which imports cfca.etl.common.client.exception /
+             cfca.etl.common.communicate.junyu.* / cfca.etl.uaclient.UAClient. Research R2
+             wrongly predicted "compile 无虞"; these packages are compile-required by JinXinApi.
+             Both jars verified in local repo (/Users/alan/App/Repository). Runtime HTTP
+             behavior deferred to Phase 8 (R2/D-16/17). -->
+        <dependency>
+            <groupId>cfca.etl.common</groupId>
+            <artifactId>etl-common</artifactId>
+            <version>3.19.4.4</version>
+        </dependency>
+        <dependency>
+            <groupId>cfca.etl.common</groupId>
+            <artifactId>etl-uaclient</artifactId>
+            <version>3.19.4.4</version>
+        </dependency>
+
         <!-- Phase 4 D-03: Redis starter, version managed by Spring Boot BOM -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
