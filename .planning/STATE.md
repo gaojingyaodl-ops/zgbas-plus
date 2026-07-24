@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: verifying
-stopped_at: Phase 5 context gathered — 3 gray areas decided (横切bean逐项收口 / 新密钥明文dev yml / 启动并入单体防双跑)
-last_updated: "2026-07-24T02:00:57.103Z"
+status: ready_to_plan
+stopped_at: Phase 05 complete (6/6) — ready to discuss Phase 6
+last_updated: 2026-07-24T02:02:56.026Z
 last_activity: 2026-07-24
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 14
-  completed_plans: 14
+  completed_plans: 20
   percent: 50
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 单进程启动即可跑通全部供应链业务(登录 → 核心业务 → 报表 → 定时任务 → 微信采购小程序),行为对齐旧系统 zgbas
-**Current focus:** Phase 05 — carrier-layer
+**Current focus:** Phase 6 — service 层迁入
 
 ## Current Position
 
-Phase: 05 (carrier-layer) — EXECUTING
-Plan: 6 of 6
-Status: Phase complete — ready for verification
+Phase: 6
+Plan: Not started
+Status: Ready to plan
 Last activity: 2026-07-24
 
 Progress: [██████████] 100%
