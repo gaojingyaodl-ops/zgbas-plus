@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: basWx 迁入
 status: executing
 stopped_at: Phase 5 context gathered — 3 gray areas decided (横切bean逐项收口 / 新密钥明文dev yml / 启动并入单体防双跑)
-last_updated: "2026-07-24T01:04:11.634Z"
-last_activity: 2026-07-24 -- Phase 5 planning complete
+last_updated: "2026-07-24T01:29:38.035Z"
+last_activity: 2026-07-24
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 14
-  completed_plans: 8
+  completed_plans: 9
   percent: 33
 ---
 
@@ -21,15 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-07-16)
 
 **Core value:** 单进程启动即可跑通全部供应链业务(登录 → 核心业务 → 报表 → 定时任务 → 微信采购小程序),行为对齐旧系统 zgbas
-**Current focus:** Phase 5 — 承托层迁入(v1.2 forward work,待规划)
+**Current focus:** Phase 05 — carrier-layer
 
 ## Current Position
 
-Phase: 05 (承托层迁入) — PLANNING(未启动)
+Phase: 05 (carrier-layer) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-07-24 -- Phase 5 planning complete
+Last activity: 2026-07-24
 
-Progress: [██████░░░░░░░░░░░░░░] 33% (v1.2: 2/6 phases done)
+Progress: [██████░░░░] 64%
 
 ## v1.2 嵌入方案(2026-07-23 锁定)
 
