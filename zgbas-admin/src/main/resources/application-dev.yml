@@ -163,3 +163,42 @@ jwt:
     key: sgcoding
     ttl: 600000
     remember: 604800000
+
+# Phase 5 D-P5-05: WX external-integration plaintext config (user-locked option3,
+# overrides the secret-externalization rule). Registered for rotation in
+# .planning/todos/pending/rotate-leaked-prod-credentials.md. Bound via
+# @ConfigurationProperties: ewechat.config -> WxCarrierConfig.eweChatConfig()
+# (05-03); aliyun.ocr -> OcrConfig (05-03); jinxin -> JinXinConfig (05-03,
+# consumer JinXinApi arrives in Phase 6).
+ewechat:
+  config:
+    corpid: ww67315c53a72c991f
+    corpsecret: gn_IIS0Sv-dvJ9MnGwZSH0m_zVZ_FCHk0mEIVMS6iZs
+    agentid: 1000007
+    messageUrl: http://h5biztest.tosupply.cn/dev-api/initLogin
+
+aliyun:
+  ocr:
+    appcode: 52e1a1531c5a4e30969d93c16eb1251f
+    host: https://cardpack.market.alicloudapi.com
+    businessLicenseUrl: /rest/160601/ocr/ocr_business_license.json
+    idCardUrl: /rest/160601/ocr/ocr_idcard.json
+    vehicleUrl: /rest/160601/ocr/ocr_vehicle.json
+    driverLicenseUrl: /rest/160601/ocr/ocr_driver_license.json
+    householdRegisterUrl: /api/predict/ocr_household_register
+    bankCardUrl: /rest/160601/ocr/ocr_bank_card.json
+    passportUrl: /rest/160601/ocr/ocr_passport.json
+
+jinxin:
+  host: https://210.74.42.15:443
+  livingUrl: /UAServer/Authenticate
+  merchNo: "0000000000036500"
+  merchKey: LaYeIemv2WEY8Z7h
+  merchRsaPrivateKey: MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCsOHpeenk1lmy1KWUbMLDmQImXPjmYfFnNNQr8Phkctu/7Jj5/HBPBxYPGGPm8+XL7ivCFiqNengOk0m2aVWHCEPuQQdrHZ7MlyiwPm+XhBWtayuvSd2dzZGBttzdD8q5L9OAaVIR3uOn+/ubbqZ0WnD3z+HOXfJsH/O13KHdH/8FMPW23yq+tdlUREeABtgAqNzPMzcLFNfOJNWgbA6/XgkqeSTtCPjiwRxnb5wmC/C88zAumKWbM9OKuZFO1/OdrHf3HtTURe6+enMMiX4EtqlFHgILosjmzWO3aFhqjc1yyTySzI/gUk6j2Ku2NxarCE/utV5MMogI44IdzkRl3AgMBAAECggEAbvXgmdjNGaK2na5zDya7A08Xl1OnJkEQVu/TCRw1b9PKIQXOBHWhoRpSQaM73O7Xj4xAVboycjba4CoYJfTXDIOGobZccFe3DCULaG8omGe2eIP/ltYJ2EYW/vmp6OSGOjgm37AOvVhtoza2pVbN+JBoNjWgvDyzYl0q3rg6yi7ErwMMiSdaKTp0Nv0dhJQq45cX8Vxbm31BeDdIHGa11GyADWYM67eWgpjRHiiKYbtHn753AIkUv1Qy4mNYzRG30gUPfWnY7YNYuNzAZhJzC+734j3wzMBTn1WM8FFxwYTox9Ak0x93N3Viqwl5hMAm/yT0tXfOsqRvEeNp053lkQKBgQDuQNBaGYs7Vao52W+9z+akc6kIb9LccckLrmP9QjZyNsueRydzJsasXE8SXyw+AFI2Kq7qPRLxyYKJV+q4Ce1oWXZ3ry9OAVY8tCvWom0LwtBPstw9IEDyS5Um3R1QuMg1m3dgDYAACoLR8Nvfx6yvVAMUtxUiSiX6sB0q6vfJ7wKBgQC5DIHCaxvy9D/GZxcyQbVdR11M4aZM141Mm+BAPuyF7nLBWsA0qAXdLgnLe/fDzZC5tvviRd5f9glDCp3LqZJX73kop1dnvKRp7GcO4f0ooVZnKS+4y55diuKhB7A/VAqVsyvqVmw4QzjJY5ur7PMiRbHEKksGOm3nqpo+3L1Q+QKBgGYrVS3OFm7zZXQ5UjnLldSf5LTBf2MZSGXB+w73/fEsnlTZnok676eqTh5KweY0rQydcTTxy9Xz3A6ZrQYO+8fr1WmtrlN9L0YI3WPFc42/lSUYRmnQEwnUb7miyJd9Jh4W9TIzl9hsqXzuFNv5/IuTM18GxAFYWsEOFPP6nxfxAoGAUwTTaj/XaCZAPmidtYRZM6ICr61EiJDj6Yy9DNWuE2Aox6pJNNZ02wf+iPXy8DtXRJpdYuRpoa+l9BfdNzO6Xg0n1B9PTVEKiiLvEXQ9uW64bsvBhyyCvgDDL+9dGOxBW2votddT8eHmpiM0AevqIGQYHqPCyOaJzDdzv+QUYzECgYEArffu9m8mjcmG1ghXllAcSYkHelbRrAEYHpqeUFOISmbGvwXTN1YV+aDSa/uFsi3t8tQ1ISLI15SdxoVbuPNYJdSy5uyU2ltXc6XZLxHb3Ql9BsKlcEexwx3FDbh2JsHJ7q35jG6S+OW4faUPb50eeJX9xnsSmmB/uUiTzrD//S8=
+  keyStorePath: /data/product/deploy/zgyy.jks
+  keyStorePassword: cfca1234
+  trustStorePath: /data/product/deploy/trust.jks
+  trustStorePassword: cfca1234
+  connectTimeout: 3000
+  readTimeout: 120000
+  tmpFilePath: /tmp
