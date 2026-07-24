@@ -67,6 +67,18 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * version remains the active ErrorController (decided in Plan 04-05); the web version stays on
  * classpath for its static method but is not registered as a bean (Rule 3 blocking auto-fix).
  *
+ * <p>Phase 7 (Plan 07-04, BFF edge 迁入) added a fifth assignable-type exclusion:
+ * {@code com.spt.bas.purchase.wx.server.config.BasicErrorController}. The source basWx module
+ * ships its own BasicErrorController (near-clone of the basServer customisation above, kept for
+ * its {@code public static getErrorResp(Throwable)} utility + structural fidelity to source D-05
+ * config edge). It is {@code @Controller} with the same simple name {@code BasicErrorController}
+ * → same default bean name {@code basicErrorController} → would collide with the active
+ * {@code com.spt.bas.server.config.BasicErrorController} (the single active ErrorController
+ * decided in Plan 04-05). Excluding it keeps classpath presence for the static util while
+ * preserving the one-active-ErrorController invariant (Rule 3 blocking, same precedent as the
+ * web-version exclusion in Plan 04-06). Global {@code /error} handling is unchanged (behaviour-
+ * equivalent to source — source basWx used module-isolated scans; the monolith uses the filter).
+ *
  * <p>Phase 3 (AUTH-01..04, D-P3-01): {@code com.spt.tools.shiro.config.ToolsShiroConfig} is now
  * UN-excluded — the previously-dormant Shiro auto-config engages now that a concrete Realm
  * ({@code com.spt.bas.web.shiro.ShiroDbRealm}, @Component, ported in Plan 03-01) satisfies the
@@ -87,7 +99,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
         classes = { com.spt.tools.http.feign.FeignConfig.class,
                     com.spt.sign.client.config.FeignConfig.class,
                     com.spt.tools.http.interceptor.BasicErrorController.class,
-                    com.spt.bas.web.config.BasicErrorController.class }
+                    com.spt.bas.web.config.BasicErrorController.class,
+                    com.spt.bas.purchase.wx.server.config.BasicErrorController.class }
     )
 )
 // Phase 4 D-P4-01 方案 A (corrected 2026-07-17): widen @EnableFeignClients to also scan
