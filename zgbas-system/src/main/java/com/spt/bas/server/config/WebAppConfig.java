@@ -19,6 +19,7 @@ import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.unit.DataSize;
 import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
@@ -46,6 +47,22 @@ public class WebAppConfig extends WebMvcConfigurerAdapter {
 	public void addViewControllers(ViewControllerRegistry registry) {
 		registry.addRedirectViewController("/", "/index");
 		super.addViewControllers(registry);
+	}
+
+	// Phase 5 Plan 05-03 (D-P5-01): CORS verbatim from WX WebAppConfig — the ONLY
+	// unique contribution of the WX WebAppConfig. Everything else (multipartConfigElement,
+	// PageInterceptor, message converters, '/'->'/index') already exists here, so the WX
+	// WebAppConfig is NOT migrated wholesale — duplicating multipartConfigElement would
+	// throw BeanDefinitionStoreException.
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**")
+//				.allowedOrigins("*")
+				.allowedMethods("GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS")
+				.allowCredentials(true)
+				.allowedOriginPatterns("*")
+				.maxAge(3600)
+				.allowedHeaders("*");
 	}
 	/**
 	 * 装饰器
