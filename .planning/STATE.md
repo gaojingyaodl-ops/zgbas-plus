@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: planning
-stopped_at: Phase 8 context gathered — 4 灰区锁定(D-P8-01~04),ready to plan
-last_updated: "2026-07-24T04:55:15.963Z"
+status: ready-to-execute
+stopped_at: Phase 8 planned — 3 plans / 3 waves(08-01 probe+注释 / 08-02 编译门 / 08-03 独立复跑+fix-to-GREEN),ready to execute
+last_updated: "2026-07-24T05:35:00.000Z"
 last_activity: 2026-07-24
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 26
+  total_plans: 29
   completed_plans: 26
   percent: 83
 ---
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-07-16)
 ## Current Position
 
 Phase: 8
-Plan: Not started
-Status: Ready to plan
+Plan: 3 plans ready (08-01 / 08-02 / 08-03)
+Status: Ready to execute
 Last activity: 2026-07-24
 
-Progress: [█████████░] 77% (4/6 phases done; P7 planned 6/6 plans)
+Progress: [█████████░] 83% (5/6 phases done; P8 planned 3/3 plans)
 
 ## v1.2 嵌入方案(2026-07-23 锁定)
 
@@ -45,7 +45,7 @@ Progress: [█████████░] 77% (4/6 phases done; P7 planned 6/6 
 | 5 承托层迁入 | payload/VO/util/common/config/cache/AOP/ewechat → system | ✅ done 2026-07-24 |
 | 6 Service 层迁入 | 19 impl + 18 iface + EweChatApi + PurchaseCommand(scrubbed) → system | ✅ done 2026-07-24 |
 | 7 BFF edge 迁入 | 路由 inventory + /wx/contract 消歧 + 11 controller + 4 API → admin | ○ planned 2026-07-24 (6 plans/3 waves;🔴 /wx/contract 已被 P5 ReportFeignPathConfig 前缀自动消解,零路由编辑) |
-| 8 对齐验证 | compile 零错 + 启动 GREEN + /wx 非404 + 自回环 proof | ○ 待规划 |
+| 8 对齐验证 | compile 零错 + 启动 GREEN + /wx 非404 + 自回环 proof | 🟡 planned 2026-07-24 (3 plans/3 waves;08-01 WX reachability+self-loop probe+stale 注释 / 08-02 全 reactor 编译门 SC#1 / 08-03 独立复跑 mvn test+fix-to-GREEN SC#2/#3/#4,autonomous=false 防假阳性 D-P8-02) |
 
 ## Accumulated Context
 
@@ -97,7 +97,7 @@ Progress: [█████████░] 77% (4/6 phases done; P7 planned 6/6 
 
 ## Session Continuity
 
-Last session: 2026-07-24T04:55:15.957Z
-Stopped at: Phase 8 context gathered — 4 灰区锁定(D-P8-01~04),ready to plan
-Resume file: .planning/phases/08-alignment-verification/08-CONTEXT.md
-Next action: `/gsd-execute-phase 7`(BFF edge 迁入 — Wave1 承托缺口 → Wave2 11 controller + 4 api + BasicErrorController → Wave3 路由矩阵 + 编译门)
+Last session: 2026-07-24T05:35:00.000Z
+Stopped at: Phase 8 planned — 3 plans / 3 waves ready to execute
+Resume file: .planning/phases/08-alignment-verification/08-01-PLAN.md
+Next action: `/gsd-execute-phase 8`(对齐验证 — Wave1 WX reachability+self-loop probe+stale 注释 → Wave2 全 reactor 编译门 → Wave3 独立复跑 mvn test+fix-to-GREEN;⚠️ 08-03 autonomous=false,需用户本地独立复跑防假阳性 D-P8-02)

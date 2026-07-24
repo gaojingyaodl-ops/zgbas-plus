@@ -174,7 +174,12 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 3. HTTP GET/POST `/wx/user/login` 等关键 WX 端点返回非 404(DispatcherServlet 找到 handler,业务报错可接受)(WX-ALIGN-03)
 4. WX Feign 自回环 proof:经 PurchaseWxClientConfig 自回环 localhost:8080 发出 WX Feign 调用,响应非 404(确认 WX controller 已接线)
 
-**Plans**: TBD
+**Plans**: 3 plans across 3 waves (planned 2026-07-24,inline — GSD subagent outage)
+- Wave 1: 08-01 (WX 端点 reachability probe `wxEndpointsReachable_proof` + WX 自回环 bean-resolve probe `wxPurchaseFeignSelfLoopbackWiring_probe` + stale 注释清理;SC#3/#4 代码,D-P8-03/04)
+- Wave 2: 08-02 (全 reactor `mvn compile` + `test-compile` 零 [ERROR];SC#1, WX-ALIGN-01;blocked on Wave 1)
+- Wave 3: 08-03 (独立复跑 `mvn test -pl zgbas-admin -am -Dtest=ZgbasApplicationTest` + runtime fix-to-GREEN 回流;SC#2 WX-ALIGN-02 + SC#3/#4 evidence;**autonomous=false** checkpoint 让用户本地独立复跑防假阳性 D-P8-02;blocked on Wave 2)
+
+**Cross-cutting constraints:** D-P8-01 最小修复预算(标根因+行为等价,不扩 scope/不动业务)横跨 08-01/02/03;D-P8-02 防假阳性(用户独立复跑为准,executor 自报不作唯一证据)横跨 08-03 + dev DB 前置。
 
 ---
 
@@ -189,8 +194,8 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 | Phase 4: 基础设施 & SDK 接入 | v1.2 | 5/5 | ✅ Complete | 2026-07-22 |
 | Phase 5: 承托层迁入 | v1.2 | 6/6 | ✅ Complete | 2026-07-24 |
 | Phase 6: Service 层迁入 | v1.2 | 6/6 | ✅ Complete | 2026-07-24 |
-| Phase 7: BFF edge 迁入 | v1.2 | 0/TBD | Not started | - |
-| Phase 8: 对齐验证 | v1.2 | 0/TBD | Not started | - |
+| Phase 7: BFF edge 迁入 | v1.2 | 6/6 | ✅ Complete | 2026-07-24 |
+| Phase 8: 对齐验证 | v1.2 | 3/3 | 🟡 Planned | - |
 
 ---
 
