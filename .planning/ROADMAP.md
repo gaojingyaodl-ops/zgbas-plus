@@ -126,7 +126,19 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 3. 对主 bas 域调用保留 Feign 自回环(`IBsCompanyClient`/`IPmProcessClient`/`IPmApproveClient` 等 localhost:8080),不重构为直接注入(方案1 决策)
 4. `JAVA_HOME=Corretto-1.8 mvn compile -pl zgbas-system` 零 `[ERROR]`
 
-**Plans**: TBD
+**Plans**: 6 plans across 5 waves (planned 2026-07-24)
+- Wave 1: 06-01 (11 实体型 CRUD leaf + iface,含 4 Dao import re-point) ∥ 06-02 (Apply + JinXinApi)
+- Wave 2: 06-03 (BuyEnquiry + BuyQuote + Contract + EweChatApi —— BuyMessage/Apply 消费者)
+- Wave 3: 06-04 (SuccessContract + UserInfo —— plan 内顺序 SuccessContract→UserInfo)
+- Wave 4: 06-05 (UserService + PurchaseCommand @XxlJob scrub)
+- Wave 5: 06-06 (编译门 mvn compile -pl zgbas-system 零 [ERROR],SC#4 / D-P6-04)
+
+**Research-driven findings (2026-07-24 RESEARCH, see 06-RESEARCH.md):**
+- ✓ 零依赖 gap:WX service 的所有 `I*Client`(主域 28 `com.spt.bas.client.remote.*` + 电签 3 `com.spt.sign.client.remote.*` 经 spt-sign-client 1.0.0-SNAPSHOT jar)均在单体解析。
+- ✓ BaseService 签名风险低(D-P6-01):12 entity iface extends 内联 IBaseService<T>(主域同款已证),IBuyEnquiry/IBuyMessageService 为 plain;无需 WxBaseService 子类、无需扩共享 base。
+- ⚠ 唯一实测适配:4 service(BsCompany/BsDict/CompanyIndustry/Feedback)复用主域 Dao(`com.spt.bas.server.dao`),源 import 需 re-point;CompanyIndustry 含字段重命名(`CompanyIndustryDao`→`BsCompanyIndustryDao`)。
+- ⚠ PurchaseCommand @XxlJob scrub(D-P6-02):删 import 行 8/9 + 注解行 21 + XxlJobHelper 块行 23-26,保 ICommand 队列路径;定时触发延后 v1.3 quartz gap-closure。
+- ✓ 验收 = 仅编译门(D-P6-04);runtime/bean/启动验证全留 Phase 8。
 
 ---
 
@@ -176,7 +188,7 @@ Full details: [milestones/v1.1-ROADMAP.md](milestones/v1.1-ROADMAP.md)
 | Phase 3: 数据层与 Feign 契约 | v1.2 | 3/3 | ✅ Complete | 2026-07-22 |
 | Phase 4: 基础设施 & SDK 接入 | v1.2 | 5/5 | ✅ Complete | 2026-07-22 |
 | Phase 5: 承托层迁入 | v1.2 | 0/6 | Planned | 2026-07-24 |
-| Phase 6: Service 层迁入 | v1.2 | 0/TBD | Not started | - |
+| Phase 6: Service 层迁入 | v1.2 | 0/6 | Planned | 2026-07-24 |
 | Phase 7: BFF edge 迁入 | v1.2 | 0/TBD | Not started | - |
 | Phase 8: 对齐验证 | v1.2 | 0/TBD | Not started | - |
 
