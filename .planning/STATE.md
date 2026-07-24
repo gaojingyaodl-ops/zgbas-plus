@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: basWx 迁入
-status: executing
-stopped_at: Phase 6 complete — compile gate green (SC#4 PASSED), advancing to Phase 7
-last_updated: "2026-07-24T03:29:48.000Z"
-last_activity: 2026-07-24 -- Phase 6 executed (6/6 plans, zgbas-system compile 0 ERROR)
+status: planning
+stopped_at: Phase 7 context gathered
+last_updated: "2026-07-24T03:59:56.335Z"
+last_activity: 2026-07-24 -- Phase 6 executed (6/6 plans, compile gate PASSED)
 progress:
   total_phases: 6
   completed_phases: 4
@@ -97,7 +97,7 @@ Progress: [████████░░] 67% (4/6 phases: P3/P4/P5/P6 done)
 
 ## Session Continuity
 
-Last session: 2026-07-24T03:29:48.000Z
-Stopped at: Phase 6 complete — compile gate green, advancing to Phase 7
-Resume file: .planning/phases/06-service/06-VERIFICATION.md
+Last session: 2026-07-24T03:59:56.330Z
+Stopped at: Phase 7 context gathered
+Resume file: .planning/phases/07-bff-edge/07-CONTEXT.md
 Next action: `/gsd-discuss-phase 7` 或 `/gsd-plan-phase 7`(BFF edge 迁入 — 路由 inventory + /wx/contract 冲突消歧 + 11 controller + 4 API → zgbas-admin)
